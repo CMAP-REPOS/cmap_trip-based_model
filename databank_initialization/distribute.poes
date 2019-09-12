@@ -1,0 +1,145 @@
+~/BASIC POE MODEL FOR EXTERNALS AND AIRPORTS, kww 4/04, 7/07.
+~/  1. IMPORTS BI DIRECTIONAL COUNTS FOR POES
+~/  2. DISTRIBUTES AND BALANCES TO HO AND NH PRODS
+~/  3. APPORTIONS AND TRANSPOSES BY VEHICLE TYPE.
+~/
+~#    cmh 5/09 - matrix cleanup at beginning & batch mode indicator
+~#    Heither 3/30/10 - t5 reference updated, mo2 & mo3 in md"speca" calculations updated to mo3 & mo4
+~#   revised Heither, 05-31-2016: Milwaukee work trip matrix factored and subtracted from zone 1946 in special generators
+~#   revised Heither, 10-05-2018: Milwaukee work trip zone updated to zone17 (zone 1946 --> 3634); POE range (1945,1961 --> 3633,3649);
+~#									internal zone range (1,1944 --> 1,3632).
+~#
+~#    Argument:   %1% = batch mode indicator (0=intyeractive, 1=batch) 
+~#       (e.g. "~<prep_macros\distribute.poes 1")
+~/=====================================================================
+~#
+~# ################################
+~# -- SET GROWTH FACTOR HERE --
+~r5=1.15 ~/growth factor from base year (1% per year)
+~# ################################
+~#
+~#
+~r1=10      / attraction weight of special generator productions
+~r2=0.0001  / gravity alpha
+~r3=2       / gravity gamma
+~r4=60      / minimum miles consideration
+~/ t5 is the impedance matrix
+~t5=mf47    
+~/
+~/ batch mode indicator (0-interactive, 1-batch) to exit macro
+~y=0
+~x=%0%
+~+;~?x=1;~y=1
+~/
+~/  Clean up matrices - 5/20/09
+~<useful_macros\delete_matrix_named speca
+~<useful_macros\delete_matrix_named specp
+~<useful_macros\delete_matrix_named spect
+~<useful_macros\delete_matrix_named spectb
+~<useful_macros\delete_matrix_named aext
+~<useful_macros\delete_matrix_named aextt
+~<useful_macros\delete_matrix_named text
+~<useful_macros\delete_matrix_named textt
+~<useful_macros\delete_matrix_named airhwy
+~<useful_macros\delete_matrix_named airt
+~/
+~/INITIALIZE
+~/
+batchin=data/poeprod.in
+3.11
+1
+
+~/APPLY GROWTH FACTOR
+3.21
+~+;1;y;mo"specp";n
+~+;mo"specp"*%r5%;;;n;1;;q
+~/
+~# ## -- APPLY GROWTH FACTOR TO MILWAUKEE WORK TRIPS
+3.21
+~+;1;y;ms96;n;ms96*%r5%; ; ;1;
+~# ## -- SUBTRACT MILWAUKEE WORK TRIPS FROM SPECIAL GENERATORS FOR ZONE 3634
+~+;1;y;mo"specp";n;(mo"specp"-(ms96*2)).max.0; ; ;y;3634; ;1;q
+~#
+~#
+~/  PREPARE ATTRACTIONS
+~/
+3.21
+~+;1;y;md"speca";y;special trip generator attr;
+~+;mo3'+mo4'+(mo"specp"'*%r1%);;;n;1;;q
+~/
+~/DISTRIBUTE
+~/
+3.21
+~+;1;y;mf30;y;spect;special generator trips;
+~+;(%r2%* (mo"specp" * md"speca"))/((%r4%.max.%t5%)**%r3%);
+~+;%t5%;;n;1;;q
+~/
+~/BALANCE
+~/
+3.22
+~+;1;mf"spect";mo"specp";md"speca";n;2;%t5%; ;1; ;
+~+;1;mf31;y;spectb;special generator trips balanced; ;1; ;q
+~/
+~/APPORTION
+~/
+~/AUTO EXTERNALS
+~/
+3.21
+~+;1;y;mf32;y;aext;sg auto externals; 
+~+;(mf"spectb"*0.35);
+~+; ;y;3633,3649; ;all;1;
+~+;1;y;mf33;y;aextt;transpose;
+~+;mf"aext"';
+~+; ;n;1;
+~+;1;y;mf"aext";n
+~+;mf"aext"+mf"aextt";
+~+; ;n;1;q
+~/
+~/TRUCK EXTERNALS
+~/
+3.21
+~+;1;y;mf34;y;text;sg truck externals; 
+~+;(mf"spectb"*0.15);
+~+; ;y;3633,3649; ;all;1;
+~+;1;y;mf35;y;textt;transpose;
+~+;mf"text"';
+~+; ;n;1;
+~+;1;y;mf"text";n
+~+;mf"text"+mf"textt";
+~+; ;n;1;q
+~/
+~/AIRPORT TRIPS 
+~/
+3.21
+~+;1;y;mf36;y;airhwy;sg all highway airport; 
+~+;(mf"spectb"*0.50);
+~+; ;y;1,3632; ;all;1;
+~+;1;y;mf37;y;airt;transpose;
+~+;mf"airhwy"';
+~+; ;n;1;
+~+;1;y;mf"airhwy";n
+~+;mf"airhwy"+mf"airt";
+~+; ;n;1;q
+~/
+~/CLEAN UP
+~/
+3.12
+~+;4;1;"aext";mf8;y;poeaut;sg auto poe %r5%;;n
+~+;4;1;"text";mf9;y;poetrk;sg truck poe %r5%;;n
+~+;4;1;"airhwy";mf10;y;poeair;sg airport poe %r5%;;n
+q
+3.12
+~+;2;speca;y
+~+;2;specp;y
+~+;2;spect;y
+~+;2;spectb;y
+~+;2;aext;y
+~+;2;aextt;y
+~+;2;text;y
+~+;2;textt;y
+~+;2;airhwy;y
+~+;2;airt;y
+q
+batchin=batchin
+~?y=1
+q

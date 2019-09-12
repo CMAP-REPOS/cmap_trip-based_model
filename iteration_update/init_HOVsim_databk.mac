@@ -1,0 +1,365 @@
+~#
+~/**********************************************************************
+~/**********************************************************************
+~/    init_HOVsim_databk.mac %1%
+~/     Where %1% = three digit alternative/scenario identifier
+~/**********************************************************************
+~o|39
+reports=report\init.mf.iter_%ms98%.rxt
+~/**********************************************************************
+~#
+~/   Macro to setup databank for doing full model iterations with three
+~/    occupancy level high and low income trip tables - delete old
+~/    matrices and initialize matricies to use in next iteration.
+~/   Standard locations/uses are listed below.
+~/
+~/  Program control
+~/  HHTG Ps and As -------------------------------- must all be present at start
+~/     mo01 = hw trip productions - low income
+~/     mo02 = hw trip productions - high income
+~/     mo03 = ho trip productions
+~/     mo04 = nh trip productions
+~/     md01 = hw trip attractions - low income
+~/     md02 = hw trip attractions - high income
+~/     md03 = ho trip attractions
+~/     md04 = nh trip attractions
+~/   Full matrices for highway assignment ----- initialized in asmt macro except
+~/     mf01 = hbw auto person trips ------------------ deleted & initialized
+~/     mf02 = hbo auto person trips ------------------ deleted & initialized
+~/     mf03 = nhb auto person trips ------------------ deleted & initialized
+~/     mf04 = b-plate truck vehicle trips
+~/     mf05 = light truck vehicle trips
+~/     mf06 = medium truck vehicle trips
+~/     mf07 = heavy truck vehicle trips
+~/     mf08 = external auto vehicle trips
+~/     mf09 = external (heavy) truck vehicle trips
+~/     mf10 = air passenger trips
+~/     mf11 = transpose of mf01 = work to home
+~/     mf12 = transpose of mf02 = other to home
+~/     mf13 = scratch for period SOV veh trips
+~/     mf14 = scratch for period btrk veq trips
+~/     mf15 = scratch for period ltrk veq trips
+~/     mf16 = scratch for period mtrk veq trips
+~/     mf17 = scratch for period htrk veq trips
+~/     mf18 = scratch for period HOV veh trips
+~/   Transit skims -------------------------------- must all be present at start
+~/     mf20 = first mode
+~/     mf21 = last mode
+~/     mf22 = in-vehicle time
+~/     mf23 = out-vehicle time
+~/     mf24 = headway - am peak
+~/     mf25 = headway - midday
+~/     mf26 = priority mode    
+~/     mf27 = fare (in cents)  
+~/   Pre-distribution composite cost calculation ----- all deleted & initialized
+~/     mf28 = nh auto costs
+~/     mf29 = nh transit costs
+~/     mf30 = ho auto costs
+~/     mf31 = ho transit costs
+~/     mf32 = hw auto costs
+~/     mf33 = hw transit costs
+~/     mf34 = reserved
+~/     mf35 = reserved
+~/   IOM trip distribution --------------------------- initialized in IOM macros
+~/     mf36 = hw person trips:low income
+~/     mf37 = hw person trips:high income
+~/     mf38 = ho person trips
+~/     mf39 = nh person trips
+~/   Binary mode choice ------------------------------ all deleted & initialized
+~/     mf48 = hbw auto person trips:low inc 
+~/     mf49 = hbw auto person trips:high inc 
+~/     mf40 = hw transit person trips:low income
+~/     mf41 = hw transit person trips:high income
+~/     mf42 = ho transit person trips
+~/     mf43 = nh transit person trips
+~/   Highway skims -------------------------------- must all be present at start
+~/     mf44 = am peak hwy skim time
+~/     mf45 = am peak hwy skim distance
+~/     mf46 = midday hwy skim time
+~/     mf47 = midday hwy skim distance
+~/   Home-work auto occupancy by income level -------- all deleted & initialized
+~/     mf50 = hw SOV1: low income
+~/     mf51 = hw HOV2: low income
+~/     mf52 = hw HOV3: low income
+~/     mf53 = hw SOV1: high income
+~/     mf54 = hw HOV2: high income
+~/     mf55 = hw HOV3: high income
+~/     mf56 = hw SOV1: total=mf50+mf53
+~/     mf57 = hw HOV2: total=mf51+mf54
+~/     mf58 = hw HOV3: total=mf52+mf55
+~/   All Purposes Vehicle Occupancy Storage -------- all created/initialized
+~/     mf101 = hw SOV1 person trips (low and high income: mf50+mf53)
+~/     mf102 = hw HOV2 person trips (low and high income: mf51+mf54)
+~/     mf103 = hw HOV3+ person trips (low and high income: mf52+mf55)
+~/     mf104 = ho SOV1 person trips
+~/     mf105 = ho HOV2 person trips
+~/     mf106 = ho HOV3+ person trips
+~/     mf107 = nh SOV1 person trips
+~/     mf108 = nh HOV2 person trips
+~/     mf109 = nh HOV3+ person trips
+~## ---     Toll/nontoll matrices     --- ##
+~/   All Purposes Summed Tolls Storage -------- all created/initialized
+~/     mf111 = low inc h-w sov toll
+~/     mf112 = low inc h-w hov 2 per toll
+~/     mf113 = low inc h-w hov 3+ per toll
+~/     mf114 = high inc h-w sov toll
+~/     mf115 = high inc h-w hov 2 per toll
+~/     mf116 = high inc h-w hov 3+ per toll
+~/     mf117 = h-o sov toll
+~/     mf118 = h-o hov 2 per toll
+~/     mf119 = h-o hov 3+ per toll
+~/     mf120 = nh sov toll
+~/     mf121 = nh hov 2 per toll
+~/     mf122 = nh hov 3+ per toll
+~#
+~/  Matrices for auto person trips on toll paths -------- all created/initialized
+~/     mf131 = low inc h-w sov tolled trips
+~/     mf132 = low inc h-w hov 2 per tolled trips
+~/     mf133 = low inc h-w hov 3+ per tolled trips
+~/     mf134 = high inc h-w sov tolled trips
+~/     mf135 = high inc h-w hov 2 per tolled trips
+~/     mf136 = high inc h-w hov 3+ per tolled trips
+~/     mf137 = h-o sov tolled trips
+~/     mf138 = h-o hov 2 per tolled trips
+~/     mf139 = h-o hov 3+ per tolled trips
+~/     mf140 = nh sov tolled trips
+~/     mf141 = nh hov 2 per tolled trips
+~/     mf142 = nh hov 3+ per tolled trips
+~#
+~/  Matrices for change in auto utility due to tolls -------- all created/initialized
+~/     mf151 = low inc h-w auto toll delta util
+~/     mf152 = low inc h-w sov toll delta util
+~/     mf153 = low inc h-w share ride toll delta util
+~/     mf154 = low inc h-w hov 2 per toll delta util
+~/     mf155 = low inc h-w hov 3 per toll delta util
+~/     mf156 = high inc h-w auto toll delta util
+~/     mf157 = high inc h-w sov toll delta util
+~/     mf158 = high inc h-w share ride toll delta util
+~/     mf159 = high inc h-w hov 2 per toll delta util
+~/     mf160 = high inc h-w hov 3 per toll delta util
+~/     mf161 = h-o sov toll delta util
+~/     mf162 = h-o hov 2 per toll delta util
+~/     mf163 = h-o hov 3+ per toll delta util
+~/     mf164 = nh sov toll delta util
+~/     mf165 = nh hov 2 per toll delta util
+~/     mf166 = nh hov 3+ per toll delta util
+~/     mf167 = h-o auto toll delta util
+~/     mf168 = nh auto toll delta util
+~/     mf201 = h-o share ride toll delta util
+~/     mf202 = nh share ride toll delta util
+~#
+~/  Matrices for revised probabilities -------- all created/initialized
+~# HW LOW INCOME
+~/     mf171 = low inc h-w auto toll new prob
+~/     mf172 = low inc h-w sov toll new prob
+~/     mf173 = low inc h-w share ride toll new prob
+~/     mf174 = low inc h-w hov 2 per toll new prob
+~/     mf175 = low inc h-w hov 3 per toll new prob
+~# HW HIGH INCOME
+~/     mf176 = high inc h-w auto toll new prob
+~/     mf177 = high inc h-w sov toll new prob
+~/     mf178 = high inc h-w share ride toll new prob
+~/     mf179 = high inc h-w hov 2 per toll new prob
+~/     mf180 = high inc h-w hov 3 per toll new prob
+~# HO
+~/     mf181 = h-o auto toll new prob
+~/     mf182 = h-o sov toll new prob
+~/     mf183 = h-o share ride toll new prob
+~/     mf184 = h-o hov 2 per toll new prob
+~/     mf185 = h-o hov 3 per toll new prob
+~# NH
+~/     mf186 = nh auto toll new prob
+~/     mf187 = nh sov toll new prob
+~/     mf188 = nh share ride toll new prob
+~/     mf189 = nh hov 2 per toll new prob
+~/     mf190 = nh hov 3 per toll new prob
+~#
+~/  Matrices for adjusted tolled person trips -------- all created/initialized
+~/     mf191 = low inc h-w auto toll adj trips
+~/     mf192 = low inc h-w sov toll adj trips
+~/     mf193 = low inc h-w hov 2 toll adj trips
+~/     mf194 = low inc h-w hov 3+ per toll adj trips
+~/     mf195 = high inc h-w auto toll adj trips
+~/     mf196 = high inc h-w sov toll adj trips
+~/     mf197 = high inc h-w hov 2 per toll adj trips
+~/     mf198 = high inc h-w hov 3+ per toll adj trips
+~/     mf199 = h-o auto toll adj trips
+~/     mf200 = h-o sov toll adj trips
+~/     mf203 = h-o hov 2 per toll adj trips
+~/     mf204 = h-o hov 3+ per toll adj trips
+~/     mf205 = nh auto toll adj trips
+~/     mf206 = nh sov toll adj trips
+~/     mf207 = nh hov 2 per toll adj trips
+~/     mf208 = nh hov 3+ per toll adj trips
+~#
+~## --  --  --  --  --  --  --  --  --  --  --  --  --  --  --
+~/   Misc
+~/     ms99 = dummy operand in IOM macros
+~/     mo05 = IOM scratch ---------------------------- initialized in IOM macros
+~/     mo06 = IOM scratch ---------------------------- initialized in IOM macros
+~/     mo07 = batchin (temp) hw low income attractions
+~/     mo08 = batchin (temp) hw high income attractions
+~/     mo09 = batchin (temp) ho attractions
+~/     mo09 = batchin (temp) nh attractions
+~/     mf67 = IOM scratch ---------------------------- initialized in IOM macros
+~/     mf68 = IOM scratch ---------------------------- initialized in IOM macros
+~/     mf69 = IOM scratch ---------------------------- initialized in IOM macros
+~#
+~/   Prepared by DBE 11NOV2009 for I-290 HOV
+~#
+~#   Revised by Craig Heither 2014-10-28: create/initialize matrices for non-work HOV procedures; collapse code
+~#
+~#   Revised by Craig Heither 2015-02-18: create/initialize toll/nontoll matrices
+~#
+~/**********************************************************************
+~/**********************************************************************
+~#
+~/**********************************************************************
+~#
+~/   List scenarios present at start of next interation then
+~/    delete & initialize matricies for next full model iteration
+~#
+~/**********************************************************************
+s=
+3.21
+~+;1;y;mf01;y;hwau%ms98%;alt%1% hw auto person trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf02;y;hoau%ms98%;alt%1% ho auto person trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf03;y;nhau%ms98%;alt%1% nh auto person trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf28;y;nhau$%ms98%;alt%1% nh auto cost sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf29;y;nhtr$%ms98%;alt%1% nh transit cost sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf30;y;hoau$%ms98%;alt%1% ho auto cost sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf31;y;hotr$%ms98%;alt%1% ho transit cost sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf32;y;hwau$%ms98%;alt%1% hw auto cost sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf33;y;hwtr$%ms98%;alt%1% hw transit cost sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf48;y;hwauL%ms98%;alt%1% hwLOW auto person trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf49;y;hwauH%ms98%;alt%1% hwHIGH auto person trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf40;y;hwtrL%ms98%;alt%1% hw transit trips sim_%ms98% - low inc;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf41;y;hwtrH%ms98%;alt%1% hw transit trips sim_%ms98% - high inc;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf42;y;hotr%ms98%;alt%1% ho transit trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf43;y;nhtr%ms98%;alt%1% nh transit trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf50;y;SOV1L%ms98%;alt%1% hw SOV1 per trips sim_%ms98%-low inc;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf51;y;HOV2L%ms98%;alt%1% hw HOV2 per trips sim_%ms98%-low inc;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf52;y;HOV3L%ms98%;alt%1% hw HOV3 per trips sim_%ms98%-low inc;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf53;y;SOV1H%ms98%;alt%1% hw SOV1 per trips sim_%ms98%-high inc;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf54;y;HOV2H%ms98%;alt%1% hw HOV2 per trips sim_%ms98%-high inc;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf55;y;HOV3H%ms98%;alt%1% hw HOV3 per trips sim_%ms98%-high inc;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf56;y;SOV1%ms98%;alt%1% hw SOV1 per trips sim_%ms98%-total;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf57;y;HOV2%ms98%;alt%1% hw HOV2 per trips sim_%ms98%-total;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf58;y;HOV3%ms98%;alt%1% hw HOV3 per trips sim_%ms98%-total;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf101;y;sov1w%ms98%;hw SOV person trips sim_%ms98%-total;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf102;y;hov2w%ms98%;hw HOV2 person trips sim_%ms98%-total;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf103;y;hov3w%ms98%;hw HOV3+ person trips sim_%ms98%-total;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf104;y;sov1o%ms98%;ho SOV person trips sim_%ms98%-total;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf105;y;hov2o%ms98%;ho HOV2 person trips sim_%ms98%-total;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf106;y;hov3o%ms98%;ho HOV3+ person trips sim_%ms98%-total;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf107;y;sov1n%ms98%;nh SOV person trips sim_%ms98%-total;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf108;y;hov2n%ms98%;nh HOV2 person trips sim_%ms98%-total;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf109;y;hov3n%ms98%;nh HOV3+ person trips sim_%ms98%-total;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf111;y;tshwl;low inc h-w sov toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf112;y;th2hwl;low inc h-w hov 2 per toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf113;y;th3hwl;low inc h-w hov 3+ per toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf114;y;tshwh;high inc h-w sov toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf115;y;th2hwh;high inc h-w hov 2 per toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf116;y;th3hwh;high inc h-w hov 3+ per toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf117;y;tsho;h-o sov toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf118;y;th2ho;h-o hov 2 per toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf119;y;th3ho;h-o hov 3+ per toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf120;y;tsnh;nh sov toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf121;y;th2nh;nh hov 2 per toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf122;y;th3nh;nh hov 3+ per toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf131;y;shwl;low inc h-w sov tolled trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf132;y;h2hwl;low inc h-w hov 2 per tolled trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf133;y;h3hwl;low inc h-w hov 3+ per tolled trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf134;y;shwh;high inc h-w sov tolled trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf135;y;h2hwh;high inc h-w hov 2 per tolled trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf136;y;h3hwh;high inc h-w hov 3+ per tolled trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf137;y;sho;h-o sov tolled trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf138;y;h2ho;h-o hov 2 per tolled trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf139;y;h3ho;h-o hov 3+ per tolled trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf140;y;snh;nh sov tolled trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf141;y;h2nh;nh hov 2 per tolled trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf142;y;h3nh;nh hov 3+ per tolled trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf151;y;uahwl;low inc h-w auto toll delta util;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf152;y;ushwl;low inc h-w sov toll delta util;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf153;y;usrhwl;low inc h-w share ride toll delta util;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf154;y;uh2hwl;low inc h-w hov 2 per toll delta util;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf155;y;uh3hwl;low inc h-w hov 3 per toll delta util;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf156;y;uahwh;high inc h-w auto toll delta util;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf157;y;ushwh;high inc h-w sov toll delta util;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf158;y;usrhwh;high inc h-w share ride toll delta util;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf159;y;uh2hwh;high inc h-w hov 2 per toll delta util;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf160;y;uh3hwh;high inc h-w hov 3 per toll delta util;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf161;y;usho;h-o sov toll delta util;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf162;y;uh2ho;h-o hov 2 per toll delta util;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf163;y;uh3ho;h-o hov 3+ per toll delta util;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf164;y;usnh;nh sov toll delta util;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf165;y;uh2nh;nh hov 2 per toll delta util;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf166;y;uh3nh;nh hov 3+ per toll delta util;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf167;y;uaho;h-o auto toll delta util;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf168;y;uanh;nh auto toll delta util;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf171;y;pahwl;low inc h-w auto toll new prob;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf172;y;pshwl;low inc h-w sov toll new prob;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf173;y;psrhwl;low inc h-w share ride toll new prob;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf174;y;ph2hwl;low inc h-w hov 2 per toll new prob;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf175;y;ph3hwl;low inc h-w hov 3 per toll new prob;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf176;y;pahwh;high inc h-w auto toll new prob;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf177;y;pshwh;high inc h-w sov toll new prob;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf178;y;psrhwh;high inc h-w share ride toll new prob;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf179;y;ph2hwh;high inc h-w hov 2 per toll new prob;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf180;y;ph3hwh;high inc h-w hov 3 per toll new prob;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf181;y;paho;h-o auto toll new prob;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf182;y;psho;h-o sov toll new prob;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf183;y;psrho;h-o share ride toll new prob;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf184;y;ph2ho;h-o hov 2 per toll new prob;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf185;y;ph3ho;h-o hov 3 per toll new prob;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf186;y;panh;nh auto toll new prob;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf187;y;psnh;nh sov toll new prob;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf188;y;psrnh;nh share ride toll new prob;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf189;y;ph2nh;nh hov 2 per toll new prob;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf190;y;ph3nh;nh hov 3 per toll new prob;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf191;y;shwl;low inc h-w auto toll adj trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf192;y;shwl;low inc h-w sov toll adj trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf193;y;h2hwl;low inc h-w hov 2 toll adj trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf194;y;h3hwl;low inc h-w hov 3+ per toll adj trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf195;y;shwh;high inc h-w auto toll adj trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf196;y;shwh;high inc h-w sov toll adj trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf197;y;h2hwh;high inc h-w hov 2 per toll adj trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf198;y;h3hwh;high inc h-w hov 3+ per toll adj trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf199;y;ho;h-o auto toll adj trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf200;y;sho;h-o sov toll adj trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf201;y;usrho;h-o share ride toll delta util;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf202;y;usrnh;nh share ride toll delta util;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf203;y;h2ho;h-o hov 2 per toll adj trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf204;y;h3ho;h-o hov 3+ per toll adj trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf205;y;nh;nh auto toll adj trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf206;y;snh;nh sov toll adj trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf207;y;h2nh;nh hov 2 per toll adj trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf208;y;h3nh;nh hov 3+ per toll adj trips;~?q=1;y;0;0; ; ;n;1;q
+~/
+~/**********************************************************************
+~#
+~/    Report existing matrices in databank
+~#
+~/**********************************************************************
+~#
+~+;3.12;6;m;2;q
+~#
+~>>report\iter.report.rxt
+~" * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+~"   Databank initialized for iteration %ms98%
+~" * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+~"
+~>>
+~/
+~/**********************************************************************
+~#
+~/    End of macro - reset reports & return to emme prompt
+~#
+~/**********************************************************************
+~#
+reports=
+~o=6
+~#
+~/**********************************************************************
+q
+~/**********************************************************************

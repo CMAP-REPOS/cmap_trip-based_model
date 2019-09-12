@@ -1,0 +1,264 @@
+~#
+~/**********************************************************************
+~/**********************************************************************
+~#
+~/  Macro free.skim.mac %1%
+~/   where %1% = three digit alt number; e.g., 100
+~#
+~/**********************************************************************
+~/  Macro written to create time and distance skims from am-peak (????3)
+~/    and mid-day (????5) scenarios to start distribution and mode choice
+~/**********************************************************************
+~#
+~/  Written by Englund
+~#
+~/    15OCT2004 (for EMME/2 Release 9.5)
+~/    Modified 8JUL2005 for "partC" in batchin path
+~/    Modified 30SEP2009 by DBE for I-290 HOV Database structure
+~#    Modified 02/22/10 by CMH: create batch mode register y
+~#    Modified 11/16/10 by CMH: added coding for HOV skim matrices
+~#    Modified 04/21/11 by CMH: slight modification to asmt setup logic due to Path-Based assignment
+~#    Modified 07/23/12 by Heither: revised for Path-based asmt and HOV midday skim matrices.
+~#
+~/**********************************************************************
+~/  Time and distance skims are prepared for the following time periods 
+~/    and stored in these full matricies.
+~#
+~/    mf44 = am peak 7-9 am SOV hwy time skims (s=????3)
+~/    mf45 = am peak 7-9 am SOV hwy distance skims (s=????3)
+~/    mf46 = midday 10 am - 2 pm SOV hwy time skims (s=????5)
+~/    mf47 = midday 10 am - 2 pm SOV hwy distance skims (s=????5)
+~/    mf76 = am peak 7-9 am HOV hwy time skims (s=????3)
+~/    mf77 = am peak 7-9 am HOV hwy distance skims (s=????3)
+~/    mf78 = midday 10 am - 2 pm HOV hwy time skims (s=????5)
+~/    mf79 = midday 10 am - 2 pm HOV hwy distance skims (s=????5)
+~/
+~/    ms97 = dummy operand for demand matrix in assignment setup (5.11)
+~#
+~/**********************************************************************
+~/  Set reports and batchin
+~/**********************************************************************
+~/ set up y to store batch mode (0-interactive, 1-batch) to exit macro
+~y=0
+~x=%0%
+~+;~?x=2;~y=1
+~/
+~o|39
+reports=report\alt%1%.free.skim.rxt
+batchin=data\vdf_free.in
+~#
+~/********************************************************************** 
+~#
+~/  Use free travel time volume delay functions for skimming.
+~/    Delete existing functions and batch in new functions.
+~#
+~/**********************************************************************
+4.12
+4
+fd1,fd10
+
+y
+q
+~#
+4.11
+2
+~#
+~/**********************************************************************
+~/  Set scenario (x) and make temp copies of scenarios for skimming.
+~/    Scenario is alt*100
+~/      +3 for am peak period scenario
+~/      +2 for midday period scenario
+~/**********************************************************************
+~#
+~x=%1%
+~x*100
+~x+3
+1.22
+3
+%x%
+93
+temp am peak scenario for SOV skimming
+no
+3
+%x%
+83
+temp am peak scenario for HOV skimming
+no
+q
+~#
+~x+2
+1.22
+3
+%x%
+95
+temp midday scenario for SOV skimming
+no
+3
+%x%
+85
+temp midday scenario for HOV skimming
+no
+q
+~#
+~/**********************************************************************
+~/  Set scenario (x) to first temp and initialize loop counter (z).
+~/**********************************************************************
+~x=93
+~z=1
+~#
+~:startloop
+~+;~?z=2;~x=95
+~+;~?z=3;~x=83
+~+;~?z=4;~x=85
+s=%x%
+~/**********************************************************************
+~/  Put @ftime into ul1
+~/**********************************************************************
+2.41
+1
+yes
+ul1
+@ftime
+
+!vdf=6,7
+
+2
+2
+q
+~/**********************************************************************
+~/  Set period text registers based on loop.
+~/**********************************************************************
+~+;~?z=2;~$>period5
+~+;~?z=3;~$>hovam
+~+;~?z=4;~$>hovmid
+~t1=mf44
+~t2=amtime
+~t3=am peak 7-9am SOV hwy time skim initsim
+~t4=mf45
+~t5=amdist
+~t6=am peak 7-9am SOV hwy distance skim init
+~$>skip
+~#
+~:period5
+~t1=mf46
+~t2=mdtime
+~t3=midday 10a-2p SOV hwy time skim initsim
+~t4=mf47
+~t5=mddist
+~t6=midday 10a-2p SOV hwy distance skim init
+~$>skip
+~#
+~:hovam
+~t1=mf76
+~t2=amhovt
+~t3=am peak 7-9am HOV hwy time skim initsim
+~t4=mf77
+~t5=amhovd
+~t6=am peak 7-9am HOV hwy distance skim init
+~$>skip
+~#
+~:hovmid
+~t1=mf78
+~t2=mdhovt
+~t3=midday 10a-2p HOV hwy time skim initsim
+~t4=mf79
+~t5=mdhovd
+~t6=midday 10a-2p HOV hwy distance skim init
+~#
+~:skip
+~#
+~# -- set assignment mode class --
+~t7=S
+~+;~?z>2;~t7=H
+~/**********************************************************************
+~/  Initialize time & distance matricies
+~/**********************************************************************
+~#
+3.12
+2
+%t1%
+~?e
+~$>err1
+yes
+~$>end1
+~:err1
+
+r
+~:end1
+1
+%t1%
+%t2%
+%t3%
+0.0
+~#
+2
+%t4%
+~?e
+~$>err2
+yes
+~$>end2
+~:err2
+
+r
+~:end2
+1
+%t4%
+%t5%
+%t6%
+0.0
+q
+~#
+~/**********************************************************************
+~/  Setup highway asmt - save skim distance as path attrib
+~/**********************************************************************
+~#
+5.11
+1          / fixed demand auto assignment
+~+;~?q=2;2 / Do a new assignment (option 2) if there is one present
+3          / option 3 = multiclass asmt
+%t7%       / mode used by primary class
+5          / assign additional demand
+ms97       / dummy matrix for assignment
+           / no veh occupancy matrix
+           / no additional demand matrix
+%t1%       / matrix to hold travel times  
+no         / don't change header
+4          / source for additional attrib = len
++          / path operator = addition
+           / threshold = none
+%t4%       / matrix to hold addl attrib (distance)   
+no         / don't change header
+1          / type of OD attrib = addl path attrib
+           / blank for no class 2 mode
+0          / number of iters
+           / default relative gap
+           / default normalized gap
+~#
+~/**********************************************************************
+~/  Run assignment - scenario %s%, mode %t7%
+~/**********************************************************************
+~+;5.22;1;2
+~/
+~/**********************************************************************
+~/  Delete Temporary Scenario %x%
+~/**********************************************************************
+1.22
+2
+%x%
+yes
+q
+~#
+~/********************************************************************** 
+~/  Increment counters and check if more scenarios to skim.
+~/**********************************************************************
+~#
+~z+1
+~+;~?z<5;~$startloop
+~#
+~/**********************************************************************
+~o=6
+reports=reports
+batchin=batchin
+~/**********************************************************************
+~?y=1
+q

@@ -1,0 +1,173 @@
+~# cleanup.for.rerun <3 digit scenario> <batch mode indicator [from trip_gen.bat]>
+~#
+~#  Heither, modified 04/07/09: ms98/ms99 values, no prompt for deleting report\*.*, create batch mode register z
+~#  Heither, modified 02/23/10: ms97 value, remove/create report\iter_X directories, load mo11/mo12/md12 for IOM, delete add'l matrices
+~#  Heither, modified 06/14/10: move build_%1%transit.rpt so it is not deleted
+~#  Heither, modified 01/14/11: delete transit assignment scenarios if exist (ex: scen 101 - 199)
+~#  Heither, modified 04/22/11: delete PATH files, if they exist
+~#  Heither, modified 10/09/13: move transit_skim.rpt & transit_skim_stats.txt so they are not deleted
+~#  Heither, modified 10/23/14: do not delete TOD transit scenarios or truck.access.rpt
+~#  Heither, modified 04/20/15: delete matrices 80-210 & reset batchin/batchout/reports to default
+~#  Ferguson, modified 05/28/15: delete moves.data, moves.longhaul.data, and network.results.punch from previous run
+~#  Heither, modified 02/04/16: retain build_xx5transit.rpt
+~#  Heither, modified 02/27/17: delete matrices mf80-mf220 upon initialization.
+~#  Heither, modified 05/01/18: additional matrix cleanup: ms705-714
+~#
+~# -------------------------------------------------------
+~/ Delete results from previous run
+~!if exist data\moves.data (del data\moves.data)
+~!if exist data\moves.longhaul.data (del data\moves.longhaul.data)
+~!if exist report\network.results.punch (del report\network.results.punch)
+~/
+~# -------------------------------------------------------
+~o|39
+~+;~z=%1%;~z+5
+~!if exist *_log.txt (del *_log.txt)
+~!if exist PATHS_s* (del PATHS_s* /Q)
+~## temporarily move reports to save them from deletion
+~!if exist report\build_%1%transit.rpt (move report\build_%1%transit.rpt build_%1%transit.rpt)
+~!if exist report\build_%z%transit.rpt (move report\build_%z%transit.rpt build_%z%transit.rpt)
+~!if exist report\transit_skim.rpt (move report\transit_skim.rpt transit_skim.rpt)
+~!if exist report\transit_skim_stats.txt (move report\transit_skim_stats.txt transit_skim_stats.txt)
+~!if exist report\truck.access.rpt (move report\truck.access.rpt truck.access.rpt)
+~!del report\*.* /Q
+~#
+batchin=
+batchout=
+reports=
+~/
+~# -------------------------------------------------------
+~/ Delete contents of report\iter_X
+~y=0
+~:loop
+~!if not exist report\iter_%y% (md report\iter_%y%)
+~!del report\iter_%y%\*.* /Q
+~y+1
+~+;~?y<5;~$loop
+~!if exist build_%1%transit.rpt (move build_%1%transit.rpt report\build_%1%transit.rpt)
+~!if exist build_%z%transit.rpt (move build_%z%transit.rpt report\build_%z%transit.rpt)
+~!if exist transit_skim.rpt (move transit_skim.rpt report\transit_skim.rpt)
+~!if exist transit_skim_stats.txt (move transit_skim_stats.txt report\transit_skim_stats.txt)
+~!if exist truck.access.rpt (move truck.access.rpt report\truck.access.rpt)
+~/
+~# -------------------------------------------------------
+~/ Delete scenarios & matrices
+~<useful_macros/delete.scenarios 0 8
+~<useful_macros/delete.scenarios %1%10 %1%18
+~<useful_macros/delete.scenarios %1%20 %1%28
+~<useful_macros/delete.scenarios %1%30 %1%38
+~<useful_macros/delete.scenarios %1%40 %1%49
+~/
+~# -- Delete transit assignment scenarios if exist --
+~+;~r1=%1%;~r1+9
+~+;~r2=%1%;~r2+99
+~<useful_macros/delete.scenarios %r1% %r2%
+~/
+~<useful_macros/delete.matrices 1 3
+q
+~<useful_macros/delete.matrices 11 19
+q
+~<useful_macros/delete.matrices 28 43
+q
+~<useful_macros/delete.matrices 48 75
+q
+~<useful_macros/delete.matrices 80 220
+q
+~/
+~# -------------------------------------------------------
+~# ## -- Remove Berger Access scalars & full --
+~<useful_macros/delete_matrix_named temp705
+~<useful_macros/delete_matrix_named temp706
+~<useful_macros/delete_matrix_named temp707
+~<useful_macros/delete_matrix_named temp708
+~<useful_macros/delete_matrix_named temp709
+~<useful_macros/delete_matrix_named temp710
+~<useful_macros/delete_matrix_named temp711
+~<useful_macros/delete_matrix_named temp712
+~<useful_macros/delete_matrix_named temp713
+~<useful_macros/delete_matrix_named temp714
+~<useful_macros/delete.matrices 700 706
+q
+~# -------------------------------------------------------
+~/ Set ms97, ms98 & ms99 to proper values for rerun (create if necessary)
+3.21
+~/ms97
+1
+y
+ms97
+y
+one
+dummy for assignment
+~+;~?q=1;y
+1
+1
+
+
+2
+~/ms98
+1
+y
+ms98
+y
+count
+iteration counter
+~+;~?q=1;y
+0
+0
+
+
+2
+~/ms99
+1
+y
+ms99
+y
+dmy0
+0 value for convolution opportunity calc
+~+;~?q=1;y
+0
+0
+
+
+2
+q
+~/
+~# -------------------------------------------------------
+~/ Load mo11 (zone sqmi), mo12 (zone x-coord) & md12 (zone y-coord) for IOM distribution
+batchin=data\zcentroid_sqmi.txt
+3.11
+1
+
+batchin=data\zcentroid_xcoord.txt
+3.11
+1
+
+batchin=data\zcentroid_ycoord.txt
+3.11
+1
+
+~# -------------------------------------------------------
+~# Delete ms1: not using lower bound for impedance matrix balancing in revised distribution
+3.12
+2
+ms1
+~?e
+~$>err
+yes
+~$>end
+~:err
+
+~:end
+q
+
+~# -------------------------------------------------------
+~o=6
+batchin=
+s=
+~# set up z to store batch mode (0-interactive, 1-batch)
+~z=0
+~x=%0%
+~+;~?x=2;~z=1
+~+;~?z=1;q
+~/ Done!
+

@@ -1,0 +1,162 @@
+C***********************************************************************
+C
+C     COMMON BLOCKS FOR APPROACH SUBMODEL
+C
+C***********************************************************************
+C## HEITHER 11-02-2017, DOND - ADDED EXTRA DIMENSION FOR VECTORIZATION:
+C##   FIRST DIMENSION REPRESENTS MAX. NUMBER IN ITER      
+      
+	COMMON/APPROACH/ DISTR, DOND, PRCOST, PNRAVL
+
+	REAL*4 DISTR(4000,5,3), DOND(1000,5,2)      
+
+	INTEGER*4 PRCOST(4000)
+
+	LOGICAL*4 PNRAVL(4000)
+
+	COMMON/BUSAPPROACH/ fwbus, fwfdr
+	
+	INTEGER*4 fwbus(4000), fwfdr(4000)  
+      
+C***********************************************************************
+C
+C	DISTR = TRANSIT APPROACH DISTANCE DISTRIBUTION PARAMETERS, THE 
+C             ARRAY IS DIMENSIONED ZONES (3000) BY TRANSIT MODES (5) BY
+C             DISTRIBUTION PARAMETERS (3)
+C
+C             OPTION 1:  WHEN ASM_AREA AND ASM_ZONE ARE BOTH FALSE THESE
+C                        VALUES ARE SET TO THE DEFAULT VALUES IN THE
+C                        BLOCK DATA.  THESE VALUES ARE PREDETERMINED BY 
+C                        ZONE AREA TYPE AND ARE FOR HOME TO WORK TRIPS.
+C                        THIS IS THE DEFAULT.
+C             OPTION 2:  WHEN ASM_AREA IS TRUE THESE VALUES ARE ENTERED
+C                        BY ZONE AREA TYPE FROM THE FILE  .
+C             OPTION 3:  WHEN ASM_ZONE IS TRUE THESE VALUES ARE ENTERED
+C                        BY INDIVIDUAL ZONE FROM THE FILE  .
+C
+C             MODE 1 = COMMUTER RAIL STATION
+C                      PARAMETER 1 = MEAN DISTANCE TO STATION
+C                        ZONE TYPE 1 (CHICAGO CBD) DEFAULT IS 0.4 MILES
+C                        ZONE TYPE 2 (CHICAGO REMAINDER) 
+C                                    DEFAULT IS 0.6 MILES
+C                        ZONE TYPE 3 (DENSE SUBURB) DEFAULT IS 0.7 MILES
+C                        ZONE TYPE 4 (SPARSE SUBURB)
+C                                    DEFAULT IS 0.7 MILES
+C                      PARAMETER 2 = STD. DEV. OF DISTANCE TO STATION
+C                        ZONE TYPE 1 (CHICAGO CBD) DEFAULT IS 0.1 MILES
+C                        ZONE TYPE 2 (CHICAGO REMAINDER) 
+C                                    DEFAULT IS 0.18 MILES
+C                        ZONE TYPE 3 (DENSE SUBURB) DEFAULT IS 0.2 MILES
+C                        ZONE TYPE 4 (SPARSE SUBURB)
+C                                    DEFAULT IS 0.2 MILES
+C                      PARAMETER 3 = TYPE OF DISTRIBUTION TO USE
+C                        101 = NORMAL DISTRIBUTION, THIS IS DEFAULT
+C                        102 = EXPONENTIAL DISTRIBUTION
+C     
+C             MODE 2 = RAIL TRANSIT STATION
+C                      PARAMETER 1 = MEAN DISTANCE TO STATION
+C                        ZONE TYPE 1 (CHICAGO CBD) DEFAULT IS 0.5 MILES
+C                        ZONE TYPE 2 (CHICAGO REMAINDER) 
+C                                    DEFAULT IS 0.8 MILES
+C                        ZONE TYPE 3 (DENSE SUBURB)
+C                                    DEFAULT IS 0.96 MILES
+C                        ZONE TYPE 4 (SPARSE SUBURB)
+C                                    DEFAULT IS 0.96 MILES
+C                      PARAMETER 2 = STD. DEVIATION OF DISTANCE TO STA.
+C                        ZONE TYPE 1 (CHICAGO CBD) DEFAULT IS 0.15 MILES
+C                        ZONE TYPE 2 (CHICAGO REMAINDER) 
+C                                    DEFAULT IS 0.26 MILES
+C                        ZONE TYPE 3 (DENSE SUBURB) 
+C                                    DEFAULT IS 0.30 MILES
+C                        ZONE TYPE 4 (SPARSE SUBURB)
+C                                    DEFAULT IS 0.30 MILES
+C                      PARAMETER 3 = TYPE OF DISTRIBUTION TO USE
+C                        101 = NORMAL DISTRIBUTION, THIS IS DEFAULT
+C                        102 = EXPONENTIAL DISTRIBUTION
+C     
+C             MODE 3 = BUS STOP
+C                      PARAMETER 1 = MINIMUM BUS STOP DISTANCE
+C                        ZONE TYPE 1 (CHICAGO CBD) DEFAULT IS 0.06 MILES
+C                        ZONE TYPE 2 (CHICAGO REMAINDER) 
+C                                    DEFAULT IS 0.06 MILES
+C                        ZONE TYPE 3 (DENSE SUBURB)
+C                                    DEFAULT IS 0.06 MILES
+C                        ZONE TYPE 4 (SPARSE SUBURB)
+C                                    DEFAULT IS 0.06 MILES
+C                      PARAMETER 2 = MAXIMUM BUS STOP DISTANCE
+C                        ZONE TYPE 1 (CHICAGO CBD) DEFAULT IS 0.19 MILES
+C                        ZONE TYPE 2 (CHICAGO REMAINDER) 
+C                                    DEFAULT IS 0.24 MILES
+C                        ZONE TYPE 3 (DENSE SUBURB) 
+C                                    DEFAULT IS 0.60 MILES
+C                        ZONE TYPE 4 (SPARSE SUBURB) 
+C                                    DEFAULT IS 0.60 MILES
+C                      PARAMETER 3 = PROPORTION OF THE ZONE THAT IS 
+C                                    WITHIN MINIMUM WALKING DISTANCE OF
+C                                    BUS STOP 
+C                                    (MUST BE BETWEEN 0.0 AND 1.0)
+C                        ZONE TYPE 1 (CHICAGO CBD) DEFAULT IS 0.83
+C                        ZONE TYPE 2 (CHICAGO REMAINDER) DEFAULT IS 0.83
+C                        ZONE TYPE 3 (DENSE SUBURB) DEFAULT IS 0.59
+C                        ZONE TYPE 4 (SPARSE SUBURB) DEFAULT IS 0.39
+C
+C             MODE 4 = FEEDER BUS STOP
+C                      PARAMETER 1 = MINIMUM BUS STOP DISTANCE
+C                        ZONE TYPE 1 (CHICAGO CBD) DEFAULT IS 0.504 MILES
+C                        ZONE TYPE 2 (CHICAGO REMAINDER) 
+C                                    DEFAULT IS 1.0 MILES
+C                        ZONE TYPE 3 (DENSE SUBURB)
+C                                    DEFAULT IS 1.0 MILES
+C                        ZONE TYPE 4 (SPARSE SUBURB)
+C                                    DEFAULT IS 1.0 MILES
+C                      PARAMETER 2 = MAXIMUM BUS STOP DISTANCE
+C                        ZONE TYPE 1 (CHICAGO CBD) DEFAULT IS 1.01 MILES
+C                        ZONE TYPE 2 (CHICAGO REMAINDER) 
+C                                    DEFAULT IS 2.0 MILES
+C                        ZONE TYPE 3 (DENSE SUBURB) 
+C                                    DEFAULT IS 2.0 MILES
+C                        ZONE TYPE 4 (SPARSE SUBURB) 
+C                                    DEFAULT IS 2.0 MILES
+C                      PARAMETER 3 = PROPORTION OF THE ZONE THAT IS 
+C                                    WITHIN MINIMUM WALKING DISTANCE OF
+C                                    BUS STOP 
+C                                    (MUST BE BETWEEN 0.0 AND 1.0)
+C                        ZONE TYPE 1 (CHICAGO CBD) DEFAULT IS 0.0
+C                        ZONE TYPE 2 (CHICAGO REMAINDER) DEFAULT IS 0.0
+C                        ZONE TYPE 3 (DENSE SUBURB) DEFAULT IS 0.0
+C                        ZONE TYPE 4 (SPARSE SUBURB) DEFAULT IS 0.0
+C
+C             MODE 5 = PARK AND RIDE STATION CTA OR METRA
+C                      PARAMETER 1 = MEAN DISTANCE TO STATION
+C                        ZONE TYPE 1 (CHICAGO CBD) DEFAULT IS 2.0 MILES
+C                        ZONE TYPE 2 (CHICAGO REMAINDER) 
+C                                    DEFAULT IS 2.0 MILES
+C                        ZONE TYPE 3 (DENSE SUBURB)
+C                                    DEFAULT IS 2.0 MILES
+C                        ZONE TYPE 4 (SPARSE SUBURB)
+C                                    DEFAULT IS 5.0 MILES
+C                      PARAMETER 2 = STD. DEVIATION OF DISTANCE TO STA.
+C                        ZONE TYPE 1 (CHICAGO CBD) DEFAULT IS 0.2 MILES
+C                        ZONE TYPE 2 (CHICAGO REMAINDER) 
+C                                    DEFAULT IS 0.5 MILES
+C                        ZONE TYPE 3 (DENSE SUBURB) 
+C                                    DEFAULT IS 1.0 MILES
+C                        ZONE TYPE 4 (SPARSE SUBURB)
+C                                    DEFAULT IS 2.0 MILES
+C                      PARAMETER 3 = TYPE OF DISTRIBUTION TO USE
+C                        101 = NORMAL DISTRIBUTION, THIS IS DEFAULT
+C                        102 = EXPONENTIAL DISTRIBUTION
+C
+C     DOND = ACCESS DISTANCES TO:
+C       J=1  BUS MODE. DISTANCE ALWAYS OBTAINED
+C       J=2  RAPID TRANSIT. DISTANCE OBTAINED ONLY IF FIRST/LAST MODE
+C            IS RAPID TRANSIT
+C       J=3  RAIL ROAD.DISTANCE OBTAINED ONLY IF FIRST/LAST MODE IS RR 
+C       J=4  FEEDER BUS.DISTANCE OBTAINED ONLY IF FIRST/LAST MODE IS RR.
+C       J=5  PARK AND RIDE STATION DISTANCE OBTAINED ONLY IF FIRST MODE IS RR.
+C
+C     PRCOST = PARK & RIDE COST IN CENTS/12 HOURS
+C     PNRAVL = TRUE IF A PANK AND RIDE LOT IS IN ZONE
+C
+C      fwbus = FIRST WAIT FOR BUS IN APPROACH SUBMODEL 
+C      fwfdr = FIRST WAIT FOR FEEDER BUS IN APPROACH SUBMODEL

@@ -1,0 +1,229 @@
+
+~# TRUCK.CLASS.SKIM.MAC
+~#   Craig Heither, rev. 09-26-2018
+~#
+~#  ************************************************************************************************
+~#    Macro skims highway network to check for inaccesssible zones for each class of truck.
+~#
+~#    Skims are run on temporary scenario 90.
+~#      - Time skims are temporarily stored in mf90 (overwritten for each mode).
+~#      - Distance skims stored in mf91-mf94.
+~#      - Zones with no truck access are flagged in mo91-94.
+~#      - All temporary truck skim matrices deleted by prep_macros\distribute.trucks.
+~#
+~#    Submit with up to three arguments:
+~#        Argument 1: 3-digit scenario number
+~#
+~#        Argument 2: Flag to use link truck restrictions to distribute truck trips.
+~#			0 = do not use truck restrictions (distribution based on midday distances).
+~#			1 = use mode-specific truck restrictions (distribution based on mode-specific
+~#                          network skims and inaccessible zones).
+~#
+~#        Argument 3 (optional): Batch mode indicator flag to exit macro.
+~#
+~#     (e.g. "~<prep_macros\truck.class.skim.mac 100 1 1")
+~#
+~#		Revised 09-27-2018, Heither: this is now the primary truck distribution macro called by trip_gen.bat; updates:
+~#							- inaccessible calculations greatly sped up (now just matrix calculations, not iterating over matrices)
+~#							- calls distribute.trucks macro
+~#
+~#  ************************************************************************************************
+~# =================================================================================================
+~/
+reports=
+~/
+~z=%2%
+~/ batch mode indicator (0-interactive, 1-batch) to exit macro
+~y=0
+~x=%0%
+~+;~?x=3;~y=1
+~/
+~+;s=%1%05;~?e;~$>bad_scen
+~/ Scenario argument is valid.
+~#
+~o|39
+~#**********************************************************************
+~#  Set files.
+~#**********************************************************************
+~r2=90           /* storage matrix and skim scenario
+~+;~x=%r2%;~x+1
+batchin=data\vdf_free.in
+~t5=report\truck.skim.rpt
+~t6=report\truck.access.rpt
+~!if exist %t5% (del %t5%)
+~!if exist %t6% (del %t6%)
+reports=%t5%
+~#
+~#
+~#********************************************************************** 
+~#
+~#  Use free travel time volume delay functions for skimming.
+~#    Delete existing functions and batch in new functions.
+~#
+~#**********************************************************************
+4.12
+4
+fd1,fd10
+
+y
+q
+~#
+4.11
+2
+~#
+~#**********************************************************************
+~#  Make temporary network copy for skimming.
+~#**********************************************************************
+1.22
+~+;2;%r2%
+~?e
+~+; ;~$>ready
+yes
+~:ready
+~+;3;%s%;%r2%;temp network for truck skimming;yes;q
+~#
+~#
+~#**********************************************************************
+~#  Put @ftime into ul1
+~#**********************************************************************
+~+;2.41;1;yes;ul1;@ftime; ;!vdf=6,7; ;2;2;q
+~#
+~#
+~#**********************************************************************
+~#  Start loop.
+~#**********************************************************************
+~z=1
+~t4=b
+~t3=skim distance - class 
+~#
+~#
+~:startloop
+~t1=mf%x%
+~+;~?z=2;~t4=l
+~+;~?z=3;~t4=m
+~+;~?z=4;~t4=h
+~t2=%t4%time
+~t7=%t4%dist
+~#
+~#
+~#**********************************************************************
+~#  Initialize time and distance matrices and inaccessible zone matrix.
+~#**********************************************************************
+3.12
+2
+mf%r2%
+~+;~?e;~$>err1
+~+;yes;~$>end1
+~:err1
+~+; ;r
+~:end1
+~+;1;mf%r2%;%t2%;%t3% %t4%;0.0
+~#
+2
+%t1%
+~+;~?e;~$>err1
+~+;yes;~$>end1
+~:err1
+~+; ;r
+~:end1
+~+;1;%t1%;%t7%;%t3% %t4%;0.0
+~#
+2
+mo%x%
+~+;~?e;~$>err1
+~+;yes;~$>end1
+~:err1
+~+; ;r
+~:end1
+~+;1;mo%x%;%t4%nacc;mode %t4% no access;0.0;q
+~#
+~#
+~#**********************************************************************
+~#  Setup highway assignment.
+~#**********************************************************************
+5.11
+1          / fixed demand auto assignment
+~+;~?q=2;2 / Do a new assignment (option 2) if there is one present
+3          / option 3 = multiclass asmt
+%t4%       / mode used by primary class
+5          / assign additional demand
+ms97       / dummy matrix for assignment
+           / no veh occupancy matrix
+           / no additional demand matrix
+mf%r2%     / matrix to hold travel times  
+no         / don't change header
+4          / source for additional attrib = len
++          / path operator = addition
+           / threshold = none
+%t1%       / matrix to hold addl attrib (distance)   
+no         / don't change header
+1          / type of OD attrib = addl path attrib
+           / blank for no class 2 mode
+0          / number of iters
+           / default relative gap
+           / default normalized gap
+~#
+~#**********************************************************************
+~/  Run Skim - scenario %s%, mode %t4%
+~#**********************************************************************
+~+;5.22;1;2
+~#
+~#
+~#**********************************************************************
+~#  Find unconnected zones - mode %t4% using matrix calculations
+~#    Store Distance Skim Matrix Data in Scalar Matrix
+~#**********************************************************************
+~# ## -- First mask intrazonal so 0 distance isn't seen as a disconnect --
+~+;3.21;1;y;mf%x%;n;((p.ne.q)*mf%x%) + ((p.eq.q)*-0.1); ; ;n;1;
+~# ## -- Next store maximum distance from each origin in MO matrix [Zero means a disconnect] --
+~+;1;y;mo%x%;y;%t4%nacc;%t4% no access;~?q=1;y;0;mf%x%; ; ;n;.max.;1;
+~# ## -- Next convert to no access flag --
+~+;1;y;mo%x%;n;(mo%x%.eq.0); ; ;n;1;
+~# ## -- Now reset negative values to 0 so matrix can be used as regional distribution impedance base --
+~+;1;y;mf%x%;n;((mf%x%.ge.0)*mf%x%) + ((mf%x%.lt.0)*0); ; ;n;1;q
+~# ## -- Punch matrix to write report --
+~t5=report\%t4%_NoAccess.rpt
+~!if exist %t5% (del %t5%)
+batchout=%t5%
+~+;3.14;3;mo%x%; ;n;n;q
+~#
+~#
+~#********************************************************************** 
+~#  Increment counters and check if more modes to skim.
+~#**********************************************************************
+~x+1
+~z+1
+~+;~?z<5;~$startloop
+~#
+~#**********************************************************************
+~#  Delete Temporary Scenario %r1% and Full Matrices
+~#**********************************************************************
+~+;1.22;2;%r2%;yes;q
+~+;3.12;2;mf%r2%;y;q
+~#
+~/**********************************************************************
+~#
+~#
+~#********************************************************************** 
+~#  Call Distribute.trucks macro to complete distribution.
+~#**********************************************************************
+~<prep_macros\distribute.trucks %1% %2%
+~#
+~#
+~# -------------------------------------------------------------------------------
+~$>skip
+~#
+~:bad_scen
+~/
+~/ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~/   3-DIGIT SCENARIO DOES NOT MATCH EMMEBANK DATA!!!!!!!
+~/ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~:skip
+~#
+~o=6
+reports=
+batchin=
+batchout=
+~/ end of macro
+~#
+~+;~?y=1;q

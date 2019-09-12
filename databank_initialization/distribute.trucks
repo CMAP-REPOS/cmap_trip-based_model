@@ -1,0 +1,543 @@
+~/CATS TRUCK TRIP DISTRIBUTION. kww,ceb 7/05, kww revised trip lengths 1/06, kww 7/07 htruck weights
+~/                              cmh 5/09 - matrix cleanup at beginning & batch mode indicator
+~/
+~#                              Heither 03-30-2010 - t1 & t2 references updated
+~#                              Heither 08-12-2014 - added logic to use mode-specific truck skims
+~#                              Heither 06-30-2015 - added logic to check for NaN errors using p register; modify balancing parameters
+~#                              Heither 05-09-2017 - implement ATRI data calibration: use heavy truck seed matrix & ATRI distance distribution
+~#                              Heither 03-22-2018 - implement updated B-Plate trips and distribution
+~#                              Heither 09-26-2018 - Now called by truck.class.skim.mac.
+~#                                                   
+~#                                
+~#  ************************************************************************************************
+~#    Truck trip distribution macro.
+~#
+~#    Submit with two arguments:
+~#        Argument 1: 3-digit scenario number
+~#
+~#        Argument 2: Flag to use link truck restrictions to distribute truck trips.
+~#			0 = do not use truck restrictions (distribution based on midday distances).
+~#			1 = use mode-specific truck restrictions (distribution based on mode-specific
+~#                          network skims and inaccessible zones) -- the default.
+~#
+~#
+~#  ************************************************************************************************
+~# =================================================================================================
+reports=
+~/
+~z=%2%
+~/
+~# ################################
+~# -- SET GROWTH FACTOR HERE --
+~r104=1.15 ~/growth factor from base year (1% per year)
+~# ################################
+~#
+~#
+~/IDENTIFY DISTRIBUTION INPUTS
+~/
+~+;~t1=mo4   ;~/ p and a allocation base
+~+;~t2=mf47  ;~/ impedance base
+~/
+~/INITIALIZE CONTROL TOTALS ("WORKING POPULATION")
+~/   These are estimates for Year 2000
+~/
+~r100=2085000 ~/b-plate
+~r101= 246500 ~/light
+~r102= 229500 ~/medium
+~r103= 395000 ~/heavy - 108750
+~/
+~r100*%r104%
+~r101*%r104%
+~r102*%r104%
+~r103*%r104%
+~/
+~## -- Import Heavy Truck Production Seed Matrix 04-18-2017 --
+batchin=data\mo20.txt
+~+;3.11;2
+batchin=
+~#
+reports=report\truck.access.rpt
+~#**********************************************************************
+~# ## -- Set impedance matrices -- ##
+~#**********************************************************************
+~+;~t4=%t2%;~t5=%t2%;~t6=%t2%
+~?z=1
+~+;~t2=mf91;~t4=mf92;~t5=mf93;~t6=mf94
+~# #
+~#
+~/  Clean up matrices - 5/20/09
+~<useful_macros\delete.matrices 4 10
+q
+~<useful_macros\delete_matrix_named ms"bcvtot"
+~<useful_macros\delete_matrix_named ms"lcvtot"
+~<useful_macros\delete_matrix_named ms"mcvtot"
+~<useful_macros\delete_matrix_named ms"hcvtot"
+~<useful_macros\delete_matrix_named ms"balloc"
+~<useful_macros\delete_matrix_named mo"bcvp"
+~<useful_macros\delete_matrix_named md"bcva"
+~<useful_macros\delete_matrix_named mf"bcvt"
+~<useful_macros\delete_matrix_named ms"lalloc"
+~<useful_macros\delete_matrix_named mo"lcvp"
+~<useful_macros\delete_matrix_named md"lcva"
+~<useful_macros\delete_matrix_named mf"lcvt"
+~<useful_macros\delete_matrix_named ms"malloc"
+~<useful_macros\delete_matrix_named mo"mcvp"
+~<useful_macros\delete_matrix_named md"mcva"
+~<useful_macros\delete_matrix_named mf"mcvt"
+~<useful_macros\delete_matrix_named ms"halloc"
+~<useful_macros\delete_matrix_named mo"hcvp"
+~<useful_macros\delete_matrix_named md"hcva"
+~<useful_macros\delete_matrix_named mf"hcvt"
+~<useful_macros\delete_matrix_named mf"index"
+~<useful_macros\delete_matrix_named mf"bcvtr"
+~<useful_macros\delete_matrix_named mf"lcvtr"
+~<useful_macros\delete_matrix_named mf"mcvtr"
+~<useful_macros\delete_matrix_named mf"hcvtr"
+~<useful_macros\delete_matrix_named md"hnattr"
+~/
+3.21
+~+;1;y;ms"bcvtot";y;b-plate truck total;;%r100%;;;1;
+~+;1;y;ms"lcvtot";y;l-plate truck total;;%r101%;;;1;
+~+;1;y;ms"mcvtot";y;m-plate truck total;;%r102%;;;1;
+~+;1;y;ms"hcvtot";y;h-plate truck total;;%r103%;;;1;q
+~#
+~#**********************************************************************
+~## -- USE INACCESSIBLE ZONES TO RE-WEIGHT REGIONAL TRUCK ALLOCATION --
+~## --   MO4: LIGHT/MEDIUM TRUCKS    M020: HEAVY TRUCKS
+~## --    IF NO ISSUE OR MO91-94 DO NOT EXIST: USE NORMAL ALLOCATION --
+~#**********************************************************************
+~+;~?z=0;~$>skip
+~x=91
+~t7=b
+~t3=mo4
+~:setup_allocation
+~#
+~+;~?x=92;~t7=l
+~+;~?x=93;~t7=m
+~?x=94
+~+;~t7=h;~t3=mo20
+~#
+~t1=%mox.t%
+~t1=%t1.1%
+~?t1=%
+~+;3.12;1;mo%x%;%t7%nacc;mode %t7% no access;0;q
+~+;3.21;1;y;mo%x%;n;(mo%x%.eq.0)*%t3%; ; ;n;2;q
+~x+1
+~+;~?x<95;~$setup_allocation
+~#
+~:skip
+~#
+~#
+~#**********************************************************************
+~/ALLOCATE CONTROL TOTALS TO REGIONAL DISTRIBUTION 
+~#**********************************************************************
+~+;~?z=1;~t1=mo91
+3.21
+~/bcv
+~+;1;y;ms"balloc";y;p and a allocation base; ;%t1%; ; ;n; ;1; 
+~+;1;y;mo"bcvp";y;bcv productions; ;"bcvtot"*(%t1%/ms"balloc"); ; ;n;1; 
+~+;1;y;md"bcva";y;bcv attractions;;mo"bcvp"';;;n;1;
+~+;1;y;mf"bcvt";y;b-plate commercial vehicle trips; ;1/%t2%; ;%t2%; ;n;1;q
+~#
+~+;~?z=1;~t1=mo92
+3.21
+~/lcv
+~+;1;y;ms"lalloc";y;p and a allocation base; ;%t1%; ; ;n; ;1; 
+~+;1;y;mo"lcvp";y;lcv productions; ;"lcvtot"*(%t1%/ms"lalloc"); ; ;n;1; 
+~+;1;y;md"lcva";y;lcv attractions;;mo"lcvp"';;;n;1;
+~+;1;y;mf"lcvt";y;light commercial vehicle trips; ;1/%t4%; ;%t4%; ;n;1;q
+~#
+~+;~?z=1;~t1=mo93
+3.21
+~/mcv
+~+;1;y;ms"malloc";y;p and a allocation base; ;%t1%; ; ;n; ;1; 
+~+;1;y;mo"mcvp";y;mcv productions; ;"mcvtot"*(%t1%/ms"malloc"); ; ;n;1; 
+~+;1;y;md"mcva";y;mcv attractions;;mo"mcvp"';;;n;1;
+~+;1;y;mf"mcvt";y;medium commercial vehicle trips; ;1/%t5%; ;%t5%; ;n;1;q
+~#
+~+;~?z=1;~t1=mo94
+3.21
+~/hcv
+~+;1;y;ms"halloc";y;p and a allocation base; ;%t1%; ; ;n; ;1; 
+~+;1;y;mo"hcvp";y;hcv productions; ;"hcvtot"*(%t1%/ms"halloc"); ; ;n;1; 
+~+;1;y;md"hcva";y;hcv attractions;;mo"hcvp"';;;n;1;
+~+;1;y;mf"hcvt";y;heavy commercial vehicle trips; ;1/%t6%; ;%t6%; ;n;1;q
+~#
+~#
+~#**********************************************************************
+~/ BALANCE TO PRESCRIBED TRIP LENGTHS
+~#**********************************************************************
+~/reset balancing iterations
+~/
+3.22
+~+;3;35;;y
+q
+~/
+~/***************
+~/ bcv balancing
+~/***************
+~/
+~# ## -- collapse impedance matrix to 30 discrete values - mode b
+~+;3.21;1;y;mf"index";y;index for 3rd dimension;0;(int(%t2%/2)+1).min.30;;;n;2;q
+~/
+~/set each register equal to the total number of trucks held in this class
+~/
+~+;~r1=%r100%;~r2=%r100%;~r3=%r100%;~r4=%r100%;~r5=%r100%;~r6=%r100%;~r7=%r100%;~r8=%r100%
+~+;~r9=%r100%;~r10=%r100%;~r11=%r100%;~r12=%r100%;~r13=%r100%;~r14=%r100%;~r15=%r100%;~r16=%r100%
+~+;~r17=%r100%;~r18=%r100%;~r19=%r100%;~r20=%r100%;~r21=%r100%;~r22=%r100%;~r23=%r100%
+~+;~r24=%r100%;~r25=%r100%;~r26=%r100%;~r27=%r100%;~r28=%r100%;~r29=%r100%;~r30=%r100%
+~/
+~/allocate these totals to the following impedances classes
+~/
+~r1*0.171725
+~r2*0.191605
+~r3*0.171725
+~r4*0.144745
+~r5*0.119185
+~r6*0.037296
+~r7*0.029756
+~r8*0.023376
+~r9*0.019316
+~r10*0.015256
+~r11*0.012356
+~r12*0.010036
+~r13*0.008296
+~r14*0.006556
+~r15*0.005396
+~r16*0.004816
+~r17*0.004236
+~r18*0.003656
+~r19*0.003076
+~r20*0.002496
+~r21*0.002496
+~r22*0.001916
+~r23*0.001336
+~r24*0.001336
+~r25*0.001336
+~r26*0.001336
+~r27*0.001336
+~r28*0.001336
+~r29*0.001336
+~r30*0.001336
+~/
+~# -- Set balancing parameters
+~+;3.22;3;30;0.001;n
+~#
+2
+mf"bcvt"        /this is the matrix to be balanced
+~/these are productions and attractions for the trips
+mo"bcvp"        /productions
+md"bcva"         /attractions
+n
+mf"index"       /this is the 3d index matrix
+~/ following is the third dimension array
+~+;%r1%;%r2%;%r3%;%r4%;%r5%;%r6%;%r7%;%r8%;%r9%;%r10%;%r11%
+~+;%r12%;%r13%;%r14%;%r15%;%r16%;%r17%;%r18%;%r19%;%r20%
+~+;%r21%;%r22%;%r23%;%r24%;%r25%;%r26%;%r27%
+~+;%r28%;%r29%;%r30%;//
+
+~+;2;1;mf"bcvtr";y;b-plate trucks balanced;0;2;q
+~#
+~/***************
+~/ lcv balancing
+~/***************
+~/
+~+;3.12;2;mf"index";y;q
+~# ## -- collapse impedance matrix to 30 discrete values - mode l
+~+;3.21;1;y;mf"index";y;index for 3rd dimension;0;(int(%t4%/2)+1).min.30;;;n;2;q
+~#
+~/set each register equal to the total number of trucks held in this class
+~/
+~+;~r1=%r101%;~r2=%r101%;~r3=%r101%;~r4=%r101%;~r5=%r101%;~r6=%r101%;~r7=%r101%;~r8=%r101%
+~+;~r9=%r101%;~r10=%r101%;~r11=%r101%;~r12=%r101%;~r13=%r101%;~r14=%r101%;~r15=%r101%;~r16=%r101%
+~+;~r17=%r101%;~r18=%r101%;~r19=%r101%;~r20=%r101%;~r21=%r101%;~r22=%r101%;~r23=%r101%
+~+;~r24=%r101%;~r25=%r101%;~r26=%r101%;~r27=%r101%;~r28=%r101%;~r29=%r101%;~r30=%r101%
+~/
+~/allocate these totals to the following impedances classes
+~/
+~r1*0.108367
+~r2*0.124367
+~r3*0.115367
+~r4*0.100367
+~r5*0.084367
+~r6*0.070367
+~r7*0.059367
+~r8*0.047367
+~r9*0.040367
+~r10*0.034367
+~r11*0.028367
+~r12*0.023367
+~r13*0.020367
+~r14*0.017367
+~r15*0.015367
+~r16*0.013367
+~r17*0.012367
+~r18*0.010367
+~r19*0.009367
+~r20*0.008367
+~r21*0.008367
+~r22*0.005367
+~r23*0.005367
+~r24*0.005367
+~r25*0.005367
+~r26*0.005367
+~r27*0.005367
+~r28*0.005367
+~r29*0.005367
+~r30*0.005367
+~/
+~# -- Set balancing parameters
+~+;3.22;3;30;0.001;n
+~#
+2
+mf"lcvt"        /this is the matrix to be balanced
+~/these are productions and attractions for the trips
+mo"lcvp"        /productions
+md"lcva"         /attractions
+n
+mf"index"       /this is the 3d index matrix
+~/ following is the third dimension array
+~+;%r1%;%r2%;%r3%;%r4%;%r5%;%r6%;%r7%;%r8%;%r9%;%r10%;%r11%
+~+;%r12%;%r13%;%r14%;%r15%;%r16%;%r17%;%r18%;%r19%;%r20%
+~+;%r21%;%r22%;%r23%;%r24%;%r25%;%r26%;%r27%
+~+;%r28%;%r29%;%r30%;//
+ 
+~+;2;1;mf"lcvtr";y;l-plate trucks balanced;0;2;q
+~#
+~/***************
+~/ mcv balancing
+~/***************
+~/
+~+;3.12;2;mf"index";y;q
+~# ## -- collapse impedance matrix to 30 discrete values - mode m
+~+;3.21;1;y;mf"index";y;index for 3rd dimension;0;(int(%t5%/2)+1).min.30;;;n;2;q
+~#
+~/set each register equal to the total number of trucks held in this class
+~/
+~+;~r1=%r102%;~r2=%r102%;~r3=%r102%;~r4=%r102%;~r5=%r102%;~r6=%r102%;~r7=%r102%;~r8=%r102%
+~+;~r9=%r102%;~r10=%r102%;~r11=%r102%;~r12=%r102%;~r13=%r102%;~r14=%r102%;~r15=%r102%;~r16=%r102%
+~+;~r17=%r102%;~r18=%r102%;~r19=%r102%;~r20=%r102%;~r21=%r102%;~r22=%r102%;~r23=%r102%
+~+;~r24=%r102%;~r25=%r102%;~r26=%r102%;~r27=%r102%;~r28=%r102%;~r29=%r102%;~r30=%r102%
+~/
+~/allocate these totals to the following impedances classes
+~/
+~r1*0.098133
+~r2*0.113133
+~r3*0.107133
+~r4*0.096133
+~r5*0.084133
+~r6*0.071133
+~r7*0.061133
+~r8*0.050133
+~r9*0.043133
+~r10*0.036133
+~r11*0.030133
+~r12*0.026133
+~r13*0.022133
+~r14*0.019133
+~r15*0.016133
+~r16*0.014133
+~r17*0.013133
+~r18*0.011133
+~r19*0.010133
+~r20*0.009133
+~r21*0.008133
+~r22*0.008133
+~r23*0.008133
+~r24*0.007133
+~r25*0.007133
+~r26*0.007133
+~r27*0.007133
+~r28*0.005133
+~r29*0.005133
+~r30*0.005133
+~/
+~# -- Set balancing parameters
+~+;3.22;3;30;0.0015;n
+~#
+2
+mf"mcvt"        /this is the matrix to be balanced
+~/these are productions and attractions for the trips
+mo"mcvp"        /productions
+md"mcva"         /attractions
+n
+mf"index"       /this is the 3d index matrix
+~/ following is the third dimension array
+~+;%r1%;%r2%;%r3%;%r4%;%r5%;%r6%;%r7%;%r8%;%r9%;%r10%;%r11%
+~+;%r12%;%r13%;%r14%;%r15%;%r16%;%r17%;%r18%;%r19%;%r20%
+~+;%r21%;%r22%;%r23%;%r24%;%r25%;%r26%;%r27%
+~+;%r28%;%r29%;%r30%;//
+ 
+~+;2;1;mf"mcvtr";y;m-plate trucks balanced;0;2;q
+~/
+~/***************
+~/ hcv balancing - ATRI data analysis
+~/***************
+~/
+~+;3.12;2;mf"index";y;q
+~# ## -- collapse impedance matrix to 30 discrete values - mode h: now bins based on ATRI data (05-09-2017)
+~# ##   --- use 2-mile bins for trips under 18 miles
+~# ##   --- use 3-mile bins for trips 18 miles up to 30 miles
+~# ##   --- use 5-mile bins for trips of 30 miles or more
+~+;3.21;1;y;mf"index";y;index for 3rd dimension;0
+(%t6%.lt.18)*((int(%t6%/2)+1).min.30) +
+(%t6%.ge.18 .and. %t6%.lt.30)*((int(%t6%/3)+4).min.30) +
+(%t6%.ge.30)*((int(%t6%/5)+8).min.30)
+
+~+;;n;2;q
+~#
+~/set each register equal to the total number of trucks held in this class
+~/
+~+;~r1=%r103%;~r2=%r103%;~r3=%r103%;~r4=%r103%;~r5=%r103%;~r6=%r103%;~r7=%r103%;~r8=%r103%
+~+;~r9=%r103%;~r10=%r103%;~r11=%r103%;~r12=%r103%;~r13=%r103%;~r14=%r103%;~r15=%r103%;~r16=%r103%
+~+;~r17=%r103%;~r18=%r103%;~r19=%r103%;~r20=%r103%;~r21=%r103%;~r22=%r103%;~r23=%r103%
+~+;~r24=%r103%;~r25=%r103%;~r26=%r103%;~r27=%r103%;~r28=%r103%;~r29=%r103%;~r30=%r103%
+~/
+~/allocate these totals to the following impedances classes - ATRI data analysis
+~/
+~r1*0.125
+~r2*0.096
+~r3*0.088
+~r4*0.052
+~r5*0.031
+~r6*0.031
+~r7*0.026
+~r8*0.023
+~r9*0.021
+~r10*0.038
+~r11*0.039
+~r12*0.030
+~r13*0.035
+~r14*0.045
+~r15*0.037
+~r16*0.033
+~r17*0.033
+~r18*0.027
+~r19*0.021
+~r20*0.020
+~r21*0.020
+~r22*0.018
+~r23*0.016
+~r24*0.017
+~r25*0.012
+~r26*0.010
+~r27*0.010
+~r28*0.010
+~r29*0.006
+~r30*0.030
+~/
+~# -- Set balancing parameters
+~+;3.22;3;30;0.001;n
+~#
+2
+mf"hcvt"        /this is the matrix to be balanced
+~/these are productions and attractions for the trips
+mo"hcvp"        /productions
+md"hcva"         /attractions
+n
+mf"index"       /this is the 3d index matrix
+~/ following is the third dimension array
+~+;%r1%;%r2%;%r3%;%r4%;%r5%;%r6%;%r7%;%r8%;%r9%;%r10%;%r11%
+~+;%r12%;%r13%;%r14%;%r15%;%r16%;%r17%;%r18%;%r19%;%r20%
+~+;%r21%;%r22%;%r23%;%r24%;%r25%;%r26%;%r27%
+~+;%r28%;%r29%;%r30%;//
+
+~+;2;1;mf"hcvtr";y;h-plate trucks balanced;0;2;q
+~/
+~/
+~/CLEAN UP
+~/
+3.12
+~+;2;ms"bcvtot";y
+~+;2;ms"lcvtot";y
+~+;2;ms"mcvtot";y
+~+;2;ms"hcvtot";y
+~+;2;ms"balloc";y
+~+;2;mo"bcvp";y
+~+;2;md"bcva";y
+~+;2;mf"bcvt";y
+~+;2;ms"lalloc";y
+~+;2;mo"lcvp";y
+~+;2;md"lcva";y
+~+;2;mf"lcvt";y
+~+;2;ms"malloc";y
+~+;2;mo"mcvp";y
+~+;2;md"mcva";y
+~+;2;mf"mcvt";y
+~+;2;ms"halloc";y
+~+;2;mo"hcvp";y
+~+;2;md"hcva";y
+~+;2;mf"hcvt";y
+~+;2;mf"index";y
+~+;2;mo20;y
+q
+~/
+~<useful_macros/delete.matrices 91 94
+q
+~#
+~+;~?z=0;~$>skip
+~<useful_macros\delete_matrix_named mo"bnacc"
+~<useful_macros\delete_matrix_named mo"lnacc"
+~<useful_macros\delete_matrix_named mo"mnacc"
+~<useful_macros\delete_matrix_named mo"hnacc"
+~<useful_macros\delete_matrix_named md"hnacc"
+~:skip
+~#
+~#
+~/slide mfs into their proper position
+3.12
+~+;4;1;mf6;mf4;y;bcvtr;b-plate trucks balanced %r104%; ;n
+~+;2;mf6;y;q
+3.12
+~+;4;1;mf7;mf5;y;lcvtr;l-plate trucks balanced %r104%; ;n
+~+;2;mf7;y;q
+3.12
+~+;4;1;mf8;mf6;y;mcvtr;m-plate trucks balanced %r104%; ;n
+~+;2;mf8;y;q
+3.12
+~+;4;1;mf9;mf7;y;hcvtr;h-plate trucks balanced %r104%; ;n
+~+;2;mf9;y;q
+~#
+~# =================================================================================================
+~#  ## -- Report Truck Trip Totals  -- ##
+~# =================================================================================================
+reports=report\truck.access.rpt
+~+;~>>report\truck.access.rpt;~"# ===========================================;~"###-- Distributed Truck Matrix Totals --###;~>
+~#
+~# -- Use p register 2031 (number of NaN operations in current module) to flag errors and stop program --
+~p=2031
+3.21
+~+;1;n;mf4; ; ;n;+;+;2
+~r50=%p%
+q
+~+;~>>report\truck.access.rpt;~"  ;~"### -- B truck: %r50% NaN operations detected -- ###;~>
+~?r50>0
+~+;~>>report\stop_truck_distribution.txt;~"### -- Review truck.access.rpt for NaN errors -- ###;~>
+~#
+3.21
+~+;1;n;mf5; ; ;n;+;+;2
+~r50=%p%
+q
+~+;~>>report\truck.access.rpt;~"  ;~"### -- L truck: %r50% NaN operations detected -- ###;~>
+~?r50>0
+~+;~>>report\stop_truck_distribution.txt;~"### -- Review report\truck.access.rpt for NaN errors -- ###;~>
+~#
+3.21
+~+;1;n;mf6; ; ;n;+;+;2
+~r50=%p%
+q
+~+;~>>report\truck.access.rpt;~"  ;~"### -- M truck: %r50% NaN operations detected -- ###;~>
+~?r50>0
+~+;~>>report\stop_truck_distribution.txt;~"### -- Review report\truck.access.rpt for NaN errors -- ###;~>
+~#
+3.21
+~+;1;n;mf7; ; ;n;+;+;2
+~r50=%p%
+q
+~+;~>>report\truck.access.rpt;~"  ;~"### -- H truck: %r50% NaN operations detected -- ###;~>
+~?r50>0
+~+;~>>report\stop_truck_distribution.txt;~"### -- Review report\truck.access.rpt for NaN errors -- ###;~>
+~#
+~:end
+reports=
+

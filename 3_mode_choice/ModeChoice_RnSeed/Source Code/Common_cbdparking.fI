@@ -1,0 +1,34 @@
+C***********************************************************************
+C
+C     COMMON BLOCKS FOR CBD PARKING MODEL
+C
+C***********************************************************************
+C  
+C     array dimensions and index default values changed by englund
+C     june 30, 1998 to accomodate quarter-quarter section zones in
+C     zone95 cbd.
+C
+C     MAXIMUM ARRAY SIZES CHANGED BY EASH, DEFAULT VALUES ARE SET FOR
+C     ZONE95 CBD, WHICH INCLUDES QUARTER-QUARTER-SECTIONS
+C
+C     array dimesions changed:
+C        cbdzon(200) formerly (40)
+C        cbdprk(200,5,4) formerly (20,5,4)
+C        pkzn(200) formerly (20)
+C
+C     array index defaults changed:
+C        zones=1778 formerly =1640
+C
+	COMMON/GORDON/ PKZN, CBDPRK, prkadj
+
+	INTEGER*4 PKZN(200), CBDPRK(200,5,4)
+
+c  #########################################################
+c  ###     Addition for new parking cost adjustment      ###
+c  #########################################################
+c
+      real*4 prkadj(5,7)
+c
+c  #########################################################
+c  ###     end Addition for new parking cost adjustment  ###
+c  #########################################################

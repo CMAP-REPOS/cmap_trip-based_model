@@ -1,0 +1,61 @@
+C***********************************************************************
+C
+C     COMMON BLOCKS FOR EMME INPUT AND OUTPUT SUBROUTINES TO READ 
+C     EMME DATABANK
+C
+C***********************************************************************
+
+      COMMON/EMMEBANK/ EMME_FILE_OFFSET,  EMME_FILE_TYPE,
+     A EMME_FILE_NUM_RECORDS, EMME_FILE_WORD_RECORD
+
+      INTEGER*4 EMME_FILE_OFFSET(200), EMME_FILE_TYPE(200),
+     A EMME_FILE_NUM_RECORDS(200), EMME_FILE_WORD_RECORD(200)
+
+      COMMON/BANKDIM/ iptit, mscen, mcent, mnode, mlink, mturn, 
+     A mline, mlseg, mmat, mfunc, moper
+
+      INTEGER*4 iptit(40)
+
+C***********************************************************************
+C 
+C     NOTE THAT INDEX FOR THESE ARRAYS IS ONE PLUS EMME/2 FILE NUMBER
+C
+C***********************************************************************
+C
+C     OFFSET = LOCATION OF FIRST WORD IN FILE
+C
+C     TYPE = FILE TYPE
+C
+C     NUM_RECORDS = NUMBER OF RECORDS IN FILE
+C
+C     WORD_RECORD = NUMBER OF WORDS PER RECORD
+C
+C***********************************************************************
+C
+C     iptit(40) = EMMEBANK PROJECT TITLE (2 CHARACTERS/WORD)
+C
+C     mscen = MAXIMUM NUMBER OF SCENARIOS IN DATABANK
+C
+C     mcent = MAXIMUM NUMBER OF CENTROIDS IN DATABANK
+C
+C     mnode = MAXIMUM NUMBER OF NODES IN DATABANK
+C
+C     mlink = MAXIMUM NUMBER OF LINKS IN DATABANK
+C
+C     mturn = MAXIMUM LENGTH OF TURN PENALTY TABLE
+C
+C     mline = MAXIMUM NUMBER OF LINES IN DATABANK
+C
+C     mlseg = MAXIMUM NUMBER OF LINE SEGMENTS IN DATABANK
+C
+C     mmat = MAXIMUM NUMBER OF MATRICES IN DATABANK
+C
+C     mfunc = MAXIMUM NUMBER OF FUNCTIONS PER FUNCTION CLASS
+C
+C     moper = MAXIMUM NUMBER OF OPERATORS PER FUNCTION CLASS
+C
+C***********************************************************************
+      COMMON/EBANK/ APTRIP, APTRIP_1, APTRIP_2, APTRIP_3
+      
+      REAL*4  APTRIP(4000), APTRIP_1(4000), APTRIP_2(4000), 
+     A  APTRIP_3(4000), APTRIP_HW_L(4000), APTRIP_HW_H(4000)

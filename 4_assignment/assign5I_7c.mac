@@ -1,0 +1,183 @@
+
+~/
+~/**********************************************************************
+~/********************************************************************** 
+~/
+~/  assign5I_7c.mac %1% %2%
+~/         where %1% = three digit alternative ID number
+~/               %2% = time period number
+~/
+~/  The replaceable parameter is used in weighting @tollv below
+~/
+~/  arranged by Stryker, 9/22 - based on work by Eash
+~/  Revised by DBE for emission calc changes with Mobile6, Dec 2002 ***
+~/  Revised by DBE to have correct number of hours applied to @tollv
+~/          pseudo capacity consistent with time period.  the calling   
+~/          macro was also modified to pass the scenario counter (=%y%)
+~/          which is the last digit of scenario).  Also increased number
+~/          of iterations: tollv 25 to 30 & tod 35 to 50 - 4Sep2003
+~/  Revised by DBE 21Apr2004 for five class assignment.
+~/  Revised by DBE 21Apr2004 for five class assignment w/ turns saved
+~/          in extra attribs.
+~/  Revised by DBE 22May2004 for two class assignment w/ turns saved
+~/          in extra attribs for use in full model batch run.
+~/  Revised by DBE 1OCT2004 for five class assignment with turns within
+~/          fulliter
+~/  Revised by DBE 15OCT2004 for new vdf for initial paths (w/ vdf=9)
+~/  Revised by DBE 29JUL2009 for I-290 HOV
+~/  Modified by DBE for multi-CPU test (5.21 changed to 5.22) with
+~/   relative gap = 0.05
+~/   normalized gap (time) = 0.10
+~/   interations increased: 300 for tollv and 500 for tod
+~/
+~/  7-class version: S is primary class
+~/
+~#           - - - - - - - - - - - - - - - - - - - - - - - - 
+~#  Revised by CMH 06-10-2011: test path-based assignment procedures.    
+~#  Revised by CMH 02-14-2012: 1). Adjusted asmt modes so b-plates not restricted.  
+~#                             2). Use paths from previous global iteration.
+~#
+~#  Revised by CMH 02-07-2013: 1). SOV is first vehicle class.
+~#                             2). Includes revised warm start logic.
+~#                             2). Use paths from previous global iteration.
+~#
+~#  Revised by Bozic/Stratton April 2013: bucket rounding forced to be non-negative.
+~#  Revised by NRF 02-10-2015: change from 6 classes to 7 classes by dividing HOV into HOV2 and HOV3+
+~#  Revised by NRF 06-04-2015: tighter closure criteria
+~#  Revised by CMH 07-21-2016: implement toll generalized cost assignment (@tollv no longer needed)
+~#  TOD functions now reference el2, @busveq  bozic 3-23-2017
+~#  Revised by Heither 11-27-2017: use DLL for pre-compiled functions (VDF_TOD only); reduced initial path cost equality tolerance & refined proportion
+~/ 
+~/**********************************************************************
+~/    Prepare scenario for auto assignment
+~/**********************************************************************
+reports=report\iter_%ms98%\assign_%s%.rxt
+~o|39
+~x=%ms98%
+~/
+~/**********************************************************************
+~/   Bring in TOD volume delay functions.
+~/**********************************************************************
+~/
+~/ delete current functions
+~+;4.12;4;fd1,fd10; ;~?e;~$>err;y
+~:err
+q
+~/
+batchin=data\vdf_tod.in
+~+;4.11;2;
+~/
+~/***Set up path-based assignment
+~# Use bucket rounding to convert to integers rather than using 5.25 option 1
+3.21
+~+;1;y;mf13;n;(bint(mf13).max.0); ; ;n;2
+~+;1;y;mf18;n;(bint(mf18).max.0); ; ;n;2
+~+;1;y;mf14;n;(bint(mf14).max.0); ; ;n;2
+~+;1;y;mf15;n;(bint(mf15).max.0); ; ;n;2
+~+;1;y;mf16;n;(bint(mf16).max.0); ; ;n;2
+~+;1;y;mf17;n;(bint(mf17).max.0); ; ;n;2;q
+~#
+~#
+~# ##-- Move DLL into active folder for use --##
+~!if exist data\emmepcf64.dll (copy data\emmepcf64.dll /y)
+~#
+~#
+~/
+~/**********************************************************************
+~/  Run assignment 
+~/**********************************************************************
+~/
+5.25
+2                 / assignment setup and execution
+~+;~?q=2;2        / if paths from this assignment are available, option 2=new setup
+1                 / option 1 = no additional volumes
+S                 / mode used by primary class
+~+;@toll;%ms84%   / fixed link cost and weight for class
+mf13              / demand matrix (veq) for class 1
+H                 / mode used by class 2
+~+;@toll;%ms85%   / fixed link cost and weight for class
+mf18              / demand matrix (veq) for class 2
+b                 / mode used by class 3
+~+;@toll;%ms86%   / fixed link cost and weight for class
+mf14              / demand matrix (veq) for class 3
+l                 / mode used by class 4
+~+;@toll2;%ms87%  / fixed link cost and weight for class
+mf15              / demand matrix (veq) for class 4
+m                 / mode used by class 5
+~+;@toll3;%ms88%  / fixed link cost and weight for class
+mf16              / demand matrix (veq) for class 5
+h                 / mode used by class 6
+~+;@toll4;%ms89%  / fixed link cost and weight for class
+mf17              / demand matrix (veq) for class 6
+
+~+;~?q=3;2        / if existing assignment, option 2=start with existing paths [from previous global iteration] & reset iteration counter
+2000              / maximum memory for paths (MB)
+0.005             / initial path cost equality tolerance (intially 0.01)
+20                / refinement iteration
+0.001             / refined proportion (initially 0.005)
+5                 / compute gap every __ iterations
+50                / max. iterations
+0.05              / best relative gap
+0.0005            / relative gap
+0.005             / normalized gap
+2
+
+~#
+~# ===================================================
+~# -- Store Class-Specific Volumes & Turn Volumes --
+~# ===================================================
+6.16
+3
+~+;@vauto;n;@tauto;n
+~+; ; 
+~+;@vbplt;n;@tbplt;n 
+~+;@vlght;n;@tlght;n
+~+;@vmed;n;@tmed;n
+~+;@vhevy;n;@thevy;n
+2
+4
+length
+
++
+0,99999
+3
+1
+~+; ; ; ; ; 
+~+;mf92; ; ;@vhov2;n;@thov2;n    /* pull HOV2 volumes and turn volumes from all HOV demand assignment
+~+; ; ; ; ; 
+~+; ; ; ; ; 
+~+; ; ; ; ; 
+~+; ; ; ; ; 
+2
+4
+length
+
++
+0,99999
+3
+1
+~+; ; ; ; ; 
+~+;mf93; ; ;@vhov3;n;@thov3;n    /* pull HOV3+ volumes and turn volumes from all HOV demand assignment
+~+; ; ; ; ; 
+~+; ; ; ; ; 
+~+; ; ; ; ; 
+~+; ; ; ; ; 
+2
+q
+~#
+~/**********************************************************************
+~/
+~/   Sum Period%2% vmt (and time stamp)
+~/
+~/**********************************************************************
+2.41
+~+;1;n;volau*len; ;all;2;2;q
+~#
+~# ##-- Delete DLL from active folder --## 
+~!if exist emmepcf64.dll (del emmepcf64.dll /Q)
+~#
+~:end_of_macro
+reports=
+batchin=
+~/**********************************************************************
+~/**********************************************************************

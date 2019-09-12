@@ -1,0 +1,42 @@
+~/batchin trip productions and attractions
+~/  cmh modified 5/19/09: create batch mode register y
+~/ set up y to store batch mode (0-interactive, 1-batch)
+~y=0
+~x=%0%
+~+;~?x=1;~y=1
+~/
+batchin=tg\sas\data\hwplo.in
+3.11
+1
+
+batchin=tg\sas\data\hwphi.in
+3.11
+1
+
+batchin=tg\sas\data\hop.in
+3.11
+1
+
+batchin=tg\sas\data\nhp.in
+3.11
+1
+
+batchin=tg\sas\data\hwalo.in
+3.11
+1
+
+batchin=tg\sas\data\hwahi.in
+3.11
+1
+
+batchin=tg\sas\data\hoa.in
+3.11
+1
+
+batchin=tg\sas\data\nha.in
+3.11
+1
+
+batchin=batchin
+~?y=1
+q

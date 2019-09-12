@@ -1,0 +1,90 @@
+C***********************************************************************
+C
+C     COMMON BLOCKS FOR SUBZONE GEOGRAPHY MATCHFILE 
+C
+C***********************************************************************
+C
+C     SZ_NUM = TG SUBZONE NUMBER
+C     SZ_CO = TG SUBZONE FIPS COUNTY CODE
+C     SZ_CONAME = TG SUBZONE ALPHANAMERIC COUNTY NAME (CHAR*10)
+C     SZ_STATE = TG SUBZONE ALPHANUMERIC STATE CODE (CHAR*2)
+C     SZ_PUMA1 = TG SUBZONE ONE PERCENT PUMS AREA 
+C     SZ_PUMA5 = TG SUBZONE FIVE PERCENT PUMS AREA
+C     SZ_ZONE = TG SUBZONE TRANSPORTATION MODEL ZONE
+C     SZ_CHI = TG SUBZONE CHICAGO CODE (0/1)
+C     SZ_CBD = TG SUBZONE CHICAGO CBD CODE (0/1) 
+C     SZ_ROWCOL = ROW-COLUMN VECTORS TO BE USED FOR ITERATIVE 
+C                 PROPORTIONAL FITTING OF TG SUBZONE 
+C     SZ_AREA = TG SUBZONE AREA IN SQUARE MILES
+C
+C***********************************************************************
+
+      COMMON/GEO1/ SZ_PUMA5, SZ_NUM, SZ_CO, SZ_CONAME, SZ_STATE, 
+     A  SZ_PUMA1, SZ_ZONE, SZ_CHI, SZ_CBD, SZ_ROWCOL, SZ_AREA
+
+	INTEGER*2 SZ_NUM(25000), SZ_ZONE(25000), 
+     A  SZ_CHI(25000), SZ_CBD(25000), SZ_ROWCOL(25000) 
+
+	INTEGER*4 SZ_PUMA5(25000), SZ_CO(25000), SZ_PUMA1(25000)
+      
+	REAL*4 SZ_AREA(25000)
+	
+	CHARACTER*10 SZ_CONAME(25000)
+	
+	CHARACTER*2 SZ_STATE(25000)
+
+C***********************************************************************
+C
+C     CO_NUM = COUNTY FIPS COUNTY CODE
+C     CO_CONAME = ALPHANUMERIC COUNTY NAME (CHAR*10)
+C
+C***********************************************************************
+
+      COMMON/GEO2/ CO_NUM, CO_CONAME, CO_STATE
+
+	INTEGER*4 CO_NUM(30)
+
+	CHARACTER*10 CO_CONAME(30)
+
+C***********************************************************************
+C
+C     P5_NUM = FIVE PERCENT PUMS AREA NUMBER
+C     P5_STATE = FIVE PERCENT PUMS AREA ALPHANUMERIC STATE CODE (CHAR*2)
+C     P5_PUMA1 = FIVE PERCENT PUMS AREA ONE PERCENT PUMS AREA 
+C     P5_ROWCOL = ROW-COLUMN VECTORS TO BE USED FOR ITERATIVE 
+C                 PROPORTIONAL FITTING OF TG SUBZONE 
+C
+C***********************************************************************
+
+      COMMON/GEO3/ P5_NUM, P5_STATE, P5_PUMA1, P5_ROWCOL
+		
+	INTEGER*2 P5_ROWCOL(100)
+	
+	INTEGER*4 P5_NUM(100), P5_PUMA1(100)
+	
+	CHARACTER*2 P5_STATE(100)
+
+C***********************************************************************
+C
+C     P1_NUM = ONE PERCENT PUMS AREA NUMBER
+C     P1_STATE = ONE PERCENT PUMS AREA ALPHANUMERIC STATE CODE (CHAR*2)
+C
+C***********************************************************************
+
+      COMMON/GEO4/ P1_NUM, P1_STATE, P1_ROWCOL
+	
+	INTEGER*2 P1_ROWCOL(30)
+
+	INTEGER*4 P1_NUM(30)
+
+	CHARACTER*2 P1_STATE(30)
+
+C***********************************************************************
+C
+C     Z_NUM = MODEL ZONE NUMBER
+C
+C***********************************************************************
+
+      COMMON/GEO5/ Z_NUM
+	
+	INTEGER*4 Z_NUM(5000)

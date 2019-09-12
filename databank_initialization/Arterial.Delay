@@ -1,0 +1,830 @@
+~/
+~$>skip
+~/***********************************************************************
+~/***********************************************************************
+~/
+~/  Macro Arterial.Delay
+~/
+~/***********************************************************************
+~/  This macro calculates the intersection characteristics needed to 
+~/    calculate arterial and expressway to arterial intersection delays.
+~/    Cycle length and green to cycle ratios are estimated at nodes
+~/    that are likely to have signalized intersections.  The macro
+~/    Ftime.Capacity must precede this macro because it requires the
+~/    additional link attribute @artfc (arterial functional class).
+~/***********************************************************************
+~/
+~/  Written by Eash, February 1996
+~/    
+~/    Revised April 10, 1996
+~/    Revixed May 2, 1966
+~/    Revised August 2, 1966 (for EMME/2 Release 8.0)
+~#
+~#  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+~#   Heither notes, 12/03/2010:
+~#    The only improvement included from Eash's I-290 setup is tmpi6 &tmpi7 (tmpi7 & tmpi9
+~#    in Eash original) which flags links broken by centroid conectors &
+~#    Zeroes out tmpl3 for two approaches when is ONLY broken by centroid conector. 
+~#  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+~/
+~/***********************************************************************
+~/  The following variables and extra attributes are used in this macro.
+~/  Link variables must be defined as shown below. 
+~/
+~/    Node Variables required at start of macro:
+~/ 
+~/       @zone = 2009 zone within which node i is located
+~/       @atype = area type within which node i is located
+~/            
+~/            1 = inside Chicago CBD (2007 zones 1-47)
+~/            2 = remainder of Chicago Central Area (2007 zones 48-77)
+~/            3 = remainder of City of Chicago (2007 zones 78-309)
+~/            4 = inside inner ring suburbs where the Chicago major
+~/                and minor arterial street grid is continued
+~/            5 = remainder of Illinois portion of Chicago Urbanized Area
+~/            6 = Indiana portion of Chicago Urbanized Area
+~/            7 = other Urbanized Areas and Urban Clusters within the MPO Metropolitan Planning
+~/                Area plus other Urbanized Areas in northeastern Illinois
+~/            8 = other Urbanized Areas and Urban Clusters in northwestern Indiana
+~/            9 = remainder of MPO Metropolitan Planning Area
+~/           10 = remainder of Lake Co., IN (rural)
+~/           11 = external area  
+~/           99 = points of entry - not defined in Capacity Zone system
+~/
+~/    Link Variables required at start of macro:
+~/
+~/        modes:  A = Generalized auto
+~/                S = Single occupant auto
+~/                H = High occupancy vehicle
+~/                T = General truck
+~/                b = B plate truck
+~/                l = Light truck
+~/                m = Medium truck
+~/                h = heavy truck
+~/
+~/        lanes = number of driving lanes
+~/          vdf:  1 = arterial street
+~/                2 = freeway
+~/                3 = freeway/expressway to arterial street
+~/                4 = expressway
+~/                5 = freeway/expressway to freeway/expressway ramp
+~/                6 = auto access to network
+~/                7 = link where toll is paid
+~/                8 = metered expressway entrance ramp
+~/
+~/       link type = old CATS functional class
+~/   
+~/       @speed = link free speed copied from CATS network
+~/       @parkl = number of parking lanes on link copied from CATS
+~/                network
+~/       @width = one-way width of link in feet copied from CATS network
+~/       @avelw = average width of link's driving lanes computed from
+~/                @width, lan and @parkl
+~/       @artfc = arterial functional class used in capacity calculations
+~/                1 = principal
+~/                2 = major
+~/                3 = minor
+~/                4 = collector
+~/
+~/    Node Variables calculated in macro:
+~/
+~/        @cycle = cycle length at node i intersection
+~/
+~/    Link Variables Calculated in macro:
+~/
+~/        @gc = green to cycle ratio for link
+~/***********************************************************************
+~/*********************************************************************** 
+~/
+~/  Delete old cycle lengths and green/cycle ratios, if necessary
+~/
+~/***********************************************************************
+~:skip
+reports=reports
+2.42
+3
+@gc
+~?e
+~$>err2
+y
+q
+~$>end2
+~:err2
+
+q
+~:end2
+2.42
+3
+@cycle
+~?e
+~$>err3
+y
+q
+~$>end3
+~:err3
+
+q
+~:end3
+~/
+~/***********************************************************************
+~/
+~/  Initialize @gc and @cycle
+~/
+~/***********************************************************************
+2.42
+2
+2
+@gc
+green to cycle ratio on link
+0.0
+2
+1
+@cycle
+cycle length at node in minutes
+0.0
+q
+~/
+~/***********************************************************************
+~/
+~/  Calculations for arterial streets vdf=1
+~/
+~/*********************************************************************** 
+~/
+~/  Following series of calculations determine the number
+~/    and types of inbound links to a node (j node variable)
+~/
+~/      tmpi1 = number of freeway-arterial ramp approaches (vdf=3)
+~/      tmpi2 = number of collector arterial approaches (@artfc=4)
+~/      tmpi3 = number of minor arterial approaches (@artfc=3)
+~/      tmpi4 = number of major arterial approaches (@artfc=2)
+~/      tmpi5 = number of principal arterial approaches (@artfc=1)
+~/              combined with freeway (vdf=2) and expressway 
+~/              (vdf=4) approaches
+~/      tmpi6 = number of auto access link approaches
+~/      tmpi7 = number of auto access links outbound
+~/      @napp = total number of approaches
+~/
+~/***********************************************************************
+2.41
+1
+y
+tmpj1
+((vdf .eq. 3) .or. (vdf .eq. 8)) .and. (@atypej .le. 4)
+
+4
+all
+2
+2
+~/
+1
+y
+tmpj2
+(vdf .eq. 1 .and. @artfc .eq. 4)
+
+4
+all
+2
+2
+~/
+1
+y
+tmpj3
+(vdf .eq. 1 .and. @artfc .eq. 3)
+
+4
+all
+2
+2
+~/
+1
+y
+tmpj4
+(vdf .eq. 1 .and. @artfc .eq. 2)
+
+4
+all
+2
+2
+~/
+1
+y
+tmpj5
+(vdf.eq.1 .and. @artfc.eq.1) .or.
+(vdf.eq.2) .or.
+(vdf.eq.4) .or.
+(vdf.eq.5) .or.
+(vdf.eq.7)
+
+4
+all
+2
+2
+~/
+~/   auto access approaches (vdf=6): new in 2010
+~/
+1
+y
+tmpj6
+(vdf.eq.6)
+
+4
+all
+2
+2
+~/
+~/   auto access links outbound (vdf=6)
+~/
+1
+y
+tmpi7
+(vdf.eq.6)
+
+4
+all
+2
+2
+~/
+~/  Zero out temporary link variables tmpl3 and tmpl4
+~/
+1
+y
+tmpl3
+0
+
+all
+2
+2
+1
+y
+tmpl4
+0
+
+all
+2
+2
+~/
+~/  Determine correct opposing approach, stored in tmpl3
+~/
+~/        1 = ramp
+~/        2 = collector
+~/        3 = minor 
+~/        4 = major
+~/        5 = principal
+~/
+~/  Four or more approaches, from principal arterial link (@artfc=1)
+~/
+1
+y
+tmpl3
+(@artfc .eq. 1)*(
+ (
+ (  ((tmpj5.eq.1)*(tmpj4.ge.1))*
+      (((tmpj4.ge.2)*4).max.((tmpj3.ge.1)*3).max.((tmpj2.ge.1)*2)
+       .max.(tmpj1.ge.1))  )+
+ (  ((tmpj5.eq.1)*(tmpj4.eq.0)*(tmpj3.ge.1))*
+      (((tmpj3.ge.2)*3).max.((tmpj2.ge.1)*2).max.(tmpj1.ge.1))  )+
+ (  ((tmpj5.eq.1)*(tmpj4.eq.0)*(tmpj3.eq.0)*(tmpj2.ge.1))*
+      (((tmpj2.ge.2)*2).max.(tmpj1.ge.1))  )+
+ (  ((tmpj5.eq.1)*(tmpj4.eq.0)*(tmpj3.eq.0)*(tmpj2.eq.0)*(tmpj1.ge.1))*
+      (tmpj1.ge.2)  )   
+ )+
+ (  (tmpj5.ge.2)*
+      (((tmpj5.gt.2)*5).max.((tmpj4.ge.1)*4).max.((tmpj3.ge.1)*3)
+        .max.((tmpj2.ge.1)*2).max.(tmpj1.ge.1))  )  
+ )
+
+vdf=1
+and @nappj=3.9,999
+
+2
+2
+~/
+~/  Four or more approaches, from major arterial link (@artfc=2)
+~/
+1
+y
+tmpl3
+tmpl3+(@artfc .eq. 2)*(
+ (
+ (  ((tmpj4.eq.1)*(tmpj5.ge.1))*
+      (((tmpj5.ge.2)*5).max.((tmpj3.ge.1)*3).max.((tmpj2.ge.1)*2)
+       .max.(tmpj1.ge.1))  )+
+ (  ((tmpj4.eq.1)*(tmpj5.eq.0)*(tmpj3.ge.1))*
+      (((tmpj3.ge.2)*3).max.((tmpj2.ge.1)*2).max.(tmpj1.ge.1))  )+
+ (  ((tmpj4.eq.1)*(tmpj5.eq.0)*(tmpj3.eq.0)*(tmpj2.ge.1))*
+      (((tmpj2.ge.2)*2).max.(tmpj1.ge.1))  )+
+ (  ((tmpj4.eq.1)*(tmpj5.eq.0)*(tmpj3.eq.0)*(tmpj2.eq.0)*(tmpj1.ge.1))*
+      (tmpj1.ge.2)  )   
+ )+
+ (  (tmpj4.ge.2)*
+      (((tmpj5.ge.1)*5).max.((tmpj4.gt.2)*4).max.((tmpj3.ge.1)*3)
+       .max.((tmpj2.ge.1)*2).max.(tmpj1.ge.1))  )
+ )
+
+vdf=1
+and @nappj=3.9,999
+
+2
+2
+~/
+~/  Four or more approaches, from minor arterial link (@artfc=3)
+~/
+1
+y
+tmpl3
+tmpl3+(@artfc .eq. 3)*(
+ (
+ (  ((tmpj3.eq.1)*(tmpj4.ge.1))*
+      (((tmpj5.ge.1)*5).max.((tmpj4.ge.2)*4).max.((tmpj2.ge.1)*2)
+       .max.(tmpj1.ge.1))  )+
+ (  ((tmpj3.eq.1)*(tmpj4.eq.0)*(tmpj2.ge.1))*
+      (((tmpj5.ge.1)*5).max.((tmpj2.ge.2)*2).max.(tmpj1.ge.1))  )+
+ (  ((tmpj3.eq.1)*(tmpj4.eq.0)*(tmpj2.eq.0)*(tmpj5.ge.1))*
+      (((tmpj5.ge.2)*5).max.(tmpj1.ge.1))  )+
+ (  ((tmpj3.eq.1)*(tmpj4.eq.0)*(tmpj2.eq.0)*(tmpj5.eq.0)*(tmpj1.ge.1))*
+      (tmpj1.ge.2)  )   
+ )+
+ (  (tmpj3.ge.2)*
+      (((tmpj5.ge.1)*5).max.((tmpj4.ge.1)*4).max.((tmpj3.gt.2)*3)
+       .max.((tmpj2.ge.1)*2).max.(tmpj1.ge.1))  )
+ )
+
+vdf=1
+and @nappj=3.9,999
+
+2
+2
+~/
+~/  Four or more approaches, from collector arterial link (@artfc=4)
+~/
+1
+y
+tmpl3
+tmpl3+(@artfc .eq. 4)*(
+ (
+ (  ((tmpj2.eq.1)*(tmpj3.ge.1))*
+      (((tmpj5.ge.1)*5).max.((tmpj4.ge.1)*4).max.((tmpj3.ge.2)*3)
+       .max.(tmpj1.ge.1))  )+
+ (  ((tmpj2.eq.1)*(tmpj3.eq.0)*(tmpj4.ge.1))*
+      (((tmpj5.ge.1)*5).max.((tmpj4.ge.2)*4).max.(tmpj1.ge.1))  )+
+ (  ((tmpj2.eq.1)*(tmpj3.eq.0)*(tmpj4.eq.0)*(tmpj5.ge.1))*
+      (((tmpj5.ge.2)*5).max.(tmpj1.ge.1))  )+
+ (  ((tmpj2.eq.1)*(tmpj3.eq.0)*(tmpj4.eq.0)*(tmpj5.eq.0)*(tmpj1.ge.1))*
+      (tmpj1.ge.2)  )   
+ )+
+ (  (tmpj2.ge.2)*
+      (((tmpj5.ge.1)*5).max.((tmpj4.ge.1)*4).max.((tmpj3.ge.1)*3)
+       .max.((tmpj2.gt.2)*2).max.(tmpj1.ge.1))  )
+ )
+
+vdf=1
+and @nappj=3.9,999
+
+2
+2
+~/
+~/  Three approaches, from principal arterial link (@artfc=1)
+~/
+1
+y
+tmpl3
+(@artfc .eq. 1)*(
+ (
+ (  ((tmpj5.eq.1)*(tmpj4.ge.1))*
+      (((tmpj4.ge.2)*4).max.((tmpj3.ge.1)*3).max.((tmpj2.ge.1)*2)
+       .max.(tmpj1.ge.1))  )+
+ (  ((tmpj5.eq.1)*(tmpj4.eq.0)*(tmpj3.ge.1))*
+      (((tmpj3.ge.2)*3).max.((tmpj2.ge.1)*2).max.(tmpj1.ge.1))  )+
+ (  ((tmpj5.eq.1)*(tmpj4.eq.0)*(tmpj3.eq.0)*(tmpj2.ge.1))*
+      (((tmpj2.ge.2)*2).max.(tmpj1.ge.1))  )+
+ (  ((tmpj5.eq.1)*(tmpj4.eq.0)*(tmpj3.eq.0)*(tmpj2.eq.0)*(tmpj1.ge.1))*
+      (tmpj1.ge.2)  )   
+ )+
+ (  (tmpj5.ge.2)*
+      (((tmpj5.gt.2)*5).max.((tmpj4.ge.1)*4).max.((tmpj3.ge.1)*3)
+        .max.((tmpj2.ge.1)*2).max.(tmpj1.ge.1))  )  
+ )
+
+vdf=1
+and @nappj=2.9,3.1
+
+2
+2
+~/
+~/  Three approaches, from major arterial link (@artfc=2)
+~/
+1
+y
+tmpl3
+tmpl3+(@artfc .eq. 2)*(
+ (
+ (  ((tmpj4.eq.1)*(tmpj5.ge.1))*
+      (((tmpj5.ge.2)*5).max.((tmpj3.ge.1)*3).max.((tmpj2.ge.1)*2)
+       .max.(tmpj1.ge.1))  )+
+ (  ((tmpj4.eq.1)*(tmpj5.eq.0)*(tmpj3.ge.1))*
+      (((tmpj3.ge.2)*3).max.((tmpj2.ge.1)*2).max.(tmpj1.ge.1))  )+
+ (  ((tmpj4.eq.1)*(tmpj5.eq.0)*(tmpj3.eq.0)*(tmpj2.ge.1))*
+      (((tmpj2.ge.2)*2).max.(tmpj1.ge.1))  )+
+ (  ((tmpj4.eq.1)*(tmpj5.eq.0)*(tmpj3.eq.0)*(tmpj2.eq.0)*(tmpj1.ge.1))*
+      (tmpj1.ge.2)  )   
+ )+
+ (  (tmpj4.ge.2)*
+      (((tmpj5.ge.1)*5).max.((tmpj4.gt.2)*4).max.((tmpj3.ge.1)*3)
+       .max.((tmpj2.ge.1)*2).max.(tmpj1.ge.1))  )
+ )
+
+vdf=1
+and @nappj=2.9,3.1
+
+2
+2
+~/
+~/  Three approaches, from minor arterial link (@artfc=3)
+~/
+1
+y
+tmpl3
+tmpl3+(@artfc .eq. 3)*(
+ (
+ (  ((tmpj3.eq.1)*(tmpj4.ge.1))*
+      (((tmpj5.ge.1)*5).max.((tmpj4.ge.2)*4).max.((tmpj2.ge.1)*2)
+       .max.(tmpj1.ge.1))  )+
+ (  ((tmpj3.eq.1)*(tmpj4.eq.0)*(tmpj2.ge.1))*
+      (((tmpj5.ge.1)*5).max.((tmpj2.ge.2)*2).max.(tmpj1.ge.1))  )+
+ (  ((tmpj3.eq.1)*(tmpj4.eq.0)*(tmpj2.eq.0)*(tmpj5.ge.1))*
+      (((tmpj5.ge.2)*5).max.(tmpj1.ge.1))  )+
+ (  ((tmpj3.eq.1)*(tmpj4.eq.0)*(tmpj2.eq.0)*(tmpj5.eq.0)*(tmpj1.ge.1))*
+      (tmpj1.ge.2)  )   
+ )+
+ (  (tmpj3.ge.2)*
+      (((tmpj5.ge.1)*5).max.((tmpj4.ge.1)*4).max.((tmpj3.gt.2)*3)
+       .max.((tmpj2.ge.1)*2).max.(tmpj1.ge.1))  )
+ )
+
+vdf=1
+and @nappj=2.9,3.1
+
+2
+2
+~/
+~/  Three approaches, from collector arterial link (@artfc=4)
+~/
+1
+y
+tmpl3
+tmpl3+(@artfc .eq. 4)*(
+ (
+ (  ((tmpj2.eq.1)*(tmpj3.ge.1))*
+      (((tmpj5.ge.1)*5).max.((tmpj4.ge.1)*4).max.((tmpj3.ge.2)*3)
+       .max.(tmpj1.ge.1))  )+
+ (  ((tmpj2.eq.1)*(tmpj3.eq.0)*(tmpj4.ge.1))*
+      (((tmpj5.ge.1)*5).max.((tmpj4.ge.2)*4).max.(tmpj1.ge.1))  )+
+ (  ((tmpj2.eq.1)*(tmpj3.eq.0)*(tmpj4.eq.0)*(tmpj5.ge.1))*
+      (((tmpj5.ge.2)*5).max.(tmpj1.ge.1))  )+
+ (  ((tmpj2.eq.1)*(tmpj3.eq.0)*(tmpj4.eq.0)*(tmpj5.eq.0)*(tmpj1.ge.1))*
+      (tmpj1.ge.2)  )   
+ )+
+ (  (tmpj2.ge.2)*
+      (((tmpj5.ge.1)*5).max.((tmpj4.ge.1)*4).max.((tmpj3.ge.1)*3)
+       .max.((tmpj2.gt.2)*2).max.(tmpj1.ge.1))  )
+ )
+
+vdf=1
+and @nappj=2.9,3.1
+
+2
+2
+~/
+~/  Two approaches, from principal arterial link (@artfc=1)
+~/
+1
+y
+tmpl3
+(@artfc .eq. 1)*(
+  (tmpj5.ge.1)*
+      (((tmpj5.eq.2)*5).max.((tmpj4.eq.1)*4).max.((tmpj3.eq.1)*3)
+        .max.((tmpj2.eq.1)*2).max.(tmpj1.eq.1)) 
+ )
+
+vdf=1
+and @nappj=1.9,2.1
+
+2
+2
+~/
+~/  Two approaches, from major arterial link (@artfc=2)
+~/
+1
+y
+tmpl3
+tmpl3+(@artfc .eq. 2)*(
+ (tmpj4.ge.1)*
+      (((tmpj5.eq.1)*5).max.((tmpj4.eq.2)*4).max.((tmpj3.eq.1)*3)
+        .max.((tmpj2.eq.1)*2).max.(tmpj1.eq.1)) 
+ )
+
+vdf=1
+and @nappj=1.9,2.1
+
+2
+2
+~/
+~/  Two approaches, from minor arterial link (@artfc=3)
+~/
+1
+y
+tmpl3
+tmpl3+(@artfc .eq. 3)*(
+  (tmpj3.ge.1)*
+      (((tmpj5.eq.1)*5).max.((tmpj4.eq.1)*4).max.((tmpj3.eq.2)*3)
+        .max.((tmpj2.eq.1)*2).max.(tmpj1.eq.1)) 
+ )
+
+vdf=1
+and @nappj=1.9,2.1
+
+2
+2
+~/
+~/  Two approaches, from collector arterial link (@artfc=4)
+~/
+1
+y
+tmpl3
+tmpl3+(@artfc .eq. 4)*(
+  (tmpj2.ge.1)*
+      (((tmpj5.eq.1)*5).max.((tmpj4.eq.1)*4).max.((tmpj3.eq.1)*3)
+        .max.((tmpj2.eq.2)*2).max.(tmpj1.eq.1)) 
+ )
+
+vdf=1
+and @nappj=1.9,2.1
+
+2
+2
+~/
+~/  Zero out tmpl3 for two approaches when link is broken only
+~/    for auto access
+~/
+1
+y
+tmpl3
+tmpl3*(tmpj6.eq.0)*(tmpj7.eq.0)
+
+vdf=1
+and @nappj=1.9,2.1
+
+2
+2
+~/
+~/  Green to cycle ratios are stored in @gc
+~/
+~/
+~/    Four approaches
+~/
+1
+y
+@gc
+n
+ (((@artfc.eq.1)*(tmpl3.eq.5)*0.40)+ 
+  ((@artfc.eq.1)*(tmpl3.eq.4)*0.40)+
+  ((@artfc.eq.1)*(tmpl3.eq.3)*0.55)+
+  ((@artfc.eq.1)*(tmpl3.eq.2)*0.70)+
+  ((@artfc.eq.1)*(tmpl3.eq.1)*0.50)+
+  ((@artfc.eq.2)*(tmpl3.eq.5)*0.40)+ 
+  ((@artfc.eq.2)*(tmpl3.eq.4)*0.45)+
+  ((@artfc.eq.2)*(tmpl3.eq.3)*0.55)+
+  ((@artfc.eq.2)*(tmpl3.eq.2)*0.70)+
+  ((@artfc.eq.2)*(tmpl3.eq.1)*0.55)+
+  ((@artfc.eq.3)*(tmpl3.eq.5)*0.25)+ 
+  ((@artfc.eq.3)*(tmpl3.eq.4)*0.25)+
+  ((@artfc.eq.3)*(tmpl3.eq.3)*0.45)+
+  ((@artfc.eq.3)*(tmpl3.eq.2)*0.50)+
+  ((@artfc.eq.3)*(tmpl3.eq.1)*0.30)+
+  ((@artfc.eq.4)*(tmpl3.eq.5)*0.20)+ 
+  ((@artfc.eq.4)*(tmpl3.eq.4)*0.20)+
+  ((@artfc.eq.4)*(tmpl3.eq.3)*0.35)+
+  ((@artfc.eq.4)*(tmpl3.eq.2)*0.45)+
+  ((@artfc.eq.4)*(tmpl3.eq.1)*0.25))
+
+vdf=1
+and @nappj=3.9,99
+
+2
+2
+~/
+~/    Three approaches
+~/
+1
+y
+@gc
+n
+ (((@artfc.eq.1)*(tmpl3.eq.5)*0.45)+ 
+  ((@artfc.eq.1)*(tmpl3.eq.4)*0.45)+
+  ((@artfc.eq.1)*(tmpl3.eq.3)*0.60)+
+  ((@artfc.eq.1)*(tmpl3.eq.2)*0.70)+
+  ((@artfc.eq.1)*(tmpl3.eq.1)*0.55)+
+  ((@artfc.eq.2)*(tmpl3.eq.5)*0.45)+ 
+  ((@artfc.eq.2)*(tmpl3.eq.4)*0.45)+
+  ((@artfc.eq.2)*(tmpl3.eq.3)*0.60)+
+  ((@artfc.eq.2)*(tmpl3.eq.2)*0.70)+
+  ((@artfc.eq.2)*(tmpl3.eq.1)*0.55)+
+  ((@artfc.eq.3)*(tmpl3.eq.5)*0.25)+ 
+  ((@artfc.eq.3)*(tmpl3.eq.4)*0.30)+
+  ((@artfc.eq.3)*(tmpl3.eq.3)*0.45)+
+  ((@artfc.eq.3)*(tmpl3.eq.2)*0.50)+
+  ((@artfc.eq.3)*(tmpl3.eq.1)*0.30)+
+  ((@artfc.eq.4)*(tmpl3.eq.5)*0.20)+ 
+  ((@artfc.eq.4)*(tmpl3.eq.4)*0.20)+
+  ((@artfc.eq.4)*(tmpl3.eq.3)*0.35)+
+  ((@artfc.eq.4)*(tmpl3.eq.2)*0.45)+
+  ((@artfc.eq.4)*(tmpl3.eq.1)*0.25))
+
+vdf=1
+and @nappj=2.9,3.1
+
+2
+2
+~/
+~/    Two approaches
+~/
+1
+y
+@gc
+n
+ (((@artfc.eq.1)*(tmpl3.eq.5)*0.50)+ 
+  ((@artfc.eq.1)*(tmpl3.eq.4)*0.50)+
+  ((@artfc.eq.1)*(tmpl3.eq.3)*0.65)+
+  ((@artfc.eq.1)*(tmpl3.eq.2)*0.70)+
+  ((@artfc.eq.1)*(tmpl3.eq.1)*0.55)+
+  ((@artfc.eq.2)*(tmpl3.eq.5)*0.50)+ 
+  ((@artfc.eq.2)*(tmpl3.eq.4)*0.50)+
+  ((@artfc.eq.2)*(tmpl3.eq.3)*0.65)+
+  ((@artfc.eq.2)*(tmpl3.eq.2)*0.70)+
+  ((@artfc.eq.2)*(tmpl3.eq.1)*0.55)+
+  ((@artfc.eq.3)*(tmpl3.eq.5)*0.30)+ 
+  ((@artfc.eq.3)*(tmpl3.eq.4)*0.30)+
+  ((@artfc.eq.3)*(tmpl3.eq.3)*0.45)+
+  ((@artfc.eq.3)*(tmpl3.eq.2)*0.50)+
+  ((@artfc.eq.3)*(tmpl3.eq.1)*0.30)+
+  ((@artfc.eq.4)*(tmpl3.eq.5)*0.20)+ 
+  ((@artfc.eq.4)*(tmpl3.eq.4)*0.20)+
+  ((@artfc.eq.4)*(tmpl3.eq.3)*0.35)+
+  ((@artfc.eq.4)*(tmpl3.eq.2)*0.45)+
+  ((@artfc.eq.4)*(tmpl3.eq.1)*0.25))
+
+vdf=1
+and @nappj=1.9,2.1
+
+2
+2
+~/
+~/  Cycle lengths (minutes) are stored in @cycle
+~/
+1
+y
+@cyclej
+n
+ (((@artfc.eq.1)*(tmpl3.eq.5)*2.0)+ 
+  ((@artfc.eq.1)*(tmpl3.eq.4)*2.0)+
+  ((@artfc.eq.1)*(tmpl3.eq.3)*1.5)+
+  ((@artfc.eq.1)*(tmpl3.eq.2)*1.0)+
+  ((@artfc.eq.1)*(tmpl3.eq.1)*1.5)+
+  ((@artfc.eq.2)*(tmpl3.eq.5)*2.0)+ 
+  ((@artfc.eq.2)*(tmpl3.eq.4)*2.0)+
+  ((@artfc.eq.2)*(tmpl3.eq.3)*1.5)+
+  ((@artfc.eq.2)*(tmpl3.eq.2)*1.0)+
+  ((@artfc.eq.2)*(tmpl3.eq.1)*1.5)+
+  ((@artfc.eq.3)*(tmpl3.eq.5)*1.5)+ 
+  ((@artfc.eq.3)*(tmpl3.eq.4)*1.5)+
+  ((@artfc.eq.3)*(tmpl3.eq.3)*1.5)+
+  ((@artfc.eq.3)*(tmpl3.eq.2)*1.0)+
+  ((@artfc.eq.3)*(tmpl3.eq.1)*1.0)+
+  ((@artfc.eq.4)*(tmpl3.eq.5)*1.0)+ 
+  ((@artfc.eq.4)*(tmpl3.eq.4)*1.0)+
+  ((@artfc.eq.4)*(tmpl3.eq.3)*1.0)+
+  ((@artfc.eq.4)*(tmpl3.eq.2)*1.0)+
+  ((@artfc.eq.4)*(tmpl3.eq.1)*1.0))
+
+2
+vdf=1
+and @nappj=1.5,99
+and i=2001,999999
+and j=2001,999999
+
+2
+2
+q
+~/
+~/***********************************************************************
+~/
+~/  Calculations for freeway/expressway to arterial street ramps vdf=3
+~/
+~/*********************************************************************** 
+~/
+~/  Following series of calculations determine the number
+~/    and types of inbound links to a node (j node variable)
+~/
+~/      tmpi1 = number of freeway-arterial ramp approaches (vdf=3)
+~/      tmpi2 = number of collector arterial approaches (@artfc=4)
+~/      tmpi3 = number of minor arterial approaches (@artfc=3)
+~/      tmpi4 = number of major arterial approaches (@artfc=2)
+~/      tmpi5 = number of principal arterial approaches (@artfc=1)
+~/
+2.41
+1
+y
+tmpj2
+(vdf .eq. 1 .and. @artfc .eq. 4)
+
+4
+all
+2
+2
+~/
+1
+y
+tmpj3
+(vdf .eq. 1 .and. @artfc .eq. 3)
+
+4
+all
+2
+2
+~/
+1
+y
+tmpj4
+(vdf .eq. 1 .and. @artfc .eq. 2)
+
+4
+all
+2
+2
+~/
+1
+y
+tmpj5
+(vdf .eq. 1 .and. @artfc .eq. 1)
+
+4
+all
+2
+2
+~/
+~/    Determine whether ramp is a freeway entrance or freeway
+~/      exit ramp
+~/
+~/        tmpl6 = 1 for exit ramp
+~/              = 0 for entrance ramp 
+~/
+1
+y
+tmpl6
+0+((tmpj5.ge.1).or.(tmpj4.ge.1).or.(tmpj3.ge.1).or.(tmpj2.ge.1))
+
+vdf=3
+
+2
+2
+~/
+~/    Calculate freeway/expressway to arterial green to cycle ratio
+~/
+1
+y
+@gc
+n
+((@atypej.le.4).and.(tmpl6.eq.1))*(
+  (((tmpj5.ge.1)*0.35)+
+   ((tmpj5.eq.0)*(tmpj4.ge.1)*0.35)+
+   ((tmpj5.eq.0)*(tmpj4.eq.0)*(tmpj3.ge.1)*0.50)).min.0.50)
+
+vdf=3
+
+2
+2
+~/
+~/    Calculate freeway/expressway to arterial cycle lengths
+~/
+1
+y
+@cyclej
+n
+((@atypej.le.4).and.(tmpl6.eq.1))*(
+  1.0 + ((tmpj5.ge.1 .or. tmpj4.ge.1)*0.50))
+
+2
+vdf=3
+and @cyclej=0
+
+2
+2
+q
+~/
+reports=reports
+~/***********************************************************************
+~/
+~/  End of macro
+~/
+~/***********************************************************************
+~/***********************************************************************

@@ -1,0 +1,254 @@
+
+~# BUILD_TOD_TRANSIT
+~#   Craig Heither, last revised 06-04-2015
+~#
+~#  ************************************************************************************************
+~#    Macro used to create AM Peak transit network for skimming and time-of-day
+~#    transit networks
+~#    For AM Peak network: segment variable @hwytm is populated with data from file: data\per3.timau.
+~#
+~#    Must provide 3-digit scenario when submitting and a second argument (0,1,2) to indicate which 
+~#    transit networks wil be built. Codes:
+~#             0 - only the AM Peak skimming network and Midday transit networks will be created.
+~#             1 - only the TOD transit networks will be created.
+~#             2 - all transit networks will be created.
+~#
+~# (e.g. "~<prep_macros\build_tod_transit 100 0")
+~#
+~#
+~#      Revisions:
+~#                09-15-2014 - import linkshape information into transit scenario
+~#                NRF 06-04-2015 - changed scenario 200 year from 2016 to 2015
+~#                CEB 12-18-2015 to bring in midday congested times into midday p5 scenario
+~#                CEB 11-1-2017 no longer brings in congested time from /data because transit skim
+~#                              is now integrated into global iterations.
+~#                NRF 12-12-2017 calls build_transit_error_check.bat just before end of macro
+~#                               to check for batchin errors.
+~#  ************************************************************************************************
+~# =================================================================================================
+~z=%0%
+~+;~?!z=2;~$>error
+~z=%2%
+~/
+~# ################################
+~# -- SET PATH TO BATCHIN FILES --
+~t2=M:\proj1\nrf\c19q3\
+~t7=transit
+~# ################################
+~/ ## - batchin source  = %t2%%t7% - ##
+~#
+~#
+~/ -- SET SCENARIO --
+on=25                       /set to 4-digit date
+~o|39
+~#
+~/ -- SET VARIABLES --
+~x=%1%
+~t1=2015
+~+;~?x=200;~t1=2020
+~+;~?x=300;~t1=2025
+~+;~?x=400;~t1=2030
+~+;~?x=500;~t1=2035
+~+;~?x=600;~t1=2040
+~+;~?x=700;~t1=2050
+~t4=am
+~t5=transit skim network - %d%
+~t6=%t1%
+~#
+~y=0
+~#  -- FLAG FOR TOD NETWORK PROCESSING ONLY: SKIP AM SKIM PROCESSING --
+~+;~?z=1;~$>skipzero   
+~#
+~#
+~:loop
+~+;~?y=1;~t1=%t6% p1. 8pm-6am
+~+;~?y=2;~t1=%t6% p2. 6am-7am
+~+;~?y=3;~t1=%t6% p3. 7am-9am
+~+;~?y=4;~t1=%t6% p4. 9am-10am
+~+;~?y=5;~t1=%t6% p5. 10am-2pm
+~+;~?y=6;~t1=%t6% p6. 2pm-4pm
+~+;~?y=7;~t1=%t6% p7. 4pm-6pm
+~+;~?y=8;~t1=%t6% p8. 6pm-8pm
+~?y>0
+~+;~t5=transit network;~t4=%y%
+~#
+~/ -- BUILD TRANSIT NETWORK %t4% --
+~+;~x=%1%;~x+%y%
+s=%x%
+~+;~?e;~$>new
+~+;1.22; 2; %x%; y; q
+~:new
+~+;1.22; 1; %x%; %t1% %t5%; y; q
+~#
+~/ -- SET REPORT --
+~t3=report\build_%s%transit.rpt
+~!if exist %t3% (del %t3%)
+reports=%t3%
+~#
+~/ -- Network --
+batchin=%t2%%t7%\tranmodes.txt
+~+;2.01; 1; 2; q
+batchin=%t2%%t7%\transveh.txt
+~+;2.02; 1; 2; q
+batchin=%t2%%t7%\%1%\bus.network_%t4%
+~+;2.11; 2;
+batchin=%t2%%t7%\%1%\rail.network_%t4%
+~+;2.11; 2;
+batchin=%t2%%t7%\%1%\access.network_%t4%
+~+;2.11; 2;
+~/ -- Transit Lines --
+batchin=%t2%%t7%\%1%\rail.itinerary_%t4%
+~+;2.21; 2
+batchin=%t2%%t7%\%1%\bus.itinerary_%t4%
+~+;2.21; 2
+~/
+~/ -- CREATE EXTRA ATTRIBUTES --
+2.42
+~+; 1; y
+~+; 2; 1; @pcost; avg. daily parking cost at station; 0
+~+; 2; 1; @atype; area type for on-street parking; 0
+~+; 2; 1; @pspac; off-street parking spaces at station; 0
+~+; 2; 1; @zone; CMAP zone; 0
+~+; 2; 4; @ltime; line service time in minutes; 0
+~/ -- we still need the extra attribute even though
+~/ -- we don't fill it in this macro anymore cb 11-1-2017
+~+; 2; 4; @hwytm; per. 3 congested hwy time from %1%; 0
+~+; 2; 4; @zfare; incremental zone fare; 0; q
+~/
+~/ -- SET EXTRA ATTRIBUTE VALUES --
+2.41
+~+; 1; y; @ltime; n; us1; ; all; all; 4
+~+; 1; y; us1; 0; ; all; all; 4
+~+; 1; y; @zfare; n; us2; ; all; all; 4
+~+; 1; y; us2; 0; ; all; all; 4; q
+~#
+batchin=%t2%%t7%\%1%\busnode.extatt_%t4%
+2.41
+~+; 3; @atype; n; all; 1,2; n; y
+~+; 3; @zone; n; all; 1,3; n; y; q
+batchin=%t2%%t7%\%1%\railnode.extatt_%t4%
+2.41
+~+; 3; @pspac; n; all; 1,2; n; y
+~+; 3; @pcost; n; all; 1,3; n; y
+~+; 3; @zone; n; all; 1,4; n; y; q
+~/
+~# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+~# BATCHIN 17-12-0001 PARK-N-RIDE PARKING FILE BEGINNING C12Q1 scenario 200
+~+;~?x<200;~$>skip
+batchin=%t2%%t7%\17120001_parking.csv
+2.41
+~+; 3; @pspac; n; all; 1,2; n; y
+~+; 3; @pcost; n; all; 1,3; n; y; q
+~:skip
+~# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+~/
+~# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+~# BATCHIN CERMAK ROAD BRT PARKING FILE FROM C03 (NO LONGER USED)
+~$>skip
+batchin=%t2%%t7%\cermakbrt_parking.csv
+2.41
+~+; 3; @pspac; n; all; 1,2; n; y
+~+; 3; @pcost; n; all; 1,3; n; y; q
+~:skip
+~# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+~/
+~/
+~# -- BRING IN CONGESTED HIGHWAY TIME --
+~# -- THIS SECTION DELETED BECAUSE WE DO IT IN GLOBAL ITERATIONS CEB 11-1-2017
+~#
+~/ -- WRITE NETWORK STATISTICS REPORT --
+~>>%t3%
+~" =============================================================================================
+~" * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+~"   -- NETWORK %t4%: DIRECTIONAL MILES BY SERVICE TYPE --
+~" * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+~>>
+~#
+2.41
+~+; 1; n; len; ; mod=BE; ; 2; 2
+~+; 1; n; len; ; mod=LPQ; ; 2; 2
+~+; 1; n; len; ; mod=C; ; 2; 2
+~+; 1; n; len; ; mod=M; ; 2; 2; q
+~/
+~>>%t3%
+~" * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+~"   -- NETWORK %t4%: SERVICE MILES BY SERVICE TYPE --
+~" * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+~>>
+~#
+2.41
+~+; 1; y; us2; 0; ; *; *; 4
+~+; 1; y; us2; 120/hdwy*len; ; mod=BE; ; mod=BE; ;2; 2
+~+; 1; y; us2; 0; ; *; *; 4
+~+; 1; y; us2; 120/hdwy*len; ; mod=LPQ; ; mod=LPQ; ;2; 2
+~+; 1; y; us2; 0; ; *; *; 4
+~+; 1; y; us2; 120/hdwy*len; ; mod=C; ; mod=C; ;2; 2
+~+; 1; y; us2; 0; ; *; *; 4
+~+; 1; y; us2; len; ; mod=M; ; mod=M; ;2; 2
+~+; 1; y; us2; 0; ; *; *; 4; q
+~/
+~>>%t3%
+~" * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+~"   -- NETWORK %t4%: SERVICE HOURS BY SERVICE TYPE --
+~" * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+~>>
+~#
+2.41
+~+; 1; y; us2; (120/hdwy*@ltime)/60; ; mod=BE; ; mod=BE; ;2; 2
+~+; 1; y; us2; 0; ; *; *; 4
+~+; 1; y; us2; (120/hdwy*@ltime)/60; ; mod=LPQ; ; mod=LPQ; ;2; 2
+~+; 1; y; us2; 0; ; *; *; 4
+~+; 1; y; us2; (120/hdwy*@ltime)/60; ; mod=C; ; mod=C; ;2; 2
+~+; 1; y; us2; 0; ; *; *; 4
+~+; 1; y; us2; @ltime/60; ; mod=M; ; mod=M; ;2; 2
+~+; 1; y; us2; 0; ; *; *; 4; q
+~/
+~>>%t3%
+~" =============================================================================================
+~>>
+~#
+~/ -- REPORT BUS ROUTE VMT --
+2.41
+~+; 1; y; us2; len; ; *; mod=BEPLQ; ; 2; 2
+~+; 1; y; us2; 0; ; *; *; 4
+~/ -- REPORT PARKING DATA --
+~+; 1; n; @pcost; ; all; 2; 2
+~+; 1; n; @pspac; ; all; 2; 2; q
+~/
+~/ -- REPORT NETWORK SUMMARY --
+~+;2.14; 3; 2; q
+~+;2.41; 1; n; lan*len; ; mod=BEPLQb; ; 2; 2; q
+~/
+~# -- END AM PEAK NETWORK PROCESSING --
+~# =============================================================================================
+~#
+~#
+~# ## -- Import Shape Points -- ##
+~t8=report\scen_%s%_transit_linkshape.rpt
+~!if exist %t8% (del %t8%)
+~!emmelinkshp -i %t2%linkshape\linkshape_%1%.in >> %t8%
+~#
+~#
+~:skipzero
+~y+1
+~#  -- FLAG FOR AM SKIM NETWORK/MIDDAY NETWORK PROCESSING ONLY --
+~+;~?z=0;~y+4     
+~#  
+~+;~?y<9;~$loop
+~/******************************************************************                   
+~#
+~$>end
+~/
+~:error
+~/ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~/   SUBMIT WITH TRANSIT SCENARIO AND PROCESSING CODE!!!!!!
+~/ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~#
+~:end
+~o=6
+batchin=
+reports=
+s=
+~!prep_macros\build_transit_error_check.bat %1%
+~/ end of macro
+

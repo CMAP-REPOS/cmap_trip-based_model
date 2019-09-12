@@ -1,0 +1,158 @@
+
+~# GLOBAL_ITERATION_STATISTICS.MAC
+~#  Craig Heither, 02-13-2018
+~#
+~# Generate a report of model run statistics for comparison to previous global iterations.
+~#  submit with global iteration number (i.e., " ~<post_macros\final_run_statistics.mac 2 " )
+~#
+~#  NRF revised 2-25-2015: @avhov replaced with @avh2v and @avh3v for 7 vehicle class version
+~#  CEB revised 3-27-2017: now an "8 class" version reading @busveq from the network too
+~#  CMH revised 2-13-2018: reports after each global iteration
+~# -------------------------------------------------------------------------------------------------------
+~z=%0%
+~+;~?!z=1;~$>error
+~#
+~o|39
+~# -- Set Values --
+~t1=data/gn.in                           
+~t2=report\global_iteration%1%_statistics.rpt      
+~!if exist %t2% (del %t2%)
+~#
+~# -- Initialize partitions --
+batchin=%t1%
+3.01
+~+;4;gn;y;gx;y;
+~# -- Import Non-Attainment Area partition --
+~+;1;1;q
+batchin=
+~#
+~#
+~>>%t2%
+~"%tp%
+~>>
+~#
+~#
+~t3=gx0
+~t4=gx0
+~t5=ENTIRE NETWORK
+~x=1
+~#
+~# -- Generate Trip Statistics --
+~:loop
+~?x=2
+~+;~t3=gn1;~t5=NON-ATTAINMENT AREA
+~#
+~/ %t5% Person Trips and Transit Share
+3.21
+~+;1;y;ms10;y;tmp10;HW total sum mf36 + mf37;~?q=1;y;0;mf36+mf37; ; ;y;%t3%; ;%t4%; ;+;+;1;
+~+;1;y;ms11;y;tmp11;HW auto sum mf01;~?q=1;y;0;mf1; ; ;y;%t3%; ;%t4%; ;+;+;1;
+~+;1;y;ms12;y;tmp12;HW transit sum mf40 + mf41;~?q=1;y;0;mf40+mf41; ; ;y;%t3%; ;%t4%; ;+;+;1;
+~+;1;y;ms13;y;tmp13;HO total sum mf38;~?q=1;y;0;mf38; ; ;y;%t3%; ;%t4%; ;+;+;1;
+~+;1;y;ms14;y;tmp14;HO auto sum mf02;~?q=1;y;0;mf2; ; ;y;%t3%; ;%t4%; ;+;+;1;
+~+;1;y;ms15;y;tmp15;HO transit sum mf42;~?q=1;y;0;mf42; ; ;y;%t3%; ;%t4%; ;+;+;1;
+~+;1;y;ms16;y;tmp16;NH total sum mf39;~?q=1;y;0;mf39; ; ;y;%t3%; ;%t4%; ;+;+;1;
+~+;1;y;ms17;y;tmp17;NH auto sum mf03;~?q=1;y;0;mf3; ; ;y;%t3%; ;%t4%; ;+;+;1;
+~+;1;y;ms18;y;tmp18;NH transit sum mf43;~?q=1;y;0;mf43; ; ;y;%t3%; ;%t4%; ;+;+;1;
+~+;1;y;ms19;y;tmp19;HW transit share;~?q=1;y;0;ms12/ms10; ; ;1;
+~+;1;y;ms20;y;tmp20;HO transit share;~?q=1;y;0;ms15/ms13; ; ;1;
+~+;1;y;ms21;y;tmp21;NH transit share;~?q=1;y;0;ms18/ms16; ; ;1;
+~+;1;y;ms22;y;tmp22;overall transit share;~?q=1;y;0;(ms12+ms15+ms18)/(ms10+ms13+ms16); ; ;1;q
+~#
+~>>%t2%
+~" 
+~"== %t5% ==
+~"-- Person Trips --
+~"HW Total Person Trips : %ms10%
+~"HW Auto Person Trips : %ms11%
+~"HW Transit Person Trips : %ms12%
+~"HO Total Person Trips : %ms13%
+~"HO Auto Person Trips : %ms14%
+~"HO Transit Person Trips : %ms15%
+~"NH Total Person Trips : %ms16%
+~"NH Auto Person Trips : %ms17%
+~"NH Transit Person Trips : %ms18%
+~"-- Transit Share --
+~"HW Transit Share : %ms19%
+~"HO Transit Share : %ms20%
+~"NH Transit Share : %ms21%
+~"Overall Transit Share : %ms22%
+~>>
+~#
+~/ %t5% Mean Trip Distance
+3.21
+~+;1;y;ms10;y;tmp10;HW distance;~?q=1;y;0;mf45*mf1; ;mf1; ;y;%t3%; ;%t4%; ;+;+;1;
+~+;1;y;ms12;y;tmp12;HW mean distance;~?q=1;y;0;ms10/ms11; ; ;1;
+~+;1;y;ms13;y;tmp13;HO distance;~?q=1;y;0;mf47*mf2; ;mf2; ;y;%t3%; ;%t4%; ;+;+;1;
+~+;1;y;ms15;y;tmp15;HO mean distance;~?q=1;y;0;ms13/ms14; ; ;1;
+~+;1;y;ms16;y;tmp16;NH distance;~?q=1;y;0;mf47*mf3; ;mf3; ;y;%t3%; ;%t4%; ;+;+;1;
+~+;1;y;ms18;y;tmp18;NH mean distance;~?q=1;y;0;ms16/ms17; ; ;1;q
+~#
+~>>%t2%
+~"-- Trip Distance --
+~"HW Trip Average Miles : %ms12%
+~"HO Trip Average Miles : %ms15%
+~"NH Trip Average Miles : %ms18%
+~>>
+~#
+~/ %t5% Mean Trip Duration
+3.21
+~+;1;y;ms10;y;tmp10;HW duration;~?q=1;y;0;mf44*mf1; ;mf1; ;y;%t3%; ;%t4%; ;+;+;1;
+~+;1;y;ms12;y;tmp12;HW mean duration;~?q=1;y;0;ms10/ms11; ; ;1;
+~+;1;y;ms13;y;tmp13;HO duration;~?q=1;y;0;mf46*mf2; ;mf2; ;y;%t3%; ;%t4%; ;+;+;1;
+~+;1;y;ms15;y;tmp15;HO mean duration;~?q=1;y;0;ms13/ms14; ; ;1;
+~+;1;y;ms16;y;tmp16;NH duration;~?q=1;y;0;mf46*mf3; ;mf3; ;y;%t3%; ;%t4%; ;+;+;1;
+~+;1;y;ms18;y;tmp18;NH mean duration;~?q=1;y;0;ms16/ms17; ; ;1;q
+~#
+~>>%t2%
+~"-- Trip Duration --
+~"HW Trip Average Minutes : %ms12%
+~"HO Trip Average Minutes : %ms15%
+~"NH Trip Average Minutes : %ms18%
+~>>
+~#
+~+;~?x=2;~$>skip_oth
+~/ %t5% Truck and POE Trips
+3.21
+~+;1;y;ms10;y;tmp10;bplate mf4;~?q=1;y;0;mf4; ; ;y;%t3%; ;%t4%; ;+;+;1;
+~+;1;y;ms11;y;tmp11;light mf5;~?q=1;y;0;mf5; ; ;y;%t3%; ;%t4%; ;+;+;1;
+~+;1;y;ms12;y;tmp12;medium mf6;~?q=1;y;0;mf6; ; ;y;%t3%; ;%t4%; ;+;+;1;
+~+;1;y;ms13;y;tmp13;heavy mf7;~?q=1;y;0;mf7; ; ;y;%t3%; ;%t4%; ;+;+;1;
+~+;1;y;ms14;y;tmp14;POE auto mf8;~?q=1;y;0;mf8; ; ;y;%t3%; ;%t4%; ;+;+;1;
+~+;1;y;ms15;y;tmp15;POE truck mf9;~?q=1;y;0;mf9; ; ;y;%t3%; ;%t4%; ;+;+;1;
+~+;1;y;ms16;y;tmp16;POE airport mf10;~?q=1;y;0;mf10; ; ;y;%t3%; ;%t4%; ;+;+;1;q
+~#
+~>>%t2%
+~"-- Other Trips --
+~"B-Plate Truck Trips : %ms10%
+~"Light Truck Trips : %ms11%
+~"Medium Truck Trips : %ms12%
+~"Heavy Truck Trips : %ms13%
+~"POE Auto Trips : %ms14%
+~"POE Truck Trips : %ms15%
+~"POE Airport Trips : %ms16%
+~>>
+~#
+~:skip_oth
+~#
+~x+1
+~+;~?x<3;~$loop
+~#
+~# -- Delete Temporary Matrices --
+~y=10
+~:delms
+~+;3.12;2;ms%y%;y;q
+~y+1
+~+;~?y<23;~$delms
+~#
+~#  =====================================================================
+~$>end
+~#
+~:error
+~/ +++++++++++++++++++++++++++++++++++++++
+~/   SUBMIT GLOBAL ITERATION NUMBER!!!!!!!
+~/ +++++++++++++++++++++++++++++++++++++++
+~/
+~:end
+~o=6
+~/ DONE!
+

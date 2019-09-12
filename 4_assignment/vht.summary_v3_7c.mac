@@ -1,0 +1,327 @@
+~#
+~#**********************************************************************
+~#**********************************************************************
+~/      vht.summary_v3_7c.mac %1%
+~/       where %1% is 3-digit alternative ID
+~#
+~#   Macro calculates vehicle (classes converted from veq) hours of 
+~#    travel for each time period in dummy scenarios 1 to 8 in @pvht then
+~#    copies this attribute from each tod scenario to ul3 in the daily
+~#    accumulation scenario where it is accumulated in @vht.
+~#   Note that daily vehicle hours of travel cannot be calculated
+~#    correctly from the daily summary scenario volumes, but must be
+~#    calculated for each scenario time period then aggregated to daily.
+~#
+~#           Created by DBE 25Nov2003
+~#   Modified 2NOV2004 by DBE for Prairie Parkway part B:
+~#    copy all 8 time period iter_4 scenarios
+~#    recalc timau for all 8 time periods with final MSA volumes
+~#   Revised 15OCT2009 by DBE for I-290 HOV Database structure.
+~#   Modified 02/2010 by CMH to run standard traffic assignment if parallel not available
+~#   Modified 04/21/11 by CMH: slight modification to asmt setup logic due to Path-Based assignment
+~#   Modified 02/10/15 by NRF to change from 6 classes to 7 classes by dividing HOV into HOV2 and HOV3+
+~#   Modified 3-27-2017 by CEB to include @busveq from the network in calculations
+~#   Modified 5-04-2018 by CMH: import shapepoints into final scenarios only to save disk space (line 158)
+~#   Ferguson 10/11/18: Import shape points into daily scenario (line 263)
+~#
+~#  7-class version: S is primary class
+~#
+~/**********************************************************************
+batchin=data\vdf_iter.in
+reports=report\alt%1%.vht_scen%1%49.rxt
+~o|39
+~#
+~/**********************************************************************
+~#
+~/  Copy scenario w/ final MSA volumes for timau recalc.
+~/   x is the scenario to be copied
+~/   z is the scenario to hold copy
+~#
+~/**********************************************************************
+~#
+~z=0
+~x=%1%
+~x*10
+~x+%ms98%
+~x-1
+~x*10
+~:copyloop
+~x+1
+s=%x%
+~t9=%ts%
+~z+1
+1.22
+3
+%s%
+%z%
+%t9.45% final
+no
+q
+~?z=8
+~$>endcopy
+~$copyloop
+~:endcopy
+~/**********************************************************************
+~#
+~/   Recalculate timau based upon final MSA volumes.
+~#
+~/**********************************************************************
+~/********************************************************************** 
+~#
+~/  Use averaging volume delay functions for skimming.
+~/    Delete existing functions and batch in new functions.
+~#
+~/**********************************************************************
+4.12
+4
+fd1,fd10
+
+yes
+q
+~#
+4.11
+2
+~#
+~/**********************************************************************
+~#
+~/   Loop through scenarios and do zero iteration asmt.
+~#
+~/**********************************************************************
+~z=0
+~:asmtloop
+~z+1
+s=%z%
+~#
+~/**********************************************************************
+~/  Sum class average volumes into new extra attrib @avtot
+~/**********************************************************************
+2.42
+3
+@avtot
+~?e
+~$>err
+yes
+q
+~$>end
+~:err
+
+q
+~:end
+~/
+2.42
+2
+2
+@avtot
+total average volume (veq)
+0
+q
+2.41
+1
+yes
+@avtot
+no
+@avauv+@avh2v+@avh3v+@avbqv+@avlqv+@avmqv+@avhqv+@busveq
+
+all
+2
+2
+q
+~#
+~/**********************************************************************
+~/  Setup highway zero iteration asmt.
+~/**********************************************************************
+~#
+el1=@avtot
+5.11
+1          / fixed auto asmt
+~+;~?q=2;2 / Do a new assignment (option 2) if there is one present
+1          / single class on auto mode
+1          / do not assign additional demand
+ms97       / dummy demand matrix for assignment
+           / no veh occupancy matrix
+           / no additional demand matrix
+           / no matrix for travel times
+0          / number of iters
+           / default relative gap
+           / default normalized gap
+~#
+~/**********************************************************************
+~/  Run assignment 
+~/**********************************************************************
+~+;5.22;1;2
+~#
+~/********************************************************************** 
+~#
+~/  Loop until all periods have zero iteration asmt.
+~#
+~/**********************************************************************
+~#
+~# ## -- Import Shape Points -- ##
+~t4=report\scen_%s%_highway_linkshape.rpt
+~!if exist %t4% (del %t4%)
+~!emmelinkshp -i data\linkshape_%1%.in >> %t4%
+~#
+~#
+~?z=8
+~$>endasmt
+~$asmtloop
+~:endasmt
+~#
+~/**********************************************************************
+~#
+~/   Initialize loop counter z for vht calc.
+~#
+~/**********************************************************************
+~z=0
+~:vhtloop
+~z+1
+s=%z%
+~/**********************************************************************
+~#
+~/   Initialize @pvht then compute period vehicle hours of travel.
+~#
+~/**********************************************************************
+2.42
+3
+@pvht
+~?e
+~$>err
+yes
+q
+~$>end
+~:err
+
+q
+~:end
+~/
+2.42
+2
+2
+@pvht
+period vehicle hours of travel
+0
+q
+~#
+2.41
+1
+yes
+@pvht
+no
+((@avauv+@avh2v+@avh3v+@avbqv+@avlqv+@avmqv/2+@avhqv/3+@busveq/3)*timau)/60
+
+all
+2
+2
+q
+~#
+~?z<8
+~$vhtloop
+~#
+~/**********************************************************************
+~/                              DAILY TOTALS
+~/**********************************************************************
+~#
+~/  Select daily scenario
+~#
+~/    register y = daily scenario
+~#
+~/**********************************************************************
+~y=%1%
+~y*10
+~y+%ms98%
+~y-1
+~y*10
+~y+9
+s=%y%
+~#
+~/********************************************************************** 
+~#
+~/  Delete extra attribute @vht, if necessary, and initalize.
+~#
+~/**********************************************************************
+2.42
+3
+@vht
+~?e
+~$>err
+y
+q
+~$>end
+~:err
+
+q
+~:end
+~#
+2.42
+2
+2
+@vht
+total daily vehicle hours traveled
+0.0
+q
+~#
+~# ## -- Import Shape Points -- ##
+~t4=report\scen_%s%_highway_linkshape.rpt
+~!if exist %t4% (del %t4%)
+~!emmelinkshp -i data\linkshape_%1%.in >> %t4%
+~#
+~/**********************************************************************
+~#
+~/  Accumulate vehicle hours traveled
+~#
+~/    registers z = scenario number being accessed
+~#
+~/**********************************************************************
+~z=0
+~:dailyloop
+~z+1
+~?z=9
+~$>endmacro
+~#
+~/**********************************************************************
+~#
+~/  Copy vht stored in @pvht from selected scenario (z) and accumulate
+~/   in @vht.
+~#
+~/**********************************************************************
+~#
+~/         zero temp accumulator in daily scenario
+2.41
+1
+yes
+ul3
+0.0
+
+all
+2
+2
+~/         copy @pvht from scenario (z) into ul3
+2
+%z%
+@pvht
+ul3
+all
+~/         accumulate vht
+1
+yes
+@vht
+no
+@vht+ul3
+
+all
+2
+2
+q
+~#
+~$dailyloop
+~#
+~:endmacro
+~#
+~/***********************************************************************
+~#
+~/  End of macro - reset reports.
+~#
+~/***********************************************************************
+reports=reports
+batchin=batchin
+~/***********************************************************************

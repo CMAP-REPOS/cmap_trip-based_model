@@ -1,0 +1,9 @@
+batchin=data\turnp07202016.txt
+~t1=report\build_turn.rpt
+reports=%t1%
+2.31
+2
+2
+q
+batchin=
+reports=
