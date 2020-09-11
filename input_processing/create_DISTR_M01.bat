@@ -1,84 +1,77 @@
-REM Create_DISTR_M01.bat
-@ECHO off
-@ECHO #####################################################################
-REM Craig Heither, revised 10-23-2014
-@ECHO.
-@ECHO This program creates the scenario-specific DISTR and M01 files needed
-@ECHO for a full model run. Processing steps:
-@ECHO   1. call Emme macro DISTR_M01_DATA.MAC to output network files.
-@ECHO   2. call SAS program CREATE_DISTR_M01_FILES.SAS to format data
-@ECHO      for spatial analysis.
-@ECHO   3. call Python script DISTR_M01_SPATIAL_ANALYSIS.PY to get all spatial
-@ECHO      information.
-@ECHO.  4. call SAS program CREATE_DISTR_M01_FILES.SAS again to create final files.
-@ECHO.
-@ECHO #####################################################################
-@ECHO.
+@echo off
 
-REM      Revised: 07-24-2012 - calls Python2.6 even after 3.2 installed
-REM      Revised: 11-28-2012 - additional fallback Python2.6 call added. 
-REM      Revised: 04-22-2013 - paths updated for ArcGIS 10.1. 
-REM      Revised: 06-11-2013 - paths updated for SAS 9.3. 
-REM      Revised: 10-23-2014 - paths updated for SAS 9.4.
-REM      Revised: 03-09-2018 - Automatically find Python and SAS executables. 
-REM =======================================================================
+rem create_DISTR_M01.bat
+rem Craig Heither, CMAP
+rem Nick Ferguson, CMAP
 
-@ECHO.
-@ECHO ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
-@ECHO   You must be connected to an Emme  
-@ECHO   license before continuing.        
-@ECHO ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
-@ECHO.
+@echo This program creates the scenario-specific DISTR and M01 files
+@echo needed for a full model run. Processing steps:
+@echo   1. call Emme macro DISTR_M01_DATA.MAC to output network files.
+@echo   2. call SAS program CREATE_DISTR_M01_FILES.SAS to format data
+@echo      for spatial analysis.
+@echo   3. call Python script DISTR_M01_SPATIAL_ANALYSIS.PY to get all
+@echo      spatial information.
+@echo   4. call SAS program CREATE_DISTR_M01_FILES.SAS again to create
+@echo      final files.
+@echo.
+@echo ==================================================================
+@echo.
+rem Revision history
+rem ----------------
+rem 07/24/2012 Heither: calls Python2.6 even after 3.2 installed
+rem 11/28/2012 Heither: additional fallback Python2.6 call added.
+rem 04/22/2013 Heither: paths updated for ArcGIS 10.1.
+rem 06/11/2013 Heither: paths updated for SAS 9.3.
+rem 10/23/2014 Heither: paths updated for SAS 9.4.
+rem 03/09/2018 Heither: Automatically find Python and SAS executables.
+rem 07/16/2020 Ferguson: Refined the Python search to use a virtual
+rem            environment with custom package requirements by calling
+rem            activate_python_env.bat.
+
+rem ====================================================================
+rem Settings
+rem --------
+@echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@echo.
+@echo   Connect to an available Emme license before continuing.
+@echo.
+@echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@echo.
 pause
-@ECHO.
+@echo.
 
-@ECHO.
-@ECHO ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
-@ECHO   Note: The geoprocessing procedures in this 
-@ECHO   script require an ArcInfo license.
-@ECHO ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
-@ECHO.
+@echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@echo.
+@echo   The geoprocessing procedures in this script require an
+@echo   available ArcGIS Desktop Advanced license. This setting must
+@echo   be selected in ArcGIS Administrator before continuing.
+@echo.
+@echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@echo.
 pause
-@ECHO.
+@echo.
 
-REM ## Supply 3-digit scenario to run macro. ##
-set sc=
-set /P sc=[ENTER 3-DIGIT SCENARIO NUMBER, ex: 100 ]
-@ECHO.
-if not '%sc%'=='' (set sc=%sc:~0,3%)
-if not '%sc%'=='' (goto next)
-goto badscen
+rem Supply 3-digit scenario to run macro.
+set /p sc="[ENTER THE 3-DIGIT SCENARIO NUMBER (e.g., 100)] "
+@echo.
+if not "%sc%"=="" (set sc=%sc:~0,3%) else (goto badscen)
 
-:next
-set /A val=%sc%
-if %val% GEQ 100 (goto continue)
-goto badscen 
+set /a val=%sc%
+if %val% lss 100 (goto badscen)
 
-:continue
-set /P ok=[ CREATE DISTR AND M01 FILES FOR SCENARIO %val%? (y/n) ]
-@ECHO.
-if '%ok%'=='y' (goto findexe)
-if '%ok%'=='Y' (goto findexe)
-goto end
+set /p ok="[CREATE DISTR AND M01 FILES FOR SCENARIO %val%? (y/n)] "
+@echo.
+set ok=%ok:y=Y%
+if not "%ok%"=="Y" (goto end)
 
-:findexe
-REM  Search for viable Python executables (ArcGS one first), write paths to file, redirect errors to nul in case file not found, read first path from file
-set infile=path.txt
-if exist %infile% (del %infile% /Q)
-dir "C:\Python27\*python.exe" /s /b >> %infile% 2>nul
-dir "D:\Python27\*python.exe" /s /b >> %infile% 2>nul
-dir "E:\Python27\*python.exe" /s /b >> %infile% 2>nul
-dir "C:\Program Files\INRO\*python.exe" /s /b >> %infile% 2>nul
-dir "D:\Program Files\INRO\*python.exe" /s /b >> %infile% 2>nul
-dir "E:\Program Files\INRO\*python.exe" /s /b >> %infile% 2>nul
-set /p path1=<%infile%
-set paren="
-set pypath=%paren%%path1%%paren%
-echo pypath = %pypath%
-call :CheckEmpty %infile%
-:pythonpass
+@echo ==================================================================
+@echo.
+
+call ..\activate_python_env.bat arcpy
+@echo.
 
 REM Now find SAS executable
+set infile=path.txt
 if exist %infile% (del %infile% /Q)
 dir "C:\Program Files\*sas.exe" /s /b >> %infile% 2>nul
 dir "D:\Program Files\*sas.exe" /s /b >> %infile% 2>nul
@@ -94,7 +87,7 @@ set sasfile=create_distr_m01_files
 
 REM -- Start Data Processing --
 @ECHO.
-@ECHO Start Time: %date% %time% 
+@ECHO Start Time: %date% %time%
 @ECHO.
 CD %~dp0
 if exist report.txt (del report.txt /Q)
@@ -120,9 +113,9 @@ cd prep_macros
 if %ERRORLEVEL% GTR 0 (goto saserr)
 
 @ECHO -- PERFORMING SPATIAL ANALYSIS --
-@ECHO    (THIS MAY TAKE 10-15 MINUTES) 
+@ECHO    (THIS MAY TAKE 10-15 MINUTES)
 @ECHO.
-%pypath% distr_m01_spatial_analysis.py 
+python distr_m01_spatial_analysis.py
 @ECHO.
 if %ERRORLEVEL% NEQ 0 (goto pyerr)
 
@@ -133,7 +126,7 @@ if exist saserr.txt (goto sasdataerr)
 @ECHO.
 @ECHO -- DISTR AND M01 FILES CREATED --
 @ECHO.
-@ECHO End Time: %date% %time% 
+@ECHO End Time: %date% %time%
 @ECHO.
 if exist temp\nul (rmdir temp /S /Q)
 if exist report.txt (del report.txt /Q)
@@ -142,10 +135,6 @@ goto last
 
 
 REM ======================================================================
-:CheckEmpty
-if %~z1 == 0 (goto badpython)
-goto pythonpass
-
 :CheckEmpty2
 if %~z1 == 0 (goto badsas)
 goto saspass
@@ -153,14 +142,6 @@ goto saspass
 :badsas
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @ECHO     COULD NOT FIND SAS INSTALLED ON THIS MACHINE.
-@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO.
-pause
-goto end
-
-:badpython
-@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO     COULD NOT FIND PYTHON INSTALLED ON THIS MACHINE.
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @ECHO.
 pause
@@ -189,7 +170,7 @@ goto end
 
 :saserr
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO SAS DID NOT TERMINATE PROPERLY!!! 
+@ECHO SAS DID NOT TERMINATE PROPERLY!!!
 @ECHO REVIEW .LOG FILE TO IDENTIFY AND CORRECT ISSUE.
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @ECHO.
@@ -198,7 +179,7 @@ goto end
 
 :sasdataerr
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO SOME SAS DATA INPUTS WERE NOT CREATED!!! 
+@ECHO SOME SAS DATA INPUTS WERE NOT CREATED!!!
 @ECHO REVIEW SASERR.TXT TO IDENTIFY AND CORRECT ISSUE.
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @ECHO.
@@ -207,7 +188,7 @@ goto end
 
 :pyerr
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO PYTHON ENCOUNTERED PROCESSING ERRORS!!! 
+@ECHO PYTHON ENCOUNTERED PROCESSING ERRORS!!!
 @ECHO REVIEW TEXT ABOVE TO IDENTIFY AND CORRECT ISSUE.
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @ECHO.
@@ -218,5 +199,6 @@ goto end
 pause
 @ECHO end of batch file
 @ECHO ======================================================================
+
 :end
 exit

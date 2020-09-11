@@ -1,98 +1,92 @@
-@ECHO BATCH FILE TO SUBMIT CMAP REGIONAL TRAVEL DEMAND MODEL
-@ECHO  - 5 GLOBAL ITERATIONS
-@ECHO  - 4 AUTO TRIP PURPOSES: HW LOW INCOME, HW HIGH INCOME, HO, NH
-@ECHO  - PATH-BASED HIGHWAY ASSIGNMENT (7 VEHICLE CLASSES)
-@ECHO         Class 1: 1 PERSON SOV (ALL PURPOSES)
-@ECHO         Class 2: 2 PERSON HOV (ALL PURPOSES)
-@ECHO         Class 3: 3+ PERSON HOV (ALL PURPOSES)
-@ECHO         Class 4: B-PLATE TRUCK
-@ECHO         Class 5: LIGHT DUTY TRUCK
-@ECHO         Class 6: MEDIUM DUTY TRUCK
-@ECHO         Class 7: HEAVY DUTY TRUCK
-@ECHO ====================================================================
-@ECHO.
-@ECHO off
-REM   Last revised 10-28-2014: Craig Heither, CMAP - include Non-work HOV procedures
-REM   Last revised 02-20-2015: Craig Heither, CMAP - include Toll Mode Choice procedures
-REM   Last revised 06-01-2015: Nick Ferguson, CMAP - call 7-class assignment macros
-REM   Last revised 02-09-2017: Craig Heither, CMAP - use copy rather than rename for NAMELIST files
-REM   Last revised 02-27-2017: Craig Heither, CMAP - call update_Namelist.py, add Monte Carlo iteration variables
-REM   Last revised 03-09-2018: Craig Heither, CMAP - Automatically find Python executable.
-REM   Last revised 03-18-2019: Craig Heither, CMAP - Use random integer to uniquely label Fortran executables and prevent conflict with a simultaneous model run.
-REM   NRF 6/13/2019: Skip pre-distribution and distribution in global iterations 3 and 4. Call fixed seed EXEs PreDist_RnSeed and ModeChoice_RnSeed with seed CSV as argument.
+@echo off
 
-REM *************************************
-REM    Set 3-digit scenario number here
-REM    --------------------------------
-set /A val=100
-REM *************************************
+rem Submit_Full_Regional_Model.bat
+rem Craig Heither, CMAP
+rem Nick Ferguson, CMAP
 
-REM *************************************
-REM    Set Iteration value (Global Iterations 0-3) here
-REM    ------------------------------------------------
-REM !!!NOT 3-DIGIT SCENARIO NUMBER!!!
-set /A iter1=100
-REM *************************************
+@echo BATCH FILE TO SUBMIT CMAP REGIONAL TRAVEL DEMAND MODEL
+@echo   - 5 GLOBAL ITERATIONS
+@echo   - 4 AUTO TRIP PURPOSES: HW LOW INCOME, HW HIGH INCOME, HO, NH
+@echo   - PATH-BASED HIGHWAY ASSIGNMENT (7 VEHICLE CLASSES)
+@echo       Class 1: 1 PERSON SOV (ALL PURPOSES)
+@echo       Class 2: 2 PERSON HOV (ALL PURPOSES)
+@echo       Class 3: 3+ PERSON HOV (ALL PURPOSES)
+@echo       Class 4: B-PLATE TRUCK
+@echo       Class 5: LIGHT DUTY TRUCK
+@echo       Class 6: MEDIUM DUTY TRUCK
+@echo       Class 7: HEAVY DUTY TRUCK
+@echo.
+@echo ==================================================================
+@echo.
+rem Revision history
+rem ----------------
+rem 10/28/2014 Heither: Include Non-work HOV procedures
+rem 02/20/2015 Heither: Include Toll Mode Choice procedures
+rem 06/01/2015 Ferguson: Call 7-class assignment macros
+rem 02/09/2017 Heither: Use copy rather than rename for NAMELIST files
+rem 02/27/2017 Heither: Call update_Namelist.py, add Monte Carlo
+rem            iteration variables
+rem 03/09/2018 Heither: Automatically find Python executable.
+rem 03/18/2019 Heither: Use random integer to uniquely label Fortran
+rem            executables and prevent conflict with a simultaneous
+rem            model run.
+rem 06/13/2019 Ferguson: Skip pre-distribution and distribution in
+rem            global iterations 3 and 4. Call fixed seed EXEs
+rem            PreDist_RnSeed and ModeChoice_RnSeed with seed CSV as
+rem            argument.
+rem 07/16/2020 Ferguson: Refined the Python search to use a virtual
+rem            environment with custom package requirements by calling
+rem            activate_python_env.bat.
 
-REM *************************************
-REM    Set Iteration value (Global Iteration 4) here
-REM    ------------------------------------------------
-REM !!!NOT 3-DIGIT SCENARIO NUMBER!!!
-set /A iter2=100
-REM *************************************
+rem ====================================================================
+rem Settings
+rem --------
+rem Set the 3-digit scenario number.
+set /a val=100
 
-REM *************************************
-REM    Select Random Integer to label Fortran executables
-REM    ------------------------------------------------
-set /A rndmint=%random% %%100
-REM *************************************
+rem Set the iteration value for global iterations 0-3.
+set /a iter1=100
 
-@ECHO.
-@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO         You must be connected to an Emme
-@ECHO         license before continuing!!!        
-@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO.
+rem Set the iteration value for global iteration 4.
+set /a iter2=100
+
+rem Select a random integer to label Fortran executables.
+set /a rndmint=%random% %%100
+
+@echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@echo.
+@echo   Connect to an available Emme license before continuing.
+@echo.
+@echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@echo.
 pause
-@ECHO.
-@ECHO ### SCENARIO RUN SET TO %val% ###
-@ECHO  -- Pre-Distribution/Mode Choice Simulations (Global Iterations 0-3): %iter1%
-@ECHO  -- Pre-Distribution/Mode Choice Simulations (Global Iteration 4): %iter2%
-@ECHO.
+@echo.
 
-set /P ok=[ RUN MODEL FOR SCENARIO %val%? (y/n) ]
-@ECHO.
-if '%ok%'=='y' (goto continue)
-if '%ok%'=='Y' (goto continue)
-goto end
+@echo Model run scenario: %val%
+@echo Pre-Distribution/Mode Choice simulations (global iterations 0-3): %iter1%
+@echo Pre-Distribution/Mode Choice simulations (global iteration 4): %iter2%
+@echo.
 
+set /p ok="[RUN MODEL FOR SCENARIO %val%? (y/n)] "
+@echo.
+set ok=%ok:y=Y%
+if not "%ok%"=="Y" (goto end)
 
-:continue
-set /A keeppath=0 
-set /P ok2=[ SAVE ALL INTERIM CLASS-SPECIFIC PATH FILES? (y/n) - Generally not necessary. ]
-@ECHO.
-if '%ok2%'=='y' (set /A keeppath=1)
-if '%ok2%'=='Y' (set /A keeppath=1)
-if %keeppath% EQU 1 (@ECHO ALL PATH FILES WILL BE RETAINED.)
+set /a keeppath=0
+set /p ok2="[SAVE ALL INTERIM CLASS-SPECIFIC PATH FILES? - Generally not necessary. (y/n)] "
+@echo.
+set ok2=%ok2:y=Y%
+if "%ok2%"=="Y" (set /a keeppath=1)
+if %keeppath% equ 1 (
+    @echo All path files will be retained.
+    @echo.
+)
+@echo ==================================================================
+@echo.
 
-REM  Search for viable Python executables, write paths to file, redirect errors to nul in case file not found, read first path from file
-set infile=path.txt
-if exist %infile% (del %infile% /Q)
-dir "C:\Python27\*python.exe" /s /b >> %infile% 2>nul
-dir "D:\Python27\*python.exe" /s /b >> %infile% 2>nul
-dir "E:\Python27\*python.exe" /s /b >> %infile% 2>nul
-dir "C:\Program Files\INRO\*python.exe" /s /b >> %infile% 2>nul
-dir "D:\Program Files\INRO\*python.exe" /s /b >> %infile% 2>nul
-dir "E:\Program Files\INRO\*python.exe" /s /b >> %infile% 2>nul
-set /p path1=<%infile%
-set paren="
-set pypath=%paren%%path1%%paren%
-echo pypath = %pypath%
-call :CheckEmpty %infile%
-:pythonpass
-if exist %infile% (del %infile% /Q)
+call activate_python_env.bat
+@echo.
 
-REM #################################################
 REM Craig Heither, 6/4/08 - added to verify files exist before running
 if not exist data\tod_factors.p1 (goto filemiss)
 if not exist data\tod_factors.p2 (goto filemiss)
@@ -173,7 +167,7 @@ copy VehOcc.exe VehOcc_%rndmint%.exe /y
 
 @ECHO ======================================================================
 REM - LOOP TO RUN MODEL (Heither 04/2010)
-set /A counter=0 
+set /A counter=0
 :while
 if %counter% GTR 4 (goto loopend)
 
@@ -181,7 +175,8 @@ if %counter% GTR 4 (goto loopend)
 @ECHO.
 @ECHO BEGINNING TRANSIT SKIM - FULL MODEL ITERATION %counter%
 @ECHO - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-call emme -ng 000 -m macros\call\skim.transit.all %val% %counter% %pypath% >> blog.txt
+call emme -ng 000 -m macros\call\skim.transit.all %val% %counter% python >> blog.txt
+if %errorlevel% neq 0 (goto end)
 @ECHO    -- End of Transit Skim Procedures: %date% %time% >> model_run_timestamp.txt
 
 
@@ -193,8 +188,8 @@ call emme -ng 000 -m macros\init_HOVsim_databk.mac %val% >> blog.txt
 
 
 REM UPDATE NAMELIST FILES
-if %counter% EQU 0 (%pypath% update_Namelist.py %iter1%)
-if %counter% EQU 4 (%pypath% update_Namelist.py %iter2%)
+if %counter% EQU 0 (python update_Namelist.py %iter1%)
+if %counter% EQU 4 (python update_Namelist.py %iter2%)
 
 
 if %counter% GTR 2 (goto skipdistr)
@@ -319,24 +314,11 @@ call emme -ng 000 -m macros\Daily.Total.Asmt5I_7c.mac %val% >> blog.txt
 @ECHO End Daily Accumulation Procedures: %date% %time% >> model_run_timestamp.txt
 goto last
 
-REM ======================================================================
-:CheckEmpty
-if %~z1 == 0 (goto badpython)
-goto pythonpass
-
-:badpython
-@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO    COULD NOT FIND PYTHON INSTALLED ON THIS MACHINE.
-@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO.
-pause
-goto end
-
 :filemiss
 @ECHO on
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-REM       Missing Files                         
-REM       Open tod_factors.xls and create files 
+REM       Missing Files
+REM       Open tod_factors.xls and create files
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 goto end
 
@@ -350,8 +332,8 @@ goto end
 
 :hhmiss
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO     HH_VTYPE_TRIPS_IN.TXT or TG_HHENUM_OUTPUT.TXT 
-@ECHO     missing from Database folder.             
+@ECHO     HH_VTYPE_TRIPS_IN.TXT or TG_HHENUM_OUTPUT.TXT
+@ECHO     missing from Database folder.
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @ECHO.
 goto end
@@ -365,6 +347,7 @@ goto end
 @ECHO END OF BATCH FILE - MODEL RUN COMPLETED
 @ECHO ======================================================================
 @ECHO ======================================================================
+
 :end
 pause
 exit

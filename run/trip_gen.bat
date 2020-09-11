@@ -1,84 +1,100 @@
-REM trip_gen.bat
-@ECHO off
-ECHO #################################################
-REM Craig Heither, rev. 03-09-2018
-REM Updates by Matt Stratton, 06/15/10
-REM   Heither, 09/15/10 - airport.tg replaces zero.out.airports, del MCHW_HH.TXT if needed
-REM   Heither, 03/11/11 - logic changed so each Module is independent & must be submitted separately.
-REM   Heither, 12/07/11 - additional saspath logic added; verify ALL required files in ..\tg\sas\data;
-REM                       copy MCHW_HH.TXT to Database folder.
-REM   Heither, 10/23/14 - various housekeeping (update SAS path for version 9.4; drop check for Windows XP;
-REM				renumber modules); add Python call for script create_HHvtype_file.py;
-REM				updated arguments added to call distribute.trucks macro
-REM   Heither, 04/21/15 - revised TG file cleanup; conditional execution of python script (trip generation mode only)
-REM   Heither, 06/30/15 - additional error-checking logic to trap NaN errors in matrix balancing 
-REM   Heither, 05/25/16 - modified to call new tg executable (TG_PopSyn.exe) & verify existence of POPSYN_HH.CSV
-REM   Heither, 03-09-2018 - Automatically find Python and SAS executables.
-REM   Heither, 10-05-2018 - Change Module 2 so truck.class.skim.mac is the primary truck distribution macro; use Python version of prepare_iom_inputs.
-REM
-ECHO.
-ECHO This script:
-ECHO   1) runs the Trip Generation model, 
-ECHO   2) creates the trip generation files to import into the emmebank
-ECHO      and runs distribute.trucks/distribute.poes/airport.tg.
-ECHO.
-ECHO #################################################
-ECHO.
+@echo off
 
-REM - Just in case CMD.exe is doing stuff in the wrong directory,
-REM - this command changes the directory to where the batch file was called from.
-CD %~dp0
+rem trip_gen.bat
+rem Craig Heither, CMAP
+rem Matt Stratton, CMAP
+rem Nick Ferguson, CMAP
 
-ECHO      Choose a Module to Run (Each must be submitted separately):
-ECHO -----------------------------------------------------------------------
-ECHO 1. Run trip generation model.
-ECHO 2. Import trip generation files into emmebank and run distribute macros.
-ECHO.
+echo This script:
+echo   1) runs the Trip Generation model,
+echo   2) creates the trip generation files to import into the emmebank
+echo      and runs distribute.trucks/distribute.poes/airport.tg.
+echo.
+echo ===================================================================
+echo.
+rem Revision history
+rem ----------------
+rem 09/15/2010 Heither: airport.tg replaces zero.out.airports, del
+rem            MCHW_HH.TXT if needed
+rem 03/11/2011 Heither: logic changed so each Module is independent &
+rem            must be submitted separately.
+rem 12/07/2011 Heither: additional saspath logic added; verify ALL
+rem            required files in ..\tg\sas\data; copy MCHW_HH.TXT to
+rem            Database folder.
+rem 10/23/2014 Heither: various housekeeping (update SAS path for
+rem            version 9.4; drop check for Windows XP; renumber
+rem            modules); add Python call for script
+rem            create_HHvtype_file.py; updated arguments added to call
+rem            distribute.trucks macro
+rem 04/21/2015 Heither: revised TG file cleanup; conditional execution
+rem            of python script (trip generation mode only)
+rem 06/30/2015 Heither: additional error-checking logic to trap NaN
+rem            errors in matrix balancing
+rem 05/25/2016 Heither: modified to call new tg executable
+rem            (TG_PopSyn.exe) & verify existence of POPSYN_HH.CSV
+rem 03/09/2018 Heither: Automatically find Python and SAS executables.
+rem 10/05/2018 Heither: Change Module 2 so truck.class.skim.mac is the
+rem            primary truck distribution macro; use Python version of
+rem            prepare_iom_inputs.
+rem 07/16/2020 Ferguson: Refined the Python search to use a virtual
+rem            environment with custom package requirements by calling
+rem            activate_python_env.bat.
 
-set choice=
-set /p choice=[SELECT THE RUN MODE. ]
-if not '%choice%'=='' set choice=%choice:~0,1%
-if '%choice%'=='1' goto one
-if '%choice%'=='2' goto two
-ECHO "%choice%" is not valid, please resubmit the program with a new argument
+rem ====================================================================
+rem Settings
+rem --------
+rem Just in case CMD.exe is doing stuff in the wrong directory,
+rem this command changes the directory to where the batch file was called from.
+cd %~dp0
+
+echo Module list (each must be submitted separately):
+echo.
+echo     1. Run trip generation model.
+echo     2. Import trip generation files into emmebank and run
+echo        distribute macros.
+echo.
+
+set /p choice="[SELECT A MODULE TO RUN] "
+echo.
+if not "%choice%"=="" (
+    set choice=%choice:~0,1%
+    if "%choice%"=="1" (goto one)
+    if "%choice%"=="2" (goto two)
+)
+
+echo !!! "%choice%" IS NOT A VALID SELECTION !!!
+echo Please resubmit the program and select a number from the module list.
+@echo.
 pause
 goto end
 
-@ECHO ======================================================================
-REM RUN TRIP GENERATION MODEL
+@echo ====================================================================
+@echo.
+
 :one
+rem Run trip generation model
 
-ECHO ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
-ECHO ! Update variables in:                                  !
-REM Heither 07-27-2017: not necessary when using PopSyn_HH.csv
-REM ECHO !  - fortran\TG_INPUT.txt                               !
-REM ECHO !    - CONTROL TOTALS MUST MATCH REGIONAL HH TOTALS     !
-ECHO !  - sas\cntl\summary_tg_results_popsyn.sas             !
-ECHO !  - sas\cntl\prepare_iom_inputs.py                     !
-ECHO !    before continuing.                                 !
-ECHO ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
-ECHO.
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+echo.
+echo   Update the settings variables in each of the following scripts
+echo   before continuing:
+rem Heither 07-27-2017: not necessary when using PopSyn_HH.csv
+rem echo !  - fortran\TG_INPUT.txt                               !
+rem echo !    - CONTROL TOTALS MUST MATCH REGIONAL HH TOTALS     !
+echo.
+echo     - sas\cntl\summary_tg_results_popsyn.sas
+echo     - sas\cntl\prepare_iom_inputs.py
+echo.
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+echo.
 pause
+echo.
 
-CD %~dp0
-
-REM  Search for viable Python executables, write paths to file, redirect errors to nul in case file not found, read first path from file
-set infile=path.txt
-if exist %infile% (del %infile% /Q)
-dir "C:\Python27\*python.exe" /s /b >> %infile% 2>nul
-dir "D:\Python27\*python.exe" /s /b >> %infile% 2>nul
-dir "E:\Python27\*python.exe" /s /b >> %infile% 2>nul
-dir "C:\Program Files\INRO\*python.exe" /s /b >> %infile% 2>nul
-dir "D:\Program Files\INRO\*python.exe" /s /b >> %infile% 2>nul
-dir "E:\Program Files\INRO\*python.exe" /s /b >> %infile% 2>nul
-set /p path1=<%infile%
-set paren="
-set pypath=%paren%%path1%%paren%
-echo pypath = %pypath%
-call :CheckEmpty %infile%
-:pythonpass
+call activate_python_env.bat
+@echo.
 
 REM Now find SAS executable
+set infile=path.txt
 if exist %infile% (del %infile% /Q)
 dir "C:\Program Files\*sas.exe" /s /b >> %infile% 2>nul
 dir "D:\Program Files\*sas.exe" /s /b >> %infile% 2>nul
@@ -104,7 +120,7 @@ if exist MCHW_HH.TXT (del MCHW_HH.TXT)
 TG_PopSyn.exe
 cd ..\sas\cntl
 %saspath% -SYSIN summary_tg_results_popsyn
-%pypath% prepare_iom_inputs.py
+python prepare_iom_inputs.py
 REM %saspath% -SYSIN prepare_iom_inputs
 cd ..\..\..
 if not exist tg\sas\data\hoa.in (goto saserr)
@@ -121,7 +137,7 @@ if not exist tg\sas\data\m01type.csv (goto saserr)
 CD %~dp0
 ECHO.
 REM --- SUBMIT THE FOLLOWING ONLY IF MODEL RUN IN TRIP GENERATION MODE ---
-if exist tg\fortran\MCHW_HH.TXT (%pypath% tg\fortran\create_HHvtype_file.py)
+if exist tg\fortran\MCHW_HH.TXT (python tg\fortran\create_HHvtype_file.py)
 ECHO.
 ECHO ~~~~~~~~~~~~~~~~~~~
 ECHO Module 1 finished.
@@ -140,7 +156,7 @@ ECHO.
 pause
 ECHO.
 
-REM SET DISTRIBUTION FACTORS BEFORE RUNNING 
+REM SET DISTRIBUTION FACTORS BEFORE RUNNING
 ECHO ! ! ! ! ! ! ! ! ! ! ! ! ! ! !
 ECHO ! Update variables in:      !
 ECHO !  - distribute.trucks      !
@@ -163,7 +179,7 @@ goto badscen
 :next
 set /A val=%sc%
 if %val% GEQ 100 goto macros
-goto badscen 
+goto badscen
 
 :macros
 if exist tg.rpt (del tg.rpt)
@@ -197,17 +213,13 @@ ECHO ~~~~~~~~~~~~~~~~~~~
 goto last
 
 REM ======================================================================
-:CheckEmpty
-if %~z1 == 0 (goto badpython)
-goto pythonpass
-
 :CheckEmpty2
 if %~z1 == 0 (goto badsas)
 goto saspass
 
 :saserr
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO  MISSING P-A FILES:               
+@ECHO  MISSING P-A FILES:
 @ECHO  REVIEW SAS LOGS FOR ERRORS!!!
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @ECHO.
@@ -225,14 +237,6 @@ goto end
 :badsas
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @ECHO    COULD NOT FIND SAS INSTALLED ON THIS MACHINE.
-@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO.
-pause
-goto end
-
-:badpython
-@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO    COULD NOT FIND PYTHON INSTALLED ON THIS MACHINE.
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @ECHO.
 pause
@@ -260,5 +264,6 @@ goto end
 ECHO.
 ECHO end of batch file
 pause
+
 :end
 exit
