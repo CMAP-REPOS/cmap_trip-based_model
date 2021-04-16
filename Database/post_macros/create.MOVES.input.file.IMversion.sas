@@ -6,7 +6,7 @@
       - one containing data for the Vehicle Inspection and Maintenance area in the IL portion of the non-attainment area.
       - one containing data for the non-Vehicle Inspection and Maintenance area in the IL portion of the non-attainment area.
 
-    
+
     MOVES Data Conversion Dictionary:
 
 
@@ -43,35 +43,36 @@
         - 09-06-2012: Incorporates SU/MU long-haul data from path-based traffic assignment.
         - 09-27-2012: Use surrogate bus & truck shares for speed distribution if necessary: see Note below.
         - 12-21-2012: Surrogate logic also applied to RoadTypeDistribution & hourVMTFraction.
-        - 12-19-2014: Creates two spreadsheet per scenario: one for I&M VMT and one for non-I&M vmt. 
+        - 12-19-2014: Creates two spreadsheet per scenario: one for I&M VMT and one for non-I&M vmt.
                          I&M zone ranges were updated 12-2014 by Steve Chau:
                          see the wiki entry: <http://wiki.cmap.local/mediawiki/index.php/Vehicle_Inspection_and_Maintenance_Zones>
-		- NRF 02-25-2015: Replace avhov with avh2v and avh3v for 7 vehicle class assignment
+        - NRF 02-25-2015: Replace avhov with avh2v and avh3v for 7 vehicle class assignment
         - 04-10-2015: Error check that all eight time periods are included in bus.link file.
-        - 07-08-2016: RoadTypeID 1 removed from RoadTypeDistribution tab (it is no longer used in MOVES2014a); code to delete .bak files        
+        - 07-08-2016: RoadTypeID 1 removed from RoadTypeDistribution tab (it is no longer used in MOVES2014a); code to delete .bak files
         - 3-27-2017 : Read in busveq with other network attributes instead of separate bus link file Bozic
         - 11-15-2018: Read in IM/nonIM areas from network attributes
                       also redefine the nonattainment area zones for the Z17 Bozic
-        - NRF 12-18-2018: Read in data\moves_avgSpeedBinID.csv to create template with all speed bins (line 293)                  
-						 
+        - NRF 12-18-2018: Read in data\moves_avgSpeedBinID.csv to create template with all speed bins (line 293)
+        - SCB 10-15-2020: Edit hourVMTFraction calculation for source types 53 and 54 (start at line 630)
+
  ----------------------------------------------------------------------------------- */
 
-*** ============================== ***;  
-%let project=c20q1; 
-%let run=200_20191213;
+*** ============================== ***;
+%let project=c21q2;
+%let run=200_20210324;
 %let year=2020;                                   ** scenario year **;
 *** ============================== ***;
 
 filename in0 "..\data\moves.longhaul.data";
-filename in1 "..\data\moves.data"; 
+filename in1 "..\data\moves.data";
 ***filename in2 "..\data\bus.link"; **==DON'T NEED THIS ANYMORE.  BUS VEHICLES ARE ON THE NETWORK;
 
 options nodate pagesize=156 linesize=135 nocenter nonumber noxwait;
 
-data _null_; command="if exist ..\data\MOVES_&project._scen&run._IM.xlsx (del ..\data\MOVES_&project._scen&run._IM.xlsx /Q)" ; 
-    call system(command); 
-data _null_; command="if exist ..\data\MOVES_&project._scen&run._nonIM.xlsx (del ..\data\MOVES_&project._scen&run._nonIM.xlsx /Q)" ; 
-    call system(command); 
+data _null_; command="if exist ..\data\MOVES_&project._scen&run._IM.xlsx (del ..\data\MOVES_&project._scen&run._IM.xlsx /Q)" ;
+    call system(command);
+data _null_; command="if exist ..\data\MOVES_&project._scen&run._nonIM.xlsx (del ..\data\MOVES_&project._scen&run._nonIM.xlsx /Q)" ;
+    call system(command);
 
  *** -- GET LONG-HAUL DATA -- ***;
 data lh; infile in0;
@@ -101,7 +102,7 @@ data a(drop=avh2v avh3v); set a(where=(i>0 & j>0));
 
     data a; merge a(in=hit) lh ; by period i j; if hit;
 
-data a; set a; 
+data a; set a;
  *** -- ISOLATE Z17 NON-ATTAINMENT AREA ZONES -- ***;
   if    1<=zone<=2304
   or 2309<=zone<=2313
@@ -113,7 +114,7 @@ data a; set a;
 
  *** -- FLAG VEHICLE INSPECTION AND MAINTENANCE AREA (Rev. DEC. 2014) -- ***;
  ** -- now read directly from network export attributes 0=no, 1=yes --;
- 
+
 
 
  *** -- RESET TOTAL M & H VEHICLE EQUIVALENTS TO SHORT-HAUL VEQS -- ***;
@@ -131,10 +132,10 @@ data a; set a;
   mdlhveh=max(m200/2,0);
   hdshveh=max(avhqv/3,0);
   hdlhveh=max(h200/3,0);
-  vubus=max(busveq/3,0); 
+  vubus=max(busveq/3,0);
 
  *** -- VMT (for verification purposes) -- ***;
-  auvehmi=auveh*miles; 
+  auvehmi=auveh*miles;
   bpvehmi=bpveh*miles;
   ldvehmi=ldveh*miles;
   mdshvehmi=mdshveh*miles;
@@ -161,11 +162,11 @@ data a; set a;
 
 
  *** -- VHT (the metric MOVES wants) -- ***;
-  if mph=0 then do; 
+  if mph=0 then do;
     auvehhr=0; bpvehhr=0; ldvehhr=0;
-    mdshvehhr=0; mdlhvehhr=0; hdshvehhr=0; 
+    mdshvehhr=0; mdlhvehhr=0; hdshvehhr=0;
     hdlhvehhr=0; vubushr=0;
-  end; 
+  end;
   else do;
     auvehhr=miles/mph*auveh; bpvehhr=miles/mph*bpveh;
     ldvehhr=miles/mph*ldveh; vubushr=miles/mph*vubus;
@@ -210,27 +211,27 @@ data sums; set a;
   proc print; format All_VMT All_VHT comma15.2; var im All_VMT All_VHT; sum All_VMT All_VHT; title "VMT and VHT Totals - First Stage";
 
 ***;
- proc summary nway data=a; class im roadTypeID period; var vubus; output out=junk sum=; 
-data junk(drop=_type_ _freq_); set junk(where=(vubus=0)); 
+ proc summary nway data=a; class im roadTypeID period; var vubus; output out=junk sum=;
+data junk(drop=_type_ _freq_); set junk(where=(vubus=0));
  proc print; title1 " "; title2 "- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -";
    title3 "Intermediate Bus Data: IM-roadTypeID-Period Categories without Bus Activity - These Will Be Adjusted";
 ***;
 
 
- proc summary nway data=a; var auvehmi bpvehmi ldvehmi mdshvehmi mdlhvehmi hdshvehmi hdlhvehmi vubusmi auvehhr bpvehhr ldvehhr 
+ proc summary nway data=a; var auvehmi bpvehmi ldvehmi mdshvehmi mdlhvehmi hdshvehmi hdlhvehmi vubusmi auvehhr bpvehhr ldvehhr
    mdshvehhr mdlhvehhr hdshvehhr hdlhvehhr vubushr; class im roadTypeID period avgSpeedBinID; id hours; output out=b1 sum=;
 
 
   *** VMT Verification ***;
    proc summary nway data=b1; class im; var auvehmi bpvehmi ldvehmi mdshvehmi mdlhvehmi hdshvehmi hdlhvehmi vubusmi auvehhr bpvehhr ldvehhr
      mdshvehhr mdlhvehhr hdshvehhr hdlhvehhr vubushr; output out=junk sum=;
-    proc print data=junk; format auvehmi bpvehmi ldvehmi mdshvehmi mdlhvehmi hdshvehmi hdlhvehmi vubusmi auvehhr bpvehhr ldvehhr 
-       mdshvehhr mdlhvehhr hdshvehhr hdlhvehhr vubushr comma15.2; 
+    proc print data=junk; format auvehmi bpvehmi ldvehmi mdshvehmi mdlhvehmi hdshvehmi hdlhvehmi vubusmi auvehhr bpvehhr ldvehhr
+       mdshvehhr mdlhvehhr hdshvehhr hdlhvehhr vubushr comma15.2;
        var im auvehmi bpvehmi ldvehmi mdshvehmi mdlhvehmi hdshvehmi hdlhvehmi vubusmi auvehhr bpvehhr ldvehhr
-          mdshvehhr mdlhvehhr hdshvehhr hdlhvehhr vubushr; 
+          mdshvehhr mdlhvehhr hdshvehhr hdlhvehhr vubushr;
        sum auvehmi bpvehmi ldvehmi mdshvehmi mdlhvehmi hdshvehmi hdlhvehmi vubusmi auvehhr bpvehhr ldvehhr
-          mdshvehhr mdlhvehhr hdshvehhr hdlhvehhr vubushr; 
-       title1 " "; title2 "- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -"; title3 "&project &run Totals Before"; 
+          mdshvehhr mdlhvehhr hdshvehhr hdlhvehhr vubushr;
+       title1 " "; title2 "- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -"; title3 "&project &run Totals Before";
 
 
  *** -- DISAGGREGATE INTO HOURLY DATA -- ***;
@@ -243,24 +244,24 @@ data b1(drop=_type_ _freq_); set b1;
   auvehhr=auvehhr/hours; bpvehhr=bpvehhr/hours; ldvehhr=ldvehhr/hours; mdshvehhr=mdshvehhr/hours; mdlhvehhr=mdlhvehhr/hours;
   hdshvehhr=hdshvehhr/hours; hdlhvehhr=hdlhvehhr/hours; vubushr=vubushr/hours;
 
-  if period=1 then do; 
+  if period=1 then do;
     do i=1 to 10; hr=i+20; output; end;
   end;
   if period=2 then do; hr=7; output; end;
-  if period=3 then do; 
+  if period=3 then do;
     do i=1 to 2; hr=i+7; output; end;
   end;
   if period=4 then do; hr=10; output; end;
-  if period=5 then do; 
+  if period=5 then do;
     do i=1 to 4; hr=i+10; output; end;
   end;
-  if period=6 then do; 
+  if period=6 then do;
     do i=1 to 2; hr=i+14; output; end;
   end;
-  if period=7 then do; 
+  if period=7 then do;
     do i=1 to 2; hr=i+16; output; end;
   end;
-  if period=8 then do; 
+  if period=8 then do;
     do i=1 to 2; hr=i+18; output; end;
   end;
 
@@ -276,22 +277,22 @@ data b5(keep=roadTypeID period avgSpeedBinID vmt vht hr hourDayID sourceTypeID i
 data b6(keep=roadTypeID period avgSpeedBinID vmt vht hr hourDayID sourceTypeID im); set b1; vmt=mdlhvehmi; vht=mdlhvehhr; sourceTypeID=53;  ** SU long haul truck;
 data b7(keep=roadTypeID period avgSpeedBinID vmt vht hr hourDayID sourceTypeID im); set b1; vmt=hdshvehmi; vht=hdshvehhr; sourceTypeID=61;  ** MU short haul truck;
 data b8(keep=roadTypeID period avgSpeedBinID vmt vht hr hourDayID sourceTypeID im); set b1; vmt=hdlhvehmi; vht=hdlhvehhr; sourceTypeID=62;  ** MU long haul truck;
-data b9(keep=roadTypeID period avgSpeedBinID vmt vht hr hourDayID sourceTypeID im); set b1; vmt=vubusmi; vht=vubushr; sourceTypeID=42;   ** transit bus; 
-data b10; set b9; sourceTypeID=41;                 *** apply transit bus distribution to intercity bus **; 
+data b9(keep=roadTypeID period avgSpeedBinID vmt vht hr hourDayID sourceTypeID im); set b1; vmt=vubusmi; vht=vubushr; sourceTypeID=42;   ** transit bus;
+data b10; set b9; sourceTypeID=41;                 *** apply transit bus distribution to intercity bus **;
 data b11; set b9; sourceTypeID=43;                 *** apply transit bus distribution to school bus **;
 data b12; set b2; sourceTypeID=11;                 *** apply auto distribution to motorcycles **;
 data b13; set b5; sourceTypeID=51;                 *** apply single unit short-haul distribution to refuse trucks **;
 data b14; set b6; sourceTypeID=54;                 *** apply single unit long-haul distribution to motor homes **;
 
-data b; set b2-b14; proc sort; by im sourceTypeID roadTypeID hourDayID avgSpeedBinID; 
+data b; set b2-b14; proc sort; by im sourceTypeID roadTypeID hourDayID avgSpeedBinID;
 
 
   *** CREATE TEMPLATE WITH ALL COMBINATIONS ***;
-  proc summary nway data=b; class sourceTypeID; output out=veh; 
-  proc summary nway data=b; class roadTypeID; output out=road;  
-  proc summary nway data=b; class hourDayID; output out=hrday;  
+  proc summary nway data=b; class sourceTypeID; output out=veh;
+  proc summary nway data=b; class roadTypeID; output out=road;
+  proc summary nway data=b; class hourDayID; output out=hrday;
   /*proc summary nway data=b; class avgSpeedBinID; output out=speed;*/ proc import datafile="..\data\moves_avgSpeedBinID.csv" out=speed dbms=csv replace; getnames=yes; run;
-  proc summary nway data=b; class im; output out=imcat;  
+  proc summary nway data=b; class im; output out=imcat;
 
 proc sql noprint;
   create table template as
@@ -301,19 +302,19 @@ proc sql noprint;
        speed.avgSpeedBinID,
        imcat.im
     from veh,road,hrday,speed,imcat;
-  proc sort data=template; by im sourceTypeID roadTypeID hourDayID avgSpeedBinID; 
+  proc sort data=template; by im sourceTypeID roadTypeID hourDayID avgSpeedBinID;
 
 
 data b; merge template b; by im sourceTypeID roadTypeID hourDayID avgSpeedBinID;
  vmt=max(0,vmt); vht=max(0,vht);
   proc format;
-   value ft 
+   value ft
      1="Off-Network"
      2="Rural Restricted Access"
      3="Rural Unrestricted Access"
      4="Urban Restricted Access"
      5="Urban Unrestricted Access";
-   value cl 
+   value cl
      11="Motorcycle"
      21="Passenger Car"
      31="Passenger Truck"
@@ -373,7 +374,7 @@ data b; merge template b; by im sourceTypeID roadTypeID hourDayID avgSpeedBinID;
 
   ****;
    proc summary nway data=b; var vmt vht; class im sourceTypeID; output out=junk sum=;
-      proc print data=junk; var im sourceTypeID vmt vht; format vmt vht comma15.2; sum vmt vht;  
+      proc print data=junk; var im sourceTypeID vmt vht; format vmt vht comma15.2; sum vmt vht;
         title1 " "; title2 "- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -";
         title3 "&project &run Totals After";
   ****;
@@ -382,13 +383,13 @@ data b; merge template b; by im sourceTypeID roadTypeID hourDayID avgSpeedBinID;
 *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*;
   * -- INTERMEDIATE OUTPUT -- *;
 *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*;
-data out; set b(where=(sourceTypeID not in (11,41,43,51,54)));     *** only include actual modeled vehicle types- for QC verification ***; 
+data out; set b(where=(sourceTypeID not in (11,41,43,51,54)));     *** only include actual modeled vehicle types- for QC verification ***;
 
-data outIM(keep=vht vmt sourceTypeID roadTypeID hourDayID avgSpeedBinID); 
+data outIM(keep=vht vmt sourceTypeID roadTypeID hourDayID avgSpeedBinID);
   retain sourceTypeID roadTypeID hourDayID avgSpeedBinID vht vmt; set out(where=(im=1));
 proc export data=outIM file="..\data\MOVES_&project._scen&run._IM.xlsx" dbms=xlsx replace; sheet="initial_model_output";
 
-data outnoIM(keep=vht vmt sourceTypeID roadTypeID hourDayID avgSpeedBinID); 
+data outnoIM(keep=vht vmt sourceTypeID roadTypeID hourDayID avgSpeedBinID);
   retain sourceTypeID roadTypeID hourDayID avgSpeedBinID vht vmt; set out(where=(im=0));
 proc export data=outnoIM file="..\data\MOVES_&project._scen&run._nonIM.xlsx" dbms=xlsx replace; sheet="initial_model_output";
 
@@ -440,7 +441,7 @@ data share; merge share fallback; by im sourceTypeID roadTypeID hourDayID avgSpe
   if allvht=0 & allvht2 then do;             *** -- substitution only occurs if no VHT for entire category -- ***;
      vht=vht2; allvht=allvht2;
   end;
-  avgSpeedFraction=round(vht/allvht,0.000001);  
+  avgSpeedFraction=round(vht/allvht,0.000001);
 
 
 data outIM(keep=sourceTypeID roadTypeID hourDayID avgSpeedBinID avgSpeedFraction);
@@ -463,7 +464,7 @@ data review(drop=_type_ _freq_); set review(where=(avgSpeedFraction<0.998 or avg
 *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*;;
   * -- SPEED DISTRIBUTION TAB [WEEKEND] -- *;
 *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*;
-** ## -- for now just use weekday values -- ## **; 
+** ## -- for now just use weekday values -- ## **;
 
 data share1; set share;
   hourDayID=hourDayID-3;   *** reset for weekend values ***;
@@ -523,7 +524,7 @@ data roadtype(drop=vmt sourceVMT vmt2 sourceVMT2); merge roadtype fallback; by i
   output;
   /* *** === Remove this as of 07-08-2016 == ***
   if roadTypeID=2 then do; roadTypeID=1; roadTypeVMTFraction=0; output; end;   *** add blank observation for Off Network category ***; */
-   proc sort; by sourceTypeID roadTypeID; 
+   proc sort; by sourceTypeID roadTypeID;
    /* proc print; title "Fallback Road Type Distribution"; */
 
 
@@ -573,7 +574,7 @@ proc export data=outnoIM outfile="..\data\MOVES_&project._scen&run._nonIM.xlsx" 
   *** CREATE TEMPLATE WITH ALL COMBINATIONS ***;
 data road; set road;
   output;
-  if roadTypeID=2 then do; roadTypeID=1; output; end;             ** add Off-Network type; 
+  if roadTypeID=2 then do; roadTypeID=1; output; end;             ** add Off-Network type;
 data hrday; set hrday; dayID=5; hourID=(hourDayID-5)/10;
 
 proc sql noprint;
@@ -582,7 +583,7 @@ proc sql noprint;
        road.roadTypeID,
        hrday.dayID, hourID, imcat.im
     from veh,road,hrday,imcat;
-  proc sort data=template2; by im sourceTypeID roadTypeID hourID; 
+  proc sort data=template2; by im sourceTypeID roadTypeID hourID;
 
 data vmt; set b; hourID=(hourDayID-5)/10;
   proc summary nway; class im sourceTypeID roadTypeID hourID; var vmt; output out=hourvmt sum=;
@@ -625,15 +626,77 @@ data fallback(drop=_type_ _freq_); set fb1-fb6;
  * * = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = * *;
 
 data vmtshare; merge vmtshare fallback; by im sourceTypeID roadTypeID hourID;
-  if allvmt=0 & allvmt2 then do;             *** -- substitution only occurs if no VMT for entire category -- ***;
+
+data vmtshare;
+        set vmtshare;
+        hourVMTFraction1=vmt/max(allvmt,0.000001);      *** calculate hourvmtfraction based on original data ***;
+run;
+
+data vmtshare;
+        set vmtshare;
+        if vmt2 and allvmt2 then hourVMTFraction2=vmt2/allvmt2; ** calculate hourvmtfraction based on fallback data ***;
+run;
+
+** for source types 53 and 54, if there is any data ** ;
+** then use both the non-zero vmt and the fallback data to arrive at the hourVMTFraction  **;
+
+data truckpart; set vmtshare(where=(sourceTypeID in (53,54) & vmt>0));
+run;
+
+** get count of how many vmt values there are for each im/sourcetype/roadtype combo **;
+proc summary nway;
+        class im sourceTypeID roadtypeID;
+        var vmt;
+        output out=vmtcount N=vmtcount1;
+run;
+
+proc sql;
+        create table vmtweight as
+        select A.*, B.*
+        FROM vmtshare A LEFT JOIN vmtcount B
+        on A.im = B.im
+        and A.sourceTypeID = B.sourceTypeID
+        and A.roadTypeID = B.roadTypeID;
+quit;
+run;
+
+data vmtweight2;
+        set vmtweight;
+        if sourceTypeID in (53,54) and allvmt>0 then do;
+                if vmt=0 then hourVMTFractionpre=hourVMTFraction2;                               *** use fallback vmtfraction for 0 vmt hours ***;
+                else if vmt>0 then hourVMTFractionpre=(((vmtcount1/24)*hourVMTFraction1)+hourVMTFraction2)/((vmtcount1+24)/24);
+ *** use average of the original and fallback vmtfraction otherwise ***;
+ *** original data is weighted by number of hours with data ***;
+        end;
+run;
+
+proc summary nway;
+        class im sourceTypeID roadtypeID;
+        var hourVMTFractionpre;
+        output out=vmtpre sum=vmtpresum;
+run;
+
+data vmtshare; merge vmtweight2 vmtpre; by im sourceTypeID roadtypeID;
+        proc sort; by im sourceTypeID roadTypeID hourID;
+run;
+
+
+data vmtshare;
+  set vmtshare;
+ if allvmt=0 & allvmt2 then do;             *** -- substitution only occurs if no VMT for entire category -- ***;
      vmt=vmt2; allvmt=allvmt2;
   end;
-  allvmt=max(allvmt,0.000001);                                           *** prevent division by zero ***;
+  allvmt=max(allvmt,0.000001);                                         *** prevent division by zero ***;
   hourVMTFraction=round(vmt/allvmt,0.000001);
+  if sourceTypeID in (53,54) and vmtpresum>0 then hourVMTFraction=round(hourVMTFractionpre/vmtpresum, 0.000001);
+  drop vmtpresum hourVMTFraction1 hourVMTFraction2 hourVMTFractionpre vmtcount1;
   output;
   if roadTypeID=5 then do; roadTypeID=1; output; end;             ** apply urban arterial distribution to Off-Network type **;
-    proc sort; by im sourceTypeID roadTypeID hourID; 
-   /* proc print; title "Fallback Hourly VMT Fraction"; */
+    proc sort; by im sourceTypeID roadTypeID hourID;
+
+
+proc print; title "Final VMT Fraction";
+run;
 
 
 data vmtshare; merge template2 vmtshare; by im sourceTypeID roadTypeID hourID;
@@ -658,7 +721,7 @@ data review(drop=_type_ _freq_); set review(where=(hourVMTFraction<.998 or hourV
 *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*;
   * -- HOURLY VMT FRACTION TAB [WEEKEND] -- *;
 *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*;
-** ## -- for now just use weekday values -- ## **; 
+** ## -- for now just use weekday values -- ## **;
 
 data vmtshare; set vmtshare;
   dayID=2;        *** reset for weekend values ***;
@@ -675,8 +738,8 @@ data hpms; set b(where=(sourceTypeID in (21,31,32,42,52,53,61,62)));        *** 
   if sourceTypeID=21 then HPMSVtypeID=20;
   else if 31<=sourceTypeID<=32 then HPMSVtypeID=30;
   else if sourceTypeID<=42 then HPMSVtypeID=40;                    *** transit bus vmt only ***;
-  else if 52<=sourceTypeID<=53 then HPMSVtypeID=50;                
-  else if 61<=sourceTypeID<=62 then HPMSVtypeID=60;                
+  else if 52<=sourceTypeID<=53 then HPMSVtypeID=50;
+  else if 61<=sourceTypeID<=62 then HPMSVtypeID=60;
 
 proc summary nway data=hpms; class im roadTypeID HPMSVtypeID; var vmt; output out=hpms1 sum=HPMSDailyVMT;
 
@@ -690,7 +753,7 @@ proc export data=outnoIM outfile="..\data\MOVES_&project._scen&run._nonIM.xlsx" 
 
 
 proc summary nway data=hpms1; class im; var HPMSDailyVMT; output out=hpms2 sum=;
-proc print data=hpms2; format HPMSDailyVMT comma15.2; var im HPMSDailyVMT; sum HPMSDailyVMT; title1 " "; 
+proc print data=hpms2; format HPMSDailyVMT comma15.2; var im HPMSDailyVMT; sum HPMSDailyVMT; title1 " ";
    title2 "- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -";
    title3 "HPMS Daily VMT TOTAL - Final Stage";
 
@@ -702,16 +765,14 @@ data hpms1; set hpms1;
   yearID=&year;
  proc summary nway data=hpms1; class roadTypeID HPMSVtypeID yearID; var HPMSDAILYVMT_IM HPMSDAILYVMT_NonIM; output out=hpms2 sum=;
 
-data hpms2(keep=roadTypeID HPMSVtypeID yearID HPMSDAILYVMT_IM HPMSDAILYVMT_NonIM HPMSDAILYVMT_TOTAL); 
-   retain roadTypeID HPMSVtypeID yearID HPMSDAILYVMT_IM HPMSDAILYVMT_NonIM HPMSDAILYVMT_TOTAL; set hpms2; 
+data hpms2(keep=roadTypeID HPMSVtypeID yearID HPMSDAILYVMT_IM HPMSDAILYVMT_NonIM HPMSDAILYVMT_TOTAL);
+   retain roadTypeID HPMSVtypeID yearID HPMSDAILYVMT_IM HPMSDAILYVMT_NonIM HPMSDAILYVMT_TOTAL; set hpms2;
   HPMSDAILYVMT_NonIM=max(HPMSDAILYVMT_NonIM,0);
   HPMSDAILYVMT_IM=max(HPMSDAILYVMT_IM,0);
   HPMSDAILYVMT_TOTAL=HPMSDAILYVMT_NonIM+HPMSDAILYVMT_IM;
 proc export data=hpms2 outfile="..\data\MOVES_&project._scen&run._nonIM.xlsx" dbms=xlsx replace; sheet="QC_Values_HPMSDailyVMT";
 
 *** == Clean up .bak files == ***;
-data _null_; command="if exist ..\data\*.bak (del ..\data\*.bak /Q)" ; 
-    call system(command); 
+data _null_; command="if exist ..\data\*.bak (del ..\data\*.bak /Q)" ;
+    call system(command);
 run;
-
-
