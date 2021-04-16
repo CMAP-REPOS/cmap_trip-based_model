@@ -20,7 +20,7 @@
 ~#
 ~# ################################
 ~# -- SET GROWTH FACTOR HERE --
-~r1=1.15      /* growth factor from base year (1% per year)
+~r1=1.20      /* growth factor from base year (1% per year)
 ~# ################################
 ~#
 ~#
