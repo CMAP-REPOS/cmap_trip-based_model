@@ -210,6 +210,7 @@ reports=report\init.mf.iter_%ms98%.rxt
 ~#   Revised by Craig Heither 2014-10-28: create/initialize matrices for non-work HOV procedures; collapse code
 ~#
 ~#   Revised by Craig Heither 2015-02-18: create/initialize toll/nontoll matrices
+~#   3/4/2020 NRF: does not delete pre-distribution cost matrices after iteration 2
 ~#
 ~/**********************************************************************
 ~/**********************************************************************
@@ -221,16 +222,19 @@ reports=report\init.mf.iter_%ms98%.rxt
 ~#
 ~/**********************************************************************
 s=
+~x=%ms98%
 3.21
 ~+;1;y;mf01;y;hwau%ms98%;alt%1% hw auto person trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf02;y;hoau%ms98%;alt%1% ho auto person trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf03;y;nhau%ms98%;alt%1% nh auto person trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;~?x>2;~$>do_not_delete
 ~+;1;y;mf28;y;nhau$%ms98%;alt%1% nh auto cost sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf29;y;nhtr$%ms98%;alt%1% nh transit cost sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf30;y;hoau$%ms98%;alt%1% ho auto cost sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf31;y;hotr$%ms98%;alt%1% ho transit cost sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf32;y;hwau$%ms98%;alt%1% hw auto cost sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf33;y;hwtr$%ms98%;alt%1% hw transit cost sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~:do_not_delete
 ~+;1;y;mf48;y;hwauL%ms98%;alt%1% hwLOW auto person trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf49;y;hwauH%ms98%;alt%1% hwHIGH auto person trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf40;y;hwtrL%ms98%;alt%1% hw transit trips sim_%ms98% - low inc;~?q=1;y;0;0; ; ;n;1;
