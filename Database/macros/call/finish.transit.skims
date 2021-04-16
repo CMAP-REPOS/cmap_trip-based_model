@@ -25,7 +25,9 @@
 ~#    Bozic, 11-2-2017 - revised to work with all matrices in the 800 and 900 ranges and will not write 
 ~#                      over model results.  This is for transit skimming during each global iteration.
 ~#                      also always works in batch mode. Does peak and offpeak.
-~#                  
+~#    Ferguson 9/19/19 - updated max non-POE zone from 1944 to 3632 for zone17
+~#    Ferguson 9/23/19 - created register r3 for cutoff value and update it to 0.4   
+~#    Ferguson 10/24/19 - no longer deletes 800/900 range mo matrices for parking spaces and costs         
 ~#  ****************************************************************************************
 ~# -------------------------------------------------------------------------------------------------------
 ~#
@@ -34,7 +36,7 @@
 ~y=0
 ~o|39
 ~/  max. non-POE zone
-~r1=1944  
+~r1=3632  
 ~#3 digit scenario number
 ~z=%1%
 ~:pk_op_loop
@@ -44,13 +46,15 @@
 ~r2=8
 ~?y=2
 ~r2=9
+~/ cutoff value for indexed transit cost/auto only trip cost
+~r3=0.4
 ~+;s=%z%;~?e;~$>bad_scen
 ~/ Transit scenario argument is valid.
 ~#
 ~#
-~# Create kzone matrix (constrained by indexed transit/auto only value of 0.3 or less) & adjust header
+~# Create kzone matrix (constrained by indexed transit/auto only cutoff value or less) & adjust header
 3.21
-~+;1;y;mf%r2%35;y;kzonep;Intermed stn zn %z%;~?q=1;y;0;mf%r2%21; ;mf%r2%34;0,0.3,include;n;2;q
+~+;1;y;mf%r2%35;y;kzonep;Intermed stn zn %z%;~?q=1;y;0;mf%r2%21; ;mf%r2%34;0,%r3%,include;n;2;q
 ~# ____________________________________________________________________________________________
 ~# Create matrix to flag zones that should not have intrazonal transit trips & adjust header
 ~# ____________________________________________________________________________________________
@@ -97,11 +101,6 @@ q
 ~/DELETE UNNEEDED MATRICES
 ~# ____________________________________________________________________________________________
 3.12
-~+;2;mo%r2%01;y
-~+;2;mo%r2%02;y
-~+;2;mo%r2%03;y
-~+;2;mo%r2%04;y
-~+;2;mo%r2%05;y
 ~+;2;mf%r2%03;y
 ~+;2;mf%r2%04;y
 ~+;2;mf%r2%05;y
