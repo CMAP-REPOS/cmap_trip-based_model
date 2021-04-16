@@ -1,0 +1,62 @@
+~# Flags O-Ds that are not connected by transit with "9999" and applies
+~# the flag to transit matrices.
+~#
+~# Call syntax: flag_transit_disconnects.mac
+~#
+~/
+~/ Flag disconnected O-Ds where in-vehicle minutes (off-peak) <0 or >=9999
+3.21  /Matrix calculations
+1       /Matrix calculations
+y         /Save result?
+mf922     /Result matrix
+n         /Do you want to initialize it?
+~#         Algebraic expression
+9999
+ 
+mf922     /Constraint matrix
+0,9999,exclude  /Constraint interval
+n         /Submatrix?
+1         /List device= Terminal
+ 
+q
+~#
+~/
+~/ Apply flag to other off-peak transit matrices
+~/ ---------------------------------------------
+~/ Walk transfer minutes
+~+;3.21;1;y;mf923;n;9999; ;mf922;9999,9999,include;n;1; ;q
+~#
+~/ Wait time
+~+;3.21;1;y;mf938;n;9999; ;mf922;9999,9999,include;n;1; ;q
+~#
+~/ Headway
+~+;3.21;1;y;mf939;n;9999; ;mf922;9999,9999,include;n;1; ;q
+~#
+~/ Priority mode
+~+;3.21;1;y;mf930;n;9999; ;mf922;9999,9999,include;n;1; ;q
+~#
+~/ Average fare
+~+;3.21;1;y;mf928;n;9999; ;mf922;9999,9999,include;n;1; ;q
+~#
+~/
+~/ Flag disconnected O-Ds where in-vehicle minutes (peak) <0 or >=9999
+~+;3.21;1;y;mf822;n;9999; ;mf822;0,9999,exclude;n;1; ;q
+~#
+~/
+~/ Apply flag to other peak transit matrices
+~/ -----------------------------------------
+~/ Walk transfer minutes
+~+;3.21;1;y;mf823;n;9999; ;mf822;9999,9999,include;n;1; ;q
+~#
+~/ Wait time
+~+;3.21;1;y;mf838;n;9999; ;mf822;9999,9999,include;n;1; ;q
+~#
+~/ Headway
+~+;3.21;1;y;mf839;n;9999; ;mf822;9999,9999,include;n;1; ;q
+~#
+~/ Priority mode
+~+;3.21;1;y;mf830;n;9999; ;mf822;9999,9999,include;n;1; ;q
+~#
+~/ Average fare
+~+;3.21;1;y;mf828;n;9999; ;mf822;9999,9999,include;n;1; ;q
+~/

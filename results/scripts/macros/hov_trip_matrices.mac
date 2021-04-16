@@ -1,0 +1,53 @@
+~# Exports SOV and HOV trip matrices as Emme batch files.
+~#
+~# Call syntax: hov_trip_matrices.mac <1>
+~#   1 - Path to directory for output
+~#
+~/ Export home-work SOV person trips
+batchout=%1%\mf101.txt
+3.14  /Export matrices
+4       /Change module parameters
+2
+8,4
+y
+4
+y
+3       /Export matrix
+mf101     /Matrix
+          /Constraint matrix
+n         /Aggregation for origins?
+n         /Aggregation for destinations?
+n         /Submatrix?
+q
+~#
+~/ Export home-work HOV2 person trips
+batchout=%1%\mf102.txt
+~+;3.14;3;mf102; ;n;n;n;q
+~#
+~/ Export home-work HOV3+ person trips
+batchout=%1%\mf103.txt
+~+;3.14;3;mf103; ;n;n;n;q
+~#
+~/ Export home-other SOV person trips
+batchout=%1%\mf104.txt
+~+;3.14;3;mf104; ;n;n;n;q
+~#
+~/ Export home-other HOV2 person trips
+batchout=%1%\mf105.txt
+~+;3.14;3;mf105; ;n;n;n;q
+~#
+~/ Export home-other HOV3+ person trips
+batchout=%1%\mf106.txt
+~+;3.14;3;mf106; ;n;n;n;q
+~#
+~/ Export non-home SOV person trips
+batchout=%1%\mf107.txt
+~+;3.14;3;mf107; ;n;n;n;q
+~#
+~/ Export non-home HOV2 person trips
+batchout=%1%\mf108.txt
+~+;3.14;3;mf108; ;n;n;n;q
+~#
+~/ Export non-home HOV3+ person trips
+batchout=%1%\mf109.txt
+~+;3.14;3;mf109; ;n;n;n;q

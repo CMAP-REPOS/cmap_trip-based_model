@@ -1,0 +1,47 @@
+~# Exports peak (AM peak) and off-peak (mid-day) transit networks,
+~# itineraries, and attributes as Emme batch files, along with a
+~# shapefile for each transit network.
+~#
+~# Call syntax: transit_networks.mac <1> <2>
+~#   1 - Path to directory for output
+~#   2 - 3-digit scenario number
+~#
+~/ Export AM peak transit (e.g., 200) network, itineraries, and attributes
+batchout=%1%/?
+s=%2%
+2.14  /Output base network
+5       /Export base network
+network_pk.txt
+y
+y
+q
+2.24  /Output transit lines
+4       /Export transit lines
+*         /Selected transit lines or attributes= all
+itins_pk.txt
+q
+2.41  /Network calculations
+1       /Network calculations and mode changes
+n         /Save result?
+~#         Expression to calculate
+@ltime+@hwytm+@zfare
+ 
+*         /Selected transit lines or attributes = all
+*         /Selected link types or attributes = all
+3         /Type of output to be generated= export
+attribs_pk.txt
+q
+~#
+~/ Export AM peak transit network as a shapefile
+~<emme2shp %1%\transit_pk-%2%
+~#
+~/ Export mid-day transit (e.g., 205) network, itineraries, and attributes
+~x=%2%
+~x+5
+s=%x%
+~+;2.14;5;network_op.txt;y;y;q
+~+;2.24;4;*;itins_op.txt;q
+~+;2.41;1;n;@ltime+@hwytm+@zfare; ;*;*;3;attribs_op.txt;q
+~#
+~/ Export mid-day transit network as a shapefile
+~<emme2shp %1%\transit_op-%2%

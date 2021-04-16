@@ -1,0 +1,54 @@
+~# Sums trip matrices and outputs trip totals as a CSV.
+~#
+~# Call syntax: trip_totals.mac <1>
+~#   1 - Path to directory for output
+~#
+~/ Sum standard trip tables mf1-10
+~x=0
+~y=49
+~:loop
+~x+1
+~y+1
+3.21  /Matrix calculations
+1       /Matrix calculations
+y         /Save result?
+ms%y%     /Result matrix ms50-ms59
+y         /Do you want to initialize it? or Change header information?
+auto      /Name
+auto person trips  /Description
+~?q=1
+y         /If asked to initialize data?
+0         /Default value
+~#         Algebraic expression= mf1-mf10
+mf%x%
+ 
+          /Constraint matrix
+n         /Submatrix?
++         /Aggregation operator over origins
++         /Aggregation operator over destinations
+2         /List device= Printer
+q
+~?x<10
+~$loop
+~#
+~/ Sum transit trip tables
+~+;3.21;1;y;ms60;y;tran;transit person trips;~?q=1;y;0;mf14; ; ;n;+;+;2;q
+~+;3.21;1;y;ms61;y;tran;transit person trips;~?q=1;y;0;mf42; ; ;n;+;+;2;q
+~+;3.21;1;y;ms62;y;tran;transit person trips;~?q=1;y;0;mf43; ; ;n;+;+;2;q
+~#
+~/ Write the totals to a file
+~>>%1%\totals.csv
+~"mf1,HWauto,%ms50% 
+~"mf2,HOauto,%ms51%
+~"mf3,NHauto,%ms52% 
+~"mf4,Btruck,%ms53%
+~"mf5,Ltruck,%ms54% 
+~"mf6,Mtruck,%ms55% 
+~"mf7,Htruck,%ms56%
+~"mf8,POEauto,%ms57% 
+~"mf9,POEtruck,%ms58% 
+~"mf10,Airport,%ms59%
+~"mf14,HWtransit,%ms60% 
+~"mf42,HOtransit,%ms61% 
+~"mf43,NHtransit,%ms62% 
+~>

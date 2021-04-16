@@ -1,0 +1,50 @@
+~# Sums home-work trip matrices by income level and outputs trip totals as a CSV.
+~#
+~# Call syntax: work_trip_totals.mac <1>
+~#   1 - Path to directory for output
+~#
+~/ Sum low-income home-work person trips
+3.21  /Matrix calculations
+1       /Matrix calculations
+y         /Save result?
+ms60      /Result matrix
+y         /Do you want to initialize it? or Change header information?
+trips     /Name
+trips     /Description
+~?q=1
+y         /If asked to initialize data?
+0         /Default value
+~#         Algebraic expression
+mf36      
+ 
+          /Constraint matrix
+n         /Submatrix?
++         /Aggregation operator over origins
++         /Aggregation operator over destinations
+2         /List device= Printer
+q
+~#
+~/ Sum high-income home-work person trips
+~+;3.21;1;y;ms61;y;trips;trips;~?q=1;y;0;mf37; ; ;n;+;+;2;q
+~#
+~/ Sum low-income home-work transit person trips
+~+;3.21;1;y;ms62;y;trips;trips;~?q=1;y;0;mf40; ; ;n;+;+;2;q
+~#
+~/ Sum high-income home-work transit person trips
+~+;3.21;1;y;ms63;y;trips;trips;~?q=1;y;0;mf41; ; ;n;+;+;2;q
+~#
+~/ Sum low-income home-work auto person trips
+~+;3.21;1;y;ms64;y;trips;trips;~?q=1;y;0;mf48; ; ;n;+;+;2;q
+~#
+~/ Sum high-income home-work auto person trips
+~+;3.21;1;y;ms65;y;trips;trips;~?q=1;y;0;mf49; ; ;n;+;+;2;q
+~#
+~/ Write the totals to a file
+~>>%1%\totals.csv
+~"mf36,LincHW,%ms60% 
+~"mf37,HincHW,%ms61%
+~"mf40,LincHWtransit,%ms62% 
+~"mf41,HincHWtransit,%ms63%
+~"mf48,LincHWauto,%ms64% 
+~"mf49,HincHWauto,%ms65% 
+~>
