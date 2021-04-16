@@ -67,8 +67,12 @@ if not "%ok%"=="Y" (goto end)
 @echo ==================================================================
 @echo.
 
+CD %~dp0
+
 call ..\activate_python_env.bat arcpy
 @echo.
+
+CD %~dp0
 
 REM Now find SAS executable
 set infile=path.txt

@@ -24,6 +24,8 @@ if '%~1'=='arcpy' (
 )
 rem ====================================================================
 
+cd %~dp0
+
 rem If the virtual environment is already available, skip the process of
 rem building it.
 if exist env (call .\env\Scripts\activate) else (goto noenv)
