@@ -71,7 +71,7 @@ if %arcpy%==y (
 @echo.
 
 rem Installs latest version in user appdata directory
-python -m pip install --user --upgrade pip
+python -m pip install --user --upgrade pip==20.3.4
 @echo.
 
 @echo Installing virtualenv...
