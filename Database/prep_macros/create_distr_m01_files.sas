@@ -76,6 +76,7 @@
            03-07-2018: - extra code to ensure format for "zone" from ArcGIS 10.5 shapefiles (bhdwy_zn, fhdwy_zn, pkrd) is compatible with other datasets.
 		   
 		   Ferguson 10/2/2018: Updated zone system 09 references to zone system 17.
+		   03/02/2021 Ferguson: Updated paths for removal of tg/sas directory.
 */
 
 *=====================================================================;
@@ -94,9 +95,9 @@ filename in25 "temp\transit_midday.itin";
 filename in3 "..\data\zcentroid_xcoord.txt";
 filename in4 "..\data\zcentroid_ycoord.txt";
 
-filename in5 "..\tg\sas\data\m01tg.txt";
-filename in6 "..\tg\sas\data\m01auto.csv";
-filename in7 "..\tg\sas\data\m01type.csv";
+filename in5 "..\tg\data\m01tg.txt";
+filename in6 "..\tg\data\m01auto.csv";
+filename in7 "..\tg\data\m01type.csv";
 filename in8 "..\tg\fortran\HH_IN.txt";
 filename error1 "saserr.txt";
 %let pnr=temp\pkrd.dbf;                              *** Park-n-Ride data;  

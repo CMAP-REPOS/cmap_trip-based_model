@@ -27,12 +27,12 @@ rem 03/09/2018 Heither: Automatically find Python and SAS executables.
 rem 07/16/2020 Ferguson: Refined the Python search to use a virtual
 rem            environment with custom package requirements by calling
 rem            activate_python_env.bat.
+rem 03/02/2021 Ferguson: Updated paths for removal of tg/sas directory.
 
 rem ====================================================================
 rem Settings
 rem --------
 @echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@echo.
 @echo   Connect to an available Emme license before continuing.
 @echo.
 @echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -41,7 +41,6 @@ pause
 @echo.
 
 @echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@echo.
 @echo   The geoprocessing procedures in this script require an
 @echo   available ArcGIS Desktop Advanced license. This setting must
 @echo   be selected in ArcGIS Administrator before continuing.
@@ -102,9 +101,9 @@ if exist saserr.txt (del saserr.txt /Q)
 cd ..
 if not exist tg\fortran\MCHW_HH.TXT (goto filemiss1)
 copy tg\fortran\MCHW_HH.TXT MCHW_HH.TXT /y
-if not exist tg\sas\data\m01auto.csv (goto filemiss2)
-if not exist tg\sas\data\m01tg.txt (goto filemiss2)
-if not exist tg\sas\data\m01type.csv (goto filemiss2)
+if not exist tg\data\m01auto.csv (goto filemiss2)
+if not exist tg\data\m01tg.txt (goto filemiss2)
+if not exist tg\data\m01type.csv (goto filemiss2)
 
 @ECHO.
 @ECHO -- OBTAINING TRANSIT NETWORK DATA FROM EMME --
@@ -167,7 +166,7 @@ goto end
 
 :filemiss2
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO VERIFY m01auto.csv, m01tg.txt, m01type.csv EXIST in tg\sas\data\!!!
+@ECHO VERIFY m01auto.csv, m01tg.txt, m01type.csv EXIST in tg\data!!!
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 pause
 goto end

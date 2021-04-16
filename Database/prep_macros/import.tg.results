@@ -1,39 +1,41 @@
-~/batchin trip productions and attractions
-~/  cmh modified 5/19/09: create batch mode register y
+~/ batchin trip productions and attractions
+~/ cmh modified 5/19/09: create batch mode register y
+~/ 03/02/2021 Ferguson: Updated paths for removal of sas directory.
+~/
 ~/ set up y to store batch mode (0-interactive, 1-batch)
 ~y=0
 ~x=%0%
 ~+;~?x=1;~y=1
 ~/
-batchin=tg\sas\data\hwplo.in
+batchin=tg\data\hwplo.in
 3.11
 1
 
-batchin=tg\sas\data\hwphi.in
+batchin=tg\data\hwphi.in
 3.11
 1
 
-batchin=tg\sas\data\hop.in
+batchin=tg\data\hop.in
 3.11
 1
 
-batchin=tg\sas\data\nhp.in
+batchin=tg\data\nhp.in
 3.11
 1
 
-batchin=tg\sas\data\hwalo.in
+batchin=tg\data\hwalo.in
 3.11
 1
 
-batchin=tg\sas\data\hwahi.in
+batchin=tg\data\hwahi.in
 3.11
 1
 
-batchin=tg\sas\data\hoa.in
+batchin=tg\data\hoa.in
 3.11
 1
 
-batchin=tg\sas\data\nha.in
+batchin=tg\data\nha.in
 3.11
 1
 
