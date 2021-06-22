@@ -58,14 +58,11 @@ def compute_deadhead_trip_table(
         wgt_matrix = np.exp(traveltime_factor*(auto_travel_time + intrazonal_value))
 
         # Fratar the deadhead weights to the deadhead productions and attractions
-        with np.errstate(divide='ignore'):
-            for iter in range(10):
-                log.info(f"compute_deadhead_trip_table: {tname} iter {iter}")
+        for iter in range(10):
+            with np.errstate(divide='ignore'):
                 w = np.nan_to_num(wgt_matrix / wgt_matrix.sum(0)) * np.expand_dims(deadhead_dests, 0)
                 wgt_matrix = np.nan_to_num(w / np.expand_dims(w.sum(1), 1)) * np.expand_dims(deadhead_origs, 1)
-                #log.info(f"   wgt_matrix: {wgt_matrix[:5,:5]}")
 
-        wgt_matrix = wgt_matrix
         chx = {}
 
         triptable = np.zeros(wgt_matrix.shape, dtype=np.int32)

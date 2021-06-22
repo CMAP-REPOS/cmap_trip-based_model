@@ -870,7 +870,7 @@ def choice_simulator_trips_many(
         if chunk_size == 1:
             break
 
-    log.debug(f"choice_simulator_trips_many: chunk_size={chunk_size}")
+    log.info(f"using chunk_size={chunk_size} to process {len(otaz)} otazs across {n_jobs} jobs")
 
     otaz_chunks = [otaz[i:i + chunk_size] for i in range(0, len(otaz), chunk_size)]
     # inits = [None for _ in range(0, min(len(otaz), n_jobs))]
@@ -879,13 +879,16 @@ def choice_simulator_trips_many(
     save_dir = dh.filenames.cache_dir / cache_subdir
     os.makedirs(save_dir, exist_ok=True)
     n_threads = max(int(thread_saturation * joblib.cpu_count() // n_jobs), 1)
-    log.debug(f"choice_simulator_trips_many: n_threads={n_threads} (per job)")
+    log.info(f"using n_threads={n_threads} (per job)")
 
     # if temp_dir is None:
     #     temp_dir = save_dir/"temp"
     if temp_dir is not None:
         os.makedirs(temp_dir, exist_ok=True)
 
+    # The model allows for using auto propensity for non-home trips
+    # that is lagged by one global iteration.  This allows all trip purposes
+    # to be processed together, greating improving runtime.
     if with_nonhome_auto:
         first_purposes = tuple(j for j in purposesA if 'NHB' not in j)
         second_purposes = tuple(j for j in purposesA if j not in first_purposes)
@@ -921,6 +924,7 @@ def choice_simulator_trips_many(
             for delay, otaz_chunk in stagger_starts(otaz_chunks, delay=3, n_jobs=n_jobs)
         )
         if with_wfh:
+            log.info("joblib model WFH starting")
             parallel(
                 joblib.delayed(choice_simulator_trips)(
                     dh,
@@ -946,6 +950,7 @@ def choice_simulator_trips_many(
     )
     if second_purposes:
         with joblib.Parallel(n_jobs=n_jobs, verbose=100) as parallel:
+            log.info("joblib model second purposes starting")
             parallel(
                 joblib.delayed(choice_simulator_trips)(
                     dh,
@@ -960,6 +965,7 @@ def choice_simulator_trips_many(
                 for delay, otaz_chunk in stagger_starts(otaz_chunks, delay=3, n_jobs=n_jobs)
             )
             if with_wfh:
+                log.info("joblib model second purposes WFH starting")
                 parallel(
                     joblib.delayed(choice_simulator_trips)(
                         dh,

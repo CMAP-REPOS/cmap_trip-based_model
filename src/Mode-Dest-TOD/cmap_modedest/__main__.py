@@ -71,6 +71,8 @@ def main(*args):
     log_info(f"#  (full path) = {os.path.abspath(args.database_dir)}")
     log_info(f"# --max_zone_chunk = {args.max_zone_chunk}")
     log_info(f"# --njobs = {args.njobs}")
+    if args.short >= 1.0 and args.njobs > 1:
+        log_info(f"#         -> n_jobs is set to 1 when running in sequential short mode")
     log_info(f"# --short = {args.short}")
     log_info(f"# --subdir = {args.subdir}")
     log_info(f"# --check = {args.check}")
