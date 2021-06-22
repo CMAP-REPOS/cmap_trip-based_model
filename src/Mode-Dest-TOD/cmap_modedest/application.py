@@ -31,7 +31,7 @@ from .time_of_day_model import time_of_day_simulator_initialize
 
 from .cmap_logging import getLogger, get_worker_log
 
-app_floatdtype = np.float64
+app_floatdtype = np.float32
 
 log = getLogger()
 
