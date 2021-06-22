@@ -1,0 +1,57 @@
+
+# To use this file::
+#  conda env create -f environment.yml
+
+name: CMAP-TRIP
+
+channels:
+- tmip
+- conda-forge
+
+dependencies:
+- python=3.9
+- pip
+- git
+- gh
+- numpy>=1.16
+- pandas>=0.23.4
+- scipy>=1.2
+- scikit-learn>=0.20.1
+- appdirs>=1.4.3
+- matplotlib>=3.0.1
+- seaborn>=0.9
+- pydot
+- graphviz>=2.38
+- plotly>=3.2.1
+- python-kaleido  # Plotly Static Image Export
+- datashader
+- ipywidgets>=7.2
+- joblib>=0.13.2
+- dask>=1.0
+- distributed>=1.25
+- cloudpickle>=0.6.1
+- ipykernel>=5.1
+- nb_conda>=2.2.1
+- jupyter_contrib_nbextensions>=0.4.0   # on conda-forge only
+- jupyter
+- notebook
+- pytest>=4.0.1
+- pyscaffold
+- ipyparallel
+- pyzmq
+- platypus-opt
+- altair
+- salib
+- sqlalchemy
+- statsmodels
+- shortuuid
+- larch
+- tmip::emat
+- pyarrow
+- geopandas
+- zarr
+
+- pip:
+  - -e .
+  - -e ./sharrow
+
