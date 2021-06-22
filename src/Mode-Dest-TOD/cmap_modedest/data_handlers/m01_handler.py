@@ -33,7 +33,7 @@ def read_m01(filename):
 def load_m01(filenames):
 	m01 = Dict()
 
-	m01.HW = read_m01(filenames.PDHW_M01)
+	m01.HW = read_m01(filenames.ALLPURPOSE_M01)
 	# There is only one unique m01 file
 	#   the others are simply copies
 	# m01.HO = read_m01(filenames.PDHO_M01)
@@ -89,8 +89,8 @@ def attach_areatypes(dh, df, prefix, suffix, targetzone):
 	auto_propensity_file = search_path(
 		dh.filenames.cache_dir / "computed_auto_propensity.csv",
 		dh.filenames.emme_database_dir / "computed_auto_propensity.csv",
-		dh.filenames.emme_database_dir / "default_auto_propensity.csv",
-		dh.filenames.emme_database_dir / "default_auto_propensity.csv.gz",
+		dh.filenames.emme_database_dir / "defaults_base_year/default_auto_propensity.csv",
+		dh.filenames.emme_database_dir / "defaults_base_year/default_auto_propensity.csv.gz",
 	)
 	autopropensity = pd.read_csv(auto_propensity_file, index_col=0)['auto_propensity']
 	df[f'{prefix}areatype{suffix}'] = np.asarray(_map(targetzone,areatype))

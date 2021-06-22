@@ -18,8 +18,8 @@ def read_distr(filename):
 
 def load_distr(filenames):
 	distr = Dict()
-	distr.HW = read_distr(filenames.PDHW_DISTR)
-	distr.HO = read_distr(filenames.PDHO_DISTR)
-	distr.NH = read_distr(filenames.PDNH_DISTR)
+	distr.HW = read_distr(filenames.HW_DISTR)
+	distr.HO = read_distr(filenames.HO_DISTR)
+	distr.NH = read_distr(filenames.NH_DISTR)
 	return distr
 

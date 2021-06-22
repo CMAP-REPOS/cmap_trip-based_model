@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import yaml
 from ..addict import Dict
+from ..util import search_path
 
 import logging
 log = logging.getLogger('CMAP')
@@ -94,21 +95,41 @@ class FileNames:
 
 
 	def __getattr__(self, item):
+
+		def _log_path_search(label, *args):
+			pth = search_path(*args)
+			log.debug(f"FILEPATH({label})={pth}")
+			return pth
+
 		if item == 'temp_dir':
 			if self._temporary_dir is None:
 				import tempfile
 				self._temporary_dir = tempfile.TemporaryDirectory()
 			return Path(self._temporary_dir.name)
 		if item[-6:] == "_DISTR":
-			return self.emme_database_dir / f"{item}.TXT"
+			return _log_path_search(
+				item,
+				self.emme_database_dir / f"{item}.TXT",
+				self.emme_database_dir / f"defaults_base_year/{item}.TXT",
+			)
 		if item[-4:] == "_M01":
-			return self.emme_database_dir / f"{item}.TXT"
+			return _log_path_search(
+				item,
+				self.emme_database_dir / f"{item}.TXT",
+				self.emme_database_dir / f"defaults_base_year/{item}.TXT",
+			)
 		if item[-5:] == "_M023":
-			return self.emme_database_dir / f"{item}.TXT"
-		if item[-5:] == "_M023":
-			return self.emme_database_dir / f"{item}.TXT"
+			return _log_path_search(
+				item,
+				self.emme_database_dir / f"{item}.TXT",
+				self.emme_database_dir / f"defaults_base_year/{item}.TXT",
+			)
 		if item[-9:] == "_CBDPARK0":
-			return self.emme_database_dir / f"{item[:-1]}.TXT"
+			return _log_path_search(
+				item,
+				self.emme_database_dir / f"{item[:-1]}.TXT",
+				self.emme_database_dir / f"defaults_base_year/{item[:-1]}.TXT",
+			)
 		if item[-8:] == "_CBDPARK":
 			return self.cache_dir / f"__{item}.TXT"
 		if item[-9:] == "_CBDPARK2":
@@ -138,7 +159,6 @@ class FileNames:
 		if item == "config":
 			return self._emme_database_dir / f"cmap_trip_config.yaml"
 		if item == "choice_model_param_file":
-			from ..util import search_path
 			result = search_path(
 				self.emme_database_dir / f"choice_model_params.yaml",
 				self.cache_dir / f"choice_model_params.yaml",
@@ -147,13 +167,11 @@ class FileNames:
 				result = self.cache_dir / f"choice_model_params.yaml"
 			return result
 		if item == "tod_model_param_file":
-			from ..util import search_path
 			return search_path(
 				self.emme_database_dir / f"tod_model_params.yaml",
 				self.cache_dir / f"tod_model_params.yaml",
 			)
 		if item == "zone_districts":
-			from ..util import search_path
 			return search_path(
 				self.emme_database_dir / f"CMAP_Zone_Districts.csv.gz",
 				self.cache_dir / f"CMAP_Zone_Districts.csv.gz",

@@ -6,9 +6,9 @@ from ..addict import Dict
 
 def load_cbd_parking(filenames):
 
-	if os.path.exists(filenames.MCHW_CBDPARK0):
-		# split the MCHW_CBDPARK file into its two primary parts
-		with open(filenames.MCHW_CBDPARK0, 'rt') as f:
+	if os.path.exists(filenames.HW_CBDPARK0):
+		# split the HW_CBDPARK file into its two primary parts
+		with open(filenames.HW_CBDPARK0, 'rt') as f:
 			lines = f.readlines()
 		def secondpart(line):
 			beginning = line.split(",", 1)[0]

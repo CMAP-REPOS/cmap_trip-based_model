@@ -162,38 +162,6 @@ def sample_dest_zones_and_data(
 		)
 		trip_alt_dest_df = pd.concat([trip_alt_dest_df, auto_cols], axis=1)
 
-		# trip_alt_dest_df = attached_auto = attach_selected_skims_sh(
-		# 	trip_alt_dest_df,
-		# 	'o_zone',
-		# 	labeler(i),
-		# 	skims.raw,
-		# 	(
-		# 		("in_peak", {
-		# 			'mf44': f'{labeler(i)}_auto_time',
-		# 			'mf45': f'{labeler(i)}_auto_dist',
-		# 		}),
-		# 		("~in_peak", {
-		# 			'mf46': f'{labeler(i)}_auto_time',
-		# 			'mf47': f'{labeler(i)}_auto_dist',
-		# 		}),
-		# 		(None, {
-		# 			'mf47': f'{labeler(i)}_auto_op_dist',
-		# 		}),
-		# 		(None, {
-		# 			'mf44': f'{labeler(i)}_auto_time_PEAK',
-		# 			'mf45': f'{labeler(i)}_auto_dist_PEAK',
-		# 		}),
-		# 		(None, {
-		# 			'mf46': f'{labeler(i)}_auto_time_OFFPEAK',
-		# 			'mf47': f'{labeler(i)}_auto_dist_OFFPEAK',
-		# 		}),
-		# 	),
-		# )
-
-		# if np.any(attached_auto.isna()):
-		# 	print(attached_auto.isna().sum())
-		# 	pass
-
 		# add areatypes
 		from ..data_handlers.m01_handler import attach_areatypes
 		trip_alt_dest_df = attach_areatypes(dh, trip_alt_dest_df, labeler(i), '', labeler(i))  # altdest0000_areatype
@@ -220,30 +188,6 @@ def sample_dest_zones_and_data(
 		# Add taxi and TNC wait time data
 		from ..data_handlers.m01_handler import attach_hired_car_waits
 		trip_alt_dest_df = attach_hired_car_waits(dh, trip_alt_dest_df, labeler(i), origin_zone)
-		# taxi_wait_pk = m01['taxi_wait_pk']
-		# taxi_wait_op = m01['taxi_wait_op']
-		# trip_alt_dest_df[f'{labeler(i)}_taxi_wait_time_PEAK'] = origin_zone.map(taxi_wait_pk)
-		# trip_alt_dest_df[f'{labeler(i)}_taxi_wait_time_OFFPEAK'] = origin_zone.map(taxi_wait_op)
-		# trip_alt_dest_df[f'{labeler(i)}_taxi_wait_time'] = (
-		# 		origin_zone.map(taxi_wait_pk) * trips.in_peak
-		# 		+ origin_zone.map(taxi_wait_op) * ~trips.in_peak
-		# )
-		# tnc_solo_wait_pk = m01['tnc_solo_wait_pk']
-		# tnc_solo_wait_op = m01['tnc_solo_wait_op']
-		# trip_alt_dest_df[f'{labeler(i)}_tnc_solo_wait_time_PEAK'] = origin_zone.map(tnc_solo_wait_pk)
-		# trip_alt_dest_df[f'{labeler(i)}_tnc_solo_wait_time_OFFPEAK'] = origin_zone.map(tnc_solo_wait_op)
-		# trip_alt_dest_df[f'{labeler(i)}_tnc_solo_wait_time'] = (
-		# 		origin_zone.map(tnc_solo_wait_pk) * trips.in_peak
-		# 		+ origin_zone.map(tnc_solo_wait_op) * ~trips.in_peak
-		# )
-		# tnc_pool_wait_pk = m01['tnc_pool_wait_pk']
-		# tnc_pool_wait_op = m01['tnc_pool_wait_op']
-		# trip_alt_dest_df[f'{labeler(i)}_tnc_pool_wait_time_PEAK'] = origin_zone.map(tnc_pool_wait_pk)
-		# trip_alt_dest_df[f'{labeler(i)}_tnc_pool_wait_time_OFFPEAK'] = origin_zone.map(tnc_pool_wait_op)
-		# trip_alt_dest_df[f'{labeler(i)}_tnc_pool_wait_time'] = (
-		# 		origin_zone.map(tnc_pool_wait_pk) * trips.in_peak
-		# 		+ origin_zone.map(tnc_pool_wait_op) * ~trips.in_peak
-		# )
 		# Add taxi and TNC fare data
 		for t in ['PEAK', 'OFFPEAK']:
 			trip_alt_dest_df[f'{labeler(i)}_taxi_fare_{t}'] = taxi_cost(
@@ -290,46 +234,6 @@ def sample_dest_zones_and_data(
 			as_dataframe=True,
 		)
 		trip_alt_dest_df = pd.concat([trip_alt_dest_df, new_cols], axis=1)
-
-		# trip_alt_dest_df = attach_selected_skims_sh(
-		# 	trip_alt_dest_df,
-		# 	'o_zone',
-		# 	labeler(i),
-		# 	skims.raw,
-		# 	(
-		# 		("in_peak", {
-		# 			skims.transit_pk.col_mapping[j]: f'{labeler(i)}_transit_{j}'
-		# 			for j in skim_tags
-		# 		}),
-		# 		(None, {
-		# 			skims.transit_pk.col_mapping[j]: f'{labeler(i)}_transit_{j}_PEAK'
-		# 			for j in skim_tags
-		# 		}),
-		# 	),
-		# )
-		#
-		# if np.any(trip_alt_dest_df.isna()):
-		# 	print(trip_alt_dest_df.isna().sum())
-		# 	pass
-		# else:
-		# 	pass
-		#
-		# trip_alt_dest_df = attach_selected_skims_sh(
-		# 	trip_alt_dest_df,
-		# 	'o_zone',
-		# 	labeler(i),
-		# 	skims.raw,
-		# 	(
-		# 		("~in_peak", {
-		# 			skims.transit_op.col_mapping[j]: f'{labeler(i)}_transit_{j}'
-		# 			for j in skim_tags
-		# 		}),
-		# 		(None, {
-		# 			skims.transit_op.col_mapping[j]: f'{labeler(i)}_transit_{j}_OFFPEAK'
-		# 			for j in skim_tags
-		# 		}),
-		# 	),
-		# )
 
 		if np.any(trip_alt_dest_df.isna()):
 			print(trip_alt_dest_df.isna().sum())

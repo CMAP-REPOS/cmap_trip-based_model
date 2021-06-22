@@ -34,6 +34,6 @@ def read_m023(filename):
 
 def load_m023(filenames):
 
-	m023 = read_m023(filenames.MCHW_M023)
+	m023 = read_m023(filenames.ALLPURPOSE_M023)
 	return m023
 

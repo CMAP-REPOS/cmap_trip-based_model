@@ -1,3 +1,6 @@
 .idea
 src/Mode-Dest-TOD/cmap_modedest.egg-info
 src/Mode-Dest-TOD/sharrow/sharrow.egg-info
+Database/defaults_base_year/emmemat.zarr
+Database/emmemat.zarr
+Database/emmemat

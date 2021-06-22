@@ -1,0 +1,227 @@
+---
+HBWH:
+  AUTO_no_veh             : -2.020507619425865
+  AUTO_sufficient_veh     : 0.3844935144504888
+  Const_BIKE              : -0.8944246388354469
+  Const_HOV2              : -0.16678697212944762
+  Const_HOV3              : -0.21801003734510463
+  Const_TAXI              : -2.4310989696693013
+  Const_TNC1              : -2.008301741035043
+  Const_TNC2              : -2.455226098623703
+  Const_Transit           : 1.2020227949186426
+  Const_WALK              : 2.4128749738878774
+  "HOV2_distance[1]: up to 5": -0.0648858859599325
+  "HOV2_distance[2]: 5 to 10": -0.11537255813271993
+  "HOV2_distance[3]: over 10": -0.013050297901826068
+  "HOV3_distance[1]: up to 5": -0.12523338685498067
+  "HOV3_distance[2]: 5 to 10": -0.14763649295658227
+  "HOV3_distance[3]: over 10": -0.017214215320360143
+  HOV_no_veh              : -2.103177844454201
+  HOV_sufficient_veh      : 0.47612143804318574
+  Mu-Dest                 : 0.5834643380829103
+  Mu-HiredCar             : 0.4375982534795487
+  Mu-PrivateCar           : 0.4375982536015584
+  bike_intrazonal         : -1.6635594415255228
+  bike_time               : -0.02778797820527519
+  cost                    : -0.011860346150832752
+  "distance[1]: up to 5"  : -0.49796817235986096
+  "distance[2]: 5 to 10"  : -0.25104627285472597
+  "distance[3]: over 10"  : -0.08139192032591108
+  intrazonal              : 0.3946695102680316
+  log_attraction          : 1.0
+  ovtt_dist               : -0.15983876898889499
+  samp_af                 : 1.0
+  totaltime               : -0.017031289681448562
+  transit_areatype2       : -1.1455222123833506
+  transit_areatype3       : -2.27512117966463
+  transit_areatype4       : -2.539621458704995
+  transit_intrazonal      : 1.6253448053954658
+  unavail                 : -999.0
+  walk_areatype2          : 0.148918521141873
+  walk_areatype3          : -0.2522046698282886
+  walk_areatype4          : -0.6561507484218998
+  walk_intrazonal         : -0.39861249595718196
+  "walk_time[1]: up to 0.5": -0.15076547783043087
+  "walk_time[2]: 0.5 to 1.0": -0.050465805122349904
+  "walk_time[3]: over 1.0": -0.045112341851531464
+
+HBWL:
+  AUTO_no_veh             : -2.648198652249382
+  AUTO_sufficient_veh     : 0.6874700854313335
+  Const_BIKE              : -0.9955599592671917
+  Const_HOV2              : -0.2507138156699107
+  Const_HOV3              : -0.42635685598566425
+  Const_TAXI              : -3.834074293273128
+  Const_TNC1              : -2.416655097254343
+  Const_TNC2              : -2.8359597288177474
+  Const_Transit           : 1.0651342682889922
+  Const_WALK              : 3.91055326755875
+  "HOV2_distance[1]: up to 5": -0.10877524857675636
+  "HOV2_distance[2]: 5 to 10": -0.05003557259724656
+  "HOV2_distance[3]: over 10": -0.0023514479823506114
+  "HOV3_distance[1]: up to 5": -0.154488811646281
+  "HOV3_distance[2]: 5 to 10": -0.1267744502752071
+  "HOV3_distance[3]: over 10": -0.01750227584516843
+  HOV_no_veh              : -2.0365040401612657
+  HOV_sufficient_veh      : 0.38913443840995715
+  Mu-Dest                 : 0.839232411773966
+  Mu-HiredCar             : 0.6295387785633717
+  Mu-PrivateCar           : 0.6295575584751641
+  bike_intrazonal         : -0.9852439199337211
+  bike_time               : -0.06311076420880149
+  cost                    : -0.02930444050469607
+  "distance[1]: up to 5"  : -0.4457701005761924
+  "distance[2]: 5 to 10"  : -0.25573092804796066
+  "distance[3]: over 10"  : -0.09147722766061185
+  intrazonal              : 0.022081534934645274
+  log_attraction          : 1.0
+  ovtt_dist               : -0.07616975683884379
+  samp_af                 : 1.0
+  totaltime               : -0.014649822465043105
+  transit_areatype2       : -1.0350866268358108
+  transit_areatype3       : -2.7829157409267773
+  transit_areatype4       : -1.7574314387801362
+  transit_intrazonal      : 1.277571337925011
+  unavail                 : -999.0
+  walk_areatype2          : 0.6442063488414419
+  walk_areatype3          : 0.08889856621641856
+  walk_areatype4          : 0.019286232234253346
+  walk_intrazonal         : -1.1143890277058952
+  "walk_time[1]: up to 0.5": -0.26824938358008715
+  "walk_time[2]: 0.5 to 1.0": -0.05886178460286381
+  "walk_time[3]: over 1.0": -0.07877032317317391
+
+HBS:
+  AUTO_no_veh             : -3.903413269541989
+  AUTO_sufficient_veh     : 0.852441151086951
+  Const_BIKE              : -1.8564761367596052
+  Const_HOV2              : -0.6025849674095608
+  Const_HOV3              : -1.7040053478604362
+  Const_TAXI              : -5.270455044104886
+  Const_TNC1              : -3.828089925814321
+  Const_TNC2              : -4.5707621633589754
+  Const_Transit           : -0.22523630918274856
+  Const_WALK              : 6.583582217566429
+  "HOV2_distance[1]: up to 5": 0.008478410545722863
+  "HOV2_distance[2]: 5 to 10": 0.048233489955187114
+  "HOV2_distance[3]: over 10": -0.022423623279792214
+  "HOV3_distance[1]: up to 5": 0.09787055846834233
+  "HOV3_distance[2]: 5 to 10": 0.022821848670209824
+  "HOV3_distance[3]: over 10": -0.026428510456663556
+  HOV_no_veh              : -2.713043291561369
+  HOV_sufficient_veh      : 0.5392304837893804
+  Mu-Dest                 : 0.9999998787808626
+  Mu-HiredCar             : 0.7499997908832601
+  Mu-PrivateCar           : 0.7281725158642609
+  bike_intrazonal         : -0.44350364685003957
+  bike_time               : -0.147104144846047
+  cost                    : -0.030384156234911752
+  "distance[1]: up to 5"  : -0.7293476329183077
+  "distance[2]: 5 to 10"  : -0.5105733204222774
+  "distance[3]: over 10"  : -0.13196769401928496
+  intrazonal              : -0.871563619356503
+  log_attraction          : 1.0
+  ovtt_dist               : -0.24659137418185922
+  samp_af                 : 1.0
+  totaltime               : -0.029999761893168667
+  transit_intrazonal      : 2.8330905997087985
+  transit_walk_is_short   : 1.6533054079471405
+  unavail                 : -999.0
+  walk_areatype2          : 0.07878751192708212
+  walk_areatype3          : -1.4856727667557421
+  walk_areatype4          : -1.775667990998324
+  walk_intrazonal         : -1.2349728126530135
+  "walk_time[1]: up to 0.5": -0.47584926071685335
+  "walk_time[2]: 0.5 to 1.0": -0.09587124973919721
+  "walk_time[3]: over 1.0": -0.10566572862364063
+
+HBO:
+  AUTO_no_veh             : -2.9723449955987724
+  AUTO_sufficient_veh     : 0.7347665118954296
+  Const_BIKE              : -1.621066255611707
+  Const_HOV2              : -0.22947425518954273
+  Const_HOV3              : -0.7620206084676309
+  Const_TAXI              : -2.9430491175996036
+  Const_TNC1              : -2.149890616846176
+  Const_TNC2              : -2.9880469207285048
+  Const_Transit           : 0.5602213903357824
+  Const_WALK              : 4.672115911124513
+  "HOV2_distance[1]: up to 5": 0.017842190298977868
+  "HOV2_distance[2]: 5 to 10": -7.075645409905262e-05
+  "HOV2_distance[3]: over 10": -0.016284519681641994
+  "HOV3_distance[1]: up to 5": 0.03978509051740356
+  "HOV3_distance[2]: 5 to 10": -0.01284491436498322
+  "HOV3_distance[3]: over 10": -0.017977770487929038
+  HOV_no_veh              : -2.325476497338139
+  HOV_sufficient_veh      : 0.5838940684711496
+  Mu-Dest                 : 0.9178713289622622
+  Mu-HiredCar             : 0.6883642360492987
+  Mu-PrivateCar           : 0.6882947886965918
+  bike_intrazonal         : -0.6770256606289964
+  bike_time               : -0.07555340184909078
+  cost                    : -0.025475554380141544
+  "distance[1]: up to 5"  : -0.6119400534906047
+  "distance[2]: 5 to 10"  : -0.40172879449864224
+  "distance[3]: over 10"  : -0.10817533988028612
+  intrazonal              : -0.4602558041398677
+  log_attraction          : 1.0
+  ovtt_dist               : -0.27514715895070463
+  samp_af                 : 1.0
+  totaltime               : -0.025482312630071828
+  transit_intrazonal      : 2.164005699052783
+  transit_walk_is_short   : 0.5244721366523835
+  unavail                 : -999.0
+  walk_areatype2          : 0.43545010238151494
+  walk_areatype3          : -0.018209860181456608
+  walk_areatype4          : -0.31602311068703826
+  walk_intrazonal         : -0.8364355122550874
+  "walk_time[1]: up to 0.5": -0.3086657505750654
+  "walk_time[2]: 0.5 to 1.0": -0.0836308345460505
+  "walk_time[3]: over 1.0": -0.08481649197021222
+
+NHB:
+  AUTO_dzone_autopropensity: 2.6093548550865298
+  AUTO_ozone_autopropensity: 7.903212659241996
+  Const_BIKE              : 3.659324348190175
+  Const_HOV2              : -0.3546572222800713
+  Const_HOV3              : -1.0028868386643826
+  Const_TAXI              : 4.045443840863456
+  Const_TNC1              : 4.508848564176248
+  Const_TNC2              : 3.1444018834689844
+  Const_Transit           : 6.6157291120458055
+  Const_WALK              : 9.049146428162608
+  "HOV2_distance[1]: up to 5": -0.01026989536042958
+  "HOV2_distance[2]: 5 to 10": -0.07627069398480767
+  "HOV2_distance[3]: over 10": -0.01677512647728643
+  "HOV3_distance[1]: up to 5": 0.0016767707562543128
+  "HOV3_distance[2]: 5 to 10": -0.06920382029463157
+  "HOV3_distance[3]: over 10": -0.04183177911547296
+  HOV_dzone_autopropensity: 2.2082304082191904
+  HOV_ozone_autopropensity: 7.957277535369164
+  Mu-Dest                 : 0.9999999992933986
+  Mu-HiredCar             : 0.750000424288159
+  Mu-PrivateCar           : 0.7500008487496016
+  bike_intrazonal         : 0.6141088674013303
+  bike_time               : -0.029732627913385528
+  cost                    : -0.1072693273773229
+  "distance[1]: up to 5"  : -0.4685871071153799
+  "distance[2]: 5 to 10"  : -0.3334398891958893
+  "distance[3]: over 10"  : -0.06407385003271333
+  intrazonal              : -0.03192832513898493
+  ivtt_longtransit        : -0.010995036453449642
+  log_attraction          : 1.0
+  ovtt_dist               : -0.2686214595515018
+  samp_af                 : 1.0
+  totaltime               : -0.029999993325868026
+  transit_intrazonal      : 3.5841071871040353
+  transit_walk_is_short   : 0.7228954376868366
+  unavail                 : -999.0
+  walk_areatype2          : 0.575517585891264
+  walk_areatype3          : 0.976220909849076
+  walk_areatype4          : 1.0867301189150687
+  walk_intrazonal         : -0.32764354394717804
+  "walk_time[1]: up to 0.5": -0.18779391577789695
+  "walk_time[2]: 0.5 to 1.0": -0.09048678440989817
+  "walk_time[3]: over 1.0": -0.09380630265341512
+
+...
