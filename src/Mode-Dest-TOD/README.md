@@ -33,7 +33,7 @@
   libraries are installed, and no conflicts are introduced with other tools.
   A conda environment file is included in the GitHub repository.
   
-  > mamba env create --file py/environment.yml
+  > mamba env create --file conda-environment.yml
   
   Also get the Database folder: 
   
