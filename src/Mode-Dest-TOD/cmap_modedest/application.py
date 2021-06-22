@@ -31,6 +31,8 @@ from .time_of_day_model import time_of_day_simulator_initialize
 
 from .cmap_logging import getLogger, get_worker_log
 
+app_floatdtype = np.float64
+
 log = getLogger()
 
 n_modes = len(mode9codes)
@@ -143,27 +145,27 @@ def _data_for_application_1(dh, otaz=1, replication=None):
     else:
         log.debug("_data_for_application_1: using stored fast_application_data_2 object")
 
-    t2 = fast_application_data_2.merge(t2)
+    t2 = fast_application_data_2.merge(t2, dtype=app_floatdtype)
 
     hh_data = sample_hh_from_zone(dh, otaz, replication, random_state=otaz << 1, )
-    hh_data['hhinc5'] = sample_hh_income_cats(dh, otaz, len(hh_data), random_state=otaz << 2,).astype(np.float32)
-    hh_data['hhinc5h'] = sample_hh_income_cats(dh, otaz, len(hh_data), random_state=otaz << 2, trunc_min=60_000).astype(np.float32)
+    hh_data['hhinc5'] = sample_hh_income_cats(dh, otaz, len(hh_data), random_state=otaz << 2,).astype(app_floatdtype)
+    hh_data['hhinc5h'] = sample_hh_income_cats(dh, otaz, len(hh_data), random_state=otaz << 2, trunc_min=60_000).astype(app_floatdtype)
 
     # TODO hhinc3 for correct purposes HBW
 
     hh_data['hhinc3'] = (hh_data['hhinc5'] - 1) // 2
-    hh_data['hhinc3==0'] = (hh_data['hhinc3'] == 0).astype(np.float32)
-    hh_data['hhinc3==1'] = (hh_data['hhinc3'] == 1).astype(np.float32)
-    hh_data['hhinc3==2'] = (hh_data['hhinc3'] == 2).astype(np.float32)
+    hh_data['hhinc3==0'] = (hh_data['hhinc3'] == 0).astype(app_floatdtype)
+    hh_data['hhinc3==1'] = (hh_data['hhinc3'] == 1).astype(app_floatdtype)
+    hh_data['hhinc3==2'] = (hh_data['hhinc3'] == 2).astype(app_floatdtype)
     hh_data['hhinc3h'] = (hh_data['hhinc5h'] - 1) // 2
-    hh_data['hhinc3h==1'] = (hh_data['hhinc3h'] == 1).astype(np.float32)
-    hh_data['hhinc3h==2'] = (hh_data['hhinc3h'] == 2).astype(np.float32)
-    hh_data['o_zone'] = np.float32(otaz)
-    hh_data['ozone_autopropensity'] = np.float32(
+    hh_data['hhinc3h==1'] = (hh_data['hhinc3h'] == 1).astype(app_floatdtype)
+    hh_data['hhinc3h==2'] = (hh_data['hhinc3h'] == 2).astype(app_floatdtype)
+    hh_data['o_zone'] = app_floatdtype(otaz)
+    hh_data['ozone_autopropensity'] = app_floatdtype(
         attach_areatypes(dh, pd.DataFrame(index=[otaz]), "", "", targetzone=[otaz])['autopropensity'].iloc[0]
     )
-    hh_data['hhveh==0'] = (hh_data['N_VEHICLES'] == 0).astype(np.float32)
-    hh_data['hhveh>=hhadults'] = (hh_data['N_VEHICLES'] >= hh_data['N_ADULTS']).astype(np.float32)
+    hh_data['hhveh==0'] = (hh_data['N_VEHICLES'] == 0).astype(app_floatdtype)
+    hh_data['hhveh>=hhadults'] = (hh_data['N_VEHICLES'] >= hh_data['N_ADULTS']).astype(app_floatdtype)
 
     df2 = t2.to_pandas()
 
@@ -191,7 +193,7 @@ def _data_for_application_1(dh, otaz=1, replication=None):
         temp_parking_cost *= paid_parking.astype(temp_parking_cost.dtype).values
         df2[f'auto_parking_cost_{purp}'] = temp_parking_cost
 
-    df2_array = df2.to_numpy(dtype=np.float32).reshape(replication, -1)
+    df2_array = df2.to_numpy(dtype=app_floatdtype).reshape(replication, -1)
 
     col_names = getattr(dh, 'column_2_replacement', [])
     try:
@@ -201,7 +203,7 @@ def _data_for_application_1(dh, otaz=1, replication=None):
         )
     except ValueError:
         df3 = pd.DataFrame(
-            df2.to_numpy(dtype=np.float32).reshape(replication, -1),
+            df2.to_numpy(dtype=app_floatdtype).reshape(replication, -1),
             columns=pd.MultiIndex.from_product([
                 [f"altdest{x:04d}" for x in range(1, n_zones + 1)],
                 df2.columns,
@@ -212,17 +214,17 @@ def _data_for_application_1(dh, otaz=1, replication=None):
         need_to_fix_column_names = False
     # hh_data = sample_hh_from_zone(dh, otaz, len(df3), random_state=otaz << 1, )
     hh_data.index = df3.index
-    # hh_data['hhinc5'] = sample_hh_income_cats(dh, otaz, len(hh_data), random_state=otaz << 2,).astype(np.float32)
+    # hh_data['hhinc5'] = sample_hh_income_cats(dh, otaz, len(hh_data), random_state=otaz << 2,).astype(app_floatdtype)
     # hh_data['hhinc3'] = (hh_data['hhinc5'] - 1) // 2
-    # hh_data['hhinc3==0'] = (hh_data['hhinc3'] == 0).astype(np.float32)
-    # hh_data['hhinc3==1'] = (hh_data['hhinc3'] == 1).astype(np.float32)
-    # hh_data['hhinc3==2'] = (hh_data['hhinc3'] == 2).astype(np.float32)
-    # hh_data['o_zone'] = np.float32(otaz)
-    # hh_data['ozone_autopropensity'] = np.float32(
+    # hh_data['hhinc3==0'] = (hh_data['hhinc3'] == 0).astype(app_floatdtype)
+    # hh_data['hhinc3==1'] = (hh_data['hhinc3'] == 1).astype(app_floatdtype)
+    # hh_data['hhinc3==2'] = (hh_data['hhinc3'] == 2).astype(app_floatdtype)
+    # hh_data['o_zone'] = app_floatdtype(otaz)
+    # hh_data['ozone_autopropensity'] = app_floatdtype(
     #     attach_areatypes(dh, pd.DataFrame(index=[otaz]), "", "", targetzone=[otaz])['autopropensity'].iloc[0]
     # )
-    # hh_data['hhveh==0'] = (hh_data['N_VEHICLES'] == 0).astype(np.float32)
-    # hh_data['hhveh>=hhadults'] = (hh_data['N_VEHICLES'] >= hh_data['N_ADULTS']).astype(np.float32)
+    # hh_data['hhveh==0'] = (hh_data['N_VEHICLES'] == 0).astype(app_floatdtype)
+    # hh_data['hhveh>=hhadults'] = (hh_data['N_VEHICLES'] >= hh_data['N_ADULTS']).astype(app_floatdtype)
     addon = hh_data[[
         'o_zone', 'ozone_autopropensity', 'hhveh==0', 'hhveh>=hhadults',
         'hhinc3', 'hhinc3==0', 'hhinc3==1', 'hhinc3==2',
@@ -286,7 +288,7 @@ def _data_for_application_2(dh, df2, filename):
 
     log.debug("_data_for_application_2::dfas")
     dfas = larch.DataFrames(
-        co=df2.astype(np.float32),
+        co=df2.astype(app_floatdtype),
         alt_codes=alt_codes,
         av=True,
         # av=columnize(df2, av, inplace=False, dtype=np.int8)
@@ -666,7 +668,7 @@ def choice_simulator_trips(
                 time_data["paFlip"] = 0.0
                 time_data["(mode9 in ('TAXI','TNC1','TNC2'))*paFlip"] = 0.0
                 time_dfs = larch.DataFrames(
-                    co=time_data,
+                    co=time_data.astype(app_floatdtype),
                     av=1,
                     alt_codes=[1, 2, 3, 4, 5, 6, 7, 8],
                     alt_names=['EA', 'AM1', 'AM2', 'AM3', 'MD', 'PM1', 'PM2', 'PM3'],

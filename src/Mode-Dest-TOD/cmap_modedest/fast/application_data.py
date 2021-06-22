@@ -39,7 +39,7 @@ def application_data(dh):
     ).squash_index(otaz='otaz_idx')
 
     attractions = Dataset.from_dataframe(
-        dh.trip_attractions5.astype(np.float32).set_index(
+        dh.trip_attractions5.astype(np.float64).set_index(
             dh.trip_attractions5.index.rename("dtaz"),
         ),
     ).squash_index(dtaz='dtaz_idx')
@@ -206,13 +206,13 @@ def application_data(dh):
         # 'log_attractions_NHBR > -666': 'log(attractions.NHBR) > -666',
         # 'log_attractions_NHBS > -666': 'log(attractions.NHBS) > -666',
 
-    }, cache_dir=local_cache(), name="cmap_trip_application_data_step_1")
+    }, dtype="float64", cache_dir=local_cache(), name="cmap_trip_application_data_step_1")
 
     try:
         log.info("     application_data::load first run")
-        df = ss.load(tbl, as_dataframe=True)
+        df = ss.load(tbl, as_dataframe=True, dtype=np.float64)
         log.info("     application_data::load second run")
-        df2 = ss.load(tbl, as_dataframe=True)
+        df2 = ss.load(tbl, as_dataframe=True, dtype=np.float64)
         log.info("     application_data::load check equal")
         try:
             pd.testing.assert_frame_equal(df, df2)
@@ -324,6 +324,7 @@ def application_data2(dh, in_table):
         coldefs,
         cache_dir=local_cache(),
         name="cmap_trip_application_data_step_2",
+        dtype="float64",
     )
 
     try:

@@ -74,7 +74,7 @@ from .f_log_attractions_NHB____666_3GFB7KMY3JN5TSJE4MRRR2HM import log_attractio
 
 
 @numba.njit(cache=True, parallel=True, error_model='numpy', boundscheck=False)
-def runner(argarray, inputarray, __attractions__HBO, __attractions__HBS, __attractions__HBWH, __attractions__HBWL, __attractions__NHB, __auto_skims__am_dist, __auto_skims__am_opcost, __auto_skims__am_opcost_hov, __auto_skims__am_time, __auto_skims__am_toll_hiinc, __auto_skims__am_toll_hov_hiinc, __auto_skims__am_toll_hov_loinc, __auto_skims__am_toll_loinc, __auto_skims__md_dist, __auto_skims__md_opcost, __auto_skims__md_time, __auto_skims__md_toll, __d_autopropensity__autopropensity, __dzone__zone_type, __ozone__taxi_wait_op, __ozone__taxi_wait_pk, __ozone__tnc_pool_wait_op, __ozone__tnc_pool_wait_pk, __ozone__tnc_solo_wait_op, __ozone__tnc_solo_wait_pk, __ozone__zone_type, __transit_op__fare, __transit_op__ivtt, __transit_op__ovtt, __transit_pk__fare, __transit_pk__ivtt, __transit_pk__ovtt, dtype=np.float32, min_shape_0=0):
+def runner(argarray, inputarray, __attractions__HBO, __attractions__HBS, __attractions__HBWH, __attractions__HBWL, __attractions__NHB, __auto_skims__am_dist, __auto_skims__am_opcost, __auto_skims__am_opcost_hov, __auto_skims__am_time, __auto_skims__am_toll_hiinc, __auto_skims__am_toll_hov_hiinc, __auto_skims__am_toll_hov_loinc, __auto_skims__am_toll_loinc, __auto_skims__md_dist, __auto_skims__md_opcost, __auto_skims__md_time, __auto_skims__md_toll, __d_autopropensity__autopropensity, __dzone__zone_type, __ozone__taxi_wait_op, __ozone__taxi_wait_pk, __ozone__tnc_pool_wait_op, __ozone__tnc_pool_wait_pk, __ozone__tnc_solo_wait_op, __ozone__tnc_solo_wait_pk, __ozone__zone_type, __transit_op__fare, __transit_op__ivtt, __transit_op__ovtt, __transit_pk__fare, __transit_pk__ivtt, __transit_pk__ovtt, dtype=np.float64, min_shape_0=0):
     out_size = max(argarray.shape[0], min_shape_0)
     if out_size != argarray.shape[0]:
         result = np.zeros((out_size, 70), dtype=dtype)
@@ -371,13 +371,15 @@ def load(
     return result
 
 
-def merge(source):
+def merge(source, dtype=None):
     """
     Merge the data created by this flow into the source.
 
     Parameters
     ----------
     source : Dataset or Table or DataFrame
+    dtype : str or dtype
+        The loaded data will be generated with this dtype.
 
     Returns
     -------
@@ -385,7 +387,7 @@ def merge(source):
         The same data type as `source` is returned.
     """
     assert isinstance(source, (xr.Dataset, pa.Table, pd.DataFrame, sh.Table))
-    new_cols = load(source)
+    new_cols = load(source, dtype=dtype)
     if isinstance(source, (pa.Table, sh.Table)):
         for n, k in enumerate(function_names):
             source = source.append_column(k, [new_cols[:, n]])

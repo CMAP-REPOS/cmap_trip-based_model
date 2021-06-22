@@ -44,7 +44,7 @@ from .f__1_transit_avail_NHB_WN7OPNQOSVQ544PG5Q2ZGTNF import _1_transit_avail_NH
 
 
 @numba.njit(cache=True, parallel=True, error_model='numpy', boundscheck=False)
-def runner(argarray, inputarray, dtype=np.float32, min_shape_0=0):
+def runner(argarray, inputarray, dtype=np.float64, min_shape_0=0):
     out_size = max(argarray.shape[0], min_shape_0)
     if out_size != argarray.shape[0]:
         result = np.zeros((out_size, 40), dtype=dtype)
@@ -216,13 +216,15 @@ def load(
     return result
 
 
-def merge(source):
+def merge(source, dtype=None):
     """
     Merge the data created by this flow into the source.
 
     Parameters
     ----------
     source : Dataset or Table or DataFrame
+    dtype : str or dtype
+        The loaded data will be generated with this dtype.
 
     Returns
     -------
@@ -230,7 +232,7 @@ def merge(source):
         The same data type as `source` is returned.
     """
     assert isinstance(source, (xr.Dataset, pa.Table, pd.DataFrame, sh.Table))
-    new_cols = load(source)
+    new_cols = load(source, dtype=dtype)
     if isinstance(source, (pa.Table, sh.Table)):
         for n, k in enumerate(function_names):
             source = source.append_column(k, [new_cols[:, n]])
