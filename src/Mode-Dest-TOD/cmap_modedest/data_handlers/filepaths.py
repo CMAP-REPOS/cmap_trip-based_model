@@ -64,25 +64,18 @@ class FileNames:
 
 	emme_database_dir = PathAttr(can_null=False, change_callback=_changed_emme_database_dir)
 	emmemat_dir = PathAttr(can_null=True)
-	#omx_skims_dir = PathAttr()
 	cache_dir = PathAttr(change_callback=_make_dirs)
 	zone_shapefile = PathAttr()
 
 	def __init__(
 			self,
 			emme_database_dir,
-			#omx_skims_dir=None,
 			cache_dir=None,
 			emmemat_dir=None,
-			#emmemat_archive=None,
 			zone_shapefile=None,
 	):
 		self._memory_mapped_skim = {}
 		self.emme_database_dir = emme_database_dir
-		#self.omx_skims_dir = omx_skims_dir
-		# if emmemat_archive:
-		# 	self.use_emmemat_archive(emmemat_archive)
-		# else:
 		self.emmemat_dir = emmemat_dir
 		self.cache_dir = cache_dir
 		self.zone_shapefile = zone_shapefile
@@ -203,6 +196,8 @@ class FileNames:
 			self.emme_database_dir / "TG_HHENUM_OUTPUT.TXT"
 		) or latest_matching(
 			self.cache_dir / "TG_HHENUM_OUTPUT.TXT"
+		) or latest_matching(
+			self.emme_database_dir / "defaults_base_year/TG_HHENUM_OUTPUT.TXT.gz"
 		)
 
 	def save(self, name, data):

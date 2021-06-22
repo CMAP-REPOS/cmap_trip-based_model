@@ -7,46 +7,6 @@ from ..util import search_path
 import logging
 
 
-# def load_tg_OLD(filenames):
-#
-# 	try:
-# 		tripgen = pd.read_sas(filenames.tripgen_sas)
-# 	except Exception as err:
-# 		log = logging.getLogger('CMAP')
-# 		log.exception(f"error in read_sas:{filenames.tripgen_sas}")
-# 		raise
-# 	tripgen['zone17'] = tripgen['zone17'].astype(int)
-#
-# 	trip_attractions = tripgen.groupby("zone17")[['hwalo','hwahi','hoa','nha', 'area']].sum()
-# 	trip_attractions = trip_attractions.rename(columns=dict(
-# 		hwalo='HBWL',
-# 		hwahi='HBWH',
-# 		hoa='HBO',
-# 		nha='NHB',
-# 	))
-#
-# 	trip_productions = tripgen.groupby("zone17")[['hwplo','hwphi','hop','nhp']].sum()
-# 	trip_productions = trip_productions.rename(columns=dict(
-# 		hwplo='HBWL',
-# 		hwphi='HBWH',
-# 		hop='HBO',
-# 		nhp='NHB',
-# 	))
-#
-# 	zone_productions = trip_productions.round().astype(int)
-# 	zone_productions = zone_productions.rename(columns=dict(
-# 		hwplo='HBWL',
-# 		hwphi='HBWH',
-# 		hop='HBO',
-# 		nhp='NHB',
-# 	))
-#
-# 	tg = Dict()
-# 	tg.trip_attractions = trip_attractions
-# 	tg.trip_productions = trip_productions
-# 	tg.zone_productions = zone_productions
-# 	return tg
-
 
 def load_hh_enum(filenames):
 
