@@ -63,10 +63,25 @@ def main(*args):
         help='rebuild all numba caches',
         action="store_true",
     )
+    parser.add_argument(
+        '--profile',
+        help='run in profiler mode',
+        action="store_true",
+    )
 
     args = parser.parse_args()
 
-    log = cmap_modedest.log_to_stderr(level=args.loglevel)
+    log_dir = os.path.join(args.database_dir, "cache", "logs")
+    os.makedirs(log_dir, exist_ok=True)
+    log = cmap_modedest.log_to_stderr(
+        level=args.loglevel,
+        log_dir=log_dir,
+    )
+
+    if args.profile:
+        from pyinstrument import Profiler
+        profiler = Profiler()
+        profiler.start()
 
     from cmap_modedest.runtime import working_dir, log_info
     log.info(time.strftime("RUN STARTED %A, %d %B %Y, %I:%M:%S %p"))
@@ -156,6 +171,10 @@ def main(*args):
         log_info("#### COMPLETED: MODE, DESTINATION, AND TIME OF DAY ####")
     finally:
         log.info(time.strftime("RUN ENDED %A, %d %B %Y, %I:%M:%S %p"))
+
+    if args.profile:
+        profiler.stop()
+        print(profiler.output_text(unicode=True, color=True))
 
 
 if __name__ == "__main__":

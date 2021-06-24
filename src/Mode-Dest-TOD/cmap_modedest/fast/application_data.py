@@ -11,9 +11,9 @@ from ..purposes import purposesA
 log = getLogger()
 
 def application_data(dh):
-    log = getSubLogger("APPDATA")
+    log = getSubLogger("fast.application_data")
 
-    log.info("preparing application_data")
+    log.info("preparing application data")
 
     #taxi_cost, tnc_solo_cost, tnc_pool_cost = \
     tnc_los_functions(dh)
@@ -205,17 +205,17 @@ def application_data(dh):
     }, dtype="float64", cache_dir=local_cache(), name="cmap_trip_application_data_step_1")
 
     try:
-        log.debug("     application_data::load first run")
+        log.debug("load first run")
         df = ss.load(tbl, as_dataframe=True, dtype=np.float64)
-        log.debug("     application_data::load second run")
+        log.debug("load second run")
         df2 = ss.load(tbl, as_dataframe=True, dtype=np.float64)
-        log.debug("     application_data::load check equal")
+        log.debug("check first and second run are equal")
         try:
             pd.testing.assert_frame_equal(df, df2)
         except AssertionError as err:
             log.exception(err)
-        from ..cmap_logging import log_df
-        log_df(df2, logger=log, verbose=1, level=10)
+        # from ..cmap_logging import log_df
+        # log_df(df2, logger=log, verbose=1, level=10)
 
         return ss
     finally:
@@ -225,7 +225,7 @@ def application_data(dh):
 
 
 def application_data2(dh, in_table):
-    log = getSubLogger("APPDATA2")
+    log = getSubLogger("fast.application_data2")
     log.info("prepare application_data2")
 
     coldefs = {
@@ -306,11 +306,11 @@ def application_data2(dh, in_table):
     )
 
     try:
-        log.debug("     application_data2::load first hit")
+        log.debug("load first hit")
         df = processor.load(in_table, as_dataframe=True)
-        log.debug("     application_data2::load second hit")
+        log.debug("load second hit")
         df2 = processor.load(in_table, as_dataframe=True)
-        log.debug("     application_data2::check equal")
+        log.debug("check first and second hits are equal")
         try:
             pd.testing.assert_frame_equal(df, df2)
         except AssertionError as err:

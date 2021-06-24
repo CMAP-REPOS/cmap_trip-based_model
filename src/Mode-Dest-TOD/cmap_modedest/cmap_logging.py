@@ -25,7 +25,7 @@ def getLogger(name=None):
 def getSubLogger(subname):
     return logging.getLogger(f"{LOGGER_NAME}.{subname}")
 
-def log_to_stderr(level=30):
+def log_to_stderr(level=30, log_dir=None):
     """
     Turn on logging and add a handler which prints to stderr
 
@@ -34,7 +34,7 @@ def log_to_stderr(level=30):
     level : int
         minimum level of the messages that will be logged
     """
-
+    import time
     logger = logging.getLogger(LOGGER_NAME)
 
     # avoid creation of multiple stream handlers for logging to console
@@ -47,6 +47,17 @@ def log_to_stderr(level=30):
     handler.setLevel(level)
     handler.setFormatter(formatter)
     logger.addHandler(handler)
+    if log_dir is not None:
+        # also log to a file
+        filehandler = RotatingFileHandler(
+            filename=os.path.join(log_dir, f"{time.strftime('cmap_trip_log_master_%Y%m%d_%H%M%S')}.log"),
+            mode='a',
+            maxBytes=1_000_000,
+            backupCount=10,
+        )
+        filehandler.setLevel(level)
+        filehandler.setFormatter(formatter)
+        logger.addHandler(filehandler)
     logger.propagate = False
     logger.setLevel(level)
 

@@ -54,7 +54,7 @@ def _data_for_application_1(dh, otaz=1, replication=None):
     pd.DataFrame
     """
     global av
-    log = getSubLogger("DATA1")
+    log = getSubLogger("application.DATA1")
     log.info(f"prepare tier 1 data for otaz {otaz}")
 
     try:
@@ -712,7 +712,7 @@ def choice_simulator_trips(
                 time_data["paFlip"] = 0.0
                 time_data["(mode9 in ('TAXI','TNC1','TNC2'))*paFlip"] = 0.0
                 time_dfs = larch.DataFrames(
-                    co=time_data.astype(app_floatdtype),
+                    co=time_data.astype(np.float64),
                     av=1,
                     alt_codes=[1, 2, 3, 4, 5, 6, 7, 8],
                     alt_names=['EA', 'AM1', 'AM2', 'AM3', 'MD', 'PM1', 'PM2', 'PM3'],
