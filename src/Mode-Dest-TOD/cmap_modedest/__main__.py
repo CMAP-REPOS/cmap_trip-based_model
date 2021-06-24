@@ -2,6 +2,7 @@ import sys
 import os
 import shutil
 import time
+import datetime
 
 import numpy as np
 import pandas as pd
@@ -85,6 +86,7 @@ def main(*args):
 
     from cmap_modedest.runtime import working_dir, log_info
     log.info(time.strftime("RUN STARTED %A, %d %B %Y, %I:%M:%S %p"))
+    start_time = time.time()
     try:
         log_info("###################################################################")
         log_info("##   CMAP TRIP-BASED MODEL: MODE, DESTINATION, AND TIME OF DAY   ##")
@@ -171,6 +173,8 @@ def main(*args):
         log_info("#### COMPLETED: MODE, DESTINATION, AND TIME OF DAY ####")
     finally:
         log.info(time.strftime("RUN ENDED %A, %d %B %Y, %I:%M:%S %p"))
+        end_time = time.time()
+        log.info(f"ELAPSED TIME {datetime.timedelta(seconds=end_time-start_time)}")
 
     if args.profile:
         profiler.stop()
