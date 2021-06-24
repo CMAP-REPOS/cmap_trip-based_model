@@ -6,7 +6,7 @@ from sharrow.maths import piece, hard_sigmoid
 
 
 
-@numba.njit(cache=True, error_model='numpy', boundscheck=False)
+@numba.jit(cache=True, error_model='numpy', boundscheck=False, nopython=True, fastmath=True)
 def samp_wgt(
     _args, 
     _inputs, 

@@ -6,7 +6,7 @@ from sharrow.maths import piece, hard_sigmoid
 from .extra_funcs import *
 from .extra_vars import *
 
-@numba.njit(cache=True, error_model='numpy', boundscheck=False)
+@numba.jit(cache=True, error_model='numpy', boundscheck=False, nopython=True, fastmath=True)
 def auto_opcost_hov_PEAK(
     _args, 
     _inputs, 

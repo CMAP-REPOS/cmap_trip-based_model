@@ -43,7 +43,7 @@ from .f__1_auto_avail_NHB_XHHWLREMVWOEBM6NUQF7EFH6 import _1_auto_avail_NHB_XHHW
 from .f__1_transit_avail_NHB_WN7OPNQOSVQ544PG5Q2ZGTNF import _1_transit_avail_NHB_WN7OPNQOSVQ544PG5Q2ZGTNF
 
 
-@numba.njit(cache=True, parallel=True, error_model='numpy', boundscheck=False)
+@numba.jit(cache=True, parallel=True, error_model='numpy', boundscheck=False, nopython=True, fastmath=True)
 def runner(argarray, inputarray, dtype=np.float64, min_shape_0=0):
     out_size = max(argarray.shape[0], min_shape_0)
     if out_size != argarray.shape[0]:

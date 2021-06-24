@@ -105,6 +105,7 @@ def read_uncompressed_skims(directory, dataset=None):
     if len(master) == 0:
         log.error(f'no uncompressed skims read from {directory}')
         raise FileNotFoundError(directory)
+    log.info(f"{len(appended_names)} uncompressed skims were added to the skims dataset")
     return sh.Dataset(master), appended_names
 
 
@@ -120,19 +121,23 @@ def read_compressed_skims(zarr_directory):
     -------
     Dataset
     """
+    result = None
     if zarr_directory is None:
         log.warning("no `zarr_directory` given")
         raise ValueError("no `zarr_directory` given")
     zarr_directory = Path(zarr_directory)
     if os.path.isdir(zarr_directory.with_suffix(".zarr")):
         log.info(f'reading compressed skims from {zarr_directory.with_suffix(".zarr")}')
-        return sh.Dataset.from_zarr(zarr_directory.with_suffix(".zarr"))
-    if os.path.isfile(zarr_directory.with_suffix(".zarr.zip")):
+        result = sh.Dataset.from_zarr(zarr_directory.with_suffix(".zarr"))
+    elif os.path.isfile(zarr_directory.with_suffix(".zarr.zip")):
         log.info(f'reading compressed skims from {zarr_directory.with_suffix(".zarr.zip")}')
-        return sh.Dataset.from_zarr(zarr_directory.with_suffix(".zarr.zip"))
-    if os.path.exists(zarr_directory):
+        result = sh.Dataset.from_zarr(zarr_directory.with_suffix(".zarr.zip"))
+    elif os.path.exists(zarr_directory):
         log.info(f'reading compressed skims from {zarr_directory}')
-        return sh.Dataset.from_zarr(zarr_directory)
+        result = sh.Dataset.from_zarr(zarr_directory)
+    if result is not None:
+        log.info(f"{len(result.data_vars)} compressed skims were added to the skims dataset")
+        return result
     raise FileNotFoundError(zarr_directory)
 
 

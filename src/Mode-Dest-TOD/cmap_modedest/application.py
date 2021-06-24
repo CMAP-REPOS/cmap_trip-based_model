@@ -29,11 +29,10 @@ from .deadheading import compute_deadhead_trip_table
 from .purposes import purposesA, purposes_to_5, purposes_to_3
 from .time_of_day_model import time_of_day_simulator_initialize
 
-from .cmap_logging import getLogger, get_worker_log
+from .cmap_logging import getSubLogger, get_worker_log, LOGGER_NAME
 
 app_floatdtype = np.float32
 
-log = getLogger()
 
 n_modes = len(mode9codes)
 
@@ -55,6 +54,8 @@ def _data_for_application_1(dh, otaz=1, replication=None):
     pd.DataFrame
     """
     global av
+    log = getSubLogger("DATA1")
+    log.info(f"prepare tier 1 data for otaz {otaz}")
 
     try:
         fast_application_data = dh.fast_application_data
@@ -65,7 +66,7 @@ def _data_for_application_1(dh, otaz=1, replication=None):
     from .purposes import purposes5
     purposes = purposes5
 
-    log.info("_data_for_application_1::prepare availability")
+    log.debug("prepare availability")
     n_zones = dh.n_internal_zones
     for purpose in purposes:
         av_purpose = av.get(purpose, {})
@@ -88,7 +89,7 @@ def _data_for_application_1(dh, otaz=1, replication=None):
     if replication is None:
         replication = dh.cfg.get('n_replications', 50)
 
-    log.info("_data_for_application_1::initialize dtaz and tbl")
+    log.debug("initialize dtaz and tbl")
     dtaz = pd.Index(np.arange(n_zones) + 1)
     otaz_series = pd.Series(otaz, index=dtaz)
 
@@ -99,13 +100,13 @@ def _data_for_application_1(dh, otaz=1, replication=None):
         'dtaz': dtaz,
     })
 
-    log.info("_data_for_application_1::load t1")
+    log.debug("load t1")
     t1 = fast_application_data.load(tbl, as_table=True)
 
-    log.info("_data_for_application_1::concat_tables t2")
+    log.debug("concat_tables t2")
     t2 = sh.concat_tables([t1] * replication)
 
-    log.info("_data_for_application_1::transit_approach_func")
+    log.debug("prepare transit approach function")
     from .fast.transit.approach import compile_transit_approach, transit_approach_wrap, transit_approach_distances
     if not dh.cfg.transit_approach_func:
         trapp_struct = compile_transit_approach(dh)
@@ -114,22 +115,23 @@ def _data_for_application_1(dh, otaz=1, replication=None):
     oz = np.full(3632, otaz)
     dz = np.arange(3632) + 1
 
-    log.debug("_data_for_application_1::trapp_dist_HW")
+    log.debug("run trapp_dist_HW")
     trapp_dist_HW = transit_approach_distances(dh.cfg.transit_approach_struct, oz, dz, 'HW', random_seed=otaz)[0]
-    log.debug("_data_for_application_1::trapp_HW")
+    log.debug("run trapp_HW")
     trapp_HW = transit_approach_wrap(dh.cfg.transit_approach_struct, oz, dz, 'HW', trapp_dist_HW, )
 
-    log.debug("_data_for_application_1::trapp_dist_HO")
+    log.debug("run trapp_dist_HO")
     trapp_dist_HO = transit_approach_distances(dh.cfg.transit_approach_struct, oz, dz, 'HO', random_seed=otaz << 13)[0]
-    log.debug("_data_for_application_1::trapp_HO")
+    log.debug("run trapp_HO")
     trapp_HO = transit_approach_wrap(dh.cfg.transit_approach_struct, oz, dz, 'HO', trapp_dist_HO, )
 
-    log.debug("_data_for_application_1::compute columns on t2")
+    log.debug("run add peak transit approach columns on t2")
     t2['transit_approach_drivetime_PEAK'] = trapp_HW['drivetime'].T.reshape(-1)
     t2['transit_approach_waittime_PEAK'] = trapp_HW['waittime'].T.reshape(-1)
     t2['transit_approach_walktime_PEAK'] = trapp_HW['walktime'].T.reshape(-1)
     t2['transit_approach_cost_PEAK'] = trapp_HW['cost'].T.reshape(-1)
 
+    log.debug("run add offpeak transit approach columns on t2")
     t2['transit_approach_drivetime_OFFPEAK'] = trapp_HO['drivetime'].T.reshape(-1)
     t2['transit_approach_waittime_OFFPEAK'] = trapp_HO['waittime'].T.reshape(-1)
     t2['transit_approach_walktime_OFFPEAK'] = trapp_HO['walktime'].T.reshape(-1)
@@ -139,27 +141,68 @@ def _data_for_application_1(dh, otaz=1, replication=None):
     try:
         fast_application_data_2 = dh.fast_application_data_2
     except AttributeError:
-        log.debug("_data_for_application_1: creating new fast_application_data_2 object")
+        log.debug("creating new fast_application_data_2 object")
         from .fast.application_data import application_data2
         fast_application_data_2 = dh.fast_application_data_2 = application_data2(dh, t2)
     else:
-        log.debug("_data_for_application_1: using stored fast_application_data_2 object")
+        log.debug("using stored fast_application_data_2 object")
 
+    log.debug("merge fast_application_data_2 columns into t2")
     t2 = fast_application_data_2.merge(t2, dtype=app_floatdtype)
 
+    log.debug("sample households from zone")
     hh_data = sample_hh_from_zone(dh, otaz, replication, random_state=otaz << 1, )
-    hh_data['hhinc5'] = sample_hh_income_cats(dh, otaz, len(hh_data), random_state=otaz << 2,).astype(app_floatdtype)
-    hh_data['hhinc5h'] = sample_hh_income_cats(dh, otaz, len(hh_data), random_state=otaz << 2, trunc_min=60_000).astype(app_floatdtype)
 
-    # TODO hhinc3 for correct purposes HBW
+    # We make 3 sets of random draws from the household income distribution
+    # of the home zone.  The first is untruncated, and applied to home-based
+    # non-work trips. The latter two are truncated and applied to home-based
+    # work high and low categories.
+    hh_data['hhinc5'] = sample_hh_income_cats(
+        dh,
+        otaz,
+        len(hh_data),
+        random_state=otaz << 2,
+        income_breaks='5',
+    ).astype(app_floatdtype)
+    hh_data['hhinc5l'] = sample_hh_income_cats(
+        dh,
+        otaz,
+        len(hh_data),
+        random_state=otaz << 2,
+        trunc_max=60_000,
+        income_breaks='5',
+    ).astype(app_floatdtype)
+    hh_data['hhinc5h'] = sample_hh_income_cats(
+        dh,
+        otaz,
+        len(hh_data),
+        random_state=otaz << 2,
+        trunc_min=60_000,
+        income_breaks='5',
+    ).astype(app_floatdtype)
 
-    hh_data['hhinc3'] = (hh_data['hhinc5'] - 1) // 2
-    hh_data['hhinc3==0'] = (hh_data['hhinc3'] == 0).astype(app_floatdtype)
-    hh_data['hhinc3==1'] = (hh_data['hhinc3'] == 1).astype(app_floatdtype)
-    hh_data['hhinc3==2'] = (hh_data['hhinc3'] == 2).astype(app_floatdtype)
-    hh_data['hhinc3h'] = (hh_data['hhinc5h'] - 1) // 2
-    hh_data['hhinc3h==1'] = (hh_data['hhinc3h'] == 1).astype(app_floatdtype)
-    hh_data['hhinc3h==2'] = (hh_data['hhinc3h'] == 2).astype(app_floatdtype)
+    hh_data['hhinc5==0'] = (hh_data['hhinc5'] == 0).astype(app_floatdtype)
+    hh_data['hhinc5==1'] = (hh_data['hhinc5'] == 1).astype(app_floatdtype)
+    hh_data['hhinc5==2'] = (hh_data['hhinc5'] == 2).astype(app_floatdtype)
+    hh_data['hhinc5==3'] = (hh_data['hhinc5'] == 3).astype(app_floatdtype)
+    hh_data['hhinc5==4'] = (hh_data['hhinc5'] == 4).astype(app_floatdtype)
+
+    hh_data['hhinc5l==0'] = (hh_data['hhinc5l'] == 0).astype(app_floatdtype)
+    hh_data['hhinc5l==1'] = (hh_data['hhinc5l'] == 1).astype(app_floatdtype)
+    hh_data['hhinc5h==2'] = (hh_data['hhinc5h'] == 2).astype(app_floatdtype)
+    hh_data['hhinc5h==3'] = (hh_data['hhinc5h'] == 3).astype(app_floatdtype)
+    hh_data['hhinc5h==4'] = (hh_data['hhinc5h'] == 4).astype(app_floatdtype)
+
+    # hh_data['hhinc5'] = sample_hh_income_cats(dh, otaz, len(hh_data), random_state=otaz << 2,).astype(app_floatdtype)
+    # hh_data['hhinc5h'] = sample_hh_income_cats(dh, otaz, len(hh_data), random_state=otaz << 2, trunc_min=60_000).astype(app_floatdtype)
+
+    # hh_data['hhinc3'] = (hh_data['hhinc5'] - 1) // 2
+    # hh_data['hhinc3==0'] = (hh_data['hhinc3'] == 0).astype(app_floatdtype)
+    # hh_data['hhinc3==1'] = (hh_data['hhinc3'] == 1).astype(app_floatdtype)
+    # hh_data['hhinc3==2'] = (hh_data['hhinc3'] == 2).astype(app_floatdtype)
+    # hh_data['hhinc3h'] = (hh_data['hhinc5h'] - 1) // 2
+    # hh_data['hhinc3h==1'] = (hh_data['hhinc3h'] == 1).astype(app_floatdtype)
+    # hh_data['hhinc3h==2'] = (hh_data['hhinc3h'] == 2).astype(app_floatdtype)
     hh_data['o_zone'] = app_floatdtype(otaz)
     hh_data['ozone_autopropensity'] = app_floatdtype(
         attach_areatypes(dh, pd.DataFrame(index=[otaz]), "", "", targetzone=[otaz])['autopropensity'].iloc[0]
@@ -227,8 +270,9 @@ def _data_for_application_1(dh, otaz=1, replication=None):
     # hh_data['hhveh>=hhadults'] = (hh_data['N_VEHICLES'] >= hh_data['N_ADULTS']).astype(app_floatdtype)
     addon = hh_data[[
         'o_zone', 'ozone_autopropensity', 'hhveh==0', 'hhveh>=hhadults',
-        'hhinc3', 'hhinc3==0', 'hhinc3==1', 'hhinc3==2',
-        'hhinc3h', 'hhinc3h==1', 'hhinc3h==2',
+        'hhinc5', 'hhinc5==0', 'hhinc5==1', 'hhinc5==2', 'hhinc5==3', 'hhinc5==4',
+        'hhinc5l', 'hhinc5l==0', 'hhinc5l==1',
+        'hhinc5h', 'hhinc5h==2', 'hhinc5h==3', 'hhinc5h==4',
     ]]
     df3 = pd.concat([df3, addon], axis=1)
     if need_to_fix_column_names:
@@ -279,6 +323,7 @@ to_disk = False
 
 def _data_for_application_2(dh, df2, filename):
     # _fix_column_names(dh, df2)
+    log = getSubLogger("DATA2")
 
     n_zones = dh.n_internal_zones
     alt_codes, alt_names = alt_codes_and_names(
@@ -286,19 +331,19 @@ def _data_for_application_2(dh, df2, filename):
         include_actual_dest=False,
     )
 
-    log.debug("_data_for_application_2::dfas")
+    log.debug("initialize dataframes")
     dfas = larch.DataFrames(
         co=df2.astype(app_floatdtype),
         alt_codes=alt_codes,
         av=True,
-        # av=columnize(df2, av, inplace=False, dtype=np.int8)
     )
 
     if to_disk:
+        log.debug("writing dataframes to disk")
         dfas.to_feathers(filename)
         return _reload_data_for_application_2(dh, filename)
 
-    log.debug("_data_for_application_2::return")
+    log.debug("completed _data_for_application_2")
     return dfas
 
 
@@ -320,6 +365,7 @@ def data_for_application(dh, otaz=1, replication=None):
     -------
 
     """
+    log = getSubLogger("DATA")
     if replication is None:
         replication = dh.cfg.get('n_replications', 50)
 
@@ -351,7 +397,6 @@ def blockwise_mean(a, blocksize):
     -------
     array
     """
-    log.debug(f"blockwise_mean")
     n_blocks = a.shape[0] // blocksize + (1 if a.shape[0] % blocksize else 0)
     mean = np.zeros([n_blocks, *a.shape[1:]])
     for j in range(n_blocks):
@@ -364,6 +409,7 @@ choice_simulator_global = Dict()
 
 def choice_simulator_initialize(dh, return_simulators=True, n_threads=1, cache=True):
     global choice_simulator_global
+    log = getSubLogger("SIM_INIT")
 
     get_worker_log(
         os.path.join(dh.filenames.cache_dir, 'logs'),
@@ -385,18 +431,18 @@ def choice_simulator_initialize(dh, return_simulators=True, n_threads=1, cache=T
         if os.path.exists(pickle_name):
             import cloudpickle
             with open(pickle_name, 'rb') as pkl_f:
-                log.debug("choice_simulator_initialize: loading pickled choice_simulator")
+                log.debug("loading pickled choice_simulator")
                 choice_simulator_global[(auto_cost_per_mile, n_zones)] = cloudpickle.load(pkl_f)
             if (auto_cost_per_mile, n_zones) in choice_simulator_global:
                 cache = False
         else:
-            log.debug("choice_simulator_initialize: pickled choice_simulator not available")
+            log.debug("pickled choice_simulator not available")
 
     if (auto_cost_per_mile, n_zones) in choice_simulator_global:
-        log.info("choice_simulator_initialize: using existing choice_simulator")
+        log.info("using existing choice_simulator")
         choice_simulator = choice_simulator_global[(auto_cost_per_mile, n_zones)]
     else:
-        log.info("choice_simulator_initialize: creating fresh choice_simulator")
+        log.info("creating fresh choice_simulator")
         choice_simulator = Dict()
         for purpose in purposesA:
             choice_simulator[purpose] = model_builder(
@@ -413,7 +459,7 @@ def choice_simulator_initialize(dh, return_simulators=True, n_threads=1, cache=T
     if cache and not os.path.exists(pickle_name):
         import cloudpickle
         with open(pickle_name, 'wb') as pkl_f:
-            log.debug("choice_simulator_initialize: pickling choice_simulator for future reload")
+            log.debug("pickling choice_simulator for future reload")
             cloudpickle.dump(
                 choice_simulator_global[(auto_cost_per_mile, n_zones)],
                 pkl_f,
@@ -424,6 +470,7 @@ def choice_simulator_initialize(dh, return_simulators=True, n_threads=1, cache=T
 
 
 def attach_dataframes(sim, purpose, dfa):
+    log = getSubLogger("ATTACH_DFS")
     if sim.dataframes is None:
         log.debug(f"attach_dataframes {purpose} attach dataframes new")
         sim.dataframes = dfa
@@ -434,7 +481,6 @@ def attach_dataframes(sim, purpose, dfa):
 
 
 def _sim_prob(purpose, sim):
-    log.debug(f"choice_simulator_prob {purpose} simulate probability")
     sim_pr = sim.probability()
     return sim_pr
 
@@ -471,17 +517,19 @@ def choice_simulator_prob(
         else:
             data_cache_file = os.path.join(temp_dir, f"cached_data_for_application_{otaz[0]}_{otaz[-1]}.feathers")
 
-    log.debug("choice_simulator_prob data_for_application")
+    log = getSubLogger("CHOICE_SIM")
+
+    log.debug("data_for_application")
     if data_cache_file and os.path.exists(data_cache_file+".data_co"):
-        log.debug("choice_simulator_prob data_for_application load")
+        log.debug("data_for_application load")
         dfa = larch.DataFrames.from_feathers(data_cache_file)
     else:
-        log.debug("choice_simulator_prob data_for_application make")
+        log.debug("data_for_application make")
         dfa = data_for_application(dh, otaz=otaz)
         if data_cache_file:
             dfa.to_feathers(data_cache_file)
 
-    log.debug("choice_simulator_prob settings")
+    log.debug("settings")
     replication = dh.cfg.get('n_replications', 50)
 
     choice_simulator = choice_simulator_initialize(dh, n_threads=n_threads)
@@ -491,12 +539,6 @@ def choice_simulator_prob(
     for purpose in purposes:
         sim = choice_simulator[purpose]
         attach_dataframes(sim, purpose, dfa)
-        # log.debug(f"choice_simulator_prob {purpose} attach dataframes")
-        # if sim.dataframes is None:
-        # 	sim.dataframes = dfa
-        # else:
-        # 	sim.set_dataframes(dfa, False)
-        # log.debug(f"choice_simulator_prob {purpose} simulate probability")
         sim_pr = _sim_prob(purpose, sim)
         simulated_probability_disagg[purpose] = sim_pr
         simulated_probability[purpose] = blockwise_mean(sim_pr, replication)
@@ -504,13 +546,14 @@ def choice_simulator_prob(
             raise ValueError(f"nan in simulated_probability[{purpose}]")
 
     #transit_approach_walktime_cols = [i for i in dfa.data_co.columns if 'transit_approach_walktime' in i and 'auto' not in i and 'sigmoid' not in i]
-    validation_useful_data = pd.DataFrame(data=np.int8(0), index=dfa.data_co.index, columns=["hh_auto_own", 'hhinc3', 'hhinc3h'])
+    validation_useful_data = pd.DataFrame(data=np.int8(0), index=dfa.data_co.index, columns=["hh_auto_own", 'hhinc5', 'hhinc5l', 'hhinc5h'])
     validation_useful_data.loc[dfa.data_co['hhveh==0'] == 0, "hh_auto_own"] = 1
     validation_useful_data.loc[dfa.data_co['hhveh==0'] > 0, "hh_auto_own"] = 0
     validation_useful_data.loc[dfa.data_co['hhveh>=hhadults'] > 0, "hh_auto_own"] = 2
-    validation_useful_data['hhinc3'] = dfa.data_co['hhinc3']
-    validation_useful_data['hhinc3h'] = dfa.data_co['hhinc3h']
-    log.debug("choice_simulator_prob complete")
+    validation_useful_data['hhinc5'] = dfa.data_co['hhinc5']
+    validation_useful_data['hhinc5l'] = dfa.data_co['hhinc5l']
+    validation_useful_data['hhinc5h'] = dfa.data_co['hhinc5h']
+    log.debug("complete")
     return simulated_probability, simulated_probability_disagg, validation_useful_data
 
 
@@ -541,6 +584,7 @@ def choice_simulator_trips(
         os.path.join(dh.filenames.cache_dir, 'logs'),
         level=10,
     )
+    log = getSubLogger("TRIP_SIM")
     try:
         if delay:
             log.debug(f"DELAY choice_simulator_trips {delay})")
@@ -580,7 +624,7 @@ def choice_simulator_trips(
                 if disagg_choices:
                     c = np.empty(num_productions, dtype=np.int32)
                     hh_autos = np.zeros(num_productions, dtype=np.int8)
-                    hh_inc3 = np.zeros(num_productions, dtype=np.int8)
+                    hh_inc5 = np.zeros(num_productions, dtype=np.int8)
                     c_position = 0
                     num_reps = 50
                     for _rep in range(num_reps):
@@ -598,11 +642,11 @@ def choice_simulator_trips(
                         c[c_position:c_position+c_.size] = c_
                         hh_autos[c_position:c_position+c_.size] = validation_data["hh_auto_own"][n]
                         if purpose == 'HBWH':
-                            hh_inc3[c_position:c_position+c_.size] = validation_data["hhinc3h"][n]
+                            hh_inc5[c_position:c_position+c_.size] = validation_data["hhinc5h"][n]
                         elif purpose == 'HBWL':
-                            hh_inc3[c_position:c_position+c_.size] = 0 # all low income
+                            hh_inc5[c_position:c_position+c_.size] = validation_data["hhinc5l"][n]
                         else:
-                            hh_inc3[c_position:c_position+c_.size] = validation_data["hhinc3"][n]
+                            hh_inc5[c_position:c_position+c_.size] = validation_data["hhinc5"][n]
                         c_position += c_.size
                         n += 1
 
@@ -619,7 +663,7 @@ def choice_simulator_trips(
                             raise
                     n += 1
                     hh_autos = np.zeros_like(c)
-                    hh_inc3 = np.zeros_like(c)
+                    hh_inc5 = np.zeros_like(c)
 
                 choices_data[_o] = pd.DataFrame(dict(
                     mode=(c % n_modes) + 1,
@@ -627,7 +671,7 @@ def choice_simulator_trips(
 
                     # other things to track for calibration / validation
                     hh_autos=hh_autos,
-                    hh_inc3=hh_inc3,
+                    hh_inc5=hh_inc5,
 
                 )).value_counts().sort_index().rename(_o).astype(np.int16)
 
@@ -636,13 +680,13 @@ def choice_simulator_trips(
                     np.arange(n_modes) + 1,
                     np.arange(dh.n_internal_zones) + 1,
                     np.arange(3),
-                    np.arange(3),
+                    np.arange(5),
                 ],
                 names=[
                     'mode',
                     'a_zone',
                     'hh_autos',
-                    'hh_inc3',
+                    'hh_inc5',
                 ],
             )
 
@@ -699,7 +743,7 @@ def choice_simulator_trips(
                 reg_auto_trips_fwd = pd.concat([base_trips.drop(columns=['trips']), reg_auto_trips_tod], axis=1)
                 reg_auto_trips_fwd_= reg_auto_trips_fwd.rename(columns={'p_zone': 'o_zone', 'a_zone': 'd_zone'})
                 reg_auto_trips_fwd_['a_zone'] = reg_auto_trips_fwd['a_zone']
-                reg_auto_trips_fwd = reg_auto_trips_fwd_.set_index(['mode', 'o_zone', 'd_zone', 'a_zone', 'hh_autos', 'hh_inc3'])
+                reg_auto_trips_fwd = reg_auto_trips_fwd_.set_index(['mode', 'o_zone', 'd_zone', 'a_zone', 'hh_autos', 'hh_inc5'])
                 reg_auto_trips_fwd.columns.name = "timeperiod"
                 reg_auto_trips_fwd = reg_auto_trips_fwd.stack().rename("trips")
 
@@ -724,7 +768,7 @@ def choice_simulator_trips(
                 reg_auto_trips_bwd = pd.concat([base_trips.drop(columns=['trips']), reg_auto_trips_tod_r], axis=1)
                 reg_auto_trips_bwd_ = reg_auto_trips_bwd.rename(columns={'p_zone': 'd_zone', 'a_zone': 'o_zone'})
                 reg_auto_trips_bwd_['a_zone'] = reg_auto_trips_bwd['a_zone']
-                reg_auto_trips_bwd = reg_auto_trips_bwd_.set_index(['mode', 'o_zone', 'd_zone', 'a_zone', 'hh_autos', 'hh_inc3'])
+                reg_auto_trips_bwd = reg_auto_trips_bwd_.set_index(['mode', 'o_zone', 'd_zone', 'a_zone', 'hh_autos', 'hh_inc5'])
                 reg_auto_trips_bwd.columns.name = "timeperiod"
                 reg_auto_trips_bwd = reg_auto_trips_bwd.stack().rename("trips")
 
@@ -756,12 +800,12 @@ def choice_simulator_trips(
             non_auto_trips_r["trips"] = n_flipped_trips
             non_auto_trips_r = non_auto_trips_r.rename(columns={'p_zone': 'o_zone', 'a_zone': 'd_zone'})
             non_auto_trips_r['a_zone'] = non_auto_trips_attractions
-            non_auto_trips_r = non_auto_trips_r.set_index(['mode', 'o_zone', 'd_zone', 'a_zone', 'hh_autos', 'hh_inc3', 'timeperiod'])["trips"]
+            non_auto_trips_r = non_auto_trips_r.set_index(['mode', 'o_zone', 'd_zone', 'a_zone', 'hh_autos', 'hh_inc5', 'timeperiod'])["trips"]
 
             non_auto_trips["trips"] = n_unflipped_trips
             non_auto_trips = non_auto_trips.rename(columns={'p_zone': 'd_zone', 'a_zone': 'o_zone'})
             non_auto_trips['a_zone'] = non_auto_trips_attractions
-            non_auto_trips = non_auto_trips.set_index(['mode', 'o_zone', 'd_zone', 'a_zone', 'hh_autos', 'hh_inc3', 'timeperiod'])["trips"]
+            non_auto_trips = non_auto_trips.set_index(['mode', 'o_zone', 'd_zone', 'a_zone', 'hh_autos', 'hh_inc5', 'timeperiod'])["trips"]
 
             non_auto_trips = pd.concat([non_auto_trips[non_auto_trips>0], non_auto_trips_r[non_auto_trips_r>0]])
             #non_auto_trips = non_auto_trips.reset_index()
@@ -805,7 +849,7 @@ def choice_simulator_trips(
                             p_zone=otaz_,
                             a_zone=dtaz_,
                             hh_autos=-1,
-                            hh_inc3=-1,
+                            hh_inc5=-1,
                         )).value_counts().sort_index().rename('trips').astype(np.int16))
 
                 visitor_choices = pd.concat(visitor_choices_data).reset_index()
@@ -819,7 +863,7 @@ def choice_simulator_trips(
                     visitor_reg_auto_trips.reset_index(),
                     visitor_hired_auto_trips.reset_index(),
                     visitor_nonauto_trips,
-                ], ignore_index=True).set_index(['mode','o_zone','d_zone','a_zone','hh_autos','hh_inc3','timeperiod'])
+                ], ignore_index=True).set_index(['mode','o_zone','d_zone','a_zone','hh_autos','hh_inc5','timeperiod'])
                 simulated_choices['VISIT'] = visitor_choices_with_time
 
         concatd = pd.concat(simulated_choices)
@@ -858,6 +902,8 @@ def choice_simulator_trips_many(
         disagg_choices=True,
         with_wfh=False,
 ):
+    log = getSubLogger("TRIP_SIM_MULTI")
+
     if otaz is None:
         otaz = np.arange(dh.n_internal_zones) + 1
 
@@ -1004,7 +1050,7 @@ def choice_simulator_trips_many(
         )
     if disagg_choices:
         deadheads['hh_autos'] = -1
-        deadheads['hh_inc3'] = -1
+        deadheads['hh_inc5'] = -1
     deadheads.to_parquet(os.path.join(save_dir, "choice_simulator_trips_deadhead.pq"))
 
     return assemble_trips(

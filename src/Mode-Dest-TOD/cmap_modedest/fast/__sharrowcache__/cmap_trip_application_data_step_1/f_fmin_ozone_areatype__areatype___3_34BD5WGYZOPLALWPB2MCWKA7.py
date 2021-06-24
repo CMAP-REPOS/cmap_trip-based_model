@@ -6,7 +6,7 @@ from sharrow.maths import piece, hard_sigmoid
 from .extra_funcs import *
 from .extra_vars import *
 
-@numba.njit(cache=True, error_model='numpy', boundscheck=False)
+@numba.jit(cache=True, error_model='numpy', boundscheck=False, nopython=True, fastmath=True)
 def fmin_ozone_areatype__areatype___3_34BD5WGYZOPLALWPB2MCWKA7(
     _args, 
     _inputs, 

@@ -4,3 +4,6 @@ src/Mode-Dest-TOD/sharrow/sharrow.egg-info
 Database/defaults_base_year/emmemat.zarr
 Database/emmemat.zarr
 Database/emmemat
+Database/cache
+Database/.ipynb_checkpoints
+computed_auto_propensity.csv

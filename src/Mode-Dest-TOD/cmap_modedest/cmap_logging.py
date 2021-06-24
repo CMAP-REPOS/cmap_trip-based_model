@@ -22,6 +22,9 @@ class ElapsedTimeFormatter(logging.Formatter):
 def getLogger(name=None):
     return logging.getLogger(name or LOGGER_NAME)
 
+def getSubLogger(subname):
+    return logging.getLogger(f"{LOGGER_NAME}.{subname}")
+
 def log_to_stderr(level=30):
     """
     Turn on logging and add a handler which prints to stderr

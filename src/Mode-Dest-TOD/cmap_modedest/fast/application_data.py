@@ -6,13 +6,14 @@ import pyarrow as pa
 from sharrow import Dataset, SharedData, Table, local_cache
 
 from .tnc_los import tnc_los_functions, taxi_cost, tnc_cost
-from ..cmap_logging import getLogger
+from ..cmap_logging import getLogger, getSubLogger
 from ..purposes import purposesA
 log = getLogger()
 
 def application_data(dh):
+    log = getSubLogger("APPDATA")
 
-    log.info("CALL application_data")
+    log.info("preparing application_data")
 
     #taxi_cost, tnc_solo_cost, tnc_pool_cost = \
     tnc_los_functions(dh)
@@ -26,11 +27,6 @@ def application_data(dh):
         'dtaz': dtazi + 1,
         'chooser_row': np.arange(otazi.size)
     })
-
-    # base_table = Dataset.from_table(
-    #     tbl,
-    #     'chooser_row',
-    # )
 
     ozones = Dataset.from_dataframe(
         dh.m01.set_index(
@@ -114,7 +110,7 @@ def application_data(dh):
         ),
     )
 
-    log.info("     application_data::setup_flow")
+    log.info("setup application data flow")
     ss = tg.setup_flow({
 
         'o_zone == dtaz': 'otaz == dtaz', #### fails dtype
@@ -209,27 +205,28 @@ def application_data(dh):
     }, dtype="float64", cache_dir=local_cache(), name="cmap_trip_application_data_step_1")
 
     try:
-        log.info("     application_data::load first run")
+        log.debug("     application_data::load first run")
         df = ss.load(tbl, as_dataframe=True, dtype=np.float64)
-        log.info("     application_data::load second run")
+        log.debug("     application_data::load second run")
         df2 = ss.load(tbl, as_dataframe=True, dtype=np.float64)
-        log.info("     application_data::load check equal")
+        log.debug("     application_data::load check equal")
         try:
             pd.testing.assert_frame_equal(df, df2)
         except AssertionError as err:
             log.exception(err)
         from ..cmap_logging import log_df
-        log_df(df2, logger=log, verbose=1)
+        log_df(df2, logger=log, verbose=1, level=10)
 
         return ss
     finally:
-        log.info("END  application_data")
+        log.info("application_data flow ready")
 
 
 
 
 def application_data2(dh, in_table):
-    log.info("CALL application_data2")
+    log = getSubLogger("APPDATA2")
+    log.info("prepare application_data2")
 
     coldefs = {
 
@@ -291,25 +288,6 @@ def application_data2(dh, in_table):
             "& (transit_approach_drivetime_OFFPEAK < 999)"
             "& (log_attractions_NHB > -9998)"
         ),
-        # 'transit_avail_HBOR': (
-        #     "(transit_ivtt_OFFPEAK < 999)"
-        #     "& (transit_approach_walktime_OFFPEAK < 999)"
-        #     "& (transit_approach_drivetime_OFFPEAK < 999)"
-        #     "& (log_attractions_HBOR > -9998)"
-        # ),
-        # 'transit_avail_NHBR': (
-        #     "(transit_ivtt_OFFPEAK < 999)"
-        #     "& (transit_approach_walktime_OFFPEAK < 999)"
-        #     "& (transit_approach_drivetime_OFFPEAK < 999)"
-        #     "& (log_attractions_NHBR > -9998)"
-        # ),
-        # 'transit_avail_NHBS': (
-        #     "(transit_ivtt_OFFPEAK < 999)"
-        #     "& (transit_approach_walktime_OFFPEAK < 999)"
-        #     "& (transit_approach_drivetime_OFFPEAK < 999)"
-        #     "& (log_attractions_NHBS > -9998)"
-        # ),
-
     }
 
     for purpose in purposesA:
@@ -319,7 +297,7 @@ def application_data2(dh, in_table):
             f'1-transit_avail_{purpose}': f'1-transit_avail_{purpose}',
         })
 
-    log.info("     application_data2::setup_flow")
+    log.info("setup application data step 2 flow")
     processor = SharedData(in_table).setup_flow(
         coldefs,
         cache_dir=local_cache(),
@@ -328,16 +306,16 @@ def application_data2(dh, in_table):
     )
 
     try:
-        log.info("     application_data2::load first hit")
+        log.debug("     application_data2::load first hit")
         df = processor.load(in_table, as_dataframe=True)
-        log.info("     application_data2::load second hit")
+        log.debug("     application_data2::load second hit")
         df2 = processor.load(in_table, as_dataframe=True)
-        log.info("     application_data2::check equal")
+        log.debug("     application_data2::check equal")
         try:
             pd.testing.assert_frame_equal(df, df2)
         except AssertionError as err:
             log.exception(err)
         return processor
     finally:
-        log.info("END  application_data2")
+        log.info("application_data2 flow ready")
 

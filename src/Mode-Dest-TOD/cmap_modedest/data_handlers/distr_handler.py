@@ -18,8 +18,11 @@ def read_distr(filename):
 
 def load_distr(filenames):
 	distr = Dict()
+	log.info(f"reading HW distr file from: {filenames.HW_DISTR}")
 	distr.HW = read_distr(filenames.HW_DISTR)
+	log.info(f"reading HO distr file from: {filenames.HO_DISTR}")
 	distr.HO = read_distr(filenames.HO_DISTR)
+	log.info(f"reading NH distr file from: {filenames.NH_DISTR}")
 	distr.NH = read_distr(filenames.NH_DISTR)
 	return distr
 

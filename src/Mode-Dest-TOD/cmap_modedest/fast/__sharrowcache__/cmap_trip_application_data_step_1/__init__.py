@@ -73,7 +73,7 @@ from .f_log_attractions_HBO____666_5VORECHSLO2A6MKP5I3SGJVQ import log_attractio
 from .f_log_attractions_NHB____666_3GFB7KMY3JN5TSJE4MRRR2HM import log_attractions_NHB____666_3GFB7KMY3JN5TSJE4MRRR2HM
 
 
-@numba.njit(cache=True, parallel=True, error_model='numpy', boundscheck=False)
+@numba.jit(cache=True, parallel=True, error_model='numpy', boundscheck=False, nopython=True, fastmath=True)
 def runner(argarray, inputarray, __attractions__HBO, __attractions__HBS, __attractions__HBWH, __attractions__HBWL, __attractions__NHB, __auto_skims__am_dist, __auto_skims__am_opcost, __auto_skims__am_opcost_hov, __auto_skims__am_time, __auto_skims__am_toll_hiinc, __auto_skims__am_toll_hov_hiinc, __auto_skims__am_toll_hov_loinc, __auto_skims__am_toll_loinc, __auto_skims__md_dist, __auto_skims__md_opcost, __auto_skims__md_time, __auto_skims__md_toll, __d_autopropensity__autopropensity, __dzone__zone_type, __ozone__taxi_wait_op, __ozone__taxi_wait_pk, __ozone__tnc_pool_wait_op, __ozone__tnc_pool_wait_pk, __ozone__tnc_solo_wait_op, __ozone__tnc_solo_wait_pk, __ozone__zone_type, __transit_op__fare, __transit_op__ivtt, __transit_op__ovtt, __transit_pk__fare, __transit_pk__ivtt, __transit_pk__ovtt, dtype=np.float64, min_shape_0=0):
     out_size = max(argarray.shape[0], min_shape_0)
     if out_size != argarray.shape[0]:

@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import warnings
 from .time_of_day_model import time_period_names, time_period_codes
 
 import logging
@@ -59,7 +60,8 @@ def compute_deadhead_trip_table(
 
         # Fratar the deadhead weights to the deadhead productions and attractions
         for iter in range(10):
-            with np.errstate(divide='ignore'):
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", category=RuntimeWarning)
                 w = np.nan_to_num(wgt_matrix / wgt_matrix.sum(0)) * np.expand_dims(deadhead_dests, 0)
                 wgt_matrix = np.nan_to_num(w / np.expand_dims(w.sum(1), 1)) * np.expand_dims(deadhead_origs, 1)
 

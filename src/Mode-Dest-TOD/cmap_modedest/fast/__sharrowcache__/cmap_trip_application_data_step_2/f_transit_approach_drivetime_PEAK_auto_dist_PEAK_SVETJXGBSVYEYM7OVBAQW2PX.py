@@ -6,7 +6,7 @@ from sharrow.maths import piece, hard_sigmoid
 
 
 
-@numba.njit(cache=True, error_model='numpy', boundscheck=False)
+@numba.jit(cache=True, error_model='numpy', boundscheck=False, nopython=True, fastmath=True)
 def transit_approach_drivetime_PEAK_auto_dist_PEAK_SVETJXGBSVYEYM7OVBAQW2PX(
     _args, 
     _inputs, 

@@ -6,7 +6,7 @@ from sharrow.maths import piece, hard_sigmoid
 from .extra_funcs import *
 from .extra_vars import *
 
-@numba.njit(cache=True, error_model='numpy', boundscheck=False)
+@numba.jit(cache=True, error_model='numpy', boundscheck=False, nopython=True, fastmath=True)
 def tnc_solo_wait_time_OFFPEAK_auto_dist_OFFPEAK_CA5RZWRWZJWFNZATH2HHD3TO(
     _args, 
     _inputs, 

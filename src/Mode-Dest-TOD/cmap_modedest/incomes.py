@@ -62,6 +62,7 @@ def random_incomes(
 		replications,
 		random_state=random_state,
 	)
+	# resample from acceptable draws when truncated
 	if trunc_max is not None:
 		acceptable = y[(y <= trunc_max)]
 		acceptable_size = acceptable.size
@@ -82,6 +83,14 @@ def random_incomes(
 			30_000,
 			60_000,
 			100_000,
+			150_000,
+			np.inf,
+		]
+	if bins == '4':
+		bins = [
+			-np.inf,
+			30_000,
+			60_000,
 			150_000,
 			np.inf,
 		]

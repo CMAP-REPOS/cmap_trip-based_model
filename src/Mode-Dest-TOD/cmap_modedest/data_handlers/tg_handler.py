@@ -43,6 +43,8 @@ def load_tg(filenames, with_detail=False):
 		filenames.cache_dir / "TRIP49_PA_OUT.TXT",
 		filenames.emme_database_dir / "TRIP49_PA_OUT.TXT.gz",
 		filenames.emme_database_dir / "TRIP49_PA_OUT.TXT",
+		filenames.emme_database_dir / "defaults_base_year/TRIP49_PA_OUT.TXT.gz",
+		filenames.emme_database_dir / "defaults_base_year/TRIP49_PA_OUT.TXT",
 	)
 	# secondary WFH trip generation
 	trip49_filenames['wfh']	= search_path(
@@ -50,13 +52,15 @@ def load_tg(filenames, with_detail=False):
 		filenames.cache_dir / "TRIP49_PA_WFH_OUT.TXT",
 		filenames.emme_database_dir / "TRIP49_PA_WFH_OUT.TXT.gz",
 		filenames.emme_database_dir / "TRIP49_PA_WFH_OUT.TXT",
+		filenames.emme_database_dir / "defaults_base_year/TRIP49_PA_WFH_OUT.TXT.gz",
+		filenames.emme_database_dir / "defaults_base_year/TRIP49_PA_WFH_OUT.TXT",
 	)
 
 	log = logging.getLogger('CMAP')
 	result = {}
 	for tripclass, trip49_filename in trip49_filenames.items():
 
-		log.info(f"reading trip generation from:{trip49_filename}")
+		log.info(f"reading {tripclass} trip generation from: {trip49_filename}")
 
 		if os.path.splitext(trip49_filename)[1] == '.gz':
 			f = gzip.open(trip49_filename, 'rb')

@@ -86,7 +86,7 @@ def load_skims(filenames, dh=None):
 def _load_skims(filename_emmemat, dh=None):
 	try:
 		skims = DictSkims()
-		log.info(f"filename emmemat = {filename_emmemat}")
+		log.debug(f"filename emmemat = {filename_emmemat}")
 		skims.filename = filename_emmemat
 		skims.raw = read_skims(filename_emmemat)
 

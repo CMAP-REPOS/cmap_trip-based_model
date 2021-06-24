@@ -92,7 +92,7 @@ def validation_aggregation(dh, trips, to_dir=None):
     internal_trips = trips.query("o_superdistrict != 'X'").query("d_superdistrict != 'X'")
 
     agg1 = internal_trips.groupby(['purpose', 'mode', 'hh_autos'])[['trips']].sum().unstack(-1)
-    agg2 = internal_trips.groupby(['purpose', 'mode', 'hh_inc3'])[['trips']].sum().unstack(-1)
+    agg2 = internal_trips.groupby(['purpose', 'mode', 'hh_inc5'])[['trips']].sum().unstack(-1)
     agg3 = internal_trips.groupby(['purpose', 'mode', 'timeperiod'])[['trips']].sum().unstack(-1)
     agg4 = superdistrict_flow_summary(dh, trips, ['purpose', 'mode']).T
     agg4.index.name = 'segments'

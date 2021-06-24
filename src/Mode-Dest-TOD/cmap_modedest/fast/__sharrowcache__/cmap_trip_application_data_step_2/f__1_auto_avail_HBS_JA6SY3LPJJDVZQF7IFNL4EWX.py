@@ -6,7 +6,7 @@ from sharrow.maths import piece, hard_sigmoid
 
 
 
-@numba.njit(cache=True, error_model='numpy', boundscheck=False)
+@numba.jit(cache=True, error_model='numpy', boundscheck=False, nopython=True, fastmath=True)
 def _1_auto_avail_HBS_JA6SY3LPJJDVZQF7IFNL4EWX(
     _args, 
     _inputs, 

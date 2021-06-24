@@ -6,7 +6,7 @@ from sharrow.maths import piece, hard_sigmoid
 from .extra_funcs import *
 from .extra_vars import *
 
-@numba.njit(cache=True, error_model='numpy', boundscheck=False)
+@numba.jit(cache=True, error_model='numpy', boundscheck=False, nopython=True, fastmath=True)
 def piece_auto_dist_OFFPEAK_0_5_1_0__HZLL3YOGUR763JRQHG7SM6TX(
     _args, 
     _inputs, 

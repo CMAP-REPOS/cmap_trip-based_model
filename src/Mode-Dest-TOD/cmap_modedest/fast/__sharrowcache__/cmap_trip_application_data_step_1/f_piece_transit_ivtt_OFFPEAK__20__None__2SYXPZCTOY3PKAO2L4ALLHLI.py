@@ -6,7 +6,7 @@ from sharrow.maths import piece, hard_sigmoid
 from .extra_funcs import *
 from .extra_vars import *
 
-@numba.njit(cache=True, error_model='numpy', boundscheck=False)
+@numba.jit(cache=True, error_model='numpy', boundscheck=False, nopython=True, fastmath=True)
 def piece_transit_ivtt_OFFPEAK__20__None__2SYXPZCTOY3PKAO2L4ALLHLI(
     _args, 
     _inputs, 

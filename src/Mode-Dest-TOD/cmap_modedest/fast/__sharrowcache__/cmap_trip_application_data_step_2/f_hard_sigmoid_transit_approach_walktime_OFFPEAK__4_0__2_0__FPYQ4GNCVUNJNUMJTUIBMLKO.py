@@ -6,7 +6,7 @@ from sharrow.maths import piece, hard_sigmoid
 
 
 
-@numba.njit(cache=True, error_model='numpy', boundscheck=False)
+@numba.jit(cache=True, error_model='numpy', boundscheck=False, nopython=True, fastmath=True)
 def hard_sigmoid_transit_approach_walktime_OFFPEAK__4_0__2_0__FPYQ4GNCVUNJNUMJTUIBMLKO(
     _args, 
     _inputs, 

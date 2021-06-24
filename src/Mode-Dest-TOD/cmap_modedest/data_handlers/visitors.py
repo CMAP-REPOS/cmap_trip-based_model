@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import logging
 from ..util import search_path
 
 
@@ -24,7 +25,9 @@ def load_visitor_trips(filenames, scale_factor=1.0):
     filename = search_path(
         filenames.cache_dir / "CMAP_TripTable_VisitorsWeekday.csv.gz",
         filenames.emme_database_dir / "CMAP_TripTable_VisitorsWeekday.csv.gz",
+        filenames.emme_database_dir / "defaults_base_year/CMAP_TripTable_VisitorsWeekday.csv.gz",
     )
+    logging.getLogger('CMAP').info(f"reading visitor trip table from: {filename}")
     trips = pd.read_csv(filename)
     n = trips['trips'].sum()
     trip_wt = trips['trips'] / n
