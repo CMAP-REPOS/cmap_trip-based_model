@@ -1,10 +1,12 @@
 # CMAP Trip-based Model
 
+This directory contains the code needed to run the CMAP trip-based model's 
+mode, destination and time-of-day model components.
 
 ## Installation Instructions
 
 - First, if "conda" is not already installed and accessible by the current user
-  on the target development machine, install it. A preferred installation solution
+  on the target development machine, install it. An easy installation solution
   is using the "Mambaforge" installer, which can be downloaded for windows here:
   
   >  https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Windows-x86_64.exe
@@ -28,16 +30,26 @@
   To clone into a different directory than the current directory (probably the 
   user's home directory) change to that directory using `cd` first.
   
-- Next, create a conda environment to use for the trip-based model components.  
+- Next, create a conda environment to use for the mode, destination and 
+  time-of-day model components, which are written in Python.  
   Creating a unique environment will ensure that all the necessary computational 
-  libraries are installed, and no conflicts are introduced with other tools.
-  A conda environment file is included in the GitHub repository.
+  libraries are installed, and no conflicts are introduced with other tools 
+  (including Emme). A conda environment file is included in the GitHub repository,
+  which installs everything you need into an environment called "CMAP-TRIP".
   
   > mamba env create --file conda-environment.yml
   
-  Also get the Database folder: 
+  All the necessary files for a basic run of the model using the default base year
+  inputs are already in the `Database` folder of this repository, except for the
+  skim data, which is quite large.
   
-  > https://camsys-my.sharepoint.com/:u:/p/jeffnewman/EWbrhcl0NnJDufOQD0rYWUABo7-BEHmlxaXX9VvWknOsRQ?e=UK5Hqv
+- Skim data can be accessed by the mode, destination and time-of-day model 
+  components in one of two formats: either as uncompressed raw "emx" files stored
+  in the `Database/emmemat` directory, or as compressed and chunked files stored
+  in the `Database/emmemat.zarr` directory.  A base year set of skims in zarr 
+  format is available here:
+  
+  > https://camsys-my.sharepoint.com/:u:/p/jeffnewman/Eckzo0ouKfpKkpfiGtsLJBYB4zUQt6dZ5eloVisGIJV9gg?e=CNsW0M
   
 ## Execution Instructions
 
@@ -54,3 +66,8 @@
   
   > cmap_modedest .\path\to\Database
    
+- The `cmap_modedest` command line tool has a number of available options. These can
+  be reviewed in the online help:
+  
+  > cmap_modedest --help
+  
