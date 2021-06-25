@@ -13,39 +13,46 @@ def main(*args):
 
     parser = argparse.ArgumentParser(
         prog='cmap_modedest',
-        description='mode destination and time-of-day for CMAP trip-based model',
+        description='Mode, destination, and time-of-day for CMAP trip-based model.',
     )
     parser.add_argument(
         'database_dir',
         type=str,
-        help='the path of the current database directory',
+        help='The path of the current database directory, which is used as the '
+             'base location for loading all input files.',
     )
     parser.add_argument(
         '-l', '--loglevel',
         type=int,
-        help='the logging level',
+        help='The logging level, or how verbose the log output should be. Set to '
+             '10 or less for debug-level output.',
         default=20,
     )
     parser.add_argument(
         '--max_zone_chunk',
         type=int,
-        help='maximum number of zones to process in one chunk',
-        default=30,
+        help='Maximum number of zones to process in one chunk. Each job can '
+             'process a few zones at once, but trying to run too many can '
+             'trigger out-of-memory problems.',
+        default=4,
     )
     parser.add_argument(
         '--njobs',
         type=int,
-        help='number of jobs to process in parallel',
-        default=3,
+        help="""
+        Number of jobs to process in parallel. Larger computers with more CPUs
+        can handle more jobs at the same time.""",
+        default=10,
     )
     parser.add_argument(
         '--short',
         type=float,
         help="""
-        whether to shorten runtime by processing only a subset of origin zones,
-        give a fraction less than one to run that fraction of zones spread over
+        Whether to shorten runtime by processing only a subset of origin zones.
+        Give a fraction less than one to run that fraction of zones spread over
         the entire region, or an integer 1 or more to run in a single process
-        that number of zones starting from the first zone.
+        that number of zones starting from the first zone. This feature is
+        primarily for testing and quick validation.
         """,
     )
     parser.add_argument(
@@ -56,17 +63,22 @@ def main(*args):
     )
     parser.add_argument(
         '--check',
-        help='check input arguments and quit',
+        help='Check input arguments to this command (including default arguments) '
+             'and the exit without processing anything.',
         action="store_true",
     )
     parser.add_argument(
         '--rebuild',
-        help='rebuild all numba caches',
+        help='Rebuild all numba caches. Try setting this argument in the model is '
+             'crashing unexpectedly.  Rebuilding caches takes a little time but is '
+             'potentially necessary when switching the code to a new computer.',
         action="store_true",
     )
     parser.add_argument(
         '--profile',
-        help='run in profiler mode',
+        help='Run in profiler mode. This will slow down the model run somewhat, '
+             'but provide a profiling report for code optization. This features '
+             'requires that the pyinstrument library is installed.',
         action="store_true",
     )
 
