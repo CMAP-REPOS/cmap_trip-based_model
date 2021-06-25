@@ -23,9 +23,9 @@ mode, destination and time-of-day model components.
   
 - Now clone the CMAP trip-based model code from GitHub, and checkout the CS2021 branch. 
 
-  > gh repo clone camsys/cmap_trip-based_model
-  > cd cmap_trip-based_model
-  > git checkout CS2021
+  > gh repo clone camsys/cmap_trip-based_model  
+  > cd cmap_trip-based_model  
+  > git checkout CS2021  
   
   To clone into a different directory than the current directory (probably the 
   user's home directory) change to that directory using `cd` first.
