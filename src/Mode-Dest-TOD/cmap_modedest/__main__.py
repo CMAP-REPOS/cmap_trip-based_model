@@ -81,8 +81,33 @@ def main(*args):
              'requires that the pyinstrument library is installed.',
         action="store_true",
     )
+    parser.add_argument(
+        '--tbb',
+        help='Use the TBB backend for numba. Experimental',
+        action="store_true",
+    )
 
     args = parser.parse_args()
+    if args.tbb or os.environ.get("NUMBA_THREADING_LAYER", None) in ("safe", "tbb"):
+        from numba import config, njit, threading_layer
+        # set the threading layer before any parallel target compilation
+        config.THREADING_LAYER = 'tbb'
+
+        @njit(parallel=True)
+        def foo(a, b):
+            return a + b
+
+        x = np.arange(10.)
+        y = x.copy()
+
+        # this will force the compilation of the function, select a threading layer
+        # and then execute in parallel
+        foo(x, y)
+
+        # demonstrate the threading layer chosen
+        print("Threading layer chosen: %s" % threading_layer())
+        os.environ["NUMBA_THREADING_LAYER"] = "tbb"
+
 
     log_dir = os.path.join(args.database_dir, "cache", "logs")
     os.makedirs(log_dir, exist_ok=True)
