@@ -45,6 +45,15 @@ def main(*args):
         default=10,
     )
     parser.add_argument(
+        '--stagger',
+        type=int,
+        help="""
+        Number of seconds to pause between initial parallel starts. 
+        This can stagger storage-heavy and cpu-heavy sections of code to
+        better distribute workload.""",
+        default=15,
+    )
+    parser.add_argument(
         '--short',
         type=float,
         help="""
@@ -136,10 +145,12 @@ def main(*args):
         log_info(f"# --njobs = {args.njobs}")
         if args.short is not None and args.short >= 1.0 and args.njobs > 1:
             log_info(f"#         -> n_jobs is set to 1 when running in sequential short mode")
+        log_info(f"# --stagger = {args.stagger}")
         log_info(f"# --short = {args.short}")
         log_info(f"# --subdir = {args.subdir}")
         log_info(f"# --check = {args.check}")
         log_info(f"# --rebuild = {args.rebuild}")
+        log_info(f"# --tbb = {args.tbb}")
         log_info("###################################################################")
 
         if args.check: return # early exit if only checking arguments
@@ -183,6 +194,7 @@ def main(*args):
             n_jobs=n_jobs,
             cache_subdir=args.subdir,
             with_wfh=True,
+            staggertime=args.stagger,
         )
 
         sim_trips_many = assemble_trips(

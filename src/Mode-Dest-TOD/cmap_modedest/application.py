@@ -2,6 +2,7 @@ import pickle
 
 import numpy as np
 import pandas as pd
+import xarray as xr
 import os
 import time
 import larch
@@ -901,6 +902,7 @@ def choice_simulator_trips_many(
         with_nonhome_auto=False,
         disagg_choices=True,
         with_wfh=False,
+        staggertime=15,
 ):
     log = getSubLogger("TRIP_SIM_MULTI")
 
@@ -967,7 +969,7 @@ def choice_simulator_trips_many(
                 temp_dir=temp_dir,
                 disagg_choices=disagg_choices,
             )
-            for delay, otaz_chunk in stagger_starts(otaz_chunks, delay=3, n_jobs=n_jobs)
+            for delay, otaz_chunk in stagger_starts(otaz_chunks, delay=staggertime, n_jobs=n_jobs)
         )
         if with_wfh:
             log.info("joblib model WFH starting")
@@ -983,7 +985,7 @@ def choice_simulator_trips_many(
                     disagg_choices=disagg_choices,
                     use_wfh_pa=True,
                 )
-                for delay, otaz_chunk in stagger_starts(otaz_chunks, delay=3, n_jobs=n_jobs)
+                for delay, otaz_chunk in stagger_starts(otaz_chunks, delay=staggertime, n_jobs=n_jobs)
             )
         log.info("joblib first purposes complete")
 
@@ -1008,7 +1010,7 @@ def choice_simulator_trips_many(
                     temp_dir=temp_dir,
                     disagg_choices=disagg_choices,
                 )
-                for delay, otaz_chunk in stagger_starts(otaz_chunks, delay=3, n_jobs=n_jobs)
+                for delay, otaz_chunk in stagger_starts(otaz_chunks, delay=staggertime, n_jobs=n_jobs)
             )
             if with_wfh:
                 log.info("joblib model second purposes WFH starting")
@@ -1024,7 +1026,7 @@ def choice_simulator_trips_many(
                         disagg_choices=disagg_choices,
                         use_wfh_pa=True,
                     )
-                    for delay, otaz_chunk in stagger_starts(otaz_chunks, delay=3, n_jobs=n_jobs)
+                    for delay, otaz_chunk in stagger_starts(otaz_chunks, delay=staggertime, n_jobs=n_jobs)
                 )
 
             log.info("joblib second purposes complete")
@@ -1101,3 +1103,126 @@ def assemble_trips(
         )
 
     return trips
+
+
+def aggregate_to_vehicle_matrixes(
+        dh,
+        trips,
+):
+    # The trips table loaded here tabulates trips by these categories:
+    # - mode
+    # - o_zone
+    # - d_zone
+    # - a_zone
+    # - hh_autos
+    # - hh_inc5
+    # - timeperiod
+
+    # The result of this function is to output EMMEMAT .emx files segmented by
+    # time period for the following tables:
+    # SOV low value of time  – mf411-mf418
+    # SOV med value of time  – mf421-mf428
+    # SOV high value of time – mf431-mf438
+    # HOV not diff'd by vot  – mf441-mf448
+
+    log = getSubLogger("application.ToMatrix")
+    log.info(f"running aggregate_to_vehicle_matrixes")
+
+    hov3_occupancy = {
+        'HBW': 3.36,
+        'HBO': 3.31,
+        'NHB': 3.39,
+    }
+
+    from .modecodes import mode9codes
+    from .time_of_day_model import time_period_names
+    n_timeperiods = len(time_period_names)
+    n_zones = dh.skims.raw.dims['otaz']
+    z_range = pd.RangeIndex(1, n_zones + 1)
+    vot_names = ['sovL', 'sovM', 'sovH', 'hov2', 'hov3']
+    n_vot = len(vot_names)
+    mtx_shape = (n_zones, n_zones, n_timeperiods)
+
+    vot_shares_hbw = pd.DataFrame(
+        {
+            0:(0.648, 0.333, 0.018),
+            1:(0.383, 0.537, 0.080),
+            2:(0.197, 0.605, 0.198),
+            3:(0.197, 0.605, 0.198),
+            4:(0.036, 0.425, 0.539),
+        },
+        index=pd.RangeIndex(3, name='VoT Bucket'),
+        columns=pd.RangeIndex(5, name='Income Group'),
+    )
+
+    vehicle_trips = xr.DataArray(
+        data=np.float32(0.0),
+        dims=['vot', 'timeperiod', 'o_zone', 'd_zone'],
+        coords={
+            'vot': vot_names,
+            'timeperiod': time_period_names,
+            'o_zone': z_range,
+            'd_zone': z_range,
+        }
+    )
+
+    for income in range(5):
+        log.info(f" sov for income {income}")
+
+        sov_array = xr.DataArray.from_series(
+            trips
+            .query(f"purpose in ('HBWH', 'HBWL') and mode == {1} and hh_inc5 == {income}")
+            .groupby(["timeperiod", "o_zone", "d_zone"])['trips']
+            .sum()
+            .compute()
+        ).reindex(
+            timeperiod=time_period_names, o_zone=z_range, d_zone=z_range,
+        ).fillna(0).values
+
+        for vot_bucket in range(3):
+            vehicle_trips[vot_bucket] += sov_array * vot_shares_hbw.iloc[vot_bucket, income]
+
+    # count up all HOV2 person trips, divide by 2
+    #for modecode, vot_bucket in zip([mode9codes.HOV2, mode9codes.HOV3], [3,4]):
+    log.info(f" hov2")
+    vehicle_trips[3, ...] = xr.DataArray.from_series(
+        trips
+        .query(f"mode == {mode9codes.HOV2}")
+        .groupby(["timeperiod", "o_zone", "d_zone"])['trips']
+        .sum()
+        .compute()
+    ).reindex(
+        timeperiod=time_period_names, o_zone=z_range, d_zone=z_range,
+    ).fillna(0).values / 2
+
+    log.info(f" hov3")
+    # count up all HOV2 person trips, divide by occupancy
+    vehicle_trips[4, ...] = xr.DataArray.from_series(
+        trips
+        .query(f"purpose in ('HBWH', 'HBWL') and mode == {mode9codes.HOV3}")
+        .groupby(["timeperiod", "o_zone", "d_zone"])['trips']
+        .sum()
+        .compute()
+    ).reindex(
+        timeperiod=time_period_names, o_zone=z_range, d_zone=z_range,
+    ).fillna(0).values / hov3_occupancy['HBW']
+    vehicle_trips[4, ...] = xr.DataArray.from_series(
+        trips
+        .query(f"purpose in ('HBO', 'HBS') and mode == {mode9codes.HOV3}")
+        .groupby(["timeperiod", "o_zone", "d_zone"])['trips']
+        .sum()
+        .compute()
+    ).reindex(
+        timeperiod=time_period_names, o_zone=z_range, d_zone=z_range,
+    ).fillna(0).values / hov3_occupancy['HBW']
+    vehicle_trips[4, ...] = xr.DataArray.from_series(
+        trips
+        .query(f"purpose in ('NHB',) and mode == {mode9codes.HOV3}")
+        .groupby(["timeperiod", "o_zone", "d_zone"])['trips']
+        .sum()
+        .compute()
+    ).reindex(
+        timeperiod=time_period_names, o_zone=z_range, d_zone=z_range,
+    ).fillna(0).values / hov3_occupancy['HBW']
+
+    return vehicle_trips
