@@ -37,7 +37,7 @@ mode, destination and time-of-day model components.
   (including Emme). A conda environment file is included in the GitHub repository,
   which installs everything you need into an environment called "CMAP-TRIP".
   
-  > mamba env create --file conda-environment.yml
+  > conda env create --file src/Mode-Dest-TOD/conda-environment.yml
   
   All the necessary files for a basic run of the model using the default base year
   inputs are already in the `Database` folder of this repository, except for the
@@ -75,3 +75,7 @@ mode, destination and time-of-day model components.
   
   > cmap_modedest --help
   
+
+
+
+cmap_modedest Database --njobs 12 --max_zone_chunk 5
