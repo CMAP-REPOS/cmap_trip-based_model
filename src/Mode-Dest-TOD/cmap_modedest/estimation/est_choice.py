@@ -325,39 +325,6 @@ for purpose in purposes:
 
 
 
-## TODO for Mode/Dest Model ##
-
-"""
-
-- treatments for tolling, HOV usage
-
-- treatment for vehicle occupancy
-
-- For TNC LoS:
-	- We will be working with only 2 time periods, peak and off-peak,
-	  so the relationship between distance & time and cost needs to be
-	  aggregated to just these two buckets
-	- We will need to split out the fare into the TNC actual fare
-	  as a function of time and distance, plus the locale-specific taxes 
-	  and fees.  This is not important for estimation but it will be for 
-	  application so let's do it up front. The data is 2019, but there's
-	  already a different tax structure in the city and CMAP may want to
-	  examine changing it even more.
-
-- Check per-mile auto operating cost is consistent with rest of model
-
-x Parking price at destination
-	- mirror treatment per unit time from current model?
-
-- Intra-zonal factors?  Vary by mode?
-
-- Quantity(Size) terms on destinations
-
-- treatment of income levels for home-based trips
-
-
-"""
-
 L("## model parameter estimation ##")
 
 Pr = Dict()
