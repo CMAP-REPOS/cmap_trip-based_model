@@ -61,7 +61,6 @@ def model_utility_for_dest(
 			+ P("samp_af") * X(f"log(1/{dest_label}_samp_wgt)")
 			+ P("log_attraction") * X(f"{dest_label}_log_attractions_{purpose}")
 			+ P("intrazonal") * X(f"o_zone == {dest_label}")
-			# TODO vary intrazonal by mode?
 			+ piecewise_linear(f"{dest_label}_auto_dist_OFFPEAK", "distance", breaks=[5, 10])
 	)
 	shift = (dest_number+1) * alts_per_dest
@@ -79,9 +78,6 @@ def model_utility_for_dest(
 
 
 	m.utility_co[jAUTO] = (
-			#+ P("cost") * X(f"{dest_label}_auto_dist_{peaky}") * auto_cost_per_mile / 100.0
-			# TODO Check per-mile auto operating cost is consistent with rest of model
-
 			+ P("cost") * X(f"{dest_label}_auto_opcost_{peaky}") / 100 # cost in dollars
 			+ P("totaltime") * X(f"{dest_label}_auto_time_{peaky}")
 			+ P("cost") * X(f"{dest_label}_auto_parking_cost_{purpose}") / 100 # cost in dollars
@@ -108,14 +104,11 @@ def model_utility_for_dest(
 
 	m.utility_co[jHOV2] = (
 			P.Const_HOV2
-			#+ P("cost") * 0.5 * X(f"{dest_label}_auto_dist_{peaky}") * auto_cost_per_mile / 100.0
 			+ P("cost") * X(f"{dest_label}_auto_opcost_{peaky_hov}") * 0.5 / 100 # cost in dollars
-			# TODO Check per-mile auto operating cost is consistent with rest of model
 			+ P("totaltime") * X(f"{dest_label}_auto_time_{peaky}")
 			+ P("cost") * 0.5 * X(f"{dest_label}_auto_parking_cost_{purpose}") / 100 # cost in dollars
 			# TODO add walk terminal time cost
 			+ P("unavail") * X(f"1-{dest_label}_auto_avail_{purpose}")
-			#+ P("HOV2_distance") * X(f"{dest_label}_auto_dist_{peaky}")
 			+ piecewise_linear(f"{dest_label}_auto_dist_OFFPEAK", "HOV2_distance", breaks=[5, 10])
 		) + utility_destination
 	if purpose.upper()[-1] == 'H':
@@ -140,8 +133,6 @@ def model_utility_for_dest(
 
 	m.utility_co[jHOV3] = (
 			P.Const_HOV3
-			#+ P("cost") * 0.33 * X(f"{dest_label}_auto_dist_{peaky}") * auto_cost_per_mile / 100.0
-			# TODO Check per-mile auto operating cost is consistent with rest of model
 			+ P("cost") * X(f"{dest_label}_auto_opcost_{peaky_hov}") * 0.33 / 100 # cost in dollars
 			+ P("totaltime") * X(f"{dest_label}_auto_time_{peaky}")
 			+ P("cost") * 0.33 * X(f"{dest_label}_auto_parking_cost_{purpose}") / 100 # cost in dollars
@@ -150,11 +141,11 @@ def model_utility_for_dest(
 			+ piecewise_linear(f"{dest_label}_auto_dist_OFFPEAK", "HOV3_distance", breaks=[5, 10])
 		) + utility_destination
 	if purpose.upper()[-1] == 'H':
-		m.utility_co[jHOV2] += P("cost") * X(f"{dest_label}_auto_toll_hov_hiinc_PEAK") / 3 / 100 # cost in dollars
+		m.utility_co[jHOV3] += P("cost") * X(f"{dest_label}_auto_toll_hov_hiinc_PEAK") / 3 / 100 # cost in dollars
 	elif purpose.upper()[-1] == 'L':
-		m.utility_co[jHOV2] += P("cost") * X(f"{dest_label}_auto_toll_hov_loinc_PEAK") / 3 / 100 # cost in dollars
+		m.utility_co[jHOV3] += P("cost") * X(f"{dest_label}_auto_toll_hov_loinc_PEAK") / 3 / 100 # cost in dollars
 	else:
-		m.utility_co[jHOV2] += P("cost") * X(f"{dest_label}_auto_toll_OFFPEAK") / 3 / 100 # cost in dollars
+		m.utility_co[jHOV3] += P("cost") * X(f"{dest_label}_auto_toll_OFFPEAK") / 3 / 100 # cost in dollars
 	if purpose.upper() in {'NH', 'NHB'}:
 		m.utility_co[jHOV3] += (
 			+ P("HOV_ozone_autopropensity") * X(f"ozone_autopropensity")
@@ -217,21 +208,9 @@ def model_utility_for_dest(
 			P.Const_BIKE
 			+ P("bike_time") * X(f"{dest_label}_auto_dist_OFFPEAK") * 5 # minutes per mile
 			+ P("bike_intrazonal") * X(f"o_zone == {dest_label}")
-			# TODO auto distance is zero for intrazonal, fix it
-			# TODO address built environment via area types
 		) + utility_destination
 	m.utility_co[jTRANSIT] = (
 			P.Const_Transit
-			# + P("cost") * X(f"{dest_label}_transit_fare_{peaky}") / 100.0
-			# + P("transit_short") * X(f"fmax(10-{dest_label}_transit_ivtt_{peaky}, 0)")
-			# + P("transit_ivtt") * X(f"{dest_label}_transit_ivtt_{peaky}")
-			# + P("ovtt") * X(f"{dest_label}_transit_ovtt_{peaky}")
-			# + P("cost") * X(f"{dest_label}_transit_approach_cost_{peaky}") / 100.0
-			# + P("transit_ivtt") * X(f"{dest_label}_transit_approach_drivetime_{peaky}")
-			# + P("ovtt") * X(f"{dest_label}_transit_approach_walktime_{peaky}")
-			# + P("ovtt") * X(f"{dest_label}_transit_approach_waittime_{peaky}")
-			# + P("unavail") * X(f"1-{dest_label}_transit_avail_{purpose}")
-	        # above = plain, below = tvtt and ovtt/dist
 			+ P("cost") * X(f"{dest_label}_transit_fare_{peaky}") / 100 # cost in dollars
 			+ P("totaltime") * X(f"{dest_label}_transit_ovtt_{peaky}")
 			+ P("cost") * X(f"{dest_label}_transit_approach_cost_{peaky}") / 100 # cost in dollars
@@ -242,7 +221,6 @@ def model_utility_for_dest(
 			+ P("ovtt_dist") * X(f"{dest_label}_transit_ovtt_{peaky}")/X(f"{dest_label}_auto_dist_{peaky}")
 			+ P("ovtt_dist") * X(f"{dest_label}_transit_approach_walktime_{peaky}")/X(f"{dest_label}_auto_dist_{peaky}")
 			+ P("ovtt_dist") * X(f"{dest_label}_transit_approach_waittime_{peaky}")/X(f"{dest_label}_auto_dist_{peaky}")
-			# + P("transit_haul_is_long") * X(f"hard_sigmoid({dest_label}_auto_dist_{peaky}, 6.0, 9.0)")
 			+ P("transit_intrazonal") * X(f"o_zone == {dest_label}")
 
 		) + utility_destination
