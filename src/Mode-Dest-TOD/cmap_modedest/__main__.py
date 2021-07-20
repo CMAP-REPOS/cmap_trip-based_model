@@ -97,6 +97,10 @@ def main(*args):
     )
 
     args = parser.parse_args()
+    return run(args)
+
+
+def run(args):
     if args.tbb or os.environ.get("NUMBA_THREADING_LAYER", None) in ("safe", "tbb"):
         from numba import config, njit, threading_layer
         # set the threading layer before any parallel target compilation
