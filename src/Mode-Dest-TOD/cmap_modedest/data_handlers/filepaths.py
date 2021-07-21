@@ -174,6 +174,11 @@ class FileNames:
 				return self.emmemat_dir
 			else:
 				return self.emme_database_dir/"emmemat"
+		if item == "value_of_time_buckets":
+			return search_path(
+				self.emme_database_dir / f"value_of_time_buckets.csv",
+				self.cache_dir / f"value_of_time_buckets.csv",
+			)
 		raise AttributeError(item)
 
 	@property

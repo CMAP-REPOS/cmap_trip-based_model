@@ -571,6 +571,7 @@ def choice_simulator_trips(
         use_wfh_pa=False,
 ):
     """
+    The single-process function to model trips by mode/dest/time.
 
     Parameters
     ----------
@@ -1109,24 +1110,36 @@ def aggregate_to_vehicle_matrixes(
         dh,
         trips,
 ):
-    # The trips table loaded here tabulates trips by these categories:
-    # - mode
-    # - o_zone
-    # - d_zone
-    # - a_zone
-    # - hh_autos
-    # - hh_inc5
-    # - timeperiod
+    """
+    Aggregate person trips into emme matrix vehicle trips.
 
-    # The result of this function is to output EMMEMAT .emx files segmented by
-    # time period for the following tables:
-    # SOV low value of time  – mf411-mf418
-    # SOV med value of time  – mf421-mf428
-    # SOV high value of time – mf431-mf438
-    # HOV not diff'd by vot  – mf441-mf448
+    This function writes vehicle trip tables to mfNNN.emx files in the
+    `Database/emmemat` directory, according to the following guide:
+        - SOV low value of time   – mf411-mf418
+        - SOV med value of time   – mf421-mf428
+        - SOV high value of time  – mf431-mf438
+        - HOV2 not diff'd by vot  – mf441-mf448
+        - HOV3 not diff'd by vot  – mf451-mf458
+
+    Parameters
+    ----------
+    dh : DataHandler
+    trips : DataFrame
+        The output trip table from the mode/dest/time-of-day models
+
+    Returns
+    -------
+    vehicle_trips : xarray.DataArray
+    """
 
     log = getSubLogger("application.ToMatrix")
     log.info(f"running aggregate_to_vehicle_matrixes")
+
+    # If we receive a dask dataframe, load it into a pandas dataframe now
+    import dask.dataframe as ddf
+    if isinstance(trips, ddf.DataFrame):
+        log.debug(f"converting trips from dask.dataframe to pandas.dataframe")
+        trips = trips.compute()
 
     hov3_occupancy = {
         'HBW': 3.36,
@@ -1140,8 +1153,11 @@ def aggregate_to_vehicle_matrixes(
     n_zones = dh.skims.raw.dims['otaz']
     z_range = pd.RangeIndex(1, n_zones + 1)
     vot_names = ['sovL', 'sovM', 'sovH', 'hov2', 'hov3']
-    n_vot = len(vot_names)
-    mtx_shape = (n_zones, n_zones, n_timeperiods)
+
+    votb = pd.read_csv(dh.filenames.value_of_time_buckets, comment="#")
+    votb["Income Group"] = votb["Income Group"] - 1
+    votb = votb.set_index(["Purpose", "Income Group"])
+    votb = votb.div(votb.sum(1), axis=0)
 
     vot_shares_hbw = pd.DataFrame(
         {
@@ -1166,21 +1182,22 @@ def aggregate_to_vehicle_matrixes(
         }
     )
 
-    for income in range(5):
-        log.info(f" sov for income {income}")
+    # TODO why no income 0?
+
+    for purpose, income in votb.index:
+        log.info(f" sov for purpose {purpose} income {income}")
 
         sov_array = xr.DataArray.from_series(
             trips
-            .query(f"purpose in ('HBWH', 'HBWL') and mode == {1} and hh_inc5 == {income}")
+            .query(f"purpose == '{purpose}' and mode == {1} and hh_inc5 == {income}")
             .groupby(["timeperiod", "o_zone", "d_zone"])['trips']
             .sum()
-            .compute()
         ).reindex(
             timeperiod=time_period_names, o_zone=z_range, d_zone=z_range,
         ).fillna(0).values
 
         for vot_bucket in range(3):
-            vehicle_trips[vot_bucket] += sov_array * vot_shares_hbw.iloc[vot_bucket, income]
+            vehicle_trips[vot_bucket] += sov_array * votb.loc[(purpose, income)].iloc[vot_bucket]
 
     # count up all HOV2 person trips, divide by 2
     #for modecode, vot_bucket in zip([mode9codes.HOV2, mode9codes.HOV3], [3,4]):
@@ -1190,39 +1207,52 @@ def aggregate_to_vehicle_matrixes(
         .query(f"mode == {mode9codes.HOV2}")
         .groupby(["timeperiod", "o_zone", "d_zone"])['trips']
         .sum()
-        .compute()
     ).reindex(
         timeperiod=time_period_names, o_zone=z_range, d_zone=z_range,
     ).fillna(0).values / 2
 
     log.info(f" hov3")
-    # count up all HOV2 person trips, divide by occupancy
-    vehicle_trips[4, ...] = xr.DataArray.from_series(
+    # count up all HOV3 person trips, divide by occupancy
+    vehicle_trips[4, ...] += xr.DataArray.from_series(
         trips
         .query(f"purpose in ('HBWH', 'HBWL') and mode == {mode9codes.HOV3}")
         .groupby(["timeperiod", "o_zone", "d_zone"])['trips']
         .sum()
-        .compute()
     ).reindex(
         timeperiod=time_period_names, o_zone=z_range, d_zone=z_range,
     ).fillna(0).values / hov3_occupancy['HBW']
-    vehicle_trips[4, ...] = xr.DataArray.from_series(
+    vehicle_trips[4, ...] += xr.DataArray.from_series(
         trips
         .query(f"purpose in ('HBO', 'HBS') and mode == {mode9codes.HOV3}")
         .groupby(["timeperiod", "o_zone", "d_zone"])['trips']
         .sum()
-        .compute()
     ).reindex(
         timeperiod=time_period_names, o_zone=z_range, d_zone=z_range,
-    ).fillna(0).values / hov3_occupancy['HBW']
-    vehicle_trips[4, ...] = xr.DataArray.from_series(
+    ).fillna(0).values / hov3_occupancy['HBO']
+    vehicle_trips[4, ...] += xr.DataArray.from_series(
         trips
-        .query(f"purpose in ('NHB',) and mode == {mode9codes.HOV3}")
+        .query(f"purpose in ('NHB', 'VISIT') and mode == {mode9codes.HOV3}")
         .groupby(["timeperiod", "o_zone", "d_zone"])['trips']
         .sum()
-        .compute()
     ).reindex(
         timeperiod=time_period_names, o_zone=z_range, d_zone=z_range,
-    ).fillna(0).values / hov3_occupancy['HBW']
+    ).fillna(0).values / hov3_occupancy['NHB']
+
+    output_mf_numbers = {
+        'sovL': 411,  # SOV low value of time  – mf411-mf418
+        'sovM': 421,  # SOV med value of time  – mf421-mf428
+        'sovH': 431,  # SOV high value of time – mf431-mf438
+        'hov2': 441,  # HOV2 not diff'd by vot  – mf441-mf448
+        'hov3': 451,  # HOV3 not diff'd by vot  – mf451-mf458
+    }
+
+    for vot in vot_names:
+        for t, time_period_name in enumerate(time_period_names):
+            n = output_mf_numbers[vot] + t
+            mtx_filename = os.fspath(dh.filenames.emme_database_dir / f"emmemat/mf{n}.emx")
+            vehicle_trips \
+                .sel(vot=vot, timeperiod=time_period_name) \
+                .transpose("o_zone", "d_zone") \
+                .values.tofile(mtx_filename)
 
     return vehicle_trips

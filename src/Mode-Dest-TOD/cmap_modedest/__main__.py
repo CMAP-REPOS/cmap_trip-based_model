@@ -65,6 +65,14 @@ def main(*args):
         """,
     )
     parser.add_argument(
+        '--no-aggregate',
+        action="store_true",
+        help="""
+        Disable vehicle trip table aggregation. If not set, the vehicle trip
+        tables in Database/emmemat will be overwritten.
+        """,
+    )
+    parser.add_argument(
         '--subdir',
         type=str,
         help="""cache subdirectory into which results are saved""",
@@ -211,6 +219,11 @@ def run(args):
         if True:
             from cmap_modedest.validation import validation_aggregation
             validation_aggregation(dh, sim_trips_many, to_dir=dh.filenames.cache_dir / args.subdir)
+
+        if sim_trips_many is not None and not args.no_aggregate:
+            log.info("Aggregating trips to vehicle trip tables by value of time and time of day")
+            from cmap_modedest.application import aggregate_to_vehicle_matrixes
+            aggregate_to_vehicle_matrixes(dh, sim_trips_many)
 
         if sim_trips_many is not None:
             s = str(

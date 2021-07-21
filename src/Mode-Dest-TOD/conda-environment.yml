@@ -51,6 +51,8 @@ dependencies:
 - pyarrow
 - geopandas
 - zarr
+- tbb
+- tbb4py
 
 - pip:
   - -e .
