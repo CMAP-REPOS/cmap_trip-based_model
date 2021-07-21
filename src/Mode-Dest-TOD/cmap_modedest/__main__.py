@@ -236,6 +236,16 @@ def run(args):
             )
             log_info(f"Trip Summary by Mode and Purpose ------\n{s}")
 
+            s = str(
+                sim_trips_many
+                    .groupby(["hh_inc5", "purpose"])['trips']
+                    .sum()
+                    .compute()
+                    .unstack(0)
+                    .fillna(0)
+            )
+            log_info(f"Trip Summary by Income and Purpose ------\n{s}")
+
         log_info("#### COMPLETED: MODE, DESTINATION, AND TIME OF DAY ####")
     finally:
         log.info(time.strftime("RUN ENDED %A, %d %B %Y, %I:%M:%S %p"))

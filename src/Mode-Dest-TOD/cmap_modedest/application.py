@@ -181,18 +181,24 @@ def _data_for_application_1(dh, otaz=1, replication=None):
         trunc_min=60_000,
         income_breaks='5',
     ).astype(app_floatdtype)
+    hh_data['hhinc5g'] = np.random.default_rng(otaz << 3).choice(
+        [1,2,3,4,5],
+        len(hh_data),
+        p=[0.19771384, 0.22170351, 0.22427661, 0.19496901, 0.16133703]
+    ).astype(app_floatdtype)
 
-    hh_data['hhinc5==0'] = (hh_data['hhinc5'] == 0).astype(app_floatdtype)
+
     hh_data['hhinc5==1'] = (hh_data['hhinc5'] == 1).astype(app_floatdtype)
     hh_data['hhinc5==2'] = (hh_data['hhinc5'] == 2).astype(app_floatdtype)
     hh_data['hhinc5==3'] = (hh_data['hhinc5'] == 3).astype(app_floatdtype)
     hh_data['hhinc5==4'] = (hh_data['hhinc5'] == 4).astype(app_floatdtype)
+    hh_data['hhinc5==5'] = (hh_data['hhinc5'] == 5).astype(app_floatdtype)
 
-    hh_data['hhinc5l==0'] = (hh_data['hhinc5l'] == 0).astype(app_floatdtype)
     hh_data['hhinc5l==1'] = (hh_data['hhinc5l'] == 1).astype(app_floatdtype)
-    hh_data['hhinc5h==2'] = (hh_data['hhinc5h'] == 2).astype(app_floatdtype)
+    hh_data['hhinc5l==2'] = (hh_data['hhinc5l'] == 2).astype(app_floatdtype)
     hh_data['hhinc5h==3'] = (hh_data['hhinc5h'] == 3).astype(app_floatdtype)
     hh_data['hhinc5h==4'] = (hh_data['hhinc5h'] == 4).astype(app_floatdtype)
+    hh_data['hhinc5h==5'] = (hh_data['hhinc5h'] == 5).astype(app_floatdtype)
 
     # hh_data['hhinc5'] = sample_hh_income_cats(dh, otaz, len(hh_data), random_state=otaz << 2,).astype(app_floatdtype)
     # hh_data['hhinc5h'] = sample_hh_income_cats(dh, otaz, len(hh_data), random_state=otaz << 2, trunc_min=60_000).astype(app_floatdtype)
@@ -271,9 +277,10 @@ def _data_for_application_1(dh, otaz=1, replication=None):
     # hh_data['hhveh>=hhadults'] = (hh_data['N_VEHICLES'] >= hh_data['N_ADULTS']).astype(app_floatdtype)
     addon = hh_data[[
         'o_zone', 'ozone_autopropensity', 'hhveh==0', 'hhveh>=hhadults',
-        'hhinc5', 'hhinc5==0', 'hhinc5==1', 'hhinc5==2', 'hhinc5==3', 'hhinc5==4',
-        'hhinc5l', 'hhinc5l==0', 'hhinc5l==1',
-        'hhinc5h', 'hhinc5h==2', 'hhinc5h==3', 'hhinc5h==4',
+        'hhinc5', 'hhinc5g',
+        'hhinc5==1', 'hhinc5==2', 'hhinc5==3', 'hhinc5==4', 'hhinc5==5',
+        'hhinc5l', 'hhinc5l==1', 'hhinc5l==2',
+        'hhinc5h', 'hhinc5h==3', 'hhinc5h==4', 'hhinc5h==5',
     ]]
     df3 = pd.concat([df3, addon], axis=1)
     if need_to_fix_column_names:
@@ -547,11 +554,12 @@ def choice_simulator_prob(
             raise ValueError(f"nan in simulated_probability[{purpose}]")
 
     #transit_approach_walktime_cols = [i for i in dfa.data_co.columns if 'transit_approach_walktime' in i and 'auto' not in i and 'sigmoid' not in i]
-    validation_useful_data = pd.DataFrame(data=np.int8(0), index=dfa.data_co.index, columns=["hh_auto_own", 'hhinc5', 'hhinc5l', 'hhinc5h'])
+    validation_useful_data = pd.DataFrame(data=np.int8(0), index=dfa.data_co.index, columns=["hh_auto_own", 'hhinc5', 'hhinc5l', 'hhinc5h', 'hhinc5g'])
     validation_useful_data.loc[dfa.data_co['hhveh==0'] == 0, "hh_auto_own"] = 1
     validation_useful_data.loc[dfa.data_co['hhveh==0'] > 0, "hh_auto_own"] = 0
     validation_useful_data.loc[dfa.data_co['hhveh>=hhadults'] > 0, "hh_auto_own"] = 2
     validation_useful_data['hhinc5'] = dfa.data_co['hhinc5']
+    validation_useful_data['hhinc5g'] = dfa.data_co['hhinc5g']
     validation_useful_data['hhinc5l'] = dfa.data_co['hhinc5l']
     validation_useful_data['hhinc5h'] = dfa.data_co['hhinc5h']
     log.debug("complete")
@@ -646,7 +654,9 @@ def choice_simulator_trips(
                         if purpose == 'HBWH':
                             hh_inc5[c_position:c_position+c_.size] = validation_data["hhinc5h"][n]
                         elif purpose == 'HBWL':
-                            hh_inc5[c_position:c_position+c_.size] = validation_data["hhinc5l"][n]
+                            hh_inc5[c_position:c_position + c_.size] = validation_data["hhinc5l"][n]
+                        elif purpose == 'NHB':
+                            hh_inc5[c_position:c_position + c_.size] = validation_data["hhinc5g"][n]
                         else:
                             hh_inc5[c_position:c_position+c_.size] = validation_data["hhinc5"][n]
                         c_position += c_.size
@@ -682,7 +692,7 @@ def choice_simulator_trips(
                     np.arange(n_modes) + 1,
                     np.arange(dh.n_internal_zones) + 1,
                     np.arange(3),
-                    np.arange(5),
+                    np.arange(5) + 1,
                 ],
                 names=[
                     'mode',
@@ -1155,7 +1165,6 @@ def aggregate_to_vehicle_matrixes(
     vot_names = ['sovL', 'sovM', 'sovH', 'hov2', 'hov3']
 
     votb = pd.read_csv(dh.filenames.value_of_time_buckets, comment="#")
-    votb["Income Group"] = votb["Income Group"] - 1
     votb = votb.set_index(["Purpose", "Income Group"])
     votb = votb.div(votb.sum(1), axis=0)
 
@@ -1195,6 +1204,8 @@ def aggregate_to_vehicle_matrixes(
         ).reindex(
             timeperiod=time_period_names, o_zone=z_range, d_zone=z_range,
         ).fillna(0).values
+
+        log.info(f" sov for purpose {purpose} income {income} total={np.sum(sov_array)}")
 
         for vot_bucket in range(3):
             vehicle_trips[vot_bucket] += sov_array * votb.loc[(purpose, income)].iloc[vot_bucket]
