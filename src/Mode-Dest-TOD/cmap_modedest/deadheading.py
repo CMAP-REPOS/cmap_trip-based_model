@@ -55,8 +55,8 @@ def compute_deadhead_trip_table(
                 columns=dh.skims.raw[f'mf46{tcode}'].indexes['dtaz'],
             ).fillna(0)
         except KeyError:
-            import numexper.necompiler
-            numexper.necompiler._numexpr_cache.clear()
+            import numexpr.necompiler
+            numexpr.necompiler._numexpr_cache.clear()
             trips_by_od = (
                 trips
                 .query("mode in (4,5,6)")
