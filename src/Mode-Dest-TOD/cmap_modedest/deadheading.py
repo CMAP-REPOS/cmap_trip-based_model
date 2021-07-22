@@ -37,19 +37,39 @@ def compute_deadhead_trip_table(
 
     for tname, tcode in zip(time_period_names, time_period_codes):
         log.info(f"compute_deadhead_trip_table: {tname}")
-        trips_by_od = (
-            trips
-            .query("mode in (4,5,6)")
-            .query(f"timeperiod in ('{tname}',)")
-            .groupby(["o_zone", "d_zone"])['trips']
-            .sum()
-            .compute()
-            .unstack(0)
-            .fillna(0)
-        ).reindex(
-            index=dh.skims.raw[f'mf46{tcode}'].indexes['otaz'],
-            columns=dh.skims.raw[f'mf46{tcode}'].indexes['dtaz'],
-        ).fillna(0)
+
+        # We try this twice, as there is a rare sync problem in numexpr that
+        # makes this fail.
+        try:
+            trips_by_od = (
+                trips
+                .query("mode in (4,5,6)")
+                .query(f"timeperiod in ('{tname}',)")
+                .groupby(["o_zone", "d_zone"])['trips']
+                .sum()
+                .compute()
+                .unstack(0)
+                .fillna(0)
+            ).reindex(
+                index=dh.skims.raw[f'mf46{tcode}'].indexes['otaz'],
+                columns=dh.skims.raw[f'mf46{tcode}'].indexes['dtaz'],
+            ).fillna(0)
+        except KeyError:
+            import numexper.necompiler
+            numexper.necompiler._numexpr_cache.clear()
+            trips_by_od = (
+                trips
+                .query("mode in (4,5,6)")
+                .query(f"timeperiod in ('{tname}',)")
+                .groupby(["o_zone", "d_zone"])['trips']
+                .sum()
+                .compute()
+                .unstack(0)
+                .fillna(0)
+            ).reindex(
+                index=dh.skims.raw[f'mf46{tcode}'].indexes['otaz'],
+                columns=dh.skims.raw[f'mf46{tcode}'].indexes['dtaz'],
+            ).fillna(0)
 
         deadhead_dests = trips_by_od.sum()  # hired car trip origins
         deadhead_origs = trips_by_od.sum(1)  # hired car trip destinations
