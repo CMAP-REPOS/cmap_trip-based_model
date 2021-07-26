@@ -54,12 +54,10 @@ regional_income_distribution:  # used for NHB trips
   4: 0.19496901
   5: 0.16133703
 
-hov3_occupancy = {
-    'HBW': 3.36,
-    'HBO': 3.31,
-    'NHB': 3.39,
-}
-
+hov3_occupancy:
+    HBW: 3.36
+    HBO: 3.31
+    NHB: 3.39
 
 default_activity_durations:  # number of hours, by trip purpose
   HW: 10

@@ -1159,11 +1159,11 @@ def aggregate_to_vehicle_matrixes(
         log.debug(f"converting trips from dask.dataframe to pandas.dataframe")
         trips = trips.compute()
 
-    hov3_occupancy = {
-        'HBW': 3.36,
-        'HBO': 3.31,
-        'NHB': 3.39,
-    }
+    # hov3_occupancy = {
+    #     'HBW': 3.36,
+    #     'HBO': 3.31,
+    #     'NHB': 3.39,
+    # }
 
     from .modecodes import mode9codes
     from .time_of_day_model import time_period_names
@@ -1237,7 +1237,7 @@ def aggregate_to_vehicle_matrixes(
         .sum()
     ).reindex(
         timeperiod=time_period_names, o_zone=z_range, d_zone=z_range,
-    ).fillna(0).values / hov3_occupancy['HBW']
+    ).fillna(0).values / dh.cfg.hov3_occupancy['HBW']
     vehicle_trips[4, ...] += xr.DataArray.from_series(
         trips
         .query(f"purpose in ('HBO', 'HBS') and mode == {mode9codes.HOV3}")
@@ -1245,7 +1245,7 @@ def aggregate_to_vehicle_matrixes(
         .sum()
     ).reindex(
         timeperiod=time_period_names, o_zone=z_range, d_zone=z_range,
-    ).fillna(0).values / hov3_occupancy['HBO']
+    ).fillna(0).values / dh.cfg.hov3_occupancy['HBO']
     vehicle_trips[4, ...] += xr.DataArray.from_series(
         trips
         .query(f"purpose in ('NHB', 'VISIT') and mode == {mode9codes.HOV3}")
@@ -1253,7 +1253,7 @@ def aggregate_to_vehicle_matrixes(
         .sum()
     ).reindex(
         timeperiod=time_period_names, o_zone=z_range, d_zone=z_range,
-    ).fillna(0).values / hov3_occupancy['NHB']
+    ).fillna(0).values / dh.cfg.hov3_occupancy['NHB']
 
     output_mf_numbers = {
         'sovL': 411,  # SOV low value of time  – mf411-mf418
