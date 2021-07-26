@@ -1273,13 +1273,23 @@ def aggregate_to_vehicle_matrixes(
                 .values.tofile(mtx_filename)
 
     # transit person trips
+
+    purposes6 = np.asarray((
+        'HBWH',  # Home-based Work, High Income
+        'HBWL',  # Home-based Work, Low Income
+        'HBS',  # Home-based Shopping
+        'HBO',  # Home-based Other Purpose Not Enumerated
+        'NHB',  # Non-home-based
+        'VISIT',
+    ),)
+
     transit_trips = xr.DataArray.from_series(
         trips
         .query(f"mode == {mode9codes.TRANSIT}")
         .groupby(["purpose", "o_zone", "d_zone"])['trips']
         .sum()
     ).reindex(
-        purpose=purposesA, o_zone=z_range, d_zone=z_range,
+        purpose=purposes6, o_zone=z_range, d_zone=z_range,
     ).astype(np.float32).fillna(0)
 
     transit_trip_mtx_numbers = {
@@ -1288,6 +1298,7 @@ def aggregate_to_vehicle_matrixes(
         'HBS': 'mf39',
         'HBO': 'mf42',
         'NHB': 'mf43',
+        'VISIT': 'mf998',
     }
 
     for purpose, purp_mtx in transit_trip_mtx_numbers.items():
