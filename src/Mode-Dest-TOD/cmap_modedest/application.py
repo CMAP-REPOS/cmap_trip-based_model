@@ -181,10 +181,11 @@ def _data_for_application_1(dh, otaz=1, replication=None):
         trunc_min=60_000,
         income_breaks='5',
     ).astype(app_floatdtype)
+    nhb_income_dist = [dh.cfg.regional_income_distribution[i] for i in (1,2,3,4,5)]
     hh_data['hhinc5g'] = np.random.default_rng(otaz << 3).choice(
         [1,2,3,4,5],
         len(hh_data),
-        p=[0.19771384, 0.22170351, 0.22427661, 0.19496901, 0.16133703]
+        p=nhb_income_dist,
     ).astype(app_floatdtype)
 
 
@@ -1125,11 +1126,18 @@ def aggregate_to_vehicle_matrixes(
 
     This function writes vehicle trip tables to mfNNN.emx files in the
     `Database/emmemat` directory, according to the following guide:
+    - Automobile Vehicle Trips (by 8 time of day periods EA AM1 AM2 AM3 MD PM1 PM2 PM3)
         - SOV low value of time   – mf411-mf418
         - SOV med value of time   – mf421-mf428
         - SOV high value of time  – mf431-mf438
         - HOV2 not diff'd by vot  – mf441-mf448
         - HOV3 not diff'd by vot  – mf451-mf458
+    - Transit Person Trips (not by time of day)
+        - home-based work low income  - mf40
+        - home-based work high income - mf41
+        - home-based shopping         - mf39
+        - home-based other            - mf42
+        - non-home-based              - mf43
 
     Parameters
     ----------
@@ -1190,8 +1198,6 @@ def aggregate_to_vehicle_matrixes(
             'd_zone': z_range,
         }
     )
-
-    # TODO why no income 0?
 
     for purpose, income in votb.index:
         log.info(f" sov for purpose {purpose} income {income}")
@@ -1265,5 +1271,27 @@ def aggregate_to_vehicle_matrixes(
                 .sel(vot=vot, timeperiod=time_period_name) \
                 .transpose("o_zone", "d_zone") \
                 .values.tofile(mtx_filename)
+
+    # transit person trips
+    transit_trips = xr.DataArray.from_series(
+        trips
+        .query(f"mode == {mode9codes.TRANSIT}")
+        .groupby(["purpose", "o_zone", "d_zone"])['trips']
+        .sum()
+    ).reindex(
+        purpose=purposesA, o_zone=z_range, d_zone=z_range,
+    ).astype(np.float32).fillna(0)
+
+    transit_trip_mtx_numbers = {
+        'HBWL': 'mf40',
+        'HBWH': 'mf41',
+        'HBS': 'mf39',
+        'HBO': 'mf42',
+        'NHB': 'mf43',
+    }
+
+    for purpose, purp_mtx in transit_trip_mtx_numbers.items():
+        mtx_filename = os.fspath(dh.filenames.emme_database_dir / f"emmemat/{purp_mtx}.emx")
+        transit_trips.sel(purpose=purpose).transpose("o_zone", "d_zone").values.tofile(mtx_filename)
 
     return vehicle_trips
