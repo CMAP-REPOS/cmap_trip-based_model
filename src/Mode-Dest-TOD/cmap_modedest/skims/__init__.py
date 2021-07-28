@@ -4,7 +4,7 @@ from pathlib import Path
 from .compression import read_compressed_skims, read_uncompressed_skims, write_compressed_skims
 from ..cmap_logging import getLogger
 
-def read_skims(directory, backfill_compressed_skims=True):
+def read_skims(directory, backfill_compressed_skims=False):
     """
 
     Parameters

@@ -62,7 +62,7 @@ def compress_skim_dir(directory, output="zarr"):
     return master
 
 
-def read_uncompressed_skims(directory, dataset=None):
+def read_uncompressed_skims(directory, dataset=None, overload=True):
     """
     Read emmemat skims into a Dataset.
 
@@ -73,6 +73,11 @@ def read_uncompressed_skims(directory, dataset=None):
     dataset : Dataset, optional
         Append to these skims.  Only skims not already available
         will be loaded.
+    overload : bool, default True
+        Whether to overload existing skims in `dataset`.  If False,
+        the existing skims (generally, those loaded from the compressed
+        skims) have priority and are retained.  If True, any uncompressed
+        skims have priority and existing data is overwritten in memory.
 
     Returns
     -------
@@ -91,7 +96,7 @@ def read_uncompressed_skims(directory, dataset=None):
     log.info(f'reading uncompressed skims from {directory}')
     for f in os.walk(directory):
         for fi in f[2]:
-            if ".emx" in fi and fi.replace(".emx", "") not in master:
+            if ".emx" in fi and (fi.replace(".emx", "") not in master or overload):
                 arr = np.memmap(os.path.join(f[0], fi), dtype='f4', mode='r')
                 side = int(np.sqrt(arr.size))
                 arr = arr.reshape(side, side)
