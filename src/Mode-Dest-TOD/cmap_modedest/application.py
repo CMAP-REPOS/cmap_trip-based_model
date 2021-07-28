@@ -1267,10 +1267,24 @@ def aggregate_to_vehicle_matrixes(
         for t, time_period_name in enumerate(time_period_names):
             n = output_mf_numbers[vot] + t
             mtx_filename = os.fspath(dh.filenames.emme_database_dir / f"emmemat/mf{n}.emx")
-            vehicle_trips \
+            write_out = vehicle_trips \
                 .sel(vot=vot, timeperiod=time_period_name) \
                 .transpose("o_zone", "d_zone") \
-                .values.tofile(mtx_filename)
+                .values
+            if os.path.exists(mtx_filename):
+                mmap_mode = 'r+'
+            else:
+                mmap_mode = 'w+'
+            # We write into the existing file instead of deleting and rewriting the file
+            # emme may be happier this way if the file handle was previously held open
+            mmap = np.memmap(
+                mtx_filename,
+                dtype=np.float32,
+                mode=mmap_mode,
+                shape=write_out.shape,
+            )
+            mmap[:,:] = write_out
+            mmap.flush()
 
     # transit person trips
 
@@ -1303,6 +1317,20 @@ def aggregate_to_vehicle_matrixes(
 
     for purpose, purp_mtx in transit_trip_mtx_numbers.items():
         mtx_filename = os.fspath(dh.filenames.emme_database_dir / f"emmemat/{purp_mtx}.emx")
-        transit_trips.sel(purpose=purpose).transpose("o_zone", "d_zone").values.tofile(mtx_filename)
+        write_out = transit_trips.sel(purpose=purpose).transpose("o_zone", "d_zone").values #.tofile(mtx_filename)
+        if os.path.exists(mtx_filename):
+            mmap_mode = 'r+'
+        else:
+            mmap_mode = 'w+'
+        # We write into the existing file instead of deleting and rewriting the file
+        # emme may be happier this way if the file handle was previously held open
+        mmap = np.memmap(
+            mtx_filename,
+            dtype=np.float32,
+            mode=mmap_mode,
+            shape=write_out.shape,
+        )
+        mmap[:, :] = write_out
+        mmap.flush()
 
     return vehicle_trips
