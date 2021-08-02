@@ -97,7 +97,7 @@ def read_uncompressed_skims(directory, dataset=None, overload=True):
     for f in os.walk(directory):
         for fi in f[2]:
             if ".emx" in fi and (fi.replace(".emx", "") not in master or overload):
-                arr = np.memmap(os.path.join(f[0], fi), dtype='f4', mode='c')
+                arr = np.memmap(os.path.join(f[0], fi), dtype='f4', mode='r+')
                 side = int(np.sqrt(arr.size))
                 arr = arr.reshape(side, side)
                 tazrange = pd.RangeIndex(1, side+1)
