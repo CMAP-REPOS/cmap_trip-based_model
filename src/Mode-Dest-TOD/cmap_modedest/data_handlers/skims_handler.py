@@ -78,9 +78,13 @@ class DictSkims(Dict):
 		)
 
 
-def load_skims(filenames, dh=None):
+def load_skims(filenames, dh=None, backfill_uncompressed_skims=False):
 	from ..util import search_path
-	return _load_skims(search_path(filenames.emmemat), dh=dh)
+	return _load_skims(
+		search_path(filenames.emmemat),
+		dh=dh,
+		backfill_uncompressed_skims=backfill_uncompressed_skims,
+	)
 
 
 def _load_skims(filename_emmemat, dh=None, backfill_uncompressed_skims=False):
