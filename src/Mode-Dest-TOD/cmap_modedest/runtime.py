@@ -33,7 +33,6 @@ def working_dir(*candidate_emme_database_dirs, backfill_uncompressed_skims=False
         emme_database_dir=emme_database_dir,
         cache_dir=emme_database_dir/"cache",
         zone_shapefile=emme_database_dir/"data/distr/zone17.shp",
-        #emmemat_dir=emme_database_dir/"emmemat.zarr.zip",
         backfill_uncompressed_skims=backfill_uncompressed_skims,
         **kwargs,
     )
