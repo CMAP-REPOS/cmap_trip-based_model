@@ -51,7 +51,7 @@ def main(*args):
         Number of seconds to pause between initial parallel starts. 
         This can stagger storage-heavy and cpu-heavy sections of code to
         better distribute workload.""",
-        default=15,
+        default=5,
     )
     parser.add_argument(
         '--short',
@@ -101,6 +101,14 @@ def main(*args):
     parser.add_argument(
         '--tbb',
         help='Use the TBB backend for numba. Experimental',
+        action="store_true",
+    )
+    parser.add_argument(
+        '--zarr-to-emmemat',
+        help='Convert all matrix files that are only found in the emmemat.zarr '
+             'format into standard emmemat .EMX files, and then quit. Note that '
+             'EMME may not recognize these files as included in the model data '
+             'unless they were previously initialized.',
         action="store_true",
     )
 
@@ -163,6 +171,7 @@ def run(args):
         log_info(f"# --check = {args.check}")
         log_info(f"# --rebuild = {args.rebuild}")
         log_info(f"# --tbb = {args.tbb}")
+        log_info(f"# --zarr-to-emmemat = {args.zarr_to_emmemat}")
         log_info("###################################################################")
 
         if args.check: return # early exit if only checking arguments
@@ -177,6 +186,10 @@ def run(args):
 
 
         from cmap_modedest.application import choice_simulator_trips_many, choice_simulator_trips, assemble_trips
+
+        if args.zarr_to_emmemat:
+            working_dir(args.database_dir, backfill_uncompressed_skims=True)
+            return
 
         dh = working_dir(args.database_dir)
 

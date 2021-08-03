@@ -24,7 +24,15 @@ class DataHandler:
 
 	serial_dir = PathAttr()
 
-	def __init__(self, filenames=None, serial_dir=None, tg_detail=False, tripclass='typical', **kwargs):
+	def __init__(
+			self,
+			filenames=None,
+			serial_dir=None,
+			tg_detail=False,
+			tripclass='typical',
+			backfill_uncompressed_skims=False,
+			**kwargs,
+	):
 
 		self._jedi_names = set()
 
@@ -78,7 +86,9 @@ class DataHandler:
 
 		log.info("loading skims")
 		from .skims_handler import load_skims
-		self['skims'] = load_skims(filenames, self)
+		self['skims'] = load_skims(
+			filenames, self, backfill_uncompressed_skims=backfill_uncompressed_skims,
+		)
 		self._jedi_names.add('skims')
 
 		log.info("loading tg")

@@ -20,7 +20,7 @@ def log_info(*args):
         log.info(s.replace("\n", "\n    "))
 
 
-def working_dir(*candidate_emme_database_dirs, **kwargs):
+def working_dir(*candidate_emme_database_dirs, backfill_uncompressed_skims=False, **kwargs):
     for emme_database_dir in candidate_emme_database_dirs:
         emme_database_dir = os.path.expanduser(emme_database_dir)
         if os.path.exists(emme_database_dir): break
@@ -34,6 +34,7 @@ def working_dir(*candidate_emme_database_dirs, **kwargs):
         cache_dir=emme_database_dir/"cache",
         zone_shapefile=emme_database_dir/"data/distr/zone17.shp",
         #emmemat_dir=emme_database_dir/"emmemat.zarr.zip",
+        backfill_uncompressed_skims=backfill_uncompressed_skims,
         **kwargs,
     )
     log_info("Data Handlers Ready")

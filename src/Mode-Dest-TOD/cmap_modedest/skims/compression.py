@@ -161,7 +161,7 @@ def write_uncompressed_skims(skims, directory, overwrite=False):
     os.makedirs(directory, exist_ok=True)
     for k in skims:
         filename = os.path.join(directory, f"{k}.emx")
-        if not os.path.exists(filename):
+        if not os.path.exists(filename) or overwrite:
             skims[k].values.tofile(filename)
 
 

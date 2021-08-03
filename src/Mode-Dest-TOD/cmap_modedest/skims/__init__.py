@@ -1,19 +1,22 @@
 import os
 import zarr
 from pathlib import Path
-from .compression import read_compressed_skims, read_uncompressed_skims, write_compressed_skims
+from .compression import read_compressed_skims, read_uncompressed_skims, write_compressed_skims, write_uncompressed_skims
 from ..cmap_logging import getLogger
 
-def read_skims(directory, backfill_compressed_skims=False):
+def read_skims(directory, backfill_compressed_skims=False, backfill_uncompressed_skims=False):
     """
 
     Parameters
     ----------
     directory : Path-like
         Where to read skims from, omitting any ".zarr" suffix.
-    backfill_compressed_skims : bool, default True
+    backfill_compressed_skims : bool, default False
         Write skims that only appear in the uncompressed directory into the
         zarr directory.
+    backfill_uncompressed_skims : bool, default False
+        Write skims that only appear in the compressed zarr directory into the
+        uncompressed directory.
 
     Returns
     -------
@@ -36,6 +39,11 @@ def read_skims(directory, backfill_compressed_skims=False):
         write_compressed_skims(
             skims[appended_names],
             os.fspath(Path(directory).with_suffix(".zarr"))
+        )
+    if backfill_uncompressed_skims:
+        write_uncompressed_skims(
+            skims,
+            directory,
         )
 
     return skims

@@ -83,12 +83,15 @@ def load_skims(filenames, dh=None):
 	return _load_skims(search_path(filenames.emmemat), dh=dh)
 
 
-def _load_skims(filename_emmemat, dh=None):
+def _load_skims(filename_emmemat, dh=None, backfill_uncompressed_skims=False):
 	try:
 		skims = DictSkims()
 		log.debug(f"filename emmemat = {filename_emmemat}")
 		skims.filename = filename_emmemat
-		skims.raw = read_skims(filename_emmemat)
+		skims.raw = read_skims(
+			filename_emmemat,
+			backfill_uncompressed_skims=backfill_uncompressed_skims,
+		)
 
 		skims.raw['mf45'] = skims.raw['mf45'].load()
 		skims.raw['mf47'] = skims.raw['mf47'].load()
