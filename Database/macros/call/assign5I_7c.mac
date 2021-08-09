@@ -47,6 +47,7 @@
 ~#  Revised by CMH 07-21-2016: implement toll generalized cost assignment (@tollv no longer needed)
 ~#  TOD functions now reference el2, @busveq  bozic 3-23-2017
 ~#  Revised by Heither 11-27-2017: use DLL for pre-compiled functions (VDF_TOD only); reduced initial path cost equality tolerance & refined proportion
+~#  Revised by JLemp 07-07-2021: Update to new vehicle class framework (3 SOV classes + combined b-plate, light trucks)
 ~/ 
 ~/**********************************************************************
 ~/    Prepare scenario for auto assignment
@@ -70,10 +71,14 @@ batchin=data\vdf_tod.in
 ~/***Set up path-based assignment
 ~# Use bucket rounding to convert to integers rather than using 5.25 option 1
 3.21
-~+;1;y;mf13;n;(bint(mf13).max.0); ; ;n;2
+~# ~+;1;y;mf13;n;(bint(mf13).max.0); ; ;n;2
+~+;1;y;mf94;n;(bint(mf94).max.0); ; ;n;2
+~+;1;y;mf95;n;(bint(mf95).max.0); ; ;n;2
+~+;1;y;mf96;n;(bint(mf96).max.0); ; ;n;2
 ~+;1;y;mf18;n;(bint(mf18).max.0); ; ;n;2
-~+;1;y;mf14;n;(bint(mf14).max.0); ; ;n;2
-~+;1;y;mf15;n;(bint(mf15).max.0); ; ;n;2
+~# ~+;1;y;mf14;n;(bint(mf14).max.0); ; ;n;2
+~# ~+;1;y;mf15;n;(bint(mf15).max.0); ; ;n;2
+~+;1;y;mf97;n;(bint(mf97).max.0); ; ;n;2
 ~+;1;y;mf16;n;(bint(mf16).max.0); ; ;n;2
 ~+;1;y;mf17;n;(bint(mf17).max.0); ; ;n;2;q
 ~#
@@ -93,22 +98,25 @@ batchin=data\vdf_tod.in
 1                 / option 1 = no additional volumes
 S                 / mode used by primary class
 ~+;@toll;%ms84%   / fixed link cost and weight for class
-mf13              / demand matrix (veq) for class 1
-H                 / mode used by class 2
+mf94              / demand matrix (veq) for class 1
+S                 / mode used by class 2
 ~+;@toll;%ms85%   / fixed link cost and weight for class
-mf18              / demand matrix (veq) for class 2
-b                 / mode used by class 3
+mf95              / demand matrix (veq) for class 2
+S                 / mode used by class 3
 ~+;@toll;%ms86%   / fixed link cost and weight for class
-mf14              / demand matrix (veq) for class 3
-l                 / mode used by class 4
-~+;@toll2;%ms87%  / fixed link cost and weight for class
-mf15              / demand matrix (veq) for class 4
-m                 / mode used by class 5
-~+;@toll3;%ms88%  / fixed link cost and weight for class
-mf16              / demand matrix (veq) for class 5
-h                 / mode used by class 6
-~+;@toll4;%ms89%  / fixed link cost and weight for class
-mf17              / demand matrix (veq) for class 6
+mf96              / demand matrix (veq) for class 3
+H                 / mode used by class 4
+~+;@toll;%ms87%   / fixed link cost and weight for class
+mf18              / demand matrix (veq) for class 4
+l                 / mode used by class 5
+~+;@toll2;%ms88%  / fixed link cost and weight for class
+mf97              / demand matrix (veq) for class 5
+m                 / mode used by class 6
+~+;@toll3;%ms89%  / fixed link cost and weight for class
+mf16              / demand matrix (veq) for class 6
+h                 / mode used by class 7
+~+;@toll4;%ms90%  / fixed link cost and weight for class
+mf17              / demand matrix (veq) for class 7
 
 ~+;~?q=3;2        / if existing assignment, option 2=start with existing paths [from previous global iteration] & reset iteration counter
 2000              / maximum memory for paths (MB)
@@ -128,10 +136,11 @@ mf17              / demand matrix (veq) for class 6
 ~# ===================================================
 6.16
 3
-~+;@vauto;n;@tauto;n
+~+;@vsov1;n;@tsov1;n
+~+;@vsov2;n;@tsov2;n
+~+;@vsov3;n;@tsov3;n
 ~+; ; 
-~+;@vbplt;n;@tbplt;n 
-~+;@vlght;n;@tlght;n
+~+; ; 
 ~+;@vmed;n;@tmed;n
 ~+;@vhevy;n;@thevy;n
 2
@@ -143,8 +152,9 @@ length
 3
 1
 ~+; ; ; ; ; 
-~+;mf92; ; ;@vhov2;n;@thov2;n    /* pull HOV2 volumes and turn volumes from all HOV demand assignment
 ~+; ; ; ; ; 
+~+; ; ; ; ; 
+~+;mf92; ; ;@vhov2;n;@thov2;n    /* pull HOV2 volumes and turn volumes from all HOV demand assignment
 ~+; ; ; ; ; 
 ~+; ; ; ; ; 
 ~+; ; ; ; ; 
@@ -157,9 +167,40 @@ length
 3
 1
 ~+; ; ; ; ; 
+~+; ; ; ; ; 
+~+; ; ; ; ; 
 ~+;mf93; ; ;@vhov3;n;@thov3;n    /* pull HOV3+ volumes and turn volumes from all HOV demand assignment
 ~+; ; ; ; ; 
 ~+; ; ; ; ; 
+~+; ; ; ; ; 
+2
+4
+length
+
++
+0,99999
+3
+1
+~+; ; ; ; ; 
+~+; ; ; ; ; 
+~+; ; ; ; ; 
+~+; ; ; ; ; 
+~+;mf14; ; ;@vbplt;n;@tbplt;n    /* pull b-plate volumes and turn volumes from combined b-plate+light truck demand assignment
+~+; ; ; ; ; 
+~+; ; ; ; ; 
+2
+4
+length
+
++
+0,99999
+3
+1
+~+; ; ; ; ; 
+~+; ; ; ; ; 
+~+; ; ; ; ; 
+~+; ; ; ; ; 
+~+;mf15; ; ;@vlght;n;@tlght;n    /* pull light truck volumes and turn volumes from combined b-plate+light truck demand assignment
 ~+; ; ; ; ; 
 ~+; ; ; ; ; 
 2

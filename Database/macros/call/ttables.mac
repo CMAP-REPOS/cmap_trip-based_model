@@ -50,6 +50,7 @@ reports=report\iter_%ms98%\ttables_%s%.rxt
 ~#        
 ~#        Bozic, 4-14-2017- add separate matrix mf848 milwaukee trips to mf8
 ~#        Ferguson, 9/18/2018 - updated r250 to number of zone17 zones
+~#        JLemp, 07-07-2021 - implement new vehicle class framework (3 SOV classes, combined b-plate + light trucks)
 ~/**********************************************************************
 ~/**********************************************************************
 ~r248=%3%                       /* store matrix value for HOV2 trips
@@ -74,7 +75,7 @@ q
 ~y=%2%
 ~/ -- Get TOD Factors
 ~<<data\tod_factors.p%y%
-~z=1
+~z=19
 ~:loop1
 ~+;~t0=~@;~?e;~$>eof1
 ~rz=%t0%
@@ -96,18 +97,18 @@ q
 ~:eof2
 ~/end of reading occ
 ~/
-~/ -- Get Directional Splits
-~<<data\directional.splits
-~z=41
-~:loop3
-~+;~t0=~@;~?e;~$>eof3
-~rz=%t0%
-~/r%z%=%rz%
-~z+1
-~+;~?z<57;~$loop3
-~:eof3
-~/end of reading splits
-~/
+~# ~/ -- Get Directional Splits
+~# ~<<data\directional.splits
+~# ~z=41
+~# ~:loop3
+~# ~+;~t0=~@;~?e;~$>eof3
+~# ~rz=%t0%
+~# ~/r%z%=%rz%
+~# ~z+1
+~# ~+;~?z<57;~$loop3
+~# ~:eof3
+~# ~/end of reading splits
+~# ~/
 ~/ Set Matrix labels
 ~t1=p1. 8pm-6am
 ~+;~?y=2;~t1=p2. 6am-7am
@@ -120,32 +121,32 @@ q
 ~#
 ~/**********************************************************************
 ~/
-~/   Initialize period trip tables mf13 - mf18 
+~/   Initialize period trip tables mf13 - mf18 + mf92-mf97
 ~/
 ~/**********************************************************************
 3.21
-~+;1;y;mf13;y;modeS;auto veh (mod=S) trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~# ~+;1;y;mf13;y;modeS;auto veh (mod=S) trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf14;y;bplt;b plate truck trips for %t1%;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf15;y;ltrk;light truck trips for %t1%;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf16;y;mtrk;medium truck trips for %t1%;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf17;y;htrk;heavy truck trips for %t1%;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf18;y;modeH;auto veh (mod=H) trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf92;y;modeH2;auto veh (mod=H) trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf93;y;modeH3;auto veh (mod=H) trip table:%t1%;~?q=1;y;0;0; ; ;n;1;q
+~+;1;y;mf93;y;modeH3;auto veh (mod=H) trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf94;y;modeS1;SOV VOT1 auto veh trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf95;y;modeS2;SOV VOT2 auto veh trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf96;y;modeS3;SOV VOT3 auto veh trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf97;y;bp_ltrk;b plate + light truck trips for %t1%;~?q=1;y;0;0; ; ;n;1;q
 ~#
 ~#**********************************************************************
 ~#  ## ---  Value-of-Time Data --- ##
 ~#**********************************************************************
 ~# ## -- Value of Time (dollars per hour) -- ##
-~r100=12     / VOT for SOV1 HBW low income
-~r101=20     / VOT for SOV1 HBW high income
-~r102=18     / VOT for HOV2 HBW low income
-~r103=30     / VOT for HOV2 HBW high income
-~r104=27     / VOT for HOV3 HBW low income
-~r105=45     / VOT for HOV3 HBW high income
-~r106=12     / VOT for SOV1 HBO & NHB
-~r107=18     / VOT for HOV2 HBO & NHB
-~r108=27     / VOT for HOV3 HBO & NHB
+~r100=2.3     / VOT for SOV VOT1
+~r101=7.2     / VOT for SOV VOT2
+~r102=24     / VOT for SOV VOT3
+~r103=9      / VOT for HOV2 (prev value = 18 for hw low & non-hw, 30 for hw high)
+~r104=14     / VOT for HOV3+ (prev value = 27 for hw low & non-hw, 45 for hw high)
 ~r109=20     / VOT for B-Plate truck
 ~r110=25     / VOT for Light truck
 ~r111=25     / VOT for Medium truck
@@ -162,21 +163,38 @@ q
 ~#      -  Auto I-PASS users may not perceive the entire cost because they are not
 ~#         paying out-of-pocket for each transaction (i.e., only see monthly credit
 ~#         card statement).
-~r100*9.00     / SOV1 HBW low income
-~r101*9.00     / SOV1 HBW high income
-~r102*9.00     / HOV2 HBW low income
-~r103*9.00     / HOV2 HBW high income
-~r104*9.00     / HOV3 HBW low income
-~r105*9.00     / HOV3 HBW high income
-~r106*8.00     / SOV1 HBO & NHB
-~r107*8.00     / HOV2 HBO & NHB
-~r108*8.00     / HOV3 HBO & NHB
-~r109*2.00     / B-Plate truck
-~r110*2.00     / Light truck
-~r111*2.00     / Medium truck
-~r112*2.00     / Heavy truck
-~r113*3.00     / External auto
-~r114*3.00     / AirPass
+~r100*1.00     / SOV VOT1
+~r101*1.00     / SOV VOT2
+~r102*1.00     / SOV VOT3
+~r103*1.00     / HOV2 (prev value = 9.0/8.0)
+~r104*1.00     / HOV3 (prev value = 9.0/8.0)
+~r109*1.00     / B-Plate truck (prev value = 2.0)
+~r110*1.00     / B-plate + Light truck (prev value = 2.0)
+~r111*1.00     / Medium truck (prev value = 2.0)
+~r112*1.00     / Heavy truck (prev value = 2.0)
+~r113*1.00     / External auto (prev value = 3.0)
+~r114*1.00     / AirPass (prev value = 3.0)
+~#**********************************************************************
+~#
+~# VOT bucket splits for added trip tables (externals, drive-transit, air passenger)
+~r61=0.10     / VOT1 share of external trips
+~r62=0.45     / VOT2 share of external trips
+~r63=0.45     / VOT3 share of external trips
+~r64=0.15     / VOT1 share of drive-transit trips
+~r65=0.50     / VOT2 share of drive-transit trips
+~r66=0.35     / VOT3 share of drive-transit trips
+~r67=0.10     / VOT1 share of air passenger trips
+~r68=0.45     / VOT2 share of air passenger trips
+~r69=0.45     / VOT3 share of air passenger trips
+~#**********************************************************************
+~#
+~# Vehicle trip matrix id's from Demand model
+~r81=41%y%     / SOV VOT1 vehicle trips
+~r82=42%y%     / SOV VOT2 vehicle trips
+~r83=43%y%     / SOV VOT3 vehicle trips
+~r84=44%y%     / HOV(2) vehicle trips
+~r85=45%y%     / HOV3+ vehicle trips
+~/ Demand Matrix IDs = %r81%,%r82%,%r83%,%r84%,%r85%
 ~#**********************************************************************
 ~#
 ~#
@@ -240,7 +258,7 @@ q
 ~/ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 ~/**********************************************************************
 ~/
-~/    Calculate mf13 as time period mode S auto vehicles and if mode H
+~/    Calculate mf94-mf96 as time period mode S (VOT1,VOT2,VOT3) auto vehicles and if mode H
 ~/      assignment desired mf18 mode H auto vehicles:
 ~/      convert/combine hbw person trips by occupancy level from mode
 ~/      choice to auto vehicle trips
@@ -250,65 +268,54 @@ q
 3.21
 1
 yes
-mf13
+mf94
 no
-~/  Home to work:SOV1
-(md"qflag".eq.0)*
-   ((%r45%*mf101)*%r5%)+
-(md"qflag".eq.1)*
-   ((%r41%*mf101)*%r1%)+
-(md"qflag".ge.2)*
-   ((%r49%*mf101)*%r9%)+
-~/  Work to home:SOV1
-(mo"pflag".eq.0)*
-   ((%r47%*mf81)*%r7%)+
-(mo"pflag".eq.1)*
-   ((%r43%*mf81)*%r3%)+
-(mo"pflag".ge.2)*
-   ((%r51%*mf81)*%r11%)
+~/  SOV VOT1 (mf%r81%)
+mf%r81%
 
 
 no
 2
 ~/
 ~# ## 
-~# ## -- Calculate Component Trips by income-occupancy for VOT -- ##
-~+;1;y;mf60;y;temp60;HW SOV low income tod %y%;~?q=1;y;0
-~/  Home to work:SOV1 low income
-(md"qflag".eq.0)*
-   ((%r45%*mf50)*%r5%)+
-(md"qflag".eq.1)*
-   ((%r41%*mf50)*%r1%)+
-(md"qflag".ge.2)*
-   ((%r49%*mf50)*%r9%)+
-~/  Work to home:SOV1 low income
-(mo"pflag".eq.0)*
-   ((%r47%*mf209)*%r7%)+
-(mo"pflag".eq.1)*
-   ((%r43%*mf209)*%r3%)+
-(mo"pflag".ge.2)*
-   ((%r51%*mf209)*%r11%)
-~+; ; ;n;2
-~#
-~+;1;y;mf61;y;temp61;HW SOV high income tod %y%;~?q=1;y;0
-~/  Home to work:SOV1 high income
-(md"qflag".eq.0)*
-   ((%r45%*mf53)*%r5%)+
-(md"qflag".eq.1)*
-   ((%r41%*mf53)*%r1%)+
-(md"qflag".ge.2)*
-   ((%r49%*mf53)*%r9%)+
-~/  Work to home:SOV1 high income
-(mo"pflag".eq.0)*
-   ((%r47%*mf212)*%r7%)+
-(mo"pflag".eq.1)*
-   ((%r43%*mf212)*%r3%)+
-(mo"pflag".ge.2)*
-   ((%r51%*mf212)*%r11%)
-~+; ; ;n;2
-~#
-~+;1;y;ms10;y;tmp10;store HW SOV;~?q=1;y;0;mf13; ; ;n;+;+;1;q
-~t2=HW SOV trips
+~+;1;y;ms24;y;tmp24;store SOV VOT1;~?q=1;y;0;mf94; ; ;n;+;+;1;q
+~t2=SOV VOT1 trips
+~>>%t3%
+~"Period %y% %t2% : %ms10.2%
+~>>
+3.21
+1
+yes
+mf95
+no
+~/  SOV VOT2 (mf%r82%)
+mf%r82%
+
+
+no
+2
+~/
+~# ## 
+~+;1;y;ms25;y;tmp25;store SOV VOT2;~?q=1;y;0;mf95; ; ;n;+;+;1;q
+~t2=SOV VOT2 trips
+~>>%t3%
+~"Period %y% %t2% : %ms10.2%
+~>>
+3.21
+1
+yes
+mf96
+no
+~/  SOV VOT3 (mf%r83%)
+mf%r83%
+
+
+no
+2
+~/
+~# ## 
+~+;1;y;ms26;y;tmp26;store HW SOV VOT3;~?q=1;y;0;mf96; ; ;n;+;+;1;q
+~t2=SOV VOT3 trips
 ~>>%t3%
 ~"Period %y% %t2% : %ms10.2%
 ~>>
@@ -319,64 +326,16 @@ no
 yes
 mf%r248%
 no
-~/  Home to work:HOV2
-mf%r248%+
-(md"qflag".eq.0)*
-   (put(%r46%*mf102)*%r6%/2.0)+
-(md"qflag".eq.1)*
-   ((%r42%*mf102)*%r2%/2.0)+
-(md"qflag".ge.2)*
-   (get(1)*%r10%/2.0)+
-~/  Work to home:HOV2
-(mo"pflag".eq.0)*
-   (put(%r48%*mf82)*%r8%/2.0)+
-(mo"pflag".eq.1)*
-   ((%r44%*mf82)*%r4%/2.0)+
-(mo"pflag".ge.2)*
-   (get(2)*%r12%/2.0)
+~/  HOV2 (mf%r84%)
+mf%r84%
 
 
 no
 2
 ~/
 ~# ## 
-~# ## -- Calculate Component Trips by income-occupancy for VOT -- ##
-~+;1;y;mf62;y;temp62;HW HOV2 low income tod %y%;~?q=1;y;0
-~/  Home to work:HOV2 low income
-(md"qflag".eq.0)*
-   (put(%r46%*mf51)*%r6%/2.0)+
-(md"qflag".eq.1)*
-   ((%r42%*mf51)*%r2%/2.0)+
-(md"qflag".ge.2)*
-   (get(1)*%r10%/2.0)+
-~/  Work to home:HOV2 low income
-(mo"pflag".eq.0)*
-   (put(%r48%*mf210)*%r8%/2.0)+
-(mo"pflag".eq.1)*
-   ((%r44%*mf210)*%r4%/2.0)+
-(mo"pflag".ge.2)*
-   (get(2)*%r12%/2.0)
-~+; ; ;n;2
-~#
-~+;1;y;mf63;y;temp63;HW HOV2 high income tod %y%;~?q=1;y;0
-~/  Home to work:HOV2 high income
-(md"qflag".eq.0)*
-   (put(%r46%*mf54)*%r6%/2.0)+
-(md"qflag".eq.1)*
-   ((%r42%*mf54)*%r2%/2.0)+
-(md"qflag".ge.2)*
-   (get(1)*%r10%/2.0)+
-~/  Work to home:HOV2 high income
-(mo"pflag".eq.0)*
-   (put(%r48%*mf213)*%r8%/2.0)+
-(mo"pflag".eq.1)*
-   ((%r44%*mf213)*%r4%/2.0)+
-(mo"pflag".ge.2)*
-   (get(2)*%r12%/2.0)
-~+; ; ;n;2
-~#
-~+;1;y;ms11;y;tmp11;store HW HOV2;~?q=1;y;0;mf%r248%; ; ;n;+;+;1;q
-~t2=HW HOV2 trips
+~+;1;y;ms27;y;tmp27;store HOV2;~?q=1;y;0;mf%r248%; ; ;n;+;+;1;q
+~t2=HOV2 trips
 ~>>%t3%
 ~"Period %y% %t2% : %ms11.2%
 ~>>
@@ -387,85 +346,42 @@ no
 yes
 mf%r249%
 no
-~/  Home to work:HOV3+
-mf%r249%+
-(md"qflag".eq.0)*
-   (put(%r46%*mf103)*%r6%/%r33%)+
-(md"qflag".eq.1)*
-   ((%r42%*mf103)*%r2%/%r31%)+
-(md"qflag".ge.2)*
-   (get(1)*%r10%/%r35%)+
-~/  Work to home:HOV3+
-(mo"pflag".eq.0)*
-   (put(%r48%*mf83)*%r8%/%r34%)+
-(mo"pflag".eq.1)*
-   ((%r44%*mf83)*%r4%/%r32%)+
-(mo"pflag".ge.2)*
-   (get(2)*%r12%/%r36%)
+~/  HOV3+ (mf%r85%)
+mf%r85%
 
 
 no
 2
 ~/
 ~# ## 
-~# ## -- Calculate Component Trips by income-occupancy for VOT -- ##
-~+;1;y;mf64;y;temp64;HW HOV3 low income tod %y%;~?q=1;y;0
-~/  Home to work:HOV3+ low income
-(md"qflag".eq.0)*
-   (put(%r46%*mf52)*%r6%/%r33%)+
-(md"qflag".eq.1)*
-   ((%r42%*mf52)*%r2%/%r31%)+
-(md"qflag".ge.2)*
-   (get(1)*%r10%/%r35%)+
-~/  Work to home:HOV3+ low income
-(mo"pflag".eq.0)*
-   (put(%r48%*mf211)*%r8%/%r34%)+
-(mo"pflag".eq.1)*
-   ((%r44%*mf211)*%r4%/%r32%)+
-(mo"pflag".ge.2)*
-   (get(2)*%r12%/%r36%)
-~+; ; ;n;2
-~#
-~+;1;y;mf65;y;temp65;HW HOV3 high income tod %y%;~?q=1;y;0
-~/  Home to work:HOV3+ high income
-(md"qflag".eq.0)*
-   (put(%r46%*mf55)*%r6%/%r33%)+
-(md"qflag".eq.1)*
-   ((%r42%*mf55)*%r2%/%r31%)+
-(md"qflag".ge.2)*
-   (get(1)*%r10%/%r35%)+
-~/  Work to home:HOV3+ high income
-(mo"pflag".eq.0)*
-   (put(%r48%*mf214)*%r8%/%r34%)+
-(mo"pflag".eq.1)*
-   ((%r44%*mf214)*%r4%/%r32%)+
-(mo"pflag".ge.2)*
-   (get(2)*%r12%/%r36%)
-~+; ; ;n;2
-~#
-~+;1;y;ms12;y;tmp12;store HW HOV3;~?q=1;y;0;mf%r249%; ; ;n;+;+;1;q
-~t2=HW HOV3 trips
+~+;1;y;ms28;y;tmp28;store HOV3;~?q=1;y;0;mf%r249%; ; ;n;+;+;1;q
+~t2=HOV3 trips
 ~>>%t3%
 ~"Period %y% %t2% : %ms12.2%
 ~>>
+~/**********************************************************************
+~/
+~/    Combine HOV2 & HOV3+
+~/
+~/**********************************************************************
+3.21
+~+;1;y;mf18;n;mf%r248%+mf%r249%; ; ;n;1;q
 3.21
 ~# ## 
 ~# ## 
 ~/**********************************************************************
 ~/
-~/    Add in home-other trips
+~/    Add in externals to mf94 to mf96
 ~/
 ~/**********************************************************************
 ~#
 1
 yes
-mf13
+mf94
 no
-mf13+
-~/  Home to other:SOV1
-((%r55%*mf104)*%r15%)+
-~/  Other to home:SOV1
-((%r53%*mf84)*%r13%)
+mf94+
+~/  External
+((mf08+mf848)*%r19%*%r61%)
 
 
 no
@@ -473,23 +389,21 @@ no
 ~/
 ~# ## 
 ~# ## 
-~+;1;y;ms23;y;tmp23;store HO SOV;~?q=1;y;0;((%r55%*mf104)*%r15%)+((%r53%*mf84)*%r13%); ; ;n;+;+;1;q
-~t2=HO SOV trips
+~+;1;y;ms21;y;tmp21;store External VOT1;~?q=1;y;0;((mf08+mf848)*%r19%*%r61%); ; ;n;+;+;1;q
+~t2=External SOV VOT1 trips
 ~>>%t3%
-~"Period %y% %t2% : %ms23.2%
+~"Period %y% %t2% : %ms21.2%
 ~>>
 3.21
 ~# ## 
 ~# ## 
 1
 yes
-mf%r248%
+mf95
 no
-mf%r248%+
-~/  Home to other:HOV2
-((%r56%*mf105)*%r16%/2.0)+
-~/  Other to home:HOV2
-((%r54%*mf85)*%r14%/2.0)
+mf95+
+~/  External
+((mf08+mf848)*%r19%*%r62%)
 
 
 no
@@ -497,8 +411,8 @@ no
 ~/
 ~# ## 
 ~# ## 
-~+;1;y;ms22;y;tmp22;store HO HOV2;~?q=1;y;0;((%r56%*mf105)*%r16%/2.0)+((%r54%*mf85)*%r14%/2.0); ; ;n;+;+;1;q
-~t2=HO HOV2 trips
+~+;1;y;ms22;y;tmp22;store External VOT2;~?q=1;y;0;((mf08+mf848)*%r19%*%r62%); ; ;n;+;+;1;q
+~t2=External SOV VOT2 trips
 ~>>%t3%
 ~"Period %y% %t2% : %ms22.2%
 ~>>
@@ -507,43 +421,11 @@ no
 ~# ## 
 1
 yes
-mf%r249%
+mf96
 no
-mf%r249%+
-~/  Home to other:HOV3+
-((%r56%*mf106)*%r16%/%r38%)+
-~/  Other to home:HOV3+
-((%r54%*mf86)*%r14%/%r37%)
-
-
-no
-2
-~/
-~# ## 
-~# ## 
-~+;1;y;ms21;y;tmp21;store HO HOV3;~?q=1;y;0;((%r56%*mf106)*%r16%/%r38%)+((%r54%*mf86)*%r14%/%r37%); ; ;n;+;+;1;q
-~t2=HO HOV3 trips
-~>>%t3%
-~"Period %y% %t2% : %ms21.2%
-~>>
-3.21
-~# ## 
-~# ## 
-~/**********************************************************************
-~/
-~/    Add in non-home trips (and externals to mf13)
-~/
-~/**********************************************************************
-~#
-1
-yes
-mf13
-no
-mf13+
-~/  non-Home:SOV1
-(mf107*%r17%)+
+mf96+
 ~/  External
-((mf08+mf848)*%r19%)
+((mf08+mf848)*%r19%*%r63%)
 
 
 no
@@ -551,62 +433,11 @@ no
 ~/
 ~# ## 
 ~# ## 
-~+;1;y;ms19;y;tmp19;store External;~?q=1;y;0;((mf08+mf848)*%r19%); ; ;n;+;+;1;q
-~t2=External SOV trips
+~+;1;y;ms23;y;tmp23;store External VOT3;~?q=1;y;0;((mf08+mf848)*%r19%*%r63%); ; ;n;+;+;1;q
+~t2=External SOV VOT3 trips
 ~>>%t3%
-~"Period %y% %t2% : %ms19.2%
+~"Period %y% %t2% : %ms23.2%
 ~>>
-~+;3.21;1;y;ms20;y;tmp20;store NH SOV;~?q=1;y;0;(mf107*%r17%); ; ;n;+;+;1;q
-~t2=NH SOV trips
-~>>%t3%
-~"Period %y% %t2% : %ms20.2%
-~>>
-3.21
-~# ## 
-~# ## 
-1
-yes
-mf%r248%
-no
-mf%r248%+
-~/  non-Home:HOV2
-(mf108*%r18%/2.0)
-
-
-no
-2
-~/
-~# ## 
-~# ## 
-~+;1;y;ms17;y;tmp17;store NH HOV2;~?q=1;y;0;(mf108*%r18%/2.0); ; ;n;+;+;1;q
-~t2=NH HOV2 trips
-~>>%t3%
-~"Period %y% %t2% : %ms17.2%
-~>>
-3.21
-~# ## 
-~# ## 
-1
-yes
-mf%r249%
-no
-mf%r249%+
-~/  non-Home:HOV3+
-(mf109*%r18%/%r39%)
-
-
-no
-2
-~/
-~# ## 
-~# ## 
-~+;1;y;ms18;y;tmp18;store NH HOV3;~?q=1;y;0;(mf109*%r18%/%r39%); ; ;n;+;+;1;q
-~t2=NH HOV3 trips
-~>>%t3%
-~"Period %y% %t2% : %ms18.2%
-~>>
-3.21
-~+;1;y;mf18;n;mf92+mf93; ; ;n;1;q
 3.21
 ~# ## 
 ~# ## 
@@ -619,11 +450,11 @@ no
 ~/**********************************************************************
 1
 yes
-mf13
+mf94
 no
-mf13+
-mf10*("qflag".ge.2)*%r20%+
-mf10*("pflag".ge.2)*("qflag".eq.0)*%r21%
+mf94+
+mf10*("qflag".ge.2)*%r20%*%r67%+
+mf10*("pflag".ge.2)*("qflag".eq.0)*%r21%*%r67%
 
 
 no
@@ -631,10 +462,50 @@ no
 ~/
 ~# ## 
 ~# ## 
-~+;1;y;ms16;y;tmp16;store POE airport trips;~?q=1;y;0;(mf10*("qflag".ge.2)*%r20%)+(mf10*("pflag".ge.2)*("qflag".eq.0)*%r21%); ; ;n;+;+;1;q
-~t2=POE Airport trips
+~+;1;y;ms18;y;tmp18;store POE airport VOT1 trips;~?q=1;y;0;(mf10*("qflag".ge.2)*%r20%*%r67%)+(mf10*("pflag".ge.2)*("qflag".eq.0)*%r21%*%r67%); ; ;n;+;+;1;q
+~t2=POE Airport VOT1 trips
 ~>>%t3%
-~"Period %y% %t2% : %ms16.2%
+~"Period %y% %t2% : %ms18.2%
+~>>
+3.21
+1
+yes
+mf95
+no
+mf95+
+mf10*("qflag".ge.2)*%r20%*%r68%+
+mf10*("pflag".ge.2)*("qflag".eq.0)*%r21%*%r68%
+
+
+no
+2
+~/
+~# ## 
+~# ## 
+~+;1;y;ms19;y;tmp19;store POE airport VOT2 trips;~?q=1;y;0;(mf10*("qflag".ge.2)*%r20%*%r68%)+(mf10*("pflag".ge.2)*("qflag".eq.0)*%r21%*%r68%); ; ;n;+;+;1;q
+~t2=POE Airport VOT2 trips
+~>>%t3%
+~"Period %y% %t2% : %ms19.2%
+~>>
+3.21
+1
+yes
+mf96
+no
+mf96+
+mf10*("qflag".ge.2)*%r20%*%r69%+
+mf10*("pflag".ge.2)*("qflag".eq.0)*%r21%*%r69%
+
+
+no
+2
+~/
+~# ## 
+~# ## 
+~+;1;y;ms20;y;tmp20;store POE airport VOT3 trips;~?q=1;y;0;(mf10*("qflag".ge.2)*%r20%*%r69%)+(mf10*("pflag".ge.2)*("qflag".eq.0)*%r21%*%r69%); ; ;n;+;+;1;q
+~t2=POE Airport VOT3 trips
+~>>%t3%
+~"Period %y% %t2% : %ms20.2%
 ~>>
 3.21
 ~# ## 
@@ -647,10 +518,10 @@ no
 ~/**********************************************************************
 1
 yes
-mf13
+mf94
 no
-mf13+
-mf59*(%r1%+%r3%)/2
+mf94+
+mf59*%r64%*(%r1%+%r3%)/2
 
 
 no
@@ -658,10 +529,48 @@ no
 ~/
 ~# ## 
 ~# ## 
-~+;1;y;ms15;y;tmp15;store P-n-R trips;~?q=1;y;0;mf59*(%r1%+%r3%)/2; ; ;n;+;+;1;q
-~t2=Park-and-Ride trips
+~+;1;y;ms15;y;tmp15;store P-n-R VOT1 trips;~?q=1;y;0;mf59*%r64%*(%r1%+%r3%)/2; ; ;n;+;+;1;q
+~t2=Park-and-Ride VOT1 trips
 ~>>%t3%
 ~"Period %y% %t2% : %ms15.2%
+~>>
+3.21
+1
+yes
+mf95
+no
+mf95+
+mf59*%r65%*(%r1%+%r3%)/2
+
+
+no
+2
+~/
+~# ## 
+~# ## 
+~+;1;y;ms16;y;tmp16;store P-n-R VOT2 trips;~?q=1;y;0;mf59*%r65%*(%r1%+%r3%)/2; ; ;n;+;+;1;q
+~t2=Park-and-Ride VOT2 trips
+~>>%t3%
+~"Period %y% %t2% : %ms16.2%
+~>>
+3.21
+1
+yes
+mf96
+no
+mf96+
+mf59*%r66%*(%r1%+%r3%)/2
+
+
+no
+2
+~/
+~# ## 
+~# ## 
+~+;1;y;ms17;y;tmp17;store P-n-R VOT3 trips;~?q=1;y;0;mf59*%r66%*(%r1%+%r3%)/2; ; ;n;+;+;1;q
+~t2=Park-and-Ride VOT3 trips
+~>>%t3%
+~"Period %y% %t2% : %ms17.2%
 ~>>
 3.21
 ~# ## 
@@ -719,6 +628,13 @@ no
 ~>>%t3%
 ~"Period %y% %t2% : %ms13.2%
 ~>>
+~/**********************************************************************
+~/
+~/    Combine b-plate and light trucks for assignment
+~/
+~/**********************************************************************
+3.21
+~+;1;y;mf97;n;mf14+mf15; ; ;n;1;q
 3.21
 ~# ## 
 ~# ## 
@@ -780,39 +696,26 @@ no
 ~/**********************************************************************
 ~# ## -- Calculations for VOT and Weight Factor -- ##
 3.21
-~# -- Store HBW Trip Values by income-occupancy --
-~+;1;y;ms24;~?q=1;y;temp24;HW SOV low income Trips TOD %2%;~?q=1;y;0;mf60; ; ;n;+;+;2
-~+;1;y;ms25;~?q=1;y;temp25;HW SOV high income Trips TOD %2%;~?q=1;y;0;mf61; ; ;n;+;+;2
-~+;1;y;ms26;~?q=1;y;temp26;HW HOV2 low income Trips TOD %2%;~?q=1;y;0;mf62; ; ;n;+;+;2
-~+;1;y;ms27;~?q=1;y;temp27;HW HOV2 high income Trips TOD %2%;~?q=1;y;0;mf63; ; ;n;+;+;2
-~+;1;y;ms28;~?q=1;y;temp28;HW HOV3 low income Trips TOD %2%;~?q=1;y;0;mf64; ; ;n;+;+;2
-~+;1;y;ms29;~?q=1;y;temp29;HW HOV3 high income Trips TOD %2%;~?q=1;y;0;mf65; ; ;n;+;+;2
 ~# -- Toll Multipliers (Weight Factors) for Individual Components --
-~+;1;y;ms30;y;tmp30;HW SOV low income toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/%r100%; ; ;2
-~+;1;y;ms31;y;tmp31;HW SOV high income toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/%r101%; ; ;2
-~+;1;y;ms32;y;tmp32;HW HOV2 low income toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/%r102%; ; ;2
-~+;1;y;ms33;y;tmp33;HW HOV2 high income toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/%r103%; ; ;2
-~+;1;y;ms34;y;tmp34;HW HOV3 low income toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/%r104%; ; ;2
-~+;1;y;ms35;y;tmp35;HW HOV3 high income toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/%r105%; ; ;2
-~+;1;y;ms36;y;tmp36;HO-NH SOV toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/%r106%; ; ;2
-~+;1;y;ms37;y;tmp37;HO-NH HOV2 toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/%r107%; ; ;2
-~+;1;y;ms38;y;tmp38;HO-NH HOV3 toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/%r108%; ; ;2
-~+;1;y;ms39;y;tmp39;External Auto toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/%r113%; ; ;2
-~+;1;y;ms40;y;tmp40;AirPass Auto toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/%r114%; ; ;2
+~+;1;y;ms29;y;tmp29;HOV2 toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/%r103%; ; ;2
+~+;1;y;ms30;y;tmp30;HOV3 toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/%r104%; ; ;2
+~+;1;y;ms31;y;tmp31;B-Plate trucks toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/%r109%; ; ;2
+~+;1;y;ms32;y;tmp32;Light trucks toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/%r110%; ; ;2
 ~# -- Calculated Weighted VOT by Assignment User Class --
-~+;1;y;ms41;y;tmp41;User Class 1 VOT*Trips - TOD %y%;~?q=1;y;0;(ms24*%r100%)+(ms25+ms15)*%r101%+(ms23+ms20)*%r106%+(ms19*%r113%)+(ms16*%r114%); ; ;2
-~+;1;y;ms42;y;tmp42;User Class 1 Trips - TOD %y%;~?q=1;y;0;ms24+ms25+ms15+ms23+ms20+ms19+ms16; ; ;2
-~+;1;y;ms43;y;tmp43;User Class 1 Weighted VOT - TOD %y%;~?q=1;y;0;ms41/ms42; ; ;2
-~+;1;y;ms44;y;tmp44;User Class 2 VOT*Trips - TOD %y%;~?q=1;y;0;(ms26*%r102%)+(ms27*%r103%)+(ms22+ms17)*%r107%+(ms28*%r104%)+(ms29*%r105%);+(ms21+ms18)*%r108%; ; ;2
-~+;1;y;ms45;y;tmp45;User Class 2 Trips - TOD %y%;~?q=1;y;0;ms26+ms27+ms22+ms17+ms28+ms29+ms21+ms18; ; ;2
-~+;1;y;ms46;y;tmp46;User Class 2 Weighted VOT - TOD %y%;~?q=1;y;0;ms44/ms45; ; ;2
+~+;1;y;ms33;y;tmp33;User Class 4 VOT*Trips - TOD %y%;~?q=1;y;0;(ms27*%r103%)+(ms28*%r104%); ; ;2
+~+;1;y;ms34;y;tmp34;User Class 4 Trips - TOD %y%;~?q=1;y;0;ms27+ms28; ; ;2
+~+;1;y;ms35;y;tmp35;User Class 4 Weighted VOT - TOD %y%;~?q=1;y;0;ms33/ms34; ; ;2
+~+;1;y;ms36;y;tmp36;User Class 5 VOT*Trips - TOD %y%;~?q=1;y;0;(ms13*%r110%)+(ms14*%r109%); ; ;2
+~+;1;y;ms37;y;tmp37;User Class 5 Trips - TOD %y%;~?q=1;y;0;ms13+ms14; ; ;2
+~+;1;y;ms38;y;tmp38;User Class 5 Weighted VOT - TOD %y%;~?q=1;y;0;ms36/ms37; ; ;2
 ~# -- Final Toll Multipliers (Weight Factors) --
-~+;1;y;ms84;y;tmp84;User Class 1 toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/ms43; ; ;2
-~+;1;y;ms85;y;tmp85;User Class 2 toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/ms46; ; ;2
-~+;1;y;ms86;y;tmp86;b-plate truck toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/%r109%; ; ;2
-~+;1;y;ms87;y;tmp87;light truck toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/%r110%; ; ;2
-~+;1;y;ms88;y;tmp88;medium truck toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/%r111%; ; ;2
-~+;1;y;ms89;y;tmp89;heavy truck toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/%r112%; ; ;2;q
+~+;1;y;ms84;y;tmp84;User Class 1 (SOV VOT1) toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/%r100%; ; ;2
+~+;1;y;ms85;y;tmp85;User Class 2 (SOV VOT2) toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/%r101%; ; ;2
+~+;1;y;ms86;y;tmp86;User Class 3 (SOV VOT3) toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/%r102%; ; ;2
+~+;1;y;ms87;y;tmp87;User Class 4 (HOV) toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/ms35; ; ;2
+~+;1;y;ms88;y;tmp88;b-plate + light truck toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/ms38; ; ;2
+~+;1;y;ms89;y;tmp89;medium truck toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/%r111%; ; ;2
+~+;1;y;ms90;y;tmp90;heavy truck toll multiplier (minutes/$) - TOD %y%;~?q=1;y;0;60/%r112%; ; ;2;q
 ~#
 ~#
 ~>>%t3%
@@ -821,30 +724,21 @@ no
 ~"                                           Perceived VOT
 ~"                                         Relative to Tolls     Toll Multiplier
 ~"                            Trips             ($/hour)           (minutes/$)
-~"Home-Work SOV low inc:   %ms24.2_>10%           %r100.2_>6%              %ms30.2_>5%
-~"Home-Work SOV high inc:  %ms25.2_>10%           %r101.2_>6%              %ms31.2_>5%
-~"Home-Other SOV trips:    %ms23.2_>10%           %r106.2_>6%              %ms36.2_>5%
-~"Non-Home SOV trips:      %ms20.2_>10%           %r106.2_>6%              %ms36.2_>5%
-~"External Auto trips:     %ms19.2_>10%           %r113.2_>6%              %ms39.2_>5%
-~"Air Passenger trips:     %ms16.2_>10%           %r114.2_>6%              %ms40.2_>5%
-~"Park & Ride trips:       %ms15.2_>10%           %r101.2_>6%              %ms31.2_>5%
-~"Overall SOV trips:       %ms42.2_>10%           %ms43.2_>6%              %ms84.2_>5%
+~"SOV low VOT trips:       %ms24.2_>10%           %r100.2_>6%              %ms84.2_>5%
+~"SOV medium VOT trips:    %ms25.2_>10%           %r101.2_>6%              %ms85.2_>5%
+~"SOV high VOT trips:      %ms26.2_>10%           %r102.2_>6%              %ms86.2_>5%
 
-~"Home-Work HOV2 low inc:  %ms26.2_>10%           %r102.2_>6%              %ms32.2_>5%
-~"Home-Work HOV2 high inc: %ms27.2_>10%           %r103.2_>6%              %ms33.2_>5%
-~"Home-Other HOV2 trips:   %ms22.2_>10%           %r107.2_>6%              %ms37.2_>5%
-~"Non-Home HOV2 trips:     %ms17.2_>10%           %r107.2_>6%              %ms37.2_>5%
-~"Home-Work HOV3 low inc:  %ms28.2_>10%           %r104.2_>6%              %ms34.2_>5%
-~"Home-Work HOV3 high inc: %ms29.2_>10%           %r105.2_>6%              %ms35.2_>5%
-~"Home-Other HOV3 trips:   %ms21.2_>10%           %r108.2_>6%              %ms38.2_>5%
-~"Non-Home HOV3 trips:     %ms18.2_>10%           %r108.2_>6%              %ms38.2_>5%
-~"Overall HOV trips:       %ms45.2_>10%           %ms46.2_>6%              %ms85.2_>5%
+~"HOV2 trips:              %ms27.2_>10%           %r103.2_>6%              %ms29.2_>5%
+~"HOV3+ trips:             %ms28.2_>10%           %r104.2_>6%              %ms30.2_>5%
+~"Overall HOV trips:       %ms34.2_>10%           %ms35.2_>6%              %ms87.2_>5%
 
-~"B-Plate Truck trips:     %ms14.2_>10%           %r109.2_>6%              %ms86.2_>5%
-~"Light Duty Truck trips:  %ms13.2_>10%           %r110.2_>6%              %ms87.2_>5%
-~"Medium Duty Truck trips: %ms12.2_>10%           %r111.2_>6%              %ms88.2_>5%
-~"Heavy Duty Truck trips:  %ms10.2_>10%           %r112.2_>6%              %ms89.2_>5%
-~"External Truck trips:    %ms11.2_>10%           %r112.2_>6%              %ms89.2_>5%
+~"B-Plate Truck trips:     %ms14.2_>10%           %r109.2_>6%              %ms31.2_>5%
+~"Light Duty Truck trips:  %ms13.2_>10%           %r110.2_>6%              %ms32.2_>5%
+~"Combined B-Plate+Light:  %ms37.2_>10%           %ms38.2_>6%              %ms88.2_>5%
+
+~"Medium Duty Truck trips: %ms12.2_>10%           %r111.2_>6%              %ms89.2_>5%
+~"Heavy Duty Truck trips:  %ms10.2_>10%           %r112.2_>6%              %ms90.2_>5%
+~"External Truck trips:    %ms11.2_>10%           %r112.2_>6%              %ms90.2_>5%
 ~"------------------------------------------------------------------------------------------------------
 ~>>
 ~#
@@ -855,19 +749,12 @@ no
 ~+;2;mf59;y;q
 ~:not_TOD8
 ~# 
-~# ## -- Delete temp matrices ms10-ms46 --
+~# ## -- Delete temp matrices ms10-ms38 --
 ~z=10
 ~:delms
 ~+;3.12;2;ms%z%;y;q
 ~z+1
-~+;~?z<47;~$delms
-~#
-~# ## -- Delete temp matrices mf60-mf65 --
-~z=60
-~:delmf
-~+;3.12;2;mf%z%;y;q
-~z+1
-~+;~?z<66;~$delmf
+~+;~?z<39;~$delms
 ~#
 batchin=
 reports=

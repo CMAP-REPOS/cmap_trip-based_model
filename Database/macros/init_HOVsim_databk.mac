@@ -3,6 +3,7 @@
 ~/**********************************************************************
 ~/    init_HOVsim_databk.mac %1%
 ~/     Where %1% = three digit alternative/scenario identifier
+~/    JLemp 07/28/21 - Updated for new Python codebase (did not delete old matrix numbers that will no longer be needed)
 ~/**********************************************************************
 ~o|39
 reports=report\init.mf.iter_%ms98%.rxt
@@ -52,80 +53,94 @@ reports=report\init.mf.iter_%ms98%.rxt
 ~/     mf26 = priority mode    
 ~/     mf27 = fare (in cents)  
 ~/   Pre-distribution composite cost calculation ----- all deleted & initialized
-~/     mf28 = nh auto costs
-~/     mf29 = nh transit costs
-~/     mf30 = ho auto costs
-~/     mf31 = ho transit costs
-~/     mf32 = hw auto costs
-~/     mf33 = hw transit costs
+~/     mf28 = nh auto costs (can delete)
+~/     mf29 = nh transit costs (can delete)
+~/     mf30 = ho auto costs (can delete)
+~/     mf31 = ho transit costs (can delete)
+~/     mf32 = hw auto costs (can delete)
+~/     mf33 = hw transit costs (can delete)
 ~/     mf34 = reserved
 ~/     mf35 = reserved
 ~/   IOM trip distribution --------------------------- initialized in IOM macros
-~/     mf36 = hw person trips:low income
-~/     mf37 = hw person trips:high income
-~/     mf38 = ho person trips
-~/     mf39 = nh person trips
+~/     mf36 = hw person trips:low income (can delete)
+~/     mf37 = hw person trips:high income (can delete)
+~/     mf38 = ho person trips (can delete)
+~/     mf39 = nh person trips (changed to hbshop transit trips)
 ~/   Binary mode choice ------------------------------ all deleted & initialized
-~/     mf48 = hbw auto person trips:low inc 
-~/     mf49 = hbw auto person trips:high inc 
+~/     mf48 = hbw auto person trips:low inc  (can delete)
+~/     mf49 = hbw auto person trips:high inc (can delete)
+~/     mf39 = hb shop transit person trips
 ~/     mf40 = hw transit person trips:low income
 ~/     mf41 = hw transit person trips:high income
 ~/     mf42 = ho transit person trips
-~/     mf43 = nh transit person trips
+~/     mf43 = nh transit person trips (this matrix now includes all visitor transit trips)
 ~/   Highway skims -------------------------------- must all be present at start
 ~/     mf44 = am peak hwy skim time
 ~/     mf45 = am peak hwy skim distance
 ~/     mf46 = midday hwy skim time
 ~/     mf47 = midday hwy skim distance
 ~/   Home-work auto occupancy by income level -------- all deleted & initialized
-~/     mf50 = hw SOV1: low income
-~/     mf51 = hw HOV2: low income
-~/     mf52 = hw HOV3: low income
-~/     mf53 = hw SOV1: high income
-~/     mf54 = hw HOV2: high income
-~/     mf55 = hw HOV3: high income
-~/     mf56 = hw SOV1: total=mf50+mf53
-~/     mf57 = hw HOV2: total=mf51+mf54
-~/     mf58 = hw HOV3: total=mf52+mf55
+~/     mf50 = hw SOV1: low income (can delete)
+~/     mf51 = hw HOV2: low income (can delete)
+~/     mf52 = hw HOV3: low income (can delete)
+~/     mf53 = hw SOV1: high income (can delete)
+~/     mf54 = hw HOV2: high income (can delete)
+~/     mf55 = hw HOV3: high income (can delete)
+~/     mf56 = hw SOV1: total=mf50+mf53 (can delete)
+~/     mf57 = hw HOV2: total=mf51+mf54 (can delete)
+~/     mf58 = hw HOV3: total=mf52+mf55 (can delete)
 ~/   All Purposes Vehicle Occupancy Storage -------- all created/initialized
-~/     mf101 = hw SOV1 person trips (low and high income: mf50+mf53)
-~/     mf102 = hw HOV2 person trips (low and high income: mf51+mf54)
-~/     mf103 = hw HOV3+ person trips (low and high income: mf52+mf55)
-~/     mf104 = ho SOV1 person trips
-~/     mf105 = ho HOV2 person trips
-~/     mf106 = ho HOV3+ person trips
-~/     mf107 = nh SOV1 person trips
-~/     mf108 = nh HOV2 person trips
-~/     mf109 = nh HOV3+ person trips
-~## ---     Toll/nontoll matrices     --- ##
-~/   All Purposes Summed Tolls Storage -------- all created/initialized
-~/     mf111 = low inc h-w sov toll
-~/     mf112 = low inc h-w hov 2 per toll
-~/     mf113 = low inc h-w hov 3+ per toll
-~/     mf114 = high inc h-w sov toll
-~/     mf115 = high inc h-w hov 2 per toll
-~/     mf116 = high inc h-w hov 3+ per toll
-~/     mf117 = h-o sov toll
-~/     mf118 = h-o hov 2 per toll
-~/     mf119 = h-o hov 3+ per toll
-~/     mf120 = nh sov toll
-~/     mf121 = nh hov 2 per toll
-~/     mf122 = nh hov 3+ per toll
-~#
-~/  Matrices for auto person trips on toll paths -------- all created/initialized
-~/     mf131 = low inc h-w sov tolled trips
-~/     mf132 = low inc h-w hov 2 per tolled trips
-~/     mf133 = low inc h-w hov 3+ per tolled trips
-~/     mf134 = high inc h-w sov tolled trips
-~/     mf135 = high inc h-w hov 2 per tolled trips
-~/     mf136 = high inc h-w hov 3+ per tolled trips
-~/     mf137 = h-o sov tolled trips
-~/     mf138 = h-o hov 2 per tolled trips
-~/     mf139 = h-o hov 3+ per tolled trips
-~/     mf140 = nh sov tolled trips
-~/     mf141 = nh hov 2 per tolled trips
-~/     mf142 = nh hov 3+ per tolled trips
-~#
+~/     mf101 = hw SOV1 person trips (low and high income: mf50+mf53) (can delete)
+~/     mf102 = hw HOV2 person trips (low and high income: mf51+mf54) (can delete)
+~/     mf103 = hw HOV3+ person trips (low and high income: mf52+mf55) (can delete)
+~/     mf104 = ho SOV1 person trips (can delete)
+~/     mf105 = ho HOV2 person trips (can delete)
+~/     mf106 = ho HOV3+ person trips (can delete)
+~/     mf107 = nh SOV1 person trips (can delete)
+~/     mf108 = nh HOV2 person trips (can delete)
+~/     mf109 = nh HOV3+ person trips (can delete)
+~/   Vehicle Trip Storage from Python codebase -------- all created/initialized
+~/     mf411 = SOV VOT1 Time of day 1 vehicle trips
+~/     mf412 = SOV VOT1 Time of day 2 vehicle trips
+~/     mf413 = SOV VOT1 Time of day 3 vehicle trips
+~/     mf414 = SOV VOT1 Time of day 4 vehicle trips
+~/     mf415 = SOV VOT1 Time of day 5 vehicle trips
+~/     mf416 = SOV VOT1 Time of day 6 vehicle trips
+~/     mf417 = SOV VOT1 Time of day 7 vehicle trips
+~/     mf418 = SOV VOT2 Time of day 8 vehicle trips
+~/     mf421 = SOV VOT2 Time of day 1 vehicle trips
+~/     mf422 = SOV VOT2 Time of day 2 vehicle trips
+~/     mf423 = SOV VOT2 Time of day 3 vehicle trips
+~/     mf424 = SOV VOT2 Time of day 4 vehicle trips
+~/     mf425 = SOV VOT2 Time of day 5 vehicle trips
+~/     mf426 = SOV VOT2 Time of day 6 vehicle trips
+~/     mf427 = SOV VOT2 Time of day 7 vehicle trips
+~/     mf428 = SOV VOT2 Time of day 8 vehicle trips
+~/     mf431 = SOV VOT3 Time of day 1 vehicle trips
+~/     mf432 = SOV VOT3 Time of day 2 vehicle trips
+~/     mf433 = SOV VOT3 Time of day 3 vehicle trips
+~/     mf434 = SOV VOT3 Time of day 4 vehicle trips
+~/     mf435 = SOV VOT3 Time of day 5 vehicle trips
+~/     mf436 = SOV VOT3 Time of day 6 vehicle trips
+~/     mf437 = SOV VOT3 Time of day 7 vehicle trips
+~/     mf438 = SOV VOT3 Time of day 8 vehicle trips
+~/     mf441 = HOV2 Time of day 1 vehicle trips
+~/     mf442 = HOV2 Time of day 2 vehicle trips
+~/     mf443 = HOV2 Time of day 3 vehicle trips
+~/     mf444 = HOV2 Time of day 4 vehicle trips
+~/     mf445 = HOV2 Time of day 5 vehicle trips
+~/     mf446 = HOV2 Time of day 6 vehicle trips
+~/     mf447 = HOV2 Time of day 7 vehicle trips
+~/     mf448 = HOV2 Time of day 8 vehicle trips
+~/     mf451 = HOV3 Time of day 1 vehicle trips
+~/     mf452 = HOV3 Time of day 2 vehicle trips
+~/     mf453 = HOV3 Time of day 3 vehicle trips
+~/     mf454 = HOV3 Time of day 4 vehicle trips
+~/     mf455 = HOV3 Time of day 5 vehicle trips
+~/     mf456 = HOV3 Time of day 6 vehicle trips
+~/     mf457 = HOV3 Time of day 7 vehicle trips
+~/     mf458 = HOV3 Time of day 8 vehicle trips
+~## ---     Toll/nontoll matrices     --- ##  (can delete)
 ~/  Matrices for change in auto utility due to tolls -------- all created/initialized
 ~/     mf151 = low inc h-w auto toll delta util
 ~/     mf152 = low inc h-w sov toll delta util
@@ -212,6 +227,9 @@ reports=report\init.mf.iter_%ms98%.rxt
 ~#   Revised by Craig Heither 2015-02-18: create/initialize toll/nontoll matrices
 ~#   3/4/2020 NRF: does not delete pre-distribution cost matrices after iteration 2
 ~#
+~#   Revised by J Lemp 2021-05-03: remove toll skim & demand matrix initialization mf111 to mf142
+~#     (moved to toll skims macro to avoid overwriting)
+~#
 ~/**********************************************************************
 ~/**********************************************************************
 ~#
@@ -237,6 +255,7 @@ s=
 ~:do_not_delete
 ~+;1;y;mf48;y;hwauL%ms98%;alt%1% hwLOW auto person trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf49;y;hwauH%ms98%;alt%1% hwHIGH auto person trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf39;y;hshtr%ms98%;alt%1% hshop transit trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf40;y;hwtrL%ms98%;alt%1% hw transit trips sim_%ms98% - low inc;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf41;y;hwtrH%ms98%;alt%1% hw transit trips sim_%ms98% - high inc;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf42;y;hotr%ms98%;alt%1% ho transit trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
@@ -259,30 +278,46 @@ s=
 ~+;1;y;mf107;y;sov1n%ms98%;nh SOV person trips sim_%ms98%-total;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf108;y;hov2n%ms98%;nh HOV2 person trips sim_%ms98%-total;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf109;y;hov3n%ms98%;nh HOV3+ person trips sim_%ms98%-total;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf111;y;tshwl;low inc h-w sov toll;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf112;y;th2hwl;low inc h-w hov 2 per toll;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf113;y;th3hwl;low inc h-w hov 3+ per toll;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf114;y;tshwh;high inc h-w sov toll;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf115;y;th2hwh;high inc h-w hov 2 per toll;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf116;y;th3hwh;high inc h-w hov 3+ per toll;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf117;y;tsho;h-o sov toll;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf118;y;th2ho;h-o hov 2 per toll;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf119;y;th3ho;h-o hov 3+ per toll;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf120;y;tsnh;nh sov toll;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf121;y;th2nh;nh hov 2 per toll;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf122;y;th3nh;nh hov 3+ per toll;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf131;y;shwl;low inc h-w sov tolled trips;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf132;y;h2hwl;low inc h-w hov 2 per tolled trips;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf133;y;h3hwl;low inc h-w hov 3+ per tolled trips;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf134;y;shwh;high inc h-w sov tolled trips;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf135;y;h2hwh;high inc h-w hov 2 per tolled trips;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf136;y;h3hwh;high inc h-w hov 3+ per tolled trips;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf137;y;sho;h-o sov tolled trips;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf138;y;h2ho;h-o hov 2 per tolled trips;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf139;y;h3ho;h-o hov 3+ per tolled trips;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf140;y;snh;nh sov tolled trips;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf141;y;h2nh;nh hov 2 per tolled trips;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf142;y;h3nh;nh hov 3+ per tolled trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf411;y;s1t1veh%ms98%;SOV VOT1 Time Period 1 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf412;y;s1t2veh%ms98%;SOV VOT1 Time Period 2 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf413;y;s1t3veh%ms98%;SOV VOT1 Time Period 3 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf414;y;s1t4veh%ms98%;SOV VOT1 Time Period 4 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf415;y;s1t5veh%ms98%;SOV VOT1 Time Period 5 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf416;y;s1t6veh%ms98%;SOV VOT1 Time Period 6 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf417;y;s1t7veh%ms98%;SOV VOT1 Time Period 7 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf418;y;s1t8veh%ms98%;SOV VOT1 Time Period 8 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf421;y;s2t1veh%ms98%;SOV VOT2 Time Period 1 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf422;y;s2t2veh%ms98%;SOV VOT2 Time Period 2 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf423;y;s2t3veh%ms98%;SOV VOT2 Time Period 3 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf424;y;s2t4veh%ms98%;SOV VOT2 Time Period 4 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf425;y;s2t5veh%ms98%;SOV VOT2 Time Period 5 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf426;y;s2t6veh%ms98%;SOV VOT2 Time Period 6 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf427;y;s2t7veh%ms98%;SOV VOT2 Time Period 7 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf428;y;s2t8veh%ms98%;SOV VOT2 Time Period 8 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf431;y;s3t1veh%ms98%;SOV VOT3 Time Period 1 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf432;y;s3t2veh%ms98%;SOV VOT3 Time Period 2 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf433;y;s3t3veh%ms98%;SOV VOT3 Time Period 3 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf434;y;s3t4veh%ms98%;SOV VOT3 Time Period 4 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf435;y;s3t5veh%ms98%;SOV VOT3 Time Period 5 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf436;y;s3t6veh%ms98%;SOV VOT3 Time Period 6 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf437;y;s3t7veh%ms98%;SOV VOT3 Time Period 7 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf438;y;s3t8veh%ms98%;SOV VOT3 Time Period 8 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf441;y;h2t1veh%ms98%;HOV2 Time Period 1 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf442;y;h2t2veh%ms98%;HOV2 Time Period 2 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf443;y;h2t3veh%ms98%;HOV2 Time Period 3 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf444;y;h2t4veh%ms98%;HOV2 Time Period 4 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf445;y;h2t5veh%ms98%;HOV2 Time Period 5 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf446;y;h2t6veh%ms98%;HOV2 Time Period 6 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf447;y;h2t7veh%ms98%;HOV2 Time Period 7 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf448;y;h2t8veh%ms98%;HOV2 Time Period 8 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf451;y;h3t1veh%ms98%;HOV3 Time Period 1 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf452;y;h3t2veh%ms98%;HOV3 Time Period 2 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf453;y;h3t3veh%ms98%;HOV3 Time Period 3 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf454;y;h3t4veh%ms98%;HOV3 Time Period 4 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf455;y;h3t5veh%ms98%;HOV3 Time Period 5 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf456;y;h3t6veh%ms98%;HOV3 Time Period 6 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf457;y;h3t7veh%ms98%;HOV3 Time Period 7 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf458;y;h3t8veh%ms98%;HOV3 Time Period 8 vehicle trips sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf151;y;uahwl;low inc h-w auto toll delta util;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf152;y;ushwl;low inc h-w sov toll delta util;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf153;y;usrhwl;low inc h-w share ride toll delta util;~?q=1;y;0;0; ; ;n;1;

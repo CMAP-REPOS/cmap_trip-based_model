@@ -46,183 +46,20 @@
 ~#            * some calculations are specific to the CBD - replaced hard-coded 
 ~#              maximum zone number with y-register; revised code to stop continually
 ~#              entering and exiting module 3.21
+~#     - Apr. 2021 by Jason Lemp: 
+~#            * removed skimming procedures as we are testing a new macro to generate
+~#              toll skims, which will be used by the new model.
 ~#
 ~#********************************************************************** 
 ~#
 ~t4=report\iter_%ms98%\mc_toll_diversion.rpt
 ~#
 reports=%t4%
-s=%1%%2%3
+~z=%2%
+~z-1
+s=%1%%z%3
 ~y=47              ~/ maximum CBD zone number - same for zone09 and zone17
 ~o|39
-~#
-~#
-~# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-~#  For 6 vehicle-class assigment two passes are needed:
-~#    - the first captures SOV and HOV2 (class 2)
-~#    - the second captures HOV3+ (class 2)
-~# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-~#
-~#********************************************************************** 
-~#
-~#  Path analysis to get home-work tolls and tolled trips
-~#  AM Peak period scenario
-~#
-~#********************************************************************** 
-~#
-~#  Low income: expanded documentation template for path analyses
-~#
-6.16                         / Path Analysis for path-based assignment
-4                            / user-defined path analysis
-@toll                        / link attribute for path analysis
-                             / no turn attribute for path analysis
-+                            / operator to compute path attributes
-0.001,9999                   / lower,upper thresholds for selected paths
-3                            / aggregation for O-D attribute [1=min, 2=max, 3=avg]
-2                            / selected paths only considerd in O-D attribute [1=all paths]
-mf50                         / demand to be analyzed for class 1 (SOV)
-~+;mf111;no                  / matrix to hold O-D attribute for class 1 - no change to header
-~+;mf131;no                  / matrix to hold selected demand for class 1 - no change to header
-                             / no extra attribute to save class 1 link volumes
-                             / no extra attribute to save class 1 turn volumes
-mf51                         / demand to be analyzed for class 2 (HOV2)
-~+;mf112;no                  / matrix to hold O-D attribute for class 2 - no change to header
-~+;mf132;no                  / matrix to hold selected demand for class 2 - no change to header
-                             / no extra attribute to save class 2 link volumes
-                             / no extra attribute to save class 2 turn volumes
-                             / no class 3 demand to be analyzed
-                             / no matrix to hold O-D attribute for class 3
-                             / no matrix to hold selected demand for class 3
-                             / no extra attribute to save class 3 link volumes
-                             / no extra attribute to save class 3 turn volumes
-                             / no class 4 demand to be analyzed
-                             / no matrix to hold O-D attribute for class 4
-                             / no matrix to hold selected demand for class 4
-                             / no extra attribute to save class 4 link volumes
-                             / no extra attribute to save class 4 turn volumes
-                             / no class 5 demand to be analyzed
-                             / no matrix to hold O-D attribute for class 5
-                             / no matrix to hold selected demand for class 5
-                             / no extra attribute to save class 5 link volumes
-                             / no extra attribute to save class 5 turn volumes
-                             / no class 6 demand to be analyzed
-                             / no matrix to hold O-D attribute for class 6
-                             / no matrix to hold selected demand for class 6
-                             / no extra attribute to save class 6 link volumes
-                             / no extra attribute to save class 6 turn volumes
-2                            / send to printer
-q
-~#
-~#  Low income: pass 2
-~#
-~+;6.16;4;@toll;;+;0.001,9999;3;2
-~+;;;;;
-~+;mf52;mf113;no;mf133;no;;
-~+;;;;;
-~+;;;;;
-~+;;;;;
-~+;;;;;;2;q
-~# - - - - - - - - - - - - - - - - - - 
-~#
-~#  High income: pass 1
-~#
-~+;6.16;4;@toll;;+;0.001,9999;3;2
-~+;mf53;mf114;no;mf134;no;;
-~+;mf54;mf115;no;mf135;no;;
-~+;;;;;
-~+;;;;;
-~+;;;;;
-~+;;;;;;2;q
-~#
-~#
-~#  High income: pass 2
-~#
-~+;6.16;4;@toll;;+;0.001,9999;3;2
-~+;;;;;
-~+;mf55;mf116;no;mf136;no;;
-~+;;;;;
-~+;;;;;
-~+;;;;;
-~+;;;;;;2;q
-~#
-~#********************************************************************** 
-~#
-~#  Path analysis to get home-other tolls and tolled trips
-~#  midday period scenario
-~#
-~#********************************************************************** 
-s=%1%%2%5
-~#
-~#  Home-Other: pass 1
-~#
-~+;6.16;4;@toll;;+;0.001,9999;3;2
-~+;mf104;mf117;no;mf137;no;;
-~+;mf105;mf118;no;mf138;no;;
-~+;;;;;
-~+;;;;;
-~+;;;;;
-~+;;;;;;2;q
-~#
-~#  Home-Other: pass 2
-~#
-~+;6.16;4;@toll;;+;0.001,9999;3;2
-~+;;;;;
-~+;mf106;mf119;no;mf139;no;;
-~+;;;;;
-~+;;;;;
-~+;;;;;
-~+;;;;;;2;q
-~#
-~#
-~#********************************************************************** 
-~#
-~#  Path analysis to get nonhome tolls and tolled trips
-~#  midday period scenario
-~#
-~#********************************************************************** 
-~#
-~#  NonHome: pass 1
-~#
-~+;6.16;4;@toll;;+;0.001,9999;3;2
-~+;mf107;mf120;no;mf140;no;;
-~+;mf108;mf121;no;mf141;no;;
-~+;;;;;
-~+;;;;;
-~+;;;;;
-~+;;;;;;2;q
-~#
-~#  NonHome: pass 2
-~#
-~+;6.16;4;@toll;;+;0.001,9999;3;2
-~+;;;;;
-~+;mf109;mf122;no;mf142;no;;
-~+;;;;;
-~+;;;;;
-~+;;;;;
-~+;;;;;;2;q
-~#
-~#
-~#********************************************************************** 
-~#
-~#  Note:  @TOLL is in $1.00, but coefficients assume cents $0.01
-~#
-~#**********************************************************************
-~#
-~#  Convert tolls to cents
-~#
-3.21
-~+;1;yes;mf111;no;mf111*100;;;no;2
-~+;1;yes;mf112;no;mf112*100;;;no;2
-~+;1;yes;mf113;no;mf113*100;;;no;2
-~+;1;yes;mf114;no;mf114*100;;;no;2
-~+;1;yes;mf115;no;mf115*100;;;no;2
-~+;1;yes;mf116;no;mf116*100;;;no;2
-~+;1;yes;mf117;no;mf117*100;;;no;2
-~+;1;yes;mf118;no;mf118*100;;;no;2
-~+;1;yes;mf119;no;mf119*100;;;no;2
-~+;1;yes;mf120;no;mf120*100;;;no;2
-~+;1;yes;mf121;no;mf121*100;;;no;2
-~+;1;yes;mf122;no;mf122*100;;;no;2
 ~#
 ~#********************************************************************** 
 ~#
@@ -233,6 +70,7 @@ s=%1%%2%5
 ~#  Home-work, low income
 ~#   -- Shared ride 3 or more persons
 ~#
+3.21
 ~+;1;yes;mf155;no;-0.00275*mf113/3.0;;;no;2
 ~#
 ~#   -- Shared ride 2 persons
