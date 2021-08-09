@@ -7,3 +7,14 @@ Database/emmemat
 Database/cache
 Database/.ipynb_checkpoints
 computed_auto_propensity.csv
+Database/PATHS_*_*
+Database/emmebank
+Database/-not-using-emmemat.zarr/
+Database/-not-using-small-emmemat.zarr/
+Database/report/iter_*
+Database/blog.txt
+Database/cleanup.rpt
+Database/core_interface_log
+Database/errors
+Database/model_run_timestamp.txt
+Database/*.db
