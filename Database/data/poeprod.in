@@ -1,0 +1,64 @@
+c production values for special generator zones
+c should reflect full bi-directional daily values
+c revised to zone04, kww, 6/05
+c revised to zone07, kww, 6/07
+c POE 1949 revised, cmh, 6/09
+c SSA trips revised, cmh, 5/10
+c POE values revised to 2015 AADT factored down to 2000, ber, 5/16
+c Revised Heither, 05-31-2016: ms96 adds work trips to greater Milwaukee
+c Revised Heither, 10-05-2018: update to zone17 from zone09
+c =====================================================================
+t matrices
+d mo"specp"
+a mo"specp" default=0 daily special generators prods
+c AIRPORTS
+c midway airport 
+  494 all : 17095
+c ohare airport
+  125 all : 41435
+  126 all : 2077
+c south suburban airport
+  2907 all : 5000
+c gary/chicago airport
+  3340 all : 61
+c HIGHWAY POINTS OF ENTRY
+c WI, SR32, north of Racine County Line       
+  3633 all :  10540 
+c WI, I-94, north of I-43 jct     
+  3634 all : 103700 
+c WI, SR36, north of Racine County Line 
+  3635 all :  11008
+c WI, I-39, north of Rock County Line
+  3636 all :  45815
+c WI , US51, north of Winnebago County Line
+  3637 all :  7224
+c IL, US20, west of Winnebago County Line
+  3638 all :  10710
+c IL, I-88, west of IL251
+  3639 all :  11928 
+c IL, I-80, west of LaSalle County Line
+  3640 all :  17892
+c IL, I-39, south of LaSalle County Line 
+  3641 all :  14112
+c IL, I-55, south of Grundy County Line
+  3642 all :  16296
+c IL, I-57, south of Kankakee County Line
+  3643 all :  14112 
+c IN, I-65, south of Lake County Line
+  3644 all :  30561
+c IN, US30, east of LaPorte County Line
+  3645 all :  10248
+c IN, SR2, east of LaPorte County Line
+  3646 all :  12783
+c IN, I-80/90, east of LaPorte County Line
+  3647 all :  23086
+c  MI, I-94, north of LaPorte County Line
+  3648 all :  36206 
+c MI, US12, north of LaPorte County Line 
+  3649 all :   6450 
+d ms96
+a ms96 Milw default=0 Milwaukee work trips from Kenosha/Racine/Walworth
+c 2006-2010 CTPP work trips from Kenosha/Racine/Walworth counties (residence) to 
+c Milwaukee/Ozaukee/Washington/Waukesha counties (work)
+c value scaled to year 2000 (31237/1.10)
+ all all:28397

@@ -1,0 +1,10 @@
+t modes init
+a A 'genauto   ' 1   1   0.00   0.00   0.00   0.00
+a S 'sov       ' 4   2
+a H 'hov       ' 4   3
+a T 'alltruck  ' 4   4
+a h 'heavytruck' 4   5
+a m 'medtruck  ' 4   6
+a l 'lighttruck' 4   7
+a b 'btruck    ' 4   7
+
