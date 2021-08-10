@@ -63,6 +63,38 @@ set /a rndmint=%random% %%100
 pause
 @echo.
 
+
+rem define here all the places where we might find the conda installation
+rem If you try to run the model, you know that conda is installed, and the
+rem model fails with "cannot find conda", then visit a conda prompt,
+rem run `where conda`, and add the resulting path to this list.
+for %%x in (
+    %CONDAPATH%
+    %CONDA_PREFIX%
+    %LOCALAPPDATA%\mambaforge
+    %LOCALAPPDATA%\miniforge
+    %LOCALAPPDATA%\miniconda
+    %LOCALAPPDATA%\miniconda3
+    %USERPROFILE%\Anaconda3
+    %USERPROFILE%\Anaconda
+    %USERPROFILE%\Anaconda2
+    %USERPROFILE%\miniconda3
+    %USERPROFILE%\miniconda
+    %USERPROFILE%\miniconda2
+) do (
+    if exist %%x\Scripts\activate.bat (
+      set CONDAPATH=%%x
+      goto condafound
+    )
+)
+@echo cannot find conda in any of the usual places
+goto end
+
+:condafound
+@echo CONDAPATH IS %CONDAPATH%
+@echo.
+
+
 @echo Model run scenario: %val%
 @echo Pre-Distribution/Mode Choice simulations (global iterations 0-3): %iter1%
 @echo Pre-Distribution/Mode Choice simulations (global iteration 4): %iter2%
@@ -191,9 +223,6 @@ if %counter% EQU 4 (python update_Namelist.py %iter2%)
 @ECHO.
 @ECHO RUN CMAP MODE-DESTINATION CHOICE MODEL - FULL MODEL ITERATION %counter%
 @ECHO - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-rem explicitly define here the path to your conda installation, or define it in the CONDAPATH environment variable
-set CONDAPATH=C:\Users\jlemp\AppData\Local\mambaforge
 
 rem The `CONDAPATH` environment variable should be set before running this .bat
 rem It points to the place where conda is installed

@@ -49,25 +49,40 @@ mode, destination and time-of-day model components.
   
 ## Execution Instructions
 
-- To run the mode, destination, and time-of-day components for the CMAP Trip-based
-  model, first activate the correct conda environment. From either the Anaconda Prompt 
-  or the Miniforge Prompt, run:
+### Running the Full Model (including Feedback Iterations)
+
+Running the full model requires an active and properly licensed EMME installation,
+plus a conda package and environment manager (available as open source, described 
+above under installation). Assuming these are available, run the batch script:
+
+  > cd Database
+  > Submit_Full_Regional_Model.bat
+
+This back script can be run either from the regular Windows command prompt or from 
+any flavor of conda terminal (Anaconda Prompt, Miniforge Prompt, etc).  
+
+
+### Running Only the Mode, Destination and Time-of-Day Components
+
+To run the mode, destination, and time-of-day components for the CMAP Trip-based
+model, first activate the correct conda environment. From either the Anaconda Prompt 
+or the Miniforge Prompt, run:
   
   > conda activate CMAP-TRIP
   
-  (If you created an environment with some other name, activate that other environment instead.)
+(If you created an environment with some other name, activate that other environment instead.)
 
-- Then, you can run the model by calling its executable version right from that
-  same command prompt, pointing at the correct `Database` directory:
+Then, you can run the model by calling its executable version right from that
+same command prompt, pointing at the correct `Database` directory:
   
   > cmap_modedest .\path\to\Database
    
-- The `cmap_modedest` command line tool has a number of available options. The most important
-  of these include the number of jobs and maximum number of origin zones processed per chunk,
-  each of which needs to be set appropriately for the computer running the model to maximize
-  resource usage (CPU's, RAM) without exceeding available resources, which can cause 
-  out-of-memory errors or processor thrashing that can slow the overall runtime. 
-  These options can be reviewed in the online help:
+The `cmap_modedest` command line tool has a number of available options. The most important
+of these include the number of jobs and maximum number of origin zones processed per chunk,
+each of which needs to be set appropriately for the computer running the model to maximize
+resource usage (CPU's, RAM) without exceeding available resources, which can cause 
+out-of-memory errors or processor thrashing that can slow the overall runtime. 
+These options can be reviewed in the online help:
   
   > cmap_modedest --help
   
