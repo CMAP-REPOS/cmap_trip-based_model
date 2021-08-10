@@ -66,8 +66,10 @@ cd Database
 Submit_Full_Regional_Model.bat
 ```
 
-This back script can be run either from the regular Windows command prompt or from 
-any flavor of conda terminal (Anaconda Prompt, Miniforge Prompt, etc).  
+This batch script can be run from any flavor of conda terminal (Anaconda Prompt, 
+Miniforge Prompt, etc) or from a plain Windows command prompt, which means it can
+also be run just by double-clicking the `Submit_Full_Regional_Model.bat` file
+in Windows Explorer.
 
 
 ### Running Only the Mode, Destination and Time-of-Day Components
