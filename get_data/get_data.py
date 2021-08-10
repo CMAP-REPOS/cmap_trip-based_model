@@ -40,7 +40,7 @@ if "s3" in manifest:
             raw,
             region="us-west-2",
         )
-        if raw[-3:] == ".gz":
+        if raw[-7:] == ".emx.gz":
             with gzip.open(raw, 'rb') as f_in:
                 with open(raw[:-3], 'wb') as f_out:
                     print(f"gunzipping {raw} -> {raw[:-3]}")
