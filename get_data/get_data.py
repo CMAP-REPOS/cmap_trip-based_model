@@ -27,6 +27,7 @@ def download_file_from_s3(bucket, dest, obj, region="us-west-2"):
 
 if "gzipped" in manifest:
     for raw, compressed in manifest["gzipped"].items():
+        os.makedirs(os.path.dirname(raw), exist_ok=True)
         with gzip.open(compressed, 'rb') as f_in:
             with open(raw, 'wb') as f_out:
                 print(f"gunzipping {compressed} -> {raw}")
@@ -34,6 +35,7 @@ if "gzipped" in manifest:
 
 if "s3" in manifest:
     for raw in manifest["s3"]:
+        os.makedirs(os.path.dirname(raw), exist_ok=True)
         download_file_from_s3(
             "camsys-cmap-trip-based-model",
             top_directory,
