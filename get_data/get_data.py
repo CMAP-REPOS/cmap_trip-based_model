@@ -36,6 +36,12 @@ if "gzipped" in manifest:
 if "s3" in manifest:
     for raw in manifest["s3"]:
         os.makedirs(os.path.dirname(raw), exist_ok=True)
+        if raw[-7:] == ".emx.gz":
+            if os.path.isfile(raw[:-3]):
+                continue
+        else:
+            if os.path.isfile(raw):
+                continue
         download_file_from_s3(
             "camsys-cmap-trip-based-model",
             top_directory,
