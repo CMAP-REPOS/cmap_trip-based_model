@@ -21,6 +21,7 @@ s3:
   - Database/data/per5.timau
   - Database/data/speed_analysis.data
   - Database/data/z07ensembles.in
+  - Database/emmebank
   - Database/emmemat/mf1.emx.gz
   - Database/emmemat/mf10.emx.gz
   - Database/emmemat/mf101.emx.gz
