@@ -1172,21 +1172,13 @@ def aggregate_to_vehicle_matrixes(
     z_range = pd.RangeIndex(1, n_zones + 1)
     vot_names = ['sovL', 'sovM', 'sovH', 'hov2', 'hov3']
 
-    votb = pd.read_csv(dh.filenames.value_of_time_buckets, comment="#")
+    votb = pd.read_csv(
+        dh.filenames.value_of_time_buckets,
+        comment="#",
+        skipinitialspace=True,
+    )
     votb = votb.set_index(["Purpose", "Income Group"])
     votb = votb.div(votb.sum(1), axis=0)
-
-    vot_shares_hbw = pd.DataFrame(
-        {
-            0:(0.648, 0.333, 0.018),
-            1:(0.383, 0.537, 0.080),
-            2:(0.197, 0.605, 0.198),
-            3:(0.197, 0.605, 0.198),
-            4:(0.036, 0.425, 0.539),
-        },
-        index=pd.RangeIndex(3, name='VoT Bucket'),
-        columns=pd.RangeIndex(5, name='Income Group'),
-    )
 
     vehicle_trips = xr.DataArray(
         data=np.float32(0.0),
