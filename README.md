@@ -7,10 +7,8 @@ mode, destination and time-of-day model components.
 
 - First, if "conda" is not already installed and accessible by the current user
   on the target development machine, install it. An easy installation solution
-  is using the "Mambaforge" installer, which can be downloaded for windows here:
-  
-  >  https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Windows-x86_64.exe
-    
+  is using the "Mambaforge" installer, which can be downloaded for Windows
+  [here](https://github.com/conda-forge/miniforge/releases/latest/download/Mambaforge-Windows-x86_64.exe). 
   Once downloaded, double-click and run the installer. Mamba is a somewhat faster
   implementation of the conda package installer, and can be used interchangably
   with conda - nearly any command you might run as `conda foo` can also be run as
@@ -19,13 +17,17 @@ mode, destination and time-of-day model components.
 - Then if needed also install git and (optionally) the GitHub command line interface.
   From either the Anaconda Prompt or the Miniforge Prompt, run:
   
-  > mamba install git gh -c conda-forge 
+  ```shell
+  mamba install git gh -c conda-forge 
+  ```
   
 - Now clone the CMAP trip-based model code from GitHub, and checkout the CS2021 branch. 
 
-  > gh repo clone camsys/cmap_trip-based_model  
-  > cd cmap_trip-based_model  
-  > git checkout CS2021  
+  ```shell
+  gh repo clone camsys/cmap_trip-based_model  
+  cd cmap_trip-based_model  
+  git checkout CS2021  
+  ```
   
   To clone into a different directory than the current directory (probably the 
   user's home directory) change to that directory using `cd` first.
@@ -37,15 +39,19 @@ mode, destination and time-of-day model components.
   (including Emme). A conda environment file is included in the GitHub repository,
   which installs everything you need into an environment called "CMAP-TRIP".
   
-  > conda env create --file src/Mode-Dest-TOD/conda-environment.yml
+  ```shell
+  conda env create --file src/Mode-Dest-TOD/conda-environment.yml
+  ````
   
   Many of the necessary files for a basic run of the model using the default base year
   inputs are already in the repository, but not everything.  The emmebank, skim data,
   and few other files are quite large and don't fit nicely into git.  You can
   get the rest of these files from Amazon's S3 service.
    
-  > conda activate CMAP-TRIP
-  > python get_data/get_data.py
+  ```shell
+  conda activate CMAP-TRIP
+  python get_data/get_data.py
+  ```
   
 ## Execution Instructions
 
@@ -55,8 +61,10 @@ Running the full model requires an active and properly licensed EMME installatio
 plus a conda package and environment manager (available as open source, described 
 above under installation). Assuming these are available, run the batch script:
 
-  > cd Database
-  > Submit_Full_Regional_Model.bat
+```shell
+cd Database
+Submit_Full_Regional_Model.bat
+```
 
 This back script can be run either from the regular Windows command prompt or from 
 any flavor of conda terminal (Anaconda Prompt, Miniforge Prompt, etc).  
@@ -68,15 +76,19 @@ To run the mode, destination, and time-of-day components for the CMAP Trip-based
 model, first activate the correct conda environment. From either the Anaconda Prompt 
 or the Miniforge Prompt, run:
   
-  > conda activate CMAP-TRIP
-  
+```shell
+conda activate CMAP-TRIP
+```
+
 (If you created an environment with some other name, activate that other environment instead.)
 
 Then, you can run the model by calling its executable version right from that
 same command prompt, pointing at the correct `Database` directory:
   
-  > cmap_modedest .\path\to\Database
-   
+```shell
+cmap_modedest .\path\to\Database
+```
+
 The `cmap_modedest` command line tool has a number of available options. The most important
 of these include the number of jobs and maximum number of origin zones processed per chunk,
 each of which needs to be set appropriately for the computer running the model to maximize
@@ -84,8 +96,9 @@ resource usage (CPU's, RAM) without exceeding available resources, which can cau
 out-of-memory errors or processor thrashing that can slow the overall runtime. 
 These options can be reviewed in the online help:
   
-  > cmap_modedest --help
-  
+```shell
+cmap_modedest --help
+```  
 
 
 
