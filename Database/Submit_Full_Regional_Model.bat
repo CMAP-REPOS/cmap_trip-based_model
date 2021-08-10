@@ -249,6 +249,10 @@ if %ENVNAME%==base (set ENVPATH=%CONDAPATH%) else (set ENVPATH=%CONDAPATH%\envs\
 rem Activate the conda environment
 rem Using call is required here, see: https://stackoverflow.com/questions/24678144/conda-environments-and-bat-files
 call %CONDAPATH%\Scripts\activate.bat %ENVPATH%
+if %errorlevel% neq 0 (
+  @echo Error in activating conda
+  goto end
+)
 
 call cmap_modedest . --njobs 15 --max_zone_chunk 5
 
