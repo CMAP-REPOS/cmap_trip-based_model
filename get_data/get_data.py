@@ -35,7 +35,8 @@ if "gzipped" in manifest:
 
 if "s3" in manifest:
     for raw in manifest["s3"]:
-        os.makedirs(os.path.dirname(raw), exist_ok=True)
+        if os.path.dirname(raw):
+            os.makedirs(os.path.dirname(raw), exist_ok=True)
         if raw[-7:] == ".emx.gz":
             if os.path.isfile(raw[:-3]):
                 continue
