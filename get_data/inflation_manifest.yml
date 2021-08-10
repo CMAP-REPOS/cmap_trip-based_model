@@ -1,0 +1,24 @@
+# This manifest outlines all the model data files that are not natively in the
+# GitHub repository and where to get them.
+
+gzipped:
+  # files that are stored elsewhere in the git repository in compressed form
+  Database/TG_HHENUM_OUTPUT.TXT:
+    Database/defaults_base_year/TG_HHENUM_OUTPUT.TXT.gz
+  Database/tg/fortran/TG_HHENUM_OUTPUT.TXT:
+    Database/defaults_base_year/TG_HHENUM_OUTPUT.TXT.gz
+
+s3:
+  # files that are stored in s3 in raw form
+  - data_tables.db
+  - Database/data/bus.link
+  - Database/data/hwydist
+  - Database/data/hwytime
+  - Database/data/linkshape_100.in
+  - Database/data/linkshape_200.in
+  - Database/data/linkshape_300.in
+  - Database/data/per3.timau
+  - Database/data/per5.timau
+  - Database/data/speed_analysis.data
+  - Database/data/z07ensembles.in
+
