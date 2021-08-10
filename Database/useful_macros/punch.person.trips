@@ -1,0 +1,38 @@
+~/punch.person.trips
+~/ recorded to prepare inputs for /matrices/w05/sas/cntl/a1
+~/ preparing for conversion to new start zone system kww 9/05.
+~/
+~!rm hbw.person.z04.mf
+batchout=hbw.person.z04.mf
+3.14
+3
+mf37
+ 
+n
+n
+n
+q
+~/
+~!rm hbo.person.z04.mf
+batchout=hbo.person.z04.mf
+3.14
+3
+mf38
+ 
+n
+n
+n
+q
+~/
+~!rm nhb.person.z04.mf
+batchout=nhb.person.z04.mf
+3.14
+3
+mf39
+ 
+n
+n
+n
+q
+~/
+batchout=batchout

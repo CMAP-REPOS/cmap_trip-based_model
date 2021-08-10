@@ -1,0 +1,55 @@
+~/punch time period networks for input to sas procedure that will format Mobile inputs
+~/ kww 3/06
+~/
+~/initialize punch file
+~/
+~!rm report/network.results.punch
+batchout=report/network.results.punch
+~/
+~/set register to count time periods
+~/
+~r1=0
+~/
+~:period
+~/
+~r1+1
+~/
+~/copy time period network to temporary scenario
+~/
+1.22
+~+;3;%r1%;99998; ;y;q
+~/
+~/
+~/set userfields and punch
+2.41
+~+;1;y;type;%r1%1; ;all;4
+~+;1;y;ul1;@zone; ;all;4
+~+;1;y;ul2;@emcap; ;all;4
+~+;1;y;ul3;timau; ;all;4;q
+2.14
+~+;5;n;;y;q
+~/
+2.41
+~+;1;y;type;%r1%2; ;all;4
+~+;1;y;ul1;@ftime; ;all;4
+~+;1;y;ul2;@avauv; ;all;4
+~+;1;y;ul3;@avbqv; ;all;4;q
+2.14
+~+;5;n;;y;q
+~/
+2.41
+~+;1;y;type;%r1%3; ;all;4
+~+;1;y;ul1;@avlqv; ;all;4
+~+;1;y;ul2;@avmqv; ;all;4
+~+;1;y;ul3;@avhqv; ;all;4;q
+2.14
+~+;5;n;;y;q
+~/
+1.22
+~+;2;99998;y;q
+~/
+~?!r1>8
+~$period
+~?e
+~/
+batchout=batchout

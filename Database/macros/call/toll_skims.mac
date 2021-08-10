@@ -1,0 +1,214 @@
+~#
+~#**********************************************************************
+~#********************************************************************** 
+~#
+~/  TOLL_SKIMS.MAC %1% %2%
+~#
+~/  where %1% = three digit alternative ID number
+~/        %2% = model iteration for calculations
+~#
+~/  This is a macro that generates toll skims along accumulated paths.
+~/
+~/  It assumes that a path based assignment has been completed and 
+~/  that the paths are available.  Toll links and tolls are included
+~/  in the network and the model steps are the same as in the full
+~/  blown model run.  A toll VDF is used and trips have adjusted
+~/  route choices but not mode choices. 
+~/  
+~/  The logic of the macro is as follows:
+~/
+~/    1.  Identify the person movements traveling tolled paths by 
+~/        auto occupancy.
+~/    2.  Sum and then average the tolls along the used toll paths.
+~#
+~#********************************************************************** 
+~#
+~#  Initial version by JLemp, April 2021.
+~#
+~#********************************************************************** 
+~#
+~t4=report\iter_%ms98%\toll_skims.rpt
+~#
+reports=%t4%
+s=%1%%2%3
+~y=47              ~/ maximum CBD zone number - same for zone09 and zone17
+~o|39
+~#
+~#
+~# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+~#  Initialize skim matrices
+~#
+3.21
+~+;1;y;mf111;y;tshwl;low inc h-w sov toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf112;y;th2hwl;low inc h-w hov 2 per toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf113;y;th3hwl;low inc h-w hov 3+ per toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf114;y;tshwh;high inc h-w sov toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf115;y;th2hwh;high inc h-w hov 2 per toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf116;y;th3hwh;high inc h-w hov 3+ per toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf117;y;tsho;h-o sov toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf118;y;th2ho;h-o hov 2 per toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf119;y;th3ho;h-o hov 3+ per toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf120;y;tsnh;nh sov toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf121;y;th2nh;nh hov 2 per toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf122;y;th3nh;nh hov 3+ per toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf123;y;ts1hw;h-w sov vot1 toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf124;y;ts2hw;h-w sov vot2 toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf125;y;ts3hw;h-w sov vot3 toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf126;y;ts1nw;non-work sov vot1 toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf127;y;ts2nw;non-work sov vot2 toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf128;y;ts3nw;non-work sov vot3 toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf131;y;shw;h-w sov tolled trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf132;y;h2hw;h-w hov tolled trips;~?q=1;y;0;0; ; ;n;1;
+~#~+;1;y;mf133;y;h3hwl;h-w hov 3+ per tolled trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf134;y;s1hw;h-w sov vot1 tolled trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf135;y;s2hw;h-w sov vot2 tolled trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf136;y;s3hw;h-w sov vot3 tolled trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf137;y;snw;non-work sov tolled trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf138;y;h2nw;non-work hov tolled trips;~?q=1;y;0;0; ; ;n;1;
+~#~+;1;y;mf139;y;h3ho;h-o hov 3+ per tolled trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf140;y;s1nw;non-work sov vot1 tolled trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf141;y;s2nw;non-work sov vot2 tolled trips;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf142;y;s3nw;non-work sov vot3 tolled trips;~?q=1;y;0;0; ; ;n;1;q
+~#
+~# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+~#
+~#********************************************************************** 
+~#
+~#  Path analysis to get home-work tolls and tolled trips
+~#  AM Peak period scenario
+~#
+~#********************************************************************** 
+~#
+~#  HW Trips: expanded documentation template for path analyses
+~#
+6.16                         / Path Analysis for path-based assignment
+4                            / user-defined path analysis
+@toll                        / link attribute for path analysis
+                             / no turn attribute for path analysis
++                            / operator to compute path attributes
+0.001,9999                   / lower,upper thresholds for selected paths
+3                            / aggregation for O-D attribute [1=min, 2=max, 3=avg]
+2                            / selected paths only considerd in O-D attribute [1=all paths]
+mf413                        / demand to be analyzed for class 1 (SOV VOT1)
+~+;mf123;no                  / matrix to hold O-D attribute for class 1 - no change to header
+~+;mf134;no                  / matrix to hold selected demand for class 1 - no change to header
+                             / no extra attribute to save class 1 link volumes
+                             / no extra attribute to save class 1 turn volumes
+mf423                        / demand to be analyzed for class 2 (SOV VOT2)
+~+;mf124;no                  / matrix to hold O-D attribute for class 2 - no change to header
+~+;mf135;no                  / matrix to hold selected demand for class 2 - no change to header
+                             / no extra attribute to save class 2 link volumes
+                             / no extra attribute to save class 2 turn volumes
+mf433                        / demand to be analyzed for class 3 (SOV VOT3)
+~+;mf125;no                  / matrix to hold O-D attribute for class 3 - no change to header
+~+;mf136;no                  / matrix to hold selected demand for class 3 - no change to header
+                             / no extra attribute to save class 3 link volumes
+                             / no extra attribute to save class 3 turn volumes
+mf443                        / demand to be analyzed for class 4 (HOV2)
+~+;mf112;no                  / matrix to hold O-D attribute for class 4 - no change to header
+~+;mf132;no                  / matrix to hold selected demand for class 4 - no change to header
+                             / no extra attribute to save class 4 link volumes
+                             / no extra attribute to save class 4 turn volumes
+                             / no class 5 demand to be analyzed
+                             / no matrix to hold O-D attribute for class 5
+                             / no matrix to hold selected demand for class 5
+                             / no extra attribute to save class 5 link volumes
+                             / no extra attribute to save class 5 turn volumes
+                             / no class 6 demand to be analyzed
+                             / no matrix to hold O-D attribute for class 6
+                             / no matrix to hold selected demand for class 6
+                             / no extra attribute to save class 6 link volumes
+                             / no extra attribute to save class 6 turn volumes
+                             / no class 7 demand to be analyzed
+                             / no matrix to hold O-D attribute for class 7
+                             / no matrix to hold selected demand for class 7
+                             / no extra attribute to save class 7 link volumes
+                             / no extra attribute to save class 7 turn volumes
+2                            / send to printer
+q
+~#
+~# - - - - - - - - - - - - - - - - - - 
+~#
+~#
+~#********************************************************************** 
+~#
+~#  Path analysis to get non-work tolls and tolled trips
+~#  midday period scenario
+~#
+~#********************************************************************** 
+s=%1%%2%5
+~#
+~#  Non-work
+~#
+~+;6.16;4;@toll;;+;0.001,9999;3;2
+~+;mf415;mf126;no;mf140;no;;
+~+;mf425;mf127;no;mf141;no;;
+~+;mf435;mf128;no;mf142;no;;
+~+;mf445;mf118;no;mf138;no;;
+~+;;;;;
+~+;;;;;
+~+;;;;;;2;q
+~#
+~#
+~#********************************************************************** 
+~#
+~#  Accumulate SOV trips, compute average SOV toll, copy HOV2 toll for HOV3+
+~#
+~#**********************************************************************
+~#
+3.21
+~+;1;yes;mf131;no;mf134+mf135+mf136;;;no;2
+~+;1;yes;mf137;no;mf140+mf141+mf142;;;no;2
+~+;1;yes;ms23;y;tmp23;store h-w SOV VOT1 tolled;~?q=1;y;0;mf134; ; ;n;+;+;1;
+~+;1;yes;ms24;y;tmp24;store h-w SOV VOT2 tolled;~?q=1;y;0;mf135; ; ;n;+;+;1;
+~+;1;yes;ms25;y;tmp25;store h-w SOV VOT3 tolled;~?q=1;y;0;mf136; ; ;n;+;+;1;
+~+;1;yes;ms26;y;tmp26;store non-work SOV VOT1 tolled;~?q=1;y;0;mf140; ; ;n;+;+;1;
+~+;1;yes;ms27;y;tmp27;store non-work SOV VOT2 tolled;~?q=1;y;0;mf141; ; ;n;+;+;1;
+~+;1;yes;ms28;y;tmp28;store non-work SOV VOT3 tolled;~?q=1;y;0;mf142; ; ;n;+;+;1;
+~+;1;yes;mf111;no;(mf123*ms23+mf124*ms24+mf125*ms25)/(ms23+ms24+ms25);;;no;2
+~+;1;yes;mf114;no;(mf123*ms23+mf124*ms24+mf125*ms25)/(ms23+ms24+ms25);;;no;2
+~+;1;yes;mf117;no;(mf126*ms26+mf127*ms27+mf128*ms28)/(ms26+ms27+ms28);;;no;2
+~+;1;yes;mf120;no;(mf126*ms26+mf127*ms27+mf128*ms28)/(ms26+ms27+ms28);;;no;2
+~+;1;yes;mf113;no;mf112;;;no;2
+~+;1;yes;mf115;no;mf112;;;no;2
+~+;1;yes;mf116;no;mf112;;;no;2
+~+;1;yes;mf119;no;mf118;;;no;2
+~+;1;yes;mf121;no;mf118;;;no;2
+~+;1;yes;mf122;no;mf118;;;no;2
+q
+~#
+~#********************************************************************** 
+~#
+~#  Note:  @TOLL is in $1.00, but coefficients assume cents $0.01
+~#
+~#**********************************************************************
+~#
+~#  Convert tolls to cents
+~#
+3.21
+~+;1;yes;mf111;no;mf111*100;;;no;2
+~+;1;yes;mf112;no;mf112*100;;;no;2
+~+;1;yes;mf113;no;mf113*100;;;no;2
+~+;1;yes;mf114;no;mf114*100;;;no;2
+~+;1;yes;mf115;no;mf115*100;;;no;2
+~+;1;yes;mf116;no;mf116*100;;;no;2
+~+;1;yes;mf117;no;mf117*100;;;no;2
+~+;1;yes;mf118;no;mf118*100;;;no;2
+~+;1;yes;mf119;no;mf119*100;;;no;2
+~+;1;yes;mf120;no;mf120*100;;;no;2
+~+;1;yes;mf121;no;mf121*100;;;no;2
+~+;1;yes;mf122;no;mf122*100;;;no;2
+q
+~#
+~# ## -- Delete temp matrices ms23-ms28 --
+~z=23
+~:delms
+~+;3.12;2;ms%z%;y;q
+~z+1
+~+;~?z<29;~$delms
+~#
+~#  The end
+~#
+reports=reports
+~#
+~/********************************************************************** 

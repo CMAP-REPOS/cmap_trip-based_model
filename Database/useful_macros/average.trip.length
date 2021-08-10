@@ -1,0 +1,17 @@
+~/syntax average.trip.length <impedance mf> <trip mf> <origin_group> <destination_group>
+3.16
+4
+%1%
+y
+%2%
+y
+%3%
+
+%4%
+
+%2%
+ 
+0,500
+100
+1
+~*<press q to continue>

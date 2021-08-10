@@ -1,0 +1,65 @@
+~/
+~/**********************************************************************
+~#  Heither, 06/23/2010
+~#    Macro to create parkrd matrix for analysis.
+~/**********************************************************************
+~r250=1944                      /* max. non-POE zone
+~#
+~/ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+~#
+~# ## PERFORM CONVOLUTION TO GET TRIPS FROM ORIGIN ZONE TO STATION ZONE ##
+~!if exist report\parkride.rxt (del report\parkride.rxt)
+reports=report\parkride.rxt
+batchin=data\kzone.mtx
+~+;3.11;2
+~#
+~# -- create combined HW transit demand matrix (high + low income) --
+3.21
+~+;1;y;mf"hwtran";y;HW High and Low inc transit trips;0;mf40+mf41; ; ;n;2
+~#
+~# -- create matrix of origins for convolution --
+~+;1;y;mo"ptemp";y;origins to extract first leg demand;0;p; ; ;y;1,%r250%; ;2;q
+~#
+~# -- perform convolution --
+3.23
+1
+mf"kzone"                ~/first operand matrix
+==                       ~/matrix combination operator
+mo"ptemp"                ~/second operand matrix
+y                        ~/use transpose of second operand matrix?
+*                        ~/masking operator 1
+n                        ~/same masking operator for all intermed. zones?
+mf"hwtran"               ~/matrix containing masking value
+2                        ~/origin to intermed. zone index
+ 
+ 
+mf"temppr"               ~/results matrix
+y                        ~/initialize matrix?
+temp drive to transit
+0
+y                        ~/submatrix?
+1,%r250%                 ~/origin zones
+ 
+1,%r250%                 ~/intermed. zones
+ 
+1,%r250%                 ~/destinations
+
+
+y
+2
+q
+~#
+~# simplified conversion of matrix from P-A format to O-D format
+3.21
+~+;1;y;mf"parkrd";y;drive to transit station;0;(mf"temppr"+mf"temppr"')/2; ; ;n;2;q
+~# -- delete matrices --
+3.12
+~+;2;mf"kzone";y
+~+;2;mf"hwtran";y
+~+;2;mf"temppr";y
+~+;2;mo"ptemp";y;q
+~# 
+batchin=batchin
+reports=reports
+~# 
+~/ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *

@@ -1,0 +1,316 @@
+~#
+~/**********************************************************************
+~/**********************************************************************
+~#
+~/  Macro skim5I_7c.mac %1%
+~/   Where %1% = three digit alternative ID number.
+~#
+~/**********************************************************************
+~/  Macro written to create time and distance skims from am-peak (????3)
+~/    and mid-day (????5) scenarios for distribution and mode choice.
+~/**********************************************************************
+~#
+~/  Written by Englund
+~#
+~/  7-class version: S is primary class
+~/
+~/    23May2004 (for EMME/2 Release 9.5)
+~/    Modified 30SEP2009 by DBE for I-290 HOV Database structure
+~#    Modified 02/2010 by CMH to run standard traffic assignment if parallel not available
+~#    Modified 11/16/10 by CMH: added coding for HOV skim matrices
+~#    Modified 04/21/11 by CMH: slight modification to asmt setup logic due to Path-Based assignment
+~#    Modified 07/23/12 by Heither: revised for Path-based asmt and HOV midday skim matrices.
+~#    Modified 02/10/15 by NRF: change from 6 classes to 7 classes by dividing HOV into HOV2 and HOV3+
+~#
+~/**********************************************************************
+~/  Time and distance skims are prepared for the following time periods 
+~/    and stored in these full matricies.
+~#
+~/    mf44 = am peak 7-9 am SOV hwy time skims (s=????3)
+~/    mf45 = am peak 7-9 am SOV hwy distance skims (s=????3)
+~/    mf46 = midday 10 am - 2 pm SOV hwy time skims (s=????5)
+~/    mf47 = midday 10 am - 2 pm SOV hwy distance skims (s=????5)
+~/    mf76 = am peak 7-9 am HOV hwy time skims (s=????3)
+~/    mf77 = am peak 7-9 am HOV hwy distance skims (s=????3)
+~/    mf78 = midday 10 am - 2 pm HOV hwy time skims (s=????5)
+~/    mf79 = midday 10 am - 2 pm HOV hwy distance skims (s=????5)
+~/
+~/    ms97 = dummy operand for demand matrix in assignment setup (5.11)
+~/
+~/    extra function parameter (el1) used in averaging vdfs
+~#
+~/**********************************************************************
+~/  Set reports and batchin
+~/**********************************************************************
+reports=report\iter_%ms98%\skim_iter_%ms98%.rxt
+~o|39
+batchin=data\vdf_iter.in
+~#
+~/********************************************************************** 
+~#
+~/  Use averaging volume delay functions for skimming.
+~/    Delete existing functions and batch in new functions.
+~#
+~/**********************************************************************
+4.12
+4
+fd1,fd10
+
+y
+q
+~#
+4.11
+2
+~#
+~/**********************************************************************
+~/  Set scenario (x) and make temp copies of scenarios for skimming.
+~/    1. remove last digit of current scenario XXXX8/10 = XXXX
+~/    2. put zero at end XXXX*10 = XXXX0
+~/    3. add 3 for am peak XXXX0 + 3 = XXXX3
+~/**********************************************************************
+~#
+~x=%s%
+~x/10
+~x*10
+~x+3
+1.22
+3
+%x%
+93
+temp am peak scenario for skimming
+no
+q
+~#
+~x+2
+1.22
+3
+%x%
+95
+temp midday scenario for skimming
+no
+q
+~#
+~/**********************************************************************
+~/  Set scenario (x) to first temp and initialize loop counter (z).
+~/**********************************************************************
+~x=93
+~z=1
+~#
+~:startloop
+~+;~?z=2;~x=95
+s=%x%
+~/**********************************************************************
+~/  Set period text registers based on loop.
+~/**********************************************************************
+~+;~?z=2;~$>period5
+~# -- SOV --
+~r1=44
+~t1=amtime
+~t2=am peak 7-9am SOV hwy time skim bal%ms98%
+~r2=45
+~t3=amdist
+~t4=am peak 7-9am SOV hwy distance skim bal%ms98%
+~# -- HOV --
+~r3=76
+~t5=amhovt
+~t6=am peak 7-9am HOV hwy time skim bal%ms98%
+~r4=77
+~t7=amhovd
+~t8=am peak 7-9am HOV hwy distance skim bal%ms98%
+~$>skip
+~#
+~:period5
+~# -- SOV --
+~r1=46
+~t1=mdtime
+~t2=midday 10a-2p SOV hwy time skim bal%ms98%
+~r2=47
+~t3=mddist
+~t4=midday 10a-2p SOV hwy distance skim bal%ms98%
+~# -- HOV --
+~r3=78
+~t5=mdhovt
+~t6=midday 10a-2p HOV hwy time skim bal%ms98%
+~r4=79
+~t7=mdhovd
+~t8=midday 10a-2p HOV hwy distance skim bal%ms98%
+~#
+~:skip
+~#
+~/**********************************************************************
+~/  Initialize time & distance matrices
+~/**********************************************************************
+~#
+3.12
+2
+mf%r1%
+~?e
+~$>err
+yes
+~$>end
+~:err
+
+r
+~:end
+~+; 1; mf%r1%; %t1%; %t2%; 0.0
+~#
+2
+mf%r2%
+~?e
+~$>err
+yes
+~$>end
+~:err
+
+r
+~:end
+~+; 1; mf%r2%; %t3%; %t4%; 0.0
+~#
+2
+mf%r3%
+~?e
+~$>err
+yes
+~$>end
+~:err
+
+r
+~:end
+~+; 1; mf%r3%; %t5%; %t6%; 0.0
+~#
+2
+mf%r4%
+~?e
+~$>err
+yes
+~$>end
+~:err
+
+r
+~:end
+~+; 1; mf%r4%; %t7%; %t8%; 0.0
+q
+~#
+~/**********************************************************************
+~/  Sum class average volumes into new extra attrib @avtot
+~/**********************************************************************
+2.42
+3
+@avtot
+~?e
+~$>err
+yes
+q
+~$>end
+~:err
+
+q
+~:end
+~/
+2.42
+2
+2
+@avtot
+total average volume (veq)
+0
+q
+2.41
+1
+yes
+@avtot
+no
+@avauv+@avh2v+@avh3v+@avbqv+@avlqv+@avmqv+@avhqv
+
+all
+2
+2
+q
+~#
+~/**********************************************************************
+~/  Setup and run highway asmt sov and hov on scenario %x%
+~/**********************************************************************
+~#
+el1=@avtot
+5.25
+2               / assignment setup and execution
+~+;~?q=2;2      / if paths from this assignment are available, option 2=new setup
+1               / option 1 = no additional volumes
+S               / mode used by primary class
+                / blank for no fixed link cost (or weight) for class
+ms97            / demand matrix (veq) for class 1
+H               / mode used by class 2
+                / blank for no fixed link cost (or weight) for class
+ms97            / demand matrix (veq) for class 2
+
+~+;~?q=3;2      / if existing assignment, option 2=start with existing paths [from previous global iteration] & reset iteration counter
+2000            / maximum memory for paths (MB)
+0.05            / initial path cost equality tolerance
+30              / refinement iteration
+0.01            / refined proportion
+5               / compute gap every __ iterations
+0               / max. iterations
+0.5             / best relative gap in %
+0.005           / relative gap
+0.05            / normalized gap (excess average time)
+2
+~#
+~#**********************************************************************
+~#  Get time skims for time period
+~#**********************************************************************
+6.16      
+1               / Type of result - Time or cost for shortest path
+mf%r1%          / Matrix to hold shortest path for class 1 (SOV)
+no              / Change header information
+mf%r3%          / Matrix to hold shortest path for class 2 (HOV)
+no              / Change header information
+2         
+~#
+~/**********************************************************************
+~/  Get distance skims for time period
+~/**********************************************************************
+4               / Path Analysis for Path Based Assignment  - userdefined path analysis
+length          / Link attribute
+                / Turn attribute
++               / Operator to compute attributes
+0,99999         / upper and lower thresholds
+3               / aggregation for O-D attribute (3 is average)
+1               / all paths considered
+~/
+                / Demand to be analyzed for class 1 (SOV)
+mf%r2%          / Matrix to hold O-D attribute for class 1 (SOV)
+no
+                / Matrix to hold selected demand for class 1 (SOV)
+                / Extra attribute to save selected link volumes for class 1 (SOV)
+                / Extra attribute to save selected turn volumes for class 1 (SOV)
+~/
+                / Demand to be analyzed for class 2 (HOV)
+mf%r4%          / Matrix to hold O-D attribute for class 2 (HOV)
+no
+                / Matrix to hold selected demand for class 2 (HOV)
+                / Extra attribute to save selected link volumes for class 2 (HOV)
+                / Extra attribute to save selected turn volumes for class 2 (HOV)
+~/
+2               
+q
+~#
+~/**********************************************************************
+~/  Delete Temporary Scenario %x%
+~/**********************************************************************
+1.22
+2
+%x%
+yes
+q
+~#
+~/********************************************************************** 
+~/  Increment counters and check if more scenarios to skim.
+~/**********************************************************************
+~#
+~z+1
+~+;~?z<3;~$startloop
+~#
+~/**********************************************************************
+~o=6
+reports=reports
+batchin=batchin
+~/**********************************************************************

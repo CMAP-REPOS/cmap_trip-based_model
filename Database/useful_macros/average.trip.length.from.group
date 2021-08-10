@@ -1,0 +1,15 @@
+~/syntax average.trip.length <impedance mf> <trip mf>
+3.16
+4
+%1%
+y
+%2%
+y
+~*enter zone group from
+
+all
+%2%
+ 
+0,500
+100
+1

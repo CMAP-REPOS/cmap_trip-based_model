@@ -1,0 +1,319 @@
+42B79BB6-18C3-444A-8C93-798F5EB3785B 07B0F5AD-A2A7-4B4E-B4A9-06EB441586D6 2 0 0
+# Emme attribute configurations generated on Fri Sep 28 09:41:12 2018
+# File: S:/AdminGroups/ResearchAnalysis/NRF/FY19/travel_and_emissions_modeling/zone_system_update/c18q3_100_20180509_mod17test/Worksheets/general.ema
+#
+# String Name: name of attribute configurations (tr)
+Name = Configurable Attributes
+
+[Configurable attribute]
+# String Name: configurable attribute name
+Name = ca_board_i
+# Text Description: description of configurable attribute (tr,subst)
+Description = Total boardings at node
+# Flags Flags: bit pattern containing object flags
+Flags = 0x0
+# String ExpressionType: domain of expression
+ExpressionType = transit segments
+# Expression Expression: expression for computing attribute values (tr,seg.,string)
+Expression = [transit boardings] board
+# Filter Filter: filter used to compute attribute values (tr,seg.,string,max. 2 values)
+Filter = [all segments] 1
+# String AggregationPointer: pointer from expression to result element
+AggregationPointer = Pi
+# String AggregationOperator: aggregation operator for computing result value
+AggregationOperator = +
+# Integer Decimals: number of decimals for default formatting
+Decimals = 0
+# Float DefaultValue: default value
+DefaultValue = 0
+# String DefaultString: default string to be displayed instead of default value
+DefaultString = -
+
+[Configurable attribute]
+# String Name: configurable attribute name
+Name = ca_alight_i
+# Text Description: description of configurable attribute (tr,subst)
+Description = Total alightings at node
+# String ExpressionType: domain of expression
+ExpressionType = transit segments
+# Expression Expression: expression for computing attribute values (tr,seg.,string)
+Expression = [transit alightings at I-node] alight
+# Filter Filter: filter used to compute attribute values (tr,seg.,string,max. 2 values)
+Filter = [all segments] 1
+# String AggregationPointer: pointer from expression to result element
+AggregationPointer = Pi
+# String AggregationOperator: aggregation operator for computing result value
+AggregationOperator = +
+# Integer Decimals: number of decimals for default formatting
+Decimals = 0
+# String DefaultString: default string to be displayed instead of default value
+DefaultString = -
+
+[Configurable attribute]
+# String Name: configurable attribute name
+Name = ca_thrupass_i
+# Text Description: description of configurable attribute (tr,subst)
+Description = Passengers going through node
+# String ExpressionType: domain of expression
+ExpressionType = transit segments
+# Expression Expression: expression for computing attribute values (tr,seg.,string)
+Expression = [transit thru-passengers at I-node] thrupass
+# Filter Filter: filter used to compute attribute values (tr,seg.,string,max. 2 values)
+Filter = [all segments] 1
+# String AggregationPointer: pointer from expression to result element
+AggregationPointer = Pi
+# String AggregationOperator: aggregation operator for computing result value
+AggregationOperator = +
+# String DefaultString: default string to be displayed instead of default value
+DefaultString = -
+
+[Configurable attribute]
+# String Name: configurable attribute name
+Name = ca_nlines_i
+# Text Description: description of configurable attribute (tr,subst)
+Description = Number of transit lines at node
+# String ExpressionType: domain of expression
+ExpressionType = transit segments
+# Expression Expression: expression for computing attribute values (tr,seg.,string)
+Expression = [unit value per line] 1
+# Filter Filter: filter used to compute attribute values (tr,seg.,string,max. 2 values)
+Filter = [all lines] 1
+# String AggregationPointer: pointer from expression to result element
+AggregationPointer = Pi
+# String AggregationOperator: aggregation operator for computing result value
+AggregationOperator = +
+# Integer Decimals: number of decimals for default formatting
+Decimals = 0
+# String DefaultString: default string to be displayed instead of default value
+DefaultString = -
+
+[Configurable attribute]
+# String Name: configurable attribute name
+Name = ca_stop_i
+# Text Description: description of configurable attribute (tr,subst)
+Description = Transit stop nodes
+# String ExpressionType: domain of expression
+ExpressionType = transit segments
+# Expression Expression: expression for computing attribute values (tr,seg.,string)
+Expression = [stop at I-node flag] isIStop
+# Filter Filter: filter used to compute attribute values (tr,seg.,string,max. 2 values)
+Filter = [all lines] 1
+# String AggregationPointer: pointer from expression to result element
+AggregationPointer = Pi
+# String AggregationOperator: aggregation operator for computing result value
+AggregationOperator = max
+# Integer Decimals: number of decimals for default formatting
+Decimals = 0
+# String DefaultString: default string to be displayed instead of default value
+DefaultString = -
+
+[Configurable attribute]
+# String Name: configurable attribute name
+Name = ca_nbstops_i
+# Text Description: description of configurable attribute (tr,subst)
+Description = Number of stops at nodes
+# String ExpressionType: domain of expression
+ExpressionType = transit segments
+# Expression Expression: expression for computing attribute values (tr,seg.,string)
+Expression = [stop at I-node flag] isIStop
+# Filter Filter: filter used to compute attribute values (tr,seg.,string,max. 2 values)
+Filter = [all lines] 1
+# String AggregationPointer: pointer from expression to result element
+AggregationPointer = Pi
+# String AggregationOperator: aggregation operator for computing result value
+AggregationOperator = +
+# Integer Decimals: number of decimals for default formatting
+Decimals = 0
+# String DefaultString: default string to be displayed instead of default value
+DefaultString = -
+
+[Configurable attribute]
+# String Name: configurable attribute name
+Name = ca_nlines_l
+# Text Description: description of configurable attribute (tr,subst)
+Description = Number of transit lines on link
+# String ExpressionType: domain of expression
+ExpressionType = transit segments
+# Expression Expression: expression for computing attribute values (tr,seg.,string)
+Expression = [unit value per line] 1
+# Filter Filter: filter used to compute attribute values (tr,seg.,string,max. 2 values)
+Filter = [all lines] 1
+# String AggregationPointer: pointer from expression to result element
+AggregationPointer = Pij
+# String AggregationOperator: aggregation operator for computing result value
+AggregationOperator = +
+# Integer Decimals: number of decimals for default formatting
+Decimals = 0
+# String DefaultString: default string to be displayed instead of default value
+DefaultString = -
+
+[Configurable attribute]
+# String Name: configurable attribute name
+Name = ca_trveh_l
+# Text Description: description of configurable attribute (tr,subst)
+Description = Number of transit vehicles per hour
+# String ExpressionType: domain of expression
+ExpressionType = transit segments
+# Expression Expression: expression for computing attribute values (tr,seg.,string)
+Expression = [vehicles per hour] 60/hdw
+# Filter Filter: filter used to compute attribute values (tr,seg.,string,max. 2 values)
+Filter = [all segments] 1
+# String AggregationPointer: pointer from expression to result element
+AggregationPointer = Pij
+# String AggregationOperator: aggregation operator for computing result value
+AggregationOperator = +
+# Integer Decimals: number of decimals for default formatting
+Decimals = 2
+# String DefaultString: default string to be displayed instead of default value
+DefaultString = -
+
+[Configurable attribute]
+# String Name: configurable attribute name
+Name = ca_caps_l
+# Text Description: description of configurable attribute (tr,subst)
+Description = Seated capacity of all lines on link
+# String ExpressionType: domain of expression
+ExpressionType = transit segments
+# Expression Expression: expression for computing attribute values (tr,seg.,string)
+Expression = [seated capacity of transit line per hour] caps
+# Filter Filter: filter used to compute attribute values (tr,seg.,string,max. 2 values)
+Filter = [all segments] 1
+# String AggregationPointer: pointer from expression to result element
+AggregationPointer = Pij
+# String AggregationOperator: aggregation operator for computing result value
+AggregationOperator = +
+# Integer Decimals: number of decimals for default formatting
+Decimals = 0
+# String DefaultString: default string to be displayed instead of default value
+DefaultString = -
+
+[Configurable attribute]
+# String Name: configurable attribute name
+Name = ca_capt_l
+# Text Description: description of configurable attribute (tr,subst)
+Description = Total capacity of all transit lines on link
+# String ExpressionType: domain of expression
+ExpressionType = transit segments
+# Expression Expression: expression for computing attribute values (tr,seg.,string)
+Expression = [total capacity of transit line per hour] capt
+# Filter Filter: filter used to compute attribute values (tr,seg.,string,max. 2 values)
+Filter = [all segments] 1
+# String AggregationPointer: pointer from expression to result element
+AggregationPointer = Pij
+# String AggregationOperator: aggregation operator for computing result value
+AggregationOperator = +
+# Integer Decimals: number of decimals for default formatting
+Decimals = 0
+# String DefaultString: default string to be displayed instead of default value
+DefaultString = -
+
+[Configurable attribute]
+# String Name: configurable attribute name
+Name = ca_voltr_l
+# Text Description: description of configurable attribute (tr,subst)
+Description = Total transit volume on link
+# String ExpressionType: domain of expression
+ExpressionType = transit segments
+# Expression Expression: expression for computing attribute values (tr,seg.,string)
+Expression = [transit segment volume] voltr
+# Filter Filter: filter used to compute attribute values (tr,seg.,string,max. 2 values)
+Filter = [all segments] 1
+# String AggregationPointer: pointer from expression to result element
+AggregationPointer = Pij
+# String AggregationOperator: aggregation operator for computing result value
+AggregationOperator = +
+# Integer Decimals: number of decimals for default formatting
+Decimals = 0
+
+[Configurable attribute]
+# String Name: configurable attribute name
+Name = ca_length_t
+# Text Description: description of configurable attribute (tr,subst)
+Description = Total line length
+# String ExpressionType: domain of expression
+ExpressionType = transit segments
+# Expression Expression: expression for computing attribute values (tr,seg.,string)
+Expression = [link length] length
+# Filter Filter: filter used to compute attribute values (tr,seg.,string,max. 2 values)
+Filter = [all segments] 1
+# String AggregationPointer: pointer from expression to result element
+AggregationPointer = Pline
+# String AggregationOperator: aggregation operator for computing result value
+AggregationOperator = +
+# Integer Decimals: number of decimals for default formatting
+Decimals = 2
+
+[Configurable attribute]
+# String Name: configurable attribute name
+Name = ca_timtr_t
+# Text Description: description of configurable attribute (tr,subst)
+Description = Total line time
+# String ExpressionType: domain of expression
+ExpressionType = transit segments
+# Expression Expression: expression for computing attribute values (tr,seg.,string)
+Expression = [transit segment time] timtr
+# Filter Filter: filter used to compute attribute values (tr,seg.,string,max. 2 values)
+Filter = [all segments] 1
+# String AggregationPointer: pointer from expression to result element
+AggregationPointer = Pline
+# String AggregationOperator: aggregation operator for computing result value
+AggregationOperator = +
+# Integer Decimals: number of decimals for default formatting
+Decimals = 2
+
+[Configurable attribute]
+# String Name: configurable attribute name
+Name = ca_first_t
+# Text Description: description of configurable attribute (tr,subst)
+Description = First stop on line
+# String ExpressionType: domain of expression
+ExpressionType = transit segments
+# Expression Expression: expression for computing attribute values (tr,seg.,string)
+Expression = i*isFirst
+# Filter Filter: filter used to compute attribute values (tr,seg.,string,max. 2 values)
+Filter = [all segments] 1
+# String AggregationPointer: pointer from expression to result element
+AggregationPointer = Pline
+# String AggregationOperator: aggregation operator for computing result value
+AggregationOperator = +
+# Integer Decimals: number of decimals for default formatting
+Decimals = 2
+
+[Configurable attribute]
+# String Name: configurable attribute name
+Name = ca_last_t
+# Text Description: description of configurable attribute (tr,subst)
+Description = Last stop on line
+# String ExpressionType: domain of expression
+ExpressionType = transit segments
+# Expression Expression: expression for computing attribute values (tr,seg.,string)
+Expression = j*isLast
+# Filter Filter: filter used to compute attribute values (tr,seg.,string,max. 2 values)
+Filter = [all segments] 1
+# String AggregationPointer: pointer from expression to result element
+AggregationPointer = Pline
+# String AggregationOperator: aggregation operator for computing result value
+AggregationOperator = +
+# Integer Decimals: number of decimals for default formatting
+Decimals = 2
+
+[Configurable attribute]
+# String Name: configurable attribute name
+Name = ca_board_t
+# Text Description: description of configurable attribute (tr,subst)
+Description = Total boardings per line
+# String ExpressionType: domain of expression
+ExpressionType = transit segments
+# Expression Expression: expression for computing attribute values (tr,seg.,string)
+Expression = [transit boardings] board
+# Filter Filter: filter used to compute attribute values (tr,seg.,string,max. 2 values)
+Filter = [all segments] 1
+# String AggregationPointer: pointer from expression to result element
+AggregationPointer = Pline
+# String AggregationOperator: aggregation operator for computing result value
+AggregationOperator = +
+# Integer Decimals: number of decimals for default formatting
+Decimals = 0
+# String DefaultString: default string to be displayed instead of default value
+DefaultString = -
+
