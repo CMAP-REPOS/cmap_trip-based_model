@@ -24,21 +24,6 @@ def attach_superdistricts_to_trip_table(dh, trip_table):
     return trip_table
 
 def superdistrict_flow_summary(dh, trip_table, dimensions):
-    # super_districts = dh.cfg.super_districts
-    # zone_info = pd.read_csv(
-    #     dh.filenames.zone_districts,
-    #     index_col=0,
-    # )
-    #
-    # if isinstance(trip_table, dd.DataFrame):
-    #     trip_table = trip_table.compute()
-    # if 'o_zone' not in trip_table.columns:
-    #     trip_table = trip_table.reset_index()
-    #
-    # trip_table['o_district'] = trip_table['o_zone'].map(zone_info.district)
-    # trip_table['d_district'] = trip_table['d_zone'].map(zone_info.district)
-    # trip_table['o_superdistrict'] = trip_table['o_district'].map(super_districts)
-    # trip_table['d_superdistrict'] = trip_table['d_district'].map(super_districts)
     trip_table = attach_superdistricts_to_trip_table(dh, trip_table)
 
     summary_table = trip_table.groupby([

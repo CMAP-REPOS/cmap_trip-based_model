@@ -426,30 +426,29 @@ def choice_simulator_initialize(dh, return_simulators=True, n_threads=1, cache=T
     )
 
     log.debug(f"choice_simulator_initialize(n_threads={n_threads}), cache={cache}")
-    auto_cost_per_mile = dh.cfg.auto.cost.per_mile
     n_zones = dh.n_internal_zones
     choice_model_params = dh.choice_model_params
 
     if len(choice_model_params) == 0:
         raise ValueError("no choice_model_params")
 
-    pickle_name = dh.filenames.cache_dir / f"choice_models_{auto_cost_per_mile}_{n_zones}.pkl"
+    pickle_name = dh.filenames.cache_dir / f"choice_models_{n_zones}.pkl"
 
-    if (auto_cost_per_mile, n_zones) not in choice_simulator_global:
+    if n_zones not in choice_simulator_global:
         log.debug("choice_simulator_initialize: preloaded choice_simulator not available")
         if os.path.exists(pickle_name):
             import cloudpickle
             with open(pickle_name, 'rb') as pkl_f:
                 log.debug("loading pickled choice_simulator")
-                choice_simulator_global[(auto_cost_per_mile, n_zones)] = cloudpickle.load(pkl_f)
-            if (auto_cost_per_mile, n_zones) in choice_simulator_global:
+                choice_simulator_global[n_zones] = cloudpickle.load(pkl_f)
+            if n_zones in choice_simulator_global:
                 cache = False
         else:
             log.debug("pickled choice_simulator not available")
 
-    if (auto_cost_per_mile, n_zones) in choice_simulator_global:
+    if n_zones in choice_simulator_global:
         log.info("using existing choice_simulator")
-        choice_simulator = choice_simulator_global[(auto_cost_per_mile, n_zones)]
+        choice_simulator = choice_simulator_global[n_zones]
     else:
         log.info("creating fresh choice_simulator")
         choice_simulator = Dict()
@@ -463,14 +462,14 @@ def choice_simulator_initialize(dh, return_simulators=True, n_threads=1, cache=T
                 n_threads=n_threads,
                 explicit_av=False,
             )
-        choice_simulator_global[(auto_cost_per_mile, n_zones)] = choice_simulator
+        choice_simulator_global[n_zones] = choice_simulator
 
     if cache and not os.path.exists(pickle_name):
         import cloudpickle
         with open(pickle_name, 'wb') as pkl_f:
             log.debug("pickling choice_simulator for future reload")
             cloudpickle.dump(
-                choice_simulator_global[(auto_cost_per_mile, n_zones)],
+                choice_simulator_global[n_zones],
                 pkl_f,
             )
 
