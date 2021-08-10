@@ -1,3 +1,8 @@
+#!/bin/python
+#
+#   This script decompresses and downloads data needed for the model, other
+#   than what's already in the Git repository.
+
 import os
 import requests
 import yaml
@@ -35,4 +40,10 @@ if "s3" in manifest:
             raw,
             region="us-west-2",
         )
+        if raw[-3:] == ".gz":
+            with gzip.open(raw, 'rb') as f_in:
+                with open(raw[:-3], 'wb') as f_out:
+                    print(f"gunzipping {raw} -> {raw[:-3]}")
+                    shutil.copyfileobj(f_in, f_out)
+            os.remove(raw)
 
