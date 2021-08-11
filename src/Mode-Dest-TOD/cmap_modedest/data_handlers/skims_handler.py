@@ -91,15 +91,22 @@ def _load_skims(
 		filename_emmemat,
 		dh=None,
 		backfill_uncompressed_skims=False,
+		use_compressed_skims=None,
 ):
 	try:
+		if use_compressed_skims is None:
+			if dh is None:
+				use_compressed_skims = False
+			else:
+				use_compressed_skims = dh.cfg.get("use_compressed_skims", False)
+
 		skims = DictSkims()
 		log.debug(f"filename emmemat = {filename_emmemat}")
 		skims.filename = filename_emmemat
 		skims.raw = read_skims(
 			filename_emmemat,
 			backfill_uncompressed_skims=backfill_uncompressed_skims,
-			use_compressed_skims=dh.cfg.get("use_compressed_skims", False)
+			use_compressed_skims=use_compressed_skims,
 		)
 
 		skims.raw['mf45'] = skims.raw['mf45'].load()
@@ -108,15 +115,15 @@ def _load_skims(
 		skims.auto.col_mapping = dict(
 			am_time='mf44',
 			am_dist='mf45',
-			am_toll_loinc='mf111',  # TODO
-			am_toll_hiinc='mf114',  # TODO
+			am_toll_loinc='mf111',
+			am_toll_hiinc='mf114',
 			md_time='mf46',
 			md_dist='mf47',
-			md_toll='mf117',  # TODO
+			md_toll='mf117',
 			am_time_hov='mf76',
 			am_dist_hov='mf77',
-			am_toll_hov_loinc='mf112',  # TODO
-			am_toll_hov_hiinc='mf115',  # TODO
+			am_toll_hov_loinc='mf112',
+			am_toll_hov_hiinc='mf115',
 			am_opcost='am_opcost',
 			am_opcost_hov='am_opcost_hov',
 			md_opcost='md_opcost',
