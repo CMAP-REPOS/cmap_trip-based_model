@@ -8,6 +8,7 @@ def read_skims(
         directory,
         backfill_compressed_skims=False,
         backfill_uncompressed_skims=False,
+        use_compressed_skims=False,
 ):
     """
 
@@ -21,18 +22,21 @@ def read_skims(
     backfill_uncompressed_skims : bool, default False
         Write skims that only appear in the compressed zarr directory into the
         uncompressed directory.
+    use_compressed_skims : bool, default False
+        Whether to allow the usage of compressed skims at all.
 
     Returns
     -------
     sh.Dataset
     """
     appended_names = []
+    skims = None
     try:
-        skims = read_compressed_skims(directory)
+        if use_compressed_skims:
+            skims = read_compressed_skims(directory)
     except zarr.errors.GroupNotFoundError as err:
-        skims = None
+        pass
     except FileNotFoundError as err:
-        skims = None
         backfill_compressed_skims = False
     try:
         skims, appended_names = read_uncompressed_skims(directory, skims)

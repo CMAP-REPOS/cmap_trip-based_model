@@ -87,7 +87,11 @@ def load_skims(filenames, dh=None, backfill_uncompressed_skims=False):
 	)
 
 
-def _load_skims(filename_emmemat, dh=None, backfill_uncompressed_skims=False):
+def _load_skims(
+		filename_emmemat,
+		dh=None,
+		backfill_uncompressed_skims=False,
+):
 	try:
 		skims = DictSkims()
 		log.debug(f"filename emmemat = {filename_emmemat}")
@@ -95,6 +99,7 @@ def _load_skims(filename_emmemat, dh=None, backfill_uncompressed_skims=False):
 		skims.raw = read_skims(
 			filename_emmemat,
 			backfill_uncompressed_skims=backfill_uncompressed_skims,
+			use_compressed_skims=dh.cfg.get("use_compressed_skims", False)
 		)
 
 		skims.raw['mf45'] = skims.raw['mf45'].load()

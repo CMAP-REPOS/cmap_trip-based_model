@@ -66,6 +66,8 @@ default_activity_durations:  # number of hours, by trip purpose
 
 n_replications: 50  # number of simulated input sets per zone pair
 
+use_compressed_skims: False
+
 taxi:
   cost:
     flag_pull: 325          # cents, initial base fare
