@@ -118,6 +118,8 @@ def read_compressed_skims(zarr_directory):
     """
     Read previously compressed skims.
 
+    Compressed skims must be stored in a directory ending with a .zarr extension.
+
     Parameters
     ----------
     zarr_directory
@@ -137,9 +139,6 @@ def read_compressed_skims(zarr_directory):
     elif os.path.isfile(zarr_directory.with_suffix(".zarr.zip")):
         log.info(f'reading compressed skims from {zarr_directory.with_suffix(".zarr.zip")}')
         result = sh.Dataset.from_zarr(zarr_directory.with_suffix(".zarr.zip"))
-    elif os.path.exists(zarr_directory):
-        log.info(f'reading compressed skims from {zarr_directory}')
-        result = sh.Dataset.from_zarr(zarr_directory)
     if result is not None:
         log.info(f"{len(result.data_vars)} compressed skims were added to the skims dataset")
         return result
