@@ -625,6 +625,7 @@ def choice_simulator_trips(
 
         random_state = check_random_state(random_state or otaz[0])
         for purpose in purposes:
+            log.debug(f"     choice_simulator_trips processing time-of-day for purpose {purpose})")
             choices_data = {}
             n = 0
 
@@ -792,9 +793,12 @@ def choice_simulator_trips(
 
             hired_auto_trips = simtrips.query("(mode in (4,5,6)) and (trips > 0)")
 
+            log.debug(f"   applying TOD to reg_auto_trips")
             reg_auto_trips = apply_tod(reg_auto_trips, 0.0)
+            log.debug(f"   applying TOD to hired_auto_trips")
             hired_auto_trips = apply_tod(hired_auto_trips, 1.0)
 
+            log.debug(f"   applying directionality to non-auto trips")
             # non-auto trips
             non_auto_trips = simtrips.query("(mode in (7,8,9)) and (trips > 0)")
             non_auto_trips = non_auto_trips.reset_index(drop=True)
@@ -887,6 +891,8 @@ def choice_simulator_trips(
                 save_dir,
                 f"choice_simulator_trips_{otaz[0]}_{otaz[-1]}_{'_'.join(purposes)}_{dh['tripclass']}.pq"
             ))
+        log.debug(f"COMPLETED choice_simulator_trips({len(otaz)} OTAZ's starting from {otaz[0]})")
+
         return concatd
     except:
         log.exception(f"error in choice_simulator_trips for otaz={otaz}")
