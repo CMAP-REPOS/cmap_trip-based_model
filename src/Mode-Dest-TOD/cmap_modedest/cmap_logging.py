@@ -58,10 +58,14 @@ def log_to_stderr(level=30, log_dir=None):
         filehandler.setLevel(level)
         filehandler.setFormatter(formatter)
         logger.addHandler(filehandler)
+    else:
+        filehandler = None
     logger.propagate = False
     logger.setLevel(level)
 
     larch_logger = logging.getLogger("Larch")
+    if filehandler is not None:
+        larch_logger.addHandler(filehandler)
     larch_logger.addHandler(handler)
     larch_logger.setLevel(level)
 
