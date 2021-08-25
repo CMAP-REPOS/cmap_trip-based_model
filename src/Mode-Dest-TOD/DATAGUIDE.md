@@ -163,8 +163,9 @@ specific to each scenario network. The following describes the DISTR file fields
 > Note: In prior version of the CMAP trip-based model, separate identical copies 
 > of the DISTR files were needed to support pre-distribution and mode choice
 > components, e.g. PDHW_DISTR and MCHW_DISTR.  The current model does not require 
-> separate files, so the model reads only a common file without the component-
-> specific prefix.
+> separate files by component, so the model reads only a common file without the component-
+> specific prefix. The purpose-specific prefix is still required, as the data in
+> these files can vary by purpose.
 
 
 ### cmap_trip_config.yaml
@@ -270,4 +271,119 @@ iteration (i.e. on the first iteration) then the default auto propensity is used
 
 
 ## Output Files
+
+### cache/choice_simulator_trips_out/choice_simulator_trips_*.pq
+
+The primary output of the MDT models is a roster of trips.  When the model is 
+run in multiprocessing/parallel mode, which is the default, individual trip
+roster files are written out for each "job", so there will be numerous individual
+trip roster files, which should be considered as different parts that can be 
+concatenated into one master trip roster table.  The overall computational work is 
+split into numerous independent jobs, where just a few trip production/origin
+zones are processed together in a batch.  Moreover, the trips made by 
+work-from-home (WFH) households are modeled independently from trips made by
+"typical" households that do not include a WFH person, so these trips are 
+seperated into two computational jobs even for the same zones.  
+
+Each *.pq file is a [parquet format](https://parquet.apache.org/) file containing
+a roster of trips, segmented on the following dimensions:
+
+- Trip Purpose
+  - HBWH: Home-based work trips by high-income households
+  - HBWL: Home-based work trips by low-income households
+  - HBS: Home-based shopping trips
+  - HBO: Home-based other purpose trips
+  - NHB: Non-home based trips
+  - VISIT: Trips made by visitors to the region
+  - DEAD: Deadhead trips made taxis and rideshare vehicles between revenue trips
+- Mode
+  - 1: SOV
+  - 2: HOV2
+  - 3: HOV3+
+  - 4: TAXI
+  - 5: TNC Private / Regular
+  - 6: TNC Shared / Pooled
+  - 7: TRANSIT
+  - 8: WALK
+  - 9: BIKE
+- Origin Zone
+  - TAZ number for the trip origin. Note this is always the beginning of the 
+    actual trip, and not necessarily the home/production zone, e.g. for trips 
+    returning home from a workplace, the origin zone is the workplace.
+- Destination Zone
+  - TAZ number for the trip destination. Note this is always the end of the 
+    actual trip, and not necessarily the attraction zone, e.g. for trips 
+    returning home from a workplace, the destination zone is home.
+- Attraction Zone
+  - TAZ number for the trip attraction zone. This can be either the production
+    or attraction zone, depending on directionality of the trip. For trips modeled
+    as O-D instead of P-A, the attraction zone is always the destination.
+- Number of Autos Owned by Household
+  - The number of automobiles (0, 1, or 2) owned by the household of the person 
+    making the trip. This is only applicable for home-based trips, as consistent
+    tours are not maintained and the model cannot use auto ownership for 
+    anything other than home-based trips.
+- Household Income Category
+  - The household income category (0, 1, or 2) owned by the household of the person 
+    making the trip. This is only applicable for home-based trips, as consistent
+    tours are not maintained and the model cannot use household income for 
+    anything other than home-based trips.
+- Time Period
+  - One of 9 time periods {EA, AM1, AM2, AM3, MD, PM1, PM2, PM3} is assigned for 
+    all public and hired auto trips. No time period is actually assigned for
+    transit or non-motorized trips, trips by these modes are marked with 'NA'.
+
+Each new run of the MDT model generates a new `choice_simulator_trips_out` 
+directory in the `Database\cache` folder.  Previous output directories are
+rotated with a dot-number extensions, so that the un-numbered output directory is
+the most recent output.
+
+### emmemat/mf*.emx
+
+Unless the "--no-aggregate" option is set, the trip roster is also aggregated 
+into Emme matrix files of vehicle trips for automobile modes, and person trips 
+for transit. In contrast to the trip roster files, which are written to a 
+rotated directory that prevents data loss, new EMX files will overwrite any
+existing data stored with the same filename.
+
+For all automobile modes, trips are aggregated from person trips to vehicle 
+trips.  SOV trips are split into three value of time categories according to the 
+ratios given in the `value_of_time_buckets.csv` input file.  HOV2 and HOV3+ modes 
+are each in a single bucket, but are converted from person trips to vehicle trips 
+based on auto occupancy, which is 2 for HOV2 and slightly over 3 for HOV3+, the 
+exact value varies by purpose and is given by the `hov3_occupancy` key in the 
+`cmap_trip_config.yaml` input file.
+
+The time of day dimension for auto trips is preserved, along with origin and 
+destination, yielding 8 full matrix tables per bucket, organized as follows:
+
+- SOV low value of time   – mf411-mf418
+- SOV med value of time   – mf421-mf428
+- SOV high value of time  – mf431-mf438
+- HOV2 not diff'd by vot  – mf441-mf448
+- HOV3 not diff'd by vot  – mf451-mf458
+
+In each group, the time of day ordering is the same, with the last digit of the
+file name representing the time period:
+
+- 1: EA
+- 2: AM1
+- 3: AM2
+- 4: AM3
+- 5: MD
+- 6: PM1
+- 7: PM2
+- 8: PM3
+
+Unlike auto trips, transit person trips are not aggregated to vehicles nor 
+segmented by time period.  Instead, transit person trips are segmented only by 
+trip purpose, yielding just 5 full matrix tables:
+
+- home-based work low income  - mf40
+- home-based work high income - mf41
+- home-based shopping         - mf39
+- home-based other            - mf42
+- non-home-based              - mf43
+
+
 

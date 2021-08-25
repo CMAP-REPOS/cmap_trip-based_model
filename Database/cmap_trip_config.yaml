@@ -55,14 +55,14 @@ regional_income_distribution:  # used for NHB trips
   5: 0.16133703
 
 hov3_occupancy:
-    HBW: 3.36
-    HBO: 3.31
-    NHB: 3.39
+    HBW: 3.36   # both high and low income
+    HBO: 3.31   # also includes Home-based Shopping
+    NHB: 3.39   # also includes Visitors
 
 default_activity_durations:  # number of hours, by trip purpose
-  HW: 10
-  HO: 6
-  NH: 3
+  HW: 10        # both high and low income
+  HO: 6         # also includes Home-based Shopping
+  NH: 3         # also includes Visitors
 
 n_replications: 50  # number of simulated input sets per zone pair
 

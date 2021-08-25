@@ -92,11 +92,12 @@ cmap_modedest .\path\to\Database
 ```
 
 The `cmap_modedest` command line tool has a number of available options. The most important
-of these include the number of jobs and maximum number of origin zones processed per chunk,
+of these include the number of jobs (`--njobs N`) and the maximum number of origin 
+zones processed per chunk (`--max_zone_chunk N`),
 each of which needs to be set appropriately for the computer running the model to maximize
 resource usage (CPU's, RAM) without exceeding available resources, which can cause 
-out-of-memory errors or processor thrashing that can slow the overall runtime. 
-These options can be reviewed in the online help:
+out-of-memory errors or processor thrashing that can slow the overall runtime.
+A complete list of other options can be reviewed in the online help:
   
 ```shell
 cmap_modedest --help
