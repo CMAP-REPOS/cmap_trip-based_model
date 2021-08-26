@@ -658,6 +658,7 @@ def choice_simulator_trips(
                             hh_inc5[c_position:c_position + c_.size] = validation_data["hhinc5l"][n]
                         elif purpose == 'NHB':
                             hh_inc5[c_position:c_position + c_.size] = validation_data["hhinc5g"][n]
+                            hh_autos[c_position:c_position + c_.size] = -1
                         else:
                             hh_inc5[c_position:c_position+c_.size] = validation_data["hhinc5"][n]
                         c_position += c_.size
