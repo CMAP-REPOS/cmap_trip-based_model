@@ -132,7 +132,8 @@ class DataHandler:
 
 		log.info("loading visitor trip tables")
 		from .visitors import load_visitor_trips
-		self['visitor_trips'] = load_visitor_trips(filenames, scale_factor=1.0)
+		visitor_trip_growth = self.cfg.get("visitor_trips_growth_factor", 1.0)
+		self['visitor_trips'] = load_visitor_trips(filenames, scale_factor=visitor_trip_growth)
 		self._jedi_names.add('visitor_trips')
 
 		log.info("loading of data handlers complete")

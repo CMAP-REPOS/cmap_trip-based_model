@@ -64,6 +64,8 @@ default_activity_durations:  # number of hours, by trip purpose
   HO: 6         # also includes Home-based Shopping
   NH: 3         # also includes Visitors
 
+visitor_trips_growth_factor: 1.0
+
 n_replications: 50  # number of simulated input sets per zone pair
 
 use_compressed_skims: False
