@@ -1331,4 +1331,33 @@ def aggregate_to_vehicle_matrixes(
         mmap[:, :] = write_out
         mmap.flush()
 
+    # Example: home-based work high and low income auto person-trips
+    if False:
+        custom_person_trips = xr.DataArray.from_series(
+            trips
+            .query(f"purpose in ('HBWH', 'HBWL') and mode in ({mode9codes.AUTO},{mode9codes.HOV2},{mode9codes.HOV3})")
+            .groupby(["o_zone", "d_zone"])['trips']
+            .sum()
+        ).reindex(
+            o_zone=z_range, d_zone=z_range,
+        ).astype(np.float32).fillna(0)
+
+        custom_matrix_number = 1234
+        mtx_filename = os.fspath(dh.filenames.emme_database_dir / f"emmemat/{custom_matrix_number}.emx")
+        write_out = custom_person_trips.transpose("o_zone", "d_zone").values  # use "transpose" to ensure ozone is rows and dzone is cols
+        if os.path.exists(mtx_filename):
+            mmap_mode = 'r+'
+        else:
+            mmap_mode = 'w+'
+        # We write into the existing file instead of deleting and rewriting the file
+        # emme may be happier this way if the file handle was previously held open
+        mmap = np.memmap(
+            mtx_filename,
+            dtype=np.float32,
+            mode=mmap_mode,
+            shape=write_out.shape,
+        )
+        mmap[:, :] = write_out
+        mmap.flush()
+
     return vehicle_trips
