@@ -202,7 +202,7 @@ def application_data(dh):
         # 'log_attractions_NHBR > -666': 'log(attractions.NHBR) > -666',
         # 'log_attractions_NHBS > -666': 'log(attractions.NHBS) > -666',
 
-    }, dtype="float64", cache_dir=local_cache(), name="cmap_trip_application_data_step_1")
+    }, dtype="float64", cache_dir=local_cache(), name="S1")
 
     try:
         log.debug("load first run")
@@ -301,7 +301,7 @@ def application_data2(dh, in_table):
     processor = SharedData(in_table).setup_flow(
         coldefs,
         cache_dir=local_cache(),
-        name="cmap_trip_application_data_step_2",
+        name="S2",
         dtype="float64",
     )
 
