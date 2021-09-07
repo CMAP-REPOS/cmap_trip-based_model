@@ -631,6 +631,7 @@ def choice_simulator_trips(
 
             for _o in otaz:
                 num_productions = dh.zone_productions5.loc[_o, purpose]
+                log.debug(f"     {purpose} productions for {_o} = {num_productions}")
 
                 if disagg_choices:
                     c = np.empty(num_productions, dtype=np.int32)
@@ -658,7 +659,7 @@ def choice_simulator_trips(
                             hh_inc5[c_position:c_position + c_.size] = validation_data["hhinc5l"][n]
                         elif purpose == 'NHB':
                             hh_inc5[c_position:c_position + c_.size] = validation_data["hhinc5g"][n]
-                            hh_autos[c_position:c_position + c_.size] = -1
+                            hh_autos[c_position:c_position + c_.size] = 0
                         else:
                             hh_inc5[c_position:c_position+c_.size] = validation_data["hhinc5"][n]
                         c_position += c_.size
