@@ -36,10 +36,15 @@ def model_utility_for_dest(
 		n_modes,
 ):
 	"""
+	Construct some utility functions for the mode and destination model.
+
+	This method constructs the utility functions for all of the modes, for
+	a single destination.  It is called multiple times to build the complete
+	set of utility functions across all destinations.
 
 	Parameters
 	----------
-	m
+	m : larch.Model
 	dest_number : int
 		The number of the destination.  In application, this is
 		the TAZ index (TAZ ID minus 1).  In estimation, this is

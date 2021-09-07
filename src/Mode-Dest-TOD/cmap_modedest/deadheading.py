@@ -28,6 +28,9 @@ def compute_deadhead_trip_table(
     traveltime_factor : float, default -1.0
         A parameter to calibrate the overall length of deadhead trips, used as
         the coefficient in a gravity model.
+    stats : bool
+        Display length distribution of deadhead trips, when in a Jupyter
+        notebook.
 
     Returns
     -------
