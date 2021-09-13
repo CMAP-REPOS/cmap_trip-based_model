@@ -11,6 +11,20 @@ from ..purposes import purposesA
 log = getLogger()
 
 def application_data(dh):
+    """
+    This function precompiles the application data flow.
+
+    It includes a bunch of random data formatted the same manner as the real
+    data will be, so that the code can be optimized ahead of time.
+
+    Parameters
+    ----------
+    dh
+
+    Returns
+    -------
+    sharrow.Flow
+    """
     log = getSubLogger("fast.application_data")
 
     log.info("preparing application data")

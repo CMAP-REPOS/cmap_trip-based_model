@@ -37,6 +37,7 @@ def compute_deadhead_trip_table(
     DataFrame
     """
     result = {}
+    random_generator = np.random.default_rng([12345,67890])
 
     for tname, tcode in zip(time_period_names, time_period_codes):
         log.info(f"compute_deadhead_trip_table: {tname}")
@@ -96,7 +97,7 @@ def compute_deadhead_trip_table(
             rowsum = wgt_matrix[row].sum()
             n = int(np.round(rowsum))
             if n:
-                chx[row] = np.random.choice(wgt_matrix.shape[1], size=n, p=wgt_matrix[row] / rowsum)
+                chx[row] = random_generator.choice(wgt_matrix.shape[1], size=n, p=wgt_matrix[row] / rowsum)
                 for k in chx[row]:
                     triptable[row, k] += 1
 

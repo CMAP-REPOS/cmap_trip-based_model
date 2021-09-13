@@ -20,7 +20,7 @@ from .tnc_costs import taxi_cost, tnc_solo_cost, tnc_pool_cost
 from .transit_approach import transit_approach
 from .modecodes import mode9codes
 from .choice_model import model_builder, alt_codes_and_names
-from .random_states import check_random_state
+from .random_states import check_random_generator
 from .data_handlers import DataHandler
 from .data_handlers.tabler import Table
 from .data_handlers.m01_handler import attach_areatypes, sample_hh_income_cats
@@ -116,13 +116,15 @@ def _data_for_application_1(dh, otaz=1, replication=None):
     oz = np.full(3632, otaz)
     dz = np.arange(3632) + 1
 
+    random_generator = np.random.default_rng([otaz, 1234])
+
     log.debug("run trapp_dist_HW")
-    trapp_dist_HW = transit_approach_distances(dh.cfg.transit_approach_struct, oz, dz, 'HW', random_seed=otaz)[0]
+    trapp_dist_HW = transit_approach_distances(dh.cfg.transit_approach_struct, oz, dz, 'HW', random_seed=random_generator)[0]
     log.debug("run trapp_HW")
     trapp_HW = transit_approach_wrap(dh.cfg.transit_approach_struct, oz, dz, 'HW', trapp_dist_HW, )
 
     log.debug("run trapp_dist_HO")
-    trapp_dist_HO = transit_approach_distances(dh.cfg.transit_approach_struct, oz, dz, 'HO', random_seed=otaz << 13)[0]
+    trapp_dist_HO = transit_approach_distances(dh.cfg.transit_approach_struct, oz, dz, 'HO', random_seed=random_generator)[0]
     log.debug("run trapp_HO")
     trapp_HO = transit_approach_wrap(dh.cfg.transit_approach_struct, oz, dz, 'HO', trapp_dist_HO, )
 
@@ -137,7 +139,6 @@ def _data_for_application_1(dh, otaz=1, replication=None):
     t2['transit_approach_waittime_OFFPEAK'] = trapp_HO['waittime'].T.reshape(-1)
     t2['transit_approach_walktime_OFFPEAK'] = trapp_HO['walktime'].T.reshape(-1)
     t2['transit_approach_cost_OFFPEAK'] = trapp_HO['cost'].T.reshape(-1)
-    # TODO transit approach varies in HO vs NH
 
     try:
         fast_application_data_2 = dh.fast_application_data_2
@@ -152,7 +153,7 @@ def _data_for_application_1(dh, otaz=1, replication=None):
     t2 = fast_application_data_2.merge(t2, dtype=app_floatdtype)
 
     log.debug("sample households from zone")
-    hh_data = sample_hh_from_zone(dh, otaz, replication, random_state=otaz << 1, )
+    hh_data = sample_hh_from_zone(dh, otaz, replication, random_state=random_generator, )
 
     # We make 3 sets of random draws from the household income distribution
     # of the home zone.  The first is untruncated, and applied to home-based
@@ -162,14 +163,14 @@ def _data_for_application_1(dh, otaz=1, replication=None):
         dh,
         otaz,
         len(hh_data),
-        random_state=otaz << 2,
+        random_state=random_generator,
         income_breaks='5',
     ).astype(app_floatdtype)
     hh_data['hhinc5l'] = sample_hh_income_cats(
         dh,
         otaz,
         len(hh_data),
-        random_state=otaz << 2,
+        random_state=random_generator,
         trunc_max=60_000,
         income_breaks='5',
     ).astype(app_floatdtype)
@@ -177,12 +178,12 @@ def _data_for_application_1(dh, otaz=1, replication=None):
         dh,
         otaz,
         len(hh_data),
-        random_state=otaz << 2,
+        random_state=random_generator,
         trunc_min=60_000,
         income_breaks='5',
     ).astype(app_floatdtype)
     nhb_income_dist = [dh.cfg.regional_income_distribution[i] for i in (1,2,3,4,5)]
-    hh_data['hhinc5g'] = np.random.default_rng(otaz << 3).choice(
+    hh_data['hhinc5g'] = random_generator.choice(
         [1,2,3,4,5],
         len(hh_data),
         p=nhb_income_dist,
@@ -201,16 +202,6 @@ def _data_for_application_1(dh, otaz=1, replication=None):
     hh_data['hhinc5h==4'] = (hh_data['hhinc5h'] == 4).astype(app_floatdtype)
     hh_data['hhinc5h==5'] = (hh_data['hhinc5h'] == 5).astype(app_floatdtype)
 
-    # hh_data['hhinc5'] = sample_hh_income_cats(dh, otaz, len(hh_data), random_state=otaz << 2,).astype(app_floatdtype)
-    # hh_data['hhinc5h'] = sample_hh_income_cats(dh, otaz, len(hh_data), random_state=otaz << 2, trunc_min=60_000).astype(app_floatdtype)
-
-    # hh_data['hhinc3'] = (hh_data['hhinc5'] - 1) // 2
-    # hh_data['hhinc3==0'] = (hh_data['hhinc3'] == 0).astype(app_floatdtype)
-    # hh_data['hhinc3==1'] = (hh_data['hhinc3'] == 1).astype(app_floatdtype)
-    # hh_data['hhinc3==2'] = (hh_data['hhinc3'] == 2).astype(app_floatdtype)
-    # hh_data['hhinc3h'] = (hh_data['hhinc5h'] - 1) // 2
-    # hh_data['hhinc3h==1'] = (hh_data['hhinc3h'] == 1).astype(app_floatdtype)
-    # hh_data['hhinc3h==2'] = (hh_data['hhinc3h'] == 2).astype(app_floatdtype)
     hh_data['o_zone'] = app_floatdtype(otaz)
     hh_data['ozone_autopropensity'] = app_floatdtype(
         attach_areatypes(dh, pd.DataFrame(index=[otaz]), "", "", targetzone=[otaz])['autopropensity'].iloc[0]
@@ -230,7 +221,7 @@ def _data_for_application_1(dh, otaz=1, replication=None):
     paid_parking = parking_is_free(
         dh,
         hhincs,
-        random_state=otaz << 5,
+        random_state=random_generator,
     )
 
     for purp in purposesA:
@@ -239,7 +230,7 @@ def _data_for_application_1(dh, otaz=1, replication=None):
             dtazs,
             dh.cfg.default_activity_durations[purposes_to_3[purp]],
             purposes_to_3[purp],
-            random_state=otaz << 4,
+            random_state=random_generator,
         ).values
         temp_parking_cost *= paid_parking.astype(temp_parking_cost.dtype).values
         df2[f'auto_parking_cost_{purp}'] = temp_parking_cost
@@ -263,19 +254,8 @@ def _data_for_application_1(dh, otaz=1, replication=None):
         need_to_fix_column_names = True
     else:
         need_to_fix_column_names = False
-    # hh_data = sample_hh_from_zone(dh, otaz, len(df3), random_state=otaz << 1, )
     hh_data.index = df3.index
-    # hh_data['hhinc5'] = sample_hh_income_cats(dh, otaz, len(hh_data), random_state=otaz << 2,).astype(app_floatdtype)
-    # hh_data['hhinc3'] = (hh_data['hhinc5'] - 1) // 2
-    # hh_data['hhinc3==0'] = (hh_data['hhinc3'] == 0).astype(app_floatdtype)
-    # hh_data['hhinc3==1'] = (hh_data['hhinc3'] == 1).astype(app_floatdtype)
-    # hh_data['hhinc3==2'] = (hh_data['hhinc3'] == 2).astype(app_floatdtype)
-    # hh_data['o_zone'] = app_floatdtype(otaz)
-    # hh_data['ozone_autopropensity'] = app_floatdtype(
-    #     attach_areatypes(dh, pd.DataFrame(index=[otaz]), "", "", targetzone=[otaz])['autopropensity'].iloc[0]
-    # )
-    # hh_data['hhveh==0'] = (hh_data['N_VEHICLES'] == 0).astype(app_floatdtype)
-    # hh_data['hhveh>=hhadults'] = (hh_data['N_VEHICLES'] >= hh_data['N_ADULTS']).astype(app_floatdtype)
+
     addon = hh_data[[
         'o_zone', 'ozone_autopropensity', 'hhveh==0', 'hhveh>=hhadults',
         'hhinc5', 'hhinc5g',
@@ -417,6 +397,20 @@ choice_simulator_global = Dict()
 
 
 def choice_simulator_initialize(dh, return_simulators=True, n_threads=1, cache=True):
+    """
+    Load or create the choice models.
+
+    Parameters
+    ----------
+    dh
+    return_simulators
+    n_threads
+    cache
+
+    Returns
+    -------
+
+    """
     global choice_simulator_global
     log = getSubLogger("SIM_INIT")
 
@@ -449,6 +443,8 @@ def choice_simulator_initialize(dh, return_simulators=True, n_threads=1, cache=T
     if n_zones in choice_simulator_global:
         log.info("using existing choice_simulator")
         choice_simulator = choice_simulator_global[n_zones]
+        for purpose in purposesA:
+            choice_simulator[purpose].set_values(choice_model_params[purpose])
     else:
         log.info("creating fresh choice_simulator")
         choice_simulator = Dict()
@@ -623,13 +619,14 @@ def choice_simulator_trips(
 
         tod_models = time_of_day_simulator_initialize(dh, cache=True)
 
-        random_state = check_random_state(random_state or otaz[0])
         for purpose in purposes:
             log.debug(f"     choice_simulator_trips processing time-of-day for purpose {purpose})")
             choices_data = {}
             n = 0
 
             for _o in otaz:
+                random_state = check_random_generator([_o, 534])
+
                 num_productions = dh.zone_productions5.loc[_o, purpose]
                 log.debug(f"     {purpose} productions for {_o} = {num_productions}")
 
@@ -718,7 +715,7 @@ def choice_simulator_trips(
 
             reg_auto_trips = simtrips.query("(mode in (1,2,3)) and (trips > 0)")
 
-            def apply_tod(base_trips, is_hired_car=0.0):
+            def apply_tod(base_trips, is_hired_car=0.0, random_gen=123):
 
                 time_data = dh.skims.raw[[f'mf46{j}' for j in range(1, 9)]].iat_df(
                     base_trips.rename(columns={'a_zone': 'dtaz', 'p_zone': 'otaz'})[['otaz', 'dtaz']] - 1
@@ -741,7 +738,7 @@ def choice_simulator_trips(
                 n_flipped_trips = binom.rvs(
                     n=base_trips["trips"].values,
                     p=dh.cfg.time_of_day.pa_split.get(purpose, 0.0 if purpose=='NHB' else 0.5),
-                    random_state=random_state,
+                    random_state=random_gen,
                 )
                 n_unflipped_trips = base_trips["trips"].values - n_flipped_trips
 
@@ -796,9 +793,9 @@ def choice_simulator_trips(
             hired_auto_trips = simtrips.query("(mode in (4,5,6)) and (trips > 0)")
 
             log.debug(f"   applying TOD to reg_auto_trips")
-            reg_auto_trips = apply_tod(reg_auto_trips, 0.0)
+            reg_auto_trips = apply_tod(reg_auto_trips, 0.0, random_state)
             log.debug(f"   applying TOD to hired_auto_trips")
-            hired_auto_trips = apply_tod(hired_auto_trips, 1.0)
+            hired_auto_trips = apply_tod(hired_auto_trips, 1.0, random_state)
 
             log.debug(f"   applying directionality to non-auto trips")
             # non-auto trips

@@ -32,7 +32,7 @@ def load_visitor_trips(filenames, scale_factor=1.0):
     n = trips['trips'].sum()
     trip_wt = trips['trips'] / n
     n_trips = int(np.round(n * scale_factor))
-    visit_trips = np.random.choice(len(trips), n_trips, p=trip_wt)
+    visit_trips = np.random.default_rng(42).choice(len(trips), n_trips, p=trip_wt)
     trips.drop(columns=['trips'], inplace=True)
     trips['visitor_trips'] = pd.Series(visit_trips).value_counts()
     trips.fillna(0, inplace=True)

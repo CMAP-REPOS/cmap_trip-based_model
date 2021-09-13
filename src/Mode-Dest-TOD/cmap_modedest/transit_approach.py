@@ -4,7 +4,7 @@ from .addict import Dict
 log = logging.getLogger('CMAP')
 
 from .ae_distance_sim import simulate_ae_dist
-from .random_states import check_random_state
+from .random_states import check_random_generator
 
 # trip types
 HW = 'HW'  # HOME PRODUCTIONS TO WORK ATTRACTIONS
@@ -110,7 +110,7 @@ def _simulate_approach_distances(
 			out,
 			random_state=random_state,
 		)
-	random_state = check_random_state(random_state)
+	random_state = check_random_generator(random_state)
 	replication = list(out.shape[:-1])
 	distr = dh.distr
 	if replication[0] == 1:
@@ -178,7 +178,7 @@ def _simulate_approach_distances_arr(
 		with shape [replications, N_APPROACH_MODES, ]
 
 	"""
-	random_state = check_random_state(random_state)
+	random_state = check_random_generator(random_state)
 	replication = list(out.shape[1:-1])
 	distr_df = dh.distr[trip_purpose].unstack().loc[zone]
 	for J in range(N_DIST_TO_TYPES):
@@ -305,7 +305,7 @@ def transit_approach(
 	dimension matching these arrays.
 
 	"""
-	random_state = check_random_state(random_state or ozone+dzone)
+	random_state = check_random_generator(random_state or [ozone, dzone])
 
 	PACE_BUS_BOARDING_FARE = dh.m023.PACE_BUS_BOARDING_FARE
 	PACE_BUS_FIRST_XFER_FARE = dh.m023.PACE_BUS_FIRST_XFER_FARE

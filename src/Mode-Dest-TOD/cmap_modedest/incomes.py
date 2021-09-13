@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import lognorm
 
-from .random_states import check_random_state
+from .random_states import check_random_generator
 
 income_levels_1 = {
 	1	:  12_000, # Less than $15,000
@@ -57,10 +57,10 @@ def random_incomes(
 	-------
 	ndarray
 	"""
-	random_state = check_random_state(random_state)
+	random_generator = check_random_generator(random_state)
 	y = lognorm(sigma, scale=median_income).rvs(
 		replications,
-		random_state=random_state,
+		random_state=random_generator,
 	)
 	# resample from acceptable draws when truncated
 	if trunc_max is not None:
@@ -68,14 +68,14 @@ def random_incomes(
 		acceptable_size = acceptable.size
 		if acceptable_size == 0:
 			acceptable = [trunc_max]
-		swaps = np.random.choice(acceptable, y.size-acceptable_size)
+		swaps = random_generator.choice(acceptable, y.size-acceptable_size)
 		y[(y > trunc_max)] = swaps
 	if trunc_min is not None:
 		acceptable = y[(y >= trunc_min)]
 		acceptable_size = acceptable.size
 		if acceptable.size == 0:
 			acceptable = [trunc_min]
-		swaps = np.random.choice(acceptable, y.size-acceptable_size)
+		swaps = random_generator.choice(acceptable, y.size-acceptable_size)
 		y[(y < trunc_min)] = swaps
 	if bins == '5':
 		bins = [

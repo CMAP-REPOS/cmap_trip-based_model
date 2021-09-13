@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from .random_states import check_random_state
+from .random_states import check_random_generator
 
 # cbd_parking = pd.read_csv(
 # 	filenames.HW_CBDPARK,
@@ -68,7 +68,7 @@ from .random_states import check_random_state
 # 		parking cost, walktime, vehicle occupancy, blocks walked, savings rate
 # 	"""
 # 	global CBD_PARKING_ZONES
-# 	random_state = check_random_state(random_state)
+# 	random_state = check_random_generator(random_state)
 #
 # 	ITER = INCOME.shape[0]
 #
@@ -168,7 +168,7 @@ def parking_cost_v2(
 		parking cost, walktime, vehicle occupancy, blocks walked, savings rate
 	"""
 	global CBD_PARKING_ZONES, cbd_parking_price_prob, cbd_parking_prices
-	random_state = check_random_state(random_state)
+	random_state = check_random_generator(random_state)
 
 	DEST = pd.Series(DEST)
 	ITER = DEST.size
@@ -301,7 +301,7 @@ def parking_cost_v3(
 		parking cost, walktime, vehicle occupancy, blocks walked, savings rate
 	"""
 	global CBD_PARKING_ZONES, cbd_parking_price_prob, cbd_parking_prices
-	random_state = check_random_state(random_state)
+	random_state = check_random_generator(random_state)
 
 	DEST = pd.Series(DEST.reshape(-1))
 	ITER = DEST.size
@@ -359,7 +359,7 @@ def parking_is_free(
 	paid_parking : array, shape[ITER]
 		1 if parking is paid, 0 if free
 	"""
-	random_state = check_random_state(random_state)
+	random_state = check_random_generator(random_state)
 	rand_free_parking = random_state.random(size=INCOME.size) * 100.  # Free Parking randomizer
 
 	# Find free parking rate based on income group

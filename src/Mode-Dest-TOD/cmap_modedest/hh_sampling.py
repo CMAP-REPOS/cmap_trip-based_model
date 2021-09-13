@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from cmap_modedest.random_states import check_random_state
+from cmap_modedest.random_states import check_random_generator
 
 
 def sample_hh_from_zone(dh, zone, n_hh, random_state=None, attr=('N_ADULTS', 'N_VEHICLES')):
@@ -14,7 +14,7 @@ def sample_hh_from_zone(dh, zone, n_hh, random_state=None, attr=('N_ADULTS', 'N_
         pool = dh.hh_tabulation.sum()
         pool_sum = pool.sum()
         hhv_prob = pool / pool_sum
-    prng = check_random_state(random_state)
+    prng = check_random_generator(random_state)
     draws = prng.choice(624, size=n_hh, p=hhv_prob)
     result = pd.DataFrame(-1, dtype=np.int8, columns=attr, index=pd.RangeIndex(n_hh))
     for i, a in enumerate(attr):

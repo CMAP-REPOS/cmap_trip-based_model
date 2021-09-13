@@ -21,3 +21,26 @@ def check_random_state(seed):
         return seed
     raise ValueError('%r cannot be used to seed a numpy.random.RandomState'
                      ' instance' % seed)
+
+
+def check_random_generator(seed=None):
+    """
+    Create a random generator.
+
+    Parameters
+    ----------
+    seed
+
+    Returns
+    -------
+    np.random.Generator
+    """
+    if seed is None:
+        raise ValueError("True random seeding disallowed for CMAP trip based model")
+    try:
+        return np.random.default_rng(seed)
+    except TypeError:
+        if isinstance(seed, np.random.RandomState):
+            return np.random.default_rng(seed.get_state()[1])
+        else:
+            raise

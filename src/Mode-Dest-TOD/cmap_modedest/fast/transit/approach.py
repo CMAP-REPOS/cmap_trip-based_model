@@ -10,7 +10,6 @@ log = logging.getLogger('CMAP')
 
 from .access_egress_distance import compile_simulate_approach_distances
 from ...ae_distance_sim import simulate_ae_dist
-from ...random_states import check_random_state
 from ...purposes import purposes_to_3
 
 # trip types
@@ -232,7 +231,13 @@ def transit_approach_distances(
         random_seed=None,
 ):
     if random_seed is not None:
-        seed_base = np.int32(random_seed)
+        try:
+            seed_base = np.int32(random_seed)
+        except TypeError:
+            if isinstance(random_seed, np.random.Generator):
+                seed_base = random_seed.integers(0, 2147483647, dtype=np.int32)
+            else:
+                raise
     else:
         seed_base = np.int32(0)
     TPTYPE = purposes_to_3.get(TPTYPE, 'NH')
