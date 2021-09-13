@@ -157,7 +157,6 @@ from ..choice_model import alt_codes_and_names
 
 alt_codes, alt_names = alt_codes_and_names(
 	n_sampled_dests=n_sampled_dests,
-	modenames=None,
 	include_actual_dest=True,
 )
 

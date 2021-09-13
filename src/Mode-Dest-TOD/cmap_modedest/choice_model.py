@@ -13,12 +13,29 @@ log = getLogger()
 
 def alt_codes_and_names(
 		n_sampled_dests=5,
-		modenames=None,
 		include_actual_dest=True,
 ):
-	if modenames is None:
-		modenames = mode9names
-	n_modes = len(modenames)
+	"""
+	Generate alternative names and codes for mode-destination model.
+
+	Parameters
+	----------
+	n_sampled_dests : int
+		The number of destinations that will be used. In estimation, this
+		is the number of destinations to be sampled. In application, this
+		is the total number of destinations, as sampling is not used.
+	include_actual_dest : bool
+		Whether to include the "actual" destination.  This destination is
+		included in estimation, where it is used to populate the actually
+		chosen alternative.  In appplication, the "actual" destination is
+		not applicable and should be turned off.
+
+	Returns
+	-------
+	alt_codes : ndarray
+	alt_names : list
+	"""
+	n_modes = len(mode9names)
 	alt_codes = np.arange(n_modes * (n_sampled_dests + 1)) + 1
 	alt_names = [i for i in mode9names]
 	for i in range(n_sampled_dests):
@@ -316,6 +333,27 @@ def purpose_peakiness(purpose):
 
 
 def model_choice_availability(purpose, n_sampled_dests, include_actual_dest=False):
+	"""
+	Build a dictionary that has expressions for availability of each mode to each destination.
+
+	Parameters
+	----------
+	purpose : str
+		The trip purpose, which in turn determines the available skims used.
+	n_sampled_dests : int
+		The number of destinations that will be used. In estimation, this
+		is the number of destinations to be sampled. In application, this
+		is the total number of destinations, as sampling is not used.
+	include_actual_dest : bool
+		Whether to include the "actual" destination.  This destination is
+		included in estimation, where it is used to populate the actually
+		chosen alternative.  In appplication, the "actual" destination is
+		not applicable and should be turned off.
+
+	Returns
+	-------
+	Dict[int, str]
+	"""
 
 	peaky = purpose_peakiness(purpose)
 	n_modes = len(mode9codes)
@@ -371,7 +409,6 @@ def model_builder(
 
 	alt_codes, alt_names = alt_codes_and_names(
 		n_sampled_dests=n_sampled_dests,
-		modenames=mode9names,
 		include_actual_dest=include_actual_dest,
 	)
 	from larch.numba import DataFrames
