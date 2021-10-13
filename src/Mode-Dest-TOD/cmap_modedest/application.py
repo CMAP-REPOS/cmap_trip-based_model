@@ -396,20 +396,30 @@ def blockwise_mean(a, blocksize):
 choice_simulator_global = Dict()
 
 
-def choice_simulator_initialize(dh, return_simulators=True, n_threads=1, cache=True):
+def choice_simulator_initialize(dh, n_threads=1, cache=True):
     """
     Load or create the choice models.
 
+    This function checks if the mode+destination choice models have already been
+    loaded into memory for this process.  If they have not, it then checks if
+    a pickled version of the choice models has been saved to disk, and loads that
+    if it is available. Otherwise, it initializes the choice models from scratch
+    using the `model_builder` function.
+
+    Not coincidentally, these three ways of making the choice model available in
+    the current process are ordered from fastest to slowest.
+
     Parameters
     ----------
-    dh
-    return_simulators
-    n_threads
-    cache
+    dh : DataHandler
+    n_threads : int
+        How many threads each model should use in computation.
+    cache : bool
+        Whether to write pickles to disk.
 
     Returns
     -------
-
+    Dict
     """
     global choice_simulator_global
     log = getSubLogger("SIM_INIT")
@@ -469,8 +479,7 @@ def choice_simulator_initialize(dh, return_simulators=True, n_threads=1, cache=T
                 pkl_f,
             )
 
-    if return_simulators:
-        return choice_simulator
+    return choice_simulator
 
 
 def attach_dataframes(sim, purpose, dfa):
@@ -497,14 +506,27 @@ def choice_simulator_prob(
         purposes=None,
 ):
     """
+    Compute probabilities for mode and destination choice.
 
     Parameters
     ----------
+    dh : DataHandler
     otaz : int or array-like
+    n_threads : int
+    temp_dir : Path-like, optional
+    purposes : Collection, optional
+        Only compute probabilities for these purposes.
 
     Returns
     -------
-
+    simulated_probability : dict
+        By purpose, the average choice probabilities. Averages are computed by
+        simulation of a number of random households and transit accessibility
+        in the zone, and averaging over the simulation.
+    simulated_probability_disagg : dict
+        By purpose, the simulated disaggregated choice probabilities.
+    validation_useful_data : DataFrame
+        Validation data extracted from the simulation.
     """
     if purposes is None:
         purposes = purposesA
@@ -917,9 +939,61 @@ def choice_simulator_trips_many(
         temp_dir=None,
         with_nonhome_auto=False,
         disagg_choices=True,
-        with_wfh=False,
+        with_wfh=True,
         staggertime=15,
 ):
+    """
+    Run the choice simulators, batching a few TAZ's at at time in parallel jobs.
+
+    Parameters
+    ----------
+    dh : DataHandler
+    otaz : array-like, optional
+        The OTAZ's to process.  Defaults to generating trips originating from
+        all internal zones.
+    max_chunk_size : int, default 20
+        The number of OTAZ's to group together in each chunk.  Larger chunks
+        run faster but require more RAM.
+    n_jobs : int, default 5
+        Number of parallel jobs to start.
+    thread_saturation : int, default 1
+        Number of threads per job to allow.  Some parts of some computations are
+        multi-threaded, and can run faster if multiple threads are allowed.
+        However, if enough RAM is available, it is more efficent to have more
+        jobs than use more threads per job.
+    cache_subdir : Path-like, default "choice_simulator_trips"
+        Relative path, within the cache directory, in which partial results are
+        stored from each job.
+    temp_dir : Path-like, optional
+        A temporary directory used to store processed data during a job.  This
+        feature is made available to handle the case where non-home-based trips
+        need to be processed separately from home-based trips, so that auto
+        propensity can be used from the current iteration.  The model as
+        implemented (October 2021) uses lagged auto propensity from the prior
+        global iteration, so storing this data is not necessary.
+    with_nonhome_auto : bool, default False
+        Set to True to use auto propensity from the current home-based trips in
+        the current global iteration.  Warning: This massively increases model
+        runtime.
+    disagg_choices : bool, default True
+        Keep a record of trip choices by disaggregate validation categories
+        (income, auto ownership, etc).  The computed behavioral choices are the
+        same, but the output files are generated with more detail suitable for
+        validation (but they are also much larger).
+    with_wfh : bool, default True
+        Run the entire model a second time, using the WFH production and
+        attractions.
+    staggertime : int, default 15
+        Number of seconds to stagger the initial launch of jobs.  Staggering
+        helps prevent resource contention across jobs (i.e. trying to read
+        inputs from disk at the same time, which can saturate the bandwidth for
+        disk reading and cause slowdowns in processes).
+
+    Returns
+    -------
+    dask dataframe
+        The modeled trips
+    """
     log = getSubLogger("TRIP_SIM_MULTI")
 
     if otaz is None:
@@ -1087,6 +1161,21 @@ def assemble_trips(
         compute_auto_propensity=False,
         validation_dump=None,
 ):
+    """
+    Assemble trip list files into a single dask DataFrame for processing.
+
+    Parameters
+    ----------
+    dh
+    from_dir
+    pattern
+    compute_auto_propensity
+    validation_dump
+
+    Returns
+    -------
+
+    """
     from_dir = Path(from_dir)
 
     import dask.dataframe as ddf
