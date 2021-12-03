@@ -527,6 +527,8 @@ def choice_simulator_prob(
         By purpose, the simulated disaggregated choice probabilities.
     validation_useful_data : DataFrame
         Validation data extracted from the simulation.
+    simulated_utility : DataFrame
+        By purpose, the simulated utilities for auto and transit
     """
     if purposes is None:
         purposes = purposesA
@@ -559,17 +561,31 @@ def choice_simulator_prob(
     replication = dh.cfg.get('n_replications', 50)
 
     choice_simulator = choice_simulator_initialize(dh, n_threads=n_threads)
+    simulated_utility = {}
     simulated_probability = {}
     simulated_probability_disagg = {}
 
     for purpose in purposes:
         sim = choice_simulator[purpose]
         attach_dataframes(sim, purpose, dfa)
+        sim_u = sim.utility()
+        sim_u_auto = sim_u[:,mode9codes.AUTO-1:dh.n_internal_zones*9:9]
+        sim_u_transit = sim_u[:,mode9codes.TRANSIT-1:dh.n_internal_zones*9:9]
+        simulated_utility[purpose] = pd.concat([
+            pd.DataFrame(blockwise_mean(sim_u_auto, replication), index=otaz).rename_axis('otaz', axis=0),
+            pd.DataFrame(blockwise_mean(sim_u_transit, replication), index=otaz).rename_axis('otaz', axis=0),
+        ], keys=['AUTO', 'TRANSIT'], names=['MODE'])
         sim_pr = _sim_prob(purpose, sim)
         simulated_probability_disagg[purpose] = sim_pr
         simulated_probability[purpose] = blockwise_mean(sim_pr, replication)
         if np.any(np.isnan(simulated_probability[purpose])):
             raise ValueError(f"nan in simulated_probability[{purpose}]")
+
+    simulated_utility = pd.concat(
+        objs=simulated_utility.values(),
+        keys=simulated_utility.keys(),
+        names=['PURPOSE']
+    )
 
     #transit_approach_walktime_cols = [i for i in dfa.data_co.columns if 'transit_approach_walktime' in i and 'auto' not in i and 'sigmoid' not in i]
     validation_useful_data = pd.DataFrame(data=np.int8(0), index=dfa.data_co.index, columns=["hh_auto_own", 'hhinc5', 'hhinc5l', 'hhinc5h', 'hhinc5g'])
@@ -581,7 +597,7 @@ def choice_simulator_prob(
     validation_useful_data['hhinc5l'] = dfa.data_co['hhinc5l']
     validation_useful_data['hhinc5h'] = dfa.data_co['hhinc5h']
     log.debug("complete")
-    return simulated_probability, simulated_probability_disagg, validation_useful_data
+    return simulated_probability, simulated_probability_disagg, validation_useful_data, simulated_utility
 
 
 def choice_simulator_trips(
@@ -631,7 +647,7 @@ def choice_simulator_trips(
 
         log.debug(f"CALL choice_simulator_trips({len(otaz)} OTAZ's starting from {otaz[0]})")
 
-        simulated_probability, simulated_probability_disagg, validation_data = choice_simulator_prob(
+        simulated_probability, simulated_probability_disagg, validation_data, simulated_utility = choice_simulator_prob(
             dh,
             otaz=otaz,
             n_threads=n_threads,
@@ -911,6 +927,11 @@ def choice_simulator_trips(
             concise.to_parquet(os.path.join(
                 save_dir,
                 f"choice_simulator_trips_{otaz[0]}_{otaz[-1]}_{'_'.join(purposes)}_{dh['tripclass']}.pq"
+            ))
+            simulated_utility.columns = [f'dest{i+1}' for i in range(dh.n_internal_zones)]
+            simulated_utility.to_parquet(os.path.join(
+                save_dir,
+                f"choice_simulator_util_{otaz[0]}_{otaz[-1]}_{'_'.join(purposes)}_{dh['tripclass']}.pq"
             ))
         log.debug(f"COMPLETED choice_simulator_trips({len(otaz)} OTAZ's starting from {otaz[0]})")
 
