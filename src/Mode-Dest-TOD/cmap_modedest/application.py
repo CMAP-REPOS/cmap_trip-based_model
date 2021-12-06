@@ -568,6 +568,7 @@ def choice_simulator_prob(
     for purpose in purposes:
         sim = choice_simulator[purpose]
         attach_dataframes(sim, purpose, dfa)
+        log.critical("--- GENERATING SIMULATED UTILITY ---")
         sim_u = sim.utility()
         sim_u_auto = sim_u[:,mode9codes.AUTO-1:dh.n_internal_zones*9:9]
         sim_u_transit = sim_u[:,mode9codes.TRANSIT-1:dh.n_internal_zones*9:9]
@@ -928,11 +929,14 @@ def choice_simulator_trips(
                 save_dir,
                 f"choice_simulator_trips_{otaz[0]}_{otaz[-1]}_{'_'.join(purposes)}_{dh['tripclass']}.pq"
             ))
+            log.critical(f"--- SAVING SIMULATED UTILITY to {save_dir} ---")
             simulated_utility.columns = [f'dest{i+1}' for i in range(dh.n_internal_zones)]
             simulated_utility.to_parquet(os.path.join(
                 save_dir,
                 f"choice_simulator_util_{otaz[0]}_{otaz[-1]}_{'_'.join(purposes)}_{dh['tripclass']}.pq"
             ))
+        else:
+            log.critical(f"--- NOT SAVING SIMULATED UTILITY (save_dir is None) ---")
         log.debug(f"COMPLETED choice_simulator_trips({len(otaz)} OTAZ's starting from {otaz[0]})")
 
         return concatd
