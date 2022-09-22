@@ -1,0 +1,15 @@
+Craig Heither, 02/03/2016
+
+The three shapefiles in this directory are used by CREATE_DISTR_M01.BAT to develop DISTR and M01 files.
+
+ * A shapefile of the current subzone centroids (including a Zone field).
+ * A shapefile of the current zone system (including a SQMI field).
+ * A shapefile of random points within each zone.
+	- Get Zone system polygons
+	- Use "Create Random Points" tool:
+		- Constraining feature: zone shapefile
+		- Number of Points: 30
+		- Minimum Allowed Distance: 500 feet
+		- Create Multipoint output: unchecked.
+
+	- Intersect output points w/ zones & AddXY	

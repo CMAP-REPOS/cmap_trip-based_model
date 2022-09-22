@@ -1,19 +1,18 @@
 #############################################################################
-# TRANSIT_SKIM_FINAL_MATRICES2.PY                                           #
-#  Craig Heither, last revised 04-04-2019                                   #
+# TRANSIT_SKIM_FINAL_MATRICES2.PY                                            #
+#  Craig Heither, last revised 10-10-2013                                   #
 #                                                                           #
 #    This program performs the matrix convolution portion of the transit    #
-#    skim procedures (much more efficiently than Emme) for the midday.      #
+#    skim procedures (much more efficiently than Emme).                     #
 #                                                                           #
 #    Written to work with Emme 4 structure.                                 #
-#    Rev Bozic to work with series 900 midday matrices 11/2/2017            #
+#    Rev Bozic to work with serices 900 midday matrices 11/2/2017           #
 #              for integration with global iterations                       #
-#    04-04-2019: Heither - implement vectorized calculations using NumPy.   #
-# 07/23/2020 Ferguson: Explicity cast kzone values as integers for          #
-#            compatibility with np.add() in NumPy 1.16.                     #
+# 07/01/2021 Heither: change Print to function for Python3, change array a2 #
+#       from typecode 'c' to 'b'                                            #
 #############################################################################
 
-import os, string, array, numpy as np
+import os, array, string
 from array import *
 
 # ----------------------------------------------------------------------------------------
@@ -60,13 +59,39 @@ stats = os.getcwd() + "\\report\\transit_skim_stats9.txt"
 
 if os.path.exists(stats):
     os.remove(stats)
+# ---------------------------------------------------------------
+# Declare empty arrays for storing values.
+# ---------------------------------------------------------------
+a0 = array('i')
+a1 = array('i')
+a2 = array('b')
+auto = array('f')
+fin_auto = array('f')
+kzone = array('f')
+tcost = array('f')
+fin_tcost = array('f')
+inveh = array('f')
+fin_inveh = array('f')
+trnfr = array('f')
+fin_trnfr = array('f')
+twait = array('f')
+fin_twait = array('f')
+fwait = array('f')
+fin_fwait = array('f')
+afare = array('f')
+fin_afare = array('f')
+fmode = array('f')
+fin_fmode = array('f')
+pmode = array('f')
+fin_pmode = array('f')
+lmode = array('f')
+fin_lmode = array('f')
+cghwy = array('f')
+ratio = array('f')
 
 # ---------------------------------------------------------------
 # Open emmebank and read metadata.
 # ---------------------------------------------------------------
-a0 = array('i')
-a1 = array('i')
-a2 = array('c')
 with open(embank,'r+b') as f:
     # ## Read first 512 items: this is File 0 - metadata about files ##
     a0.fromfile(f,512)            ## grabs file offset, # of records, words/record & file type: 1-integer, 2-real, 3-text
@@ -76,20 +101,20 @@ with open(embank,'r+b') as f:
     f.seek(offst, 0)
     a1.fromfile(f,80)
     mcent = a1[51]              ## maximum number of centroids defined in emmebank
-    print "\tREADING EMMEBANK: {0} Centroids".format(str(mcent),)
+    print("\tREADING EMMEBANK: {0} Centroids".format(str(mcent),))
 
     # ## Read Project title from File 2 ##
     offst = a0[104] * 4
     f.seek(offst, 0)
     a2.fromfile(f,80)
     proj = ''
-    for z in range(0,80):
-        proj = string.replace(proj+a2[z], "  ", "")
+#    for z in range(0,80):
+#        proj = string.replace(proj+a2[z], "  ", "")
 
     # ## Write Emmebank parameters to File to review ##
     outFile = open(stats, 'w')
-    outFile.write("Project: {0} \n".format(proj,))
-    outFile.write("\n")
+#    outFile.write("Project: {0} \n".format(proj,))
+#    outFile.write("\n")
     outFile.write("Max. scenarios: {0} \n".format((a1[50]),))
     outFile.write("Max. centroids: {0} \n".format((a1[51]),))
     outFile.write("Max. nodes: {0} \n".format((a1[52]),))
@@ -111,64 +136,83 @@ with open(embank,'r+b') as f:
 # Store matrix values in arrays.
 # ---------------------------------------------------------------
  #   -- Input Matrices --
-auto = np.fromfile(mfauto, dtype='f4')						## -- float, 4 bytes
-kzone = np.fromfile(mfkzone, dtype='f4')
-tcost = np.fromfile(mftcost, dtype='f4')
-inveh = np.fromfile(mfinveh, dtype='f4')
-trnfr = np.fromfile(mftrnfr, dtype='f4')
-twait = np.fromfile(mftwait, dtype='f4')
-fwait = np.fromfile(mffwait, dtype='f4')
-afare = np.fromfile(mfafare, dtype='f4')
-fmode = np.fromfile(mffmode, dtype='f4')
-pmode = np.fromfile(mfpmode, dtype='f4')
-lmode = np.fromfile(mflmode, dtype='f4')
-cghwy = np.fromfile(mfcghwy, dtype='f4')
+inputmat = (mfauto, mfkzone, mftcost, mfinveh, mftrnfr, mftwait, mffwait, mfafare, mffmode, mfpmode, mflmode, mfcghwy)
+ #   -- Storage Arrays --
+storage = (auto, kzone, tcost, inveh, trnfr, twait, fwait, afare, fmode, pmode, lmode, cghwy)
+x = 0
+for m in inputmat:
+    with open(inputmat[x],'r+b') as m1:
+        storage[x].fromfile(m1,mcent*mcent)                 ### Write matrix values into array
+        x += 1
 
-## -- create leg1 (p-k) indices
-indxloc = np.arange(mcent*mcent)							## -- array of consecutive numbers representing element index values
-leg1pt1 = np.divide(indxloc,mcent) * mcent					## -- portion of element index defining origin zone (division results in integer value)
-leg1indx = np.add(leg1pt1,kzone.astype('i4')-1,dtype='i4')				## -- add portion of element index defining destination zone
-print("Kzone 1-1: {0}, Index 1-1: {1}, Kzone 121-2: {2}, Index 121-2: {3} \n".format(kzone[0], leg1indx[0], kzone[437882], leg1indx[437882]))
-
-## -- create leg2 (k-q) indices
-leg2pt1 = np.multiply(kzone.astype('i4')-1,mcent)
-leg2pt2 = np.mod(indxloc,mcent)
-leg2indx = np.add(leg2pt1,leg2pt2,dtype='i4')
-print("Kzone 1-1: {0}, Index 1-1: {1}, Kzone 121-2: {2}, Index 121-2: {3} \n".format(kzone[0], leg2indx[0], kzone[437882], leg2indx[437882]))
 
 # ---------------------------------------------------------------
-# Create indexed matrices.
+# Perform matrix convolution.
 # ---------------------------------------------------------------
-autoval = np.where(kzone>0, auto[leg1indx], kzone)					## -- hwy time matrix
-tcostval = np.where(kzone>0, tcost[leg1indx], kzone)				## -- indexed transit generalized cost
-invehval = np.where(kzone>0, inveh[leg2indx], kzone)				## -- skimmed in-vehicle minutes
-trnfrval = np.where(kzone>0, trnfr[leg2indx], kzone)				## -- skimmed transfer link minutes
-twaitval = np.where(kzone>0, twait[leg2indx], kzone)				## -- skimmed total wait minutes
-fwaitval = np.where(kzone>0, fwait[leg2indx], kzone)				## -- skimmed first wait minutes
-afareval = np.where(kzone>0, afare[leg2indx], kzone)				## -- skimmed final average fare
-fmodeval = np.where(kzone>0, fmode[leg2indx], kzone)				## -- skimmed first mode
-pmodeval = np.where(kzone>0, pmode[leg2indx], kzone)				## -- skimmed priority mode
-lmodeval = np.where(kzone>0, lmode[leg2indx], kzone)				## -- skimmed last mode
-threshold = np.where(cghwy>0, np.divide(tcostval,cghwy), cghwy)		## -- ratio of indexed transit cost to auto only cost
+for x in range(0,mcent*mcent):
+    pos = int(kzone[x])                                     ### intermediate zone value
+    cghwyval = cghwy[x]                                     ### congested hwy generalized cost cell value
 
-## -- Swap original matrix value back in if the threshold exceeds the cutoff value
-autoval = np.where(threshold>cutoff, 0, autoval)
-tcostval = np.where(threshold>cutoff, 0, tcostval)
-invehval = np.where(threshold>cutoff, inveh, invehval)
-trnfrval = np.where(threshold>cutoff, trnfr, trnfrval)
-twaitval = np.where(threshold>cutoff, twait, twaitval)
-fwaitval = np.where(threshold>cutoff, fwait, fwaitval)
-afareval = np.where(threshold>cutoff, afare, afareval)
-fmodeval = np.where(threshold>cutoff, fmode, fmodeval)
-pmodeval = np.where(threshold>cutoff, pmode, pmodeval)
-lmodeval = np.where(threshold>cutoff, lmode, lmodeval)
+    if pos == 0:                                            ### Final matrix values are 0 if there is no intermediate zone
+        autoval = 0                                         ### hwy time matrix value
+        tcostval = 0                                        ### indexed transit gen. cost cell value
+        invehval = 0                                        ### skimmed in-vehicle minutes cell value
+        trnfrval = 0                                        ### skimmed transfer link minutes cell value
+        twaitval = 0                                        ### skimmed total wait minutes cell value
+        fwaitval = 0                                        ### skimmed first wait minutes cell value
+        afareval = 0                                        ### skimmed final average fare cell value
+        fmodeval = 0                                        ### skimmed first mode cell value
+        pmodeval = 0                                        ### skimmed priority mode cell value
+        lmodeval = 0                                        ### skimmed last mode cell value
+    else:                                                   ### perform convolution
+        leg1 = int(x/mcent)*mcent+(pos-1)                   ### first leg index value
+        leg2 = (pos-1)*mcent+(x % mcent)                    ### second leg index value
+        autoval = auto[leg1]
+        tcostval = tcost[leg1]
+        invehval = inveh[leg2]
+        trnfrval = trnfr[leg2]
+        twaitval = twait[leg2]
+        fwaitval = fwait[leg2]
+        afareval = afare[leg2]
+        fmodeval = fmode[leg2]
+        pmodeval = pmode[leg2]
+        lmodeval = lmode[leg2]
+
+    if cghwyval == 0:                                       ### Calculate ratio of indexed transit cost to auto only cost
+        threshold = 0
+    else:
+        threshold = tcostval/cghwyval
+
+    if threshold > cutoff:                                  ### use original matrix value (or zero) in final matrix if threshold exceeded
+        autoval = 0
+        tcostval = 0
+        invehval = inveh[x]
+        trnfrval = trnfr[x]
+        twaitval = twait[x]
+        fwaitval = fwait[x]
+        afareval = afare[x]
+        fmodeval = fmode[x]
+        pmodeval = pmode[x]
+        lmodeval = lmode[x]
+
+    fin_auto.append(autoval)
+    fin_tcost.append(tcostval)
+    fin_inveh.append(invehval)
+    fin_trnfr.append(trnfrval)
+    fin_twait.append(twaitval)
+    fin_fwait.append(fwaitval)
+    fin_afare.append(afareval)
+    fin_fmode.append(fmodeval)
+    fin_pmode.append(pmodeval)
+    fin_lmode.append(lmodeval)
+    ratio.append(threshold)
 
 
 # ---------------------------------------------------------------
 # Write final matrix values into files.
 # ---------------------------------------------------------------
  # -- Arrays to write out
-mtxlist = (invehval, trnfrval, twaitval, fwaitval, afareval, fmodeval, pmodeval, lmodeval, tcostval, autoval, threshold)
+mtxlist = (fin_inveh, fin_trnfr, fin_twait, fin_fwait, fin_afare, fin_fmode, fin_pmode, fin_lmode, fin_tcost, fin_auto, ratio)
  # -- Files to write to
 outmtx = (mfinvehi, mftrnfri, mftwaiti, mffwaiti, mfafarei, mffmodei, mfpmodei, mflmodei, mfacosti, mfautrni, mfratioi)
 x = 0
@@ -176,12 +220,12 @@ outFl = open(stats, 'a')
 outFl.write("\n\n {0:=^100}\n\n".format('=',))
 
 for m in outmtx:
-	mtxlist[x].tofile(outmtx[x])
-	(fpath, fname) = os.path.split(outmtx[x])
-	outFl.write("{0} Written Successfully.\n".format(fname, ))
-	outFl.write("\t-- Minimum = {0:.4f}\n\t-- Maximum = {1:0.4f}\n\t-- Mean = {2:0.4f}\n\t-- Sum = {3:0.4f}\n\n".format(min(mtxlist[x]), max(mtxlist[x]), sum(mtxlist[x])/len(mtxlist[x]), sum(mtxlist[x])))
-	x += 1
+    with open(outmtx[x],'r+b') as m1:
+        mtxlist[x].tofile(m1)                                    ### Write matrix values
+        (fpath, fname) = os.path.split(outmtx[x])
+        outFl.write("{0} Written Successfully.\n".format(fname, ))
+        outFl.write("\t-- Minimum = {0:.4f}\n\t-- Maximum = {1:0.4f}\n\t-- Mean = {2:0.4f}\n\t-- Sum = {3:0.4f}\n\n".format(min(mtxlist[x]), max(mtxlist[x]), sum(mtxlist[x])/len(mtxlist[x]), sum(mtxlist[x])))
+        x += 1
 
 outFl.close()
-
-print "-- TRANSIT SKIM MATRICES CREATED --"
+print("-- TRANSIT SKIM MATRICES CREATED --")

@@ -1,0 +1,15 @@
+Craig Heither, 05-17-2013
+Claire Bozic , 12-16-2015
+   .v2 macros have been edited to set up and run transit assignments separately for work 
+   and nonwork purposes.  You must have a peak hour (200) and midday (205) network in the databank
+
+Steps to run a Transit Assignment:
+-------------------------------
+
+1. submit transit_asmt_setup.v2.mac <3 digit scenario>
+
+2. submit assign_transit.v2.mac <3 digit scenario>
+
+OR
+
+1. it can all be run by submitting transit_stats.v2.mac <3 digit scenario>

@@ -9,7 +9,7 @@
 # 12/12/2017 NRF: Adjusted file paths for call from
 #                 build_transit_error_check.bat
 
-import sys, os, string
+import sys, os
 
 scen = sys.argv[1]
 rpt_name = 'build_' + str(scen) + 'transit.rpt'
@@ -17,9 +17,9 @@ rpt = os.path.dirname(os.getcwd()) + '\\report\\' + rpt_name
 
 with open(rpt) as r:
     for line in r:
-        split_line = string.split(line, 'error count=')
+        split_line = str.split(line, 'error count=')
         if len(split_line) > 1:
-            count = int(string.strip(split_line[1]))
+            count = int(str.strip(split_line[1]))
             if count > 0:
                 f = open(
                         os.path.dirname(os.getcwd())

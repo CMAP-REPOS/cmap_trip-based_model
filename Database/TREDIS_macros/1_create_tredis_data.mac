@@ -1,0 +1,147 @@
+~/ 1_create_tredis_data.mac
+~/**********************************************************************
+~#**********************************************************************
+~# Craig Heither, 03-02-2016
+~#
+~#  Wrapper macro to collect data for TREDIS files. Compatible with c16q1 emmebank structure & model setup.
+~#  Temporary matrix information is stored in slots 400-599 of all four matrix types (mf/mo/md/ms), although not all slots are actually used.
+~#
+~#   Revision for zone17: default Market Access centroid changed from 82 (zone09) to 94 (zone17) -- Heither, 02-27-2019
+~#
+~#  Arguments:   %1% = 3-digit scenario number 
+~#               %2% = Modeling zone that serves as the centroid for the Market Access calculations
+~#
+~#       (e.g. "~<TREDIS_macros\1_create_tredis_data.mac 200 94")  
+~# -------------------------------------------------------------------------------------------------------
+~#
+~# _________________________________________________________________________	
+~# ## -- ERROR CHECKING AND SETUP -- ##
+~# _________________________________________________________________________
+~x=%0%
+~+;~?!x=2;~$>error
+~#
+~+;s=%1%;~?e;~$>bad_scen
+~/ Scenario argument is valid.
+~#************
+~# ## -- Verify the databank has enough storage space --
+~p=2117     / maximum number of words for extra attributes per scenario 
+~z=%p%
+~+;~?z<3000000;~$>not_enough_space
+~#************
+~/ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~/
+~t1=~*Proceed with TREDIS analysis for scenario %1% and market access centroid %2%? (y/n):
+~+;~?t1=n;~$>do_not_proceed
+~#************
+~o|39
+s=%1%49
+reports=
+batchin=
+~!if not exist TREDIS_macros\report (md TREDIS_macros\report)
+~!if not exist TREDIS_macros\output (md TREDIS_macros\output)
+~#
+~# _________________________________________________________________________
+~#  VERIFY CONFORMITY TRANSIT ASSIGNMENTS EXIST, OTHERWISE CREATE THEM
+~# _________________________________________________________________________
+~+;~x=%1%;~x+10
+~+;s=%x%;~?e;~<transit_asmt_macros\transit_stats.v2.mac %1%
+~x+5
+~+;s=%x%;~?e;~<transit_asmt_macros\transit_stats.v2.mac %1%
+~#
+~# _________________________________________________________________________	
+~# ## -- LOOP THROUGH TIME PERIODS -- ##
+~# _________________________________________________________________________
+~x=1
+~:tod_loop
+~#
+~/ --- ## STEP 1. CREATE TOD %x% TRIP TABLES ## ---
+~<TREDIS_macros\2_tredis_tod_demand.mac %x%
+~/ --- ## STEP 2. GET TRAFFIC ASSIGNMENT RESULTS ## ---
+~<TREDIS_macros\3_tredis_highway_assignment_data.mac %1% %x%
+~#
+~x+1
+~+;~?x<9;~$tod_loop
+~#
+~/ --- ## STEP 3. GET TRANSIT ASSIGNMENT RESULTS ## ---
+~<TREDIS_macros\4_tredis_transit_assignment_data.mac %1%
+~#
+~/ --- ## STEP 4. CALCULATE MARKET ACCESS RESULTS ## ---
+~<TREDIS_macros\5_tredis_market_access.mac %2%
+~#
+~# _________________________________________________________________________
+~# ## -- WRITE OUTPUT FOR TREDIS -- ##
+~# _________________________________________________________________________
+~<TREDIS_macros\6_write_tredis_data.mac %1% %2%
+~# ##
+~# _________________________________________________________________________
+~# ## -- CLEANUP -- ##
+~# _________________________________________________________________________
+~# Delete matrices (mf400-599, mo400-599, md400-599, ms400-599)
+~z=1     / matrix type counter
+~y=400   / matrix counter
+~t2=mf
+~#
+~:delloop
+~+;~?z=2;~t2=mo
+~+;~?z=3;~t2=md
+~+;~?z=4;~t2=ms
+3.12
+~+;2;%t2%%y%;~?e
+~$>err
+~+;yes;~$>end
+~:err
+~+; ;r
+~:end
+q
+~y+1
+~?y=600
+~+;~z+1;~y=400
+~+;~?z<5;~$delloop
+~#
+~# ## -- Delete TREDIS Transit Assignments --
+~+;~x=%1%;~x+20
+~+;1.22;2;%x%;y;q
+~x+5
+~+;1.22;2;%x%;y;q
+~x+5
+~+;1.22;2;%x%;y;q
+~#
+~/ -- TREDIS Input Files Have Been Created --
+~#
+~$>end
+~#**********************************************************************
+~:error
+~/ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~/    SUBMIT WITH 3-DIGIT SCENARIO AND MARKET ACCESS CENTROID!!!!!
+~/ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~$>end
+~#
+~:bad_scen
+~/
+~/ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~/   3-DIGIT SCENARIO DOES NOT MATCH EMMEBANK DATA!!!!!!!
+~/ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~$>end
+~#
+~:not_enough_space
+~/
+~/ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~/  WARNING:
+~/   EMMEBANK DOES NOT HAVE ENOUGH SPACE TO SUPPORT TREDIS EXTRA ATTRIBUTES!!!
+~/   ->  INCREASE MAXIMUM NUMBER OF WORDS FOR EXTRA ATTRIBUTES TO 3000000 <-
+~/ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~$>end
+~#
+~:do_not_proceed
+~/
+~/ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~/          YOU HAVE CHOSEN TO TERMINATE THESE PROCEDURES
+~/ +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~$>end
+~#  =====================================================================
+~:end
+~o=6
+reports=
+batchin=
+~/end of macro
+

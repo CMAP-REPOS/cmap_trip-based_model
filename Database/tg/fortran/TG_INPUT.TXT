@@ -1,5 +1,5 @@
  &PARAM
-  TITLE = 'CMAP Trip Generation c21q2 - 200'
+  TITLE = 'CMAP Trip Generation c21q4 - 100'
   SUBZONES = 17418
   PUMA5 = 69
   PUMA1 = 20

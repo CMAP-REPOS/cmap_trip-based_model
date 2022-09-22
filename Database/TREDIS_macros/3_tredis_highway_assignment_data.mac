@@ -1,0 +1,411 @@
+~/ 3_tredis_highway_assignment_data.mac
+~#**********************************************************************
+~#**********************************************************************
+~# Craig Heither, 03-02-2016
+~#
+~#  Macro to obtain path analysis results used to develop data for TREDIS model.
+~#
+~#
+~#    revised to include truck tolls @toll2 @toll3 and @toll 4 in the toll calculation bozic 8-9-2018
+~#   Revisions for zone17 -- Heither, 02-27-2019:
+~#			- Change upper bound of 7-county zone definition from 1711 (zone09) to 2926 (zone17) [line 68]
+~#
+~#  Arguments:   %1% = three digit alternative ID number 
+~#               %2% = TOD period
+~#
+~#    (e.g. "~<TREDIS_macros\3_tredis_highway_assignment_data.mac 200 1") 
+~#
+~#**********************************************************************
+~#
+~# -------------------------------------------------------------------------------------------------------
+~#
+~x=%0%
+~+;~?!x=2;~$>error
+~o|39
+~#
+~t2=TREDIS_macros\report\tredis_path_analysis_tod_%2%.rpt
+~#
+~!if exist %t2% (del %t2%)
+reports=%t2%
+~#
+~#
+~# _________________________________________________________________________
+~#  Set scenario and make temporary copy of scenario for path analysis.
+~# _________________________________________________________________________
+s=%1%4%2%
+1.22
+~# delete temp copy if it exists
+2
+~+;9%2%;~?e
+~+; ;q;~$>next
+~+;yes;q
+~:next
+~# create temp copy
+~+;1.22;3
+~+;%s%;9%2%;temp period %2% scenario for path analysis;yes;q
+~#
+~#
+~# _________________________________________________________________________
+~#  Create extra link attributes
+~# _________________________________________________________________________
+2.42
+~+;2;2;@hwsv1;HW SOV1 volume            ;0
+~+;2;2;@hwhv2;HW HOV2 volume            ;0
+~+;2;2;@hwhv3;HW HOV3 volume            ;0
+~+;2;2;@hosv1;HO SOV1 volume            ;0
+~+;2;2;@hohv2;HO HOV2 volume            ;0
+~+;2;2;@hohv3;HO HOV3 volume            ;0
+~+;2;2;@nhsv1;NH SOV1 volume            ;0
+~+;2;2;@nhhv2;NH HOV2 volume            ;0
+~+;2;2;@nhhv3;NH HOV3 volume            ;0
+~+;2;2;@cnty7;7-county link flag        ;0
+~+;2;2;@lkcap;link TOD %2% capacity     ;0
+~+;2;2;@cngst;congested link flag       ;0
+~+;2;2;@trtime;assigned link travel time;0;q
+~# 
+2.41
+~# -- FLAG ALL LINKS IN THE 7-COUNTY REGION --
+~+;1;y;@cnty7;n;(@zone.ge.1 .and. @zone.le.2926); ;all;2;2
+~# -- CALCULATE LINK CAPACITY --
+~+;1;y;@lkcap;n
+@emcap*lan*
+ (5*(%2%==1)+
+  1*((%2%==2)||(%2%==4))+
+  2*((%2%==3)||((%2%>=6)&&(%2%<=8)))+
+  4*(%2%==5))
+
+~+;!vdf=6,7; ;2;2
+~# -- FLAG CONGESTED LINKS IN 7 COUNTIES --
+~+;1;y;@cngst;n;((volau/@lkcap).ge.0.9)*(@cnty7.eq.1); ;!vdf=6,7; ;2;2
+~# -- CALCULATE ASSIGNED SPEED (IN HOURS) USING ARTERIAL SPEED ADJUSTMENT --
+~#  -- Part 1. Recalculate Timau For vdf=7 Using Speed From Incoming Link --
+~+;1;y;ui1;0; ;all;4
+~+;1;y;ui2;0; ;all;4
+~+;1;y;ui1;vdf.eq.7; ;2;all;4
+~+;1;y;uj2;(uj1.eq.1)*timau/len; ;2;all;4
+~+;1;y;tmpl1;ui2*len; ;vdf=7; ;4
+~#  -- Part 2. Recalculate Arterial Speed Using Adjustment --
+~+;1;y;@trtime;n;((len/timau)*60)*(vdf.ne.1 .and. vdf.ne.7) +
+((len/tmpl1)*60)*(vdf.eq.7) +
+(1/(((60/@speed)*((ln(@speed)*.249) +
+  (.153*(volau/(.75*@lkcap))**3.98)))/60)) *
+ (vdf .eq. 1)
+~+; ;all;4
+~#  -- Part 3. Convert to Link Travel Time (in Hours) --
+~+;1;y;@trtime;n;len/@trtime; ;all;2;2;q
+~# ##
+~# ## 
+~# _________________________________________________________________________
+~#  Initialize storage matrices
+~# _________________________________________________________________________
+3.21
+~+;1;y;mf420;y;HWS1od;SOV1 HW O-D trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf421;y;HWH2od;HOV2 HW O-D trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf422;y;HWH3od;HOV3+ HW O-D trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf423;y;HOS1od;SOV1 HO O-D trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf424;y;HOH2od;HOV2 HO O-D trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf425;y;HOH3od;HOV3+ HO O-D trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf426;y;NHS1od;SOV1 NH O-D trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf427;y;NHH2od;HOV2 NH O-D trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf428;y;NHH3od;HOV3+ NH O-D trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf429;y;bpltod;B-Plate truck O-D trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf430;y;lghtod;Light truck O-D trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf431;y;medmod;Medium truck O-D trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf432;y;hevyod;Heavy truck O-D trip table:%t1%;~?q=1;y;0;0; ; ;n;1;q
+~# ##
+~# ##
+~/
+~# _________________________________________________________________________
+~/  Conduct Path Analysis for TOD %2% - Pass Number 1 [HW SOV1 & HOV2 & TRUCKS]
+~# _________________________________________________________________________
+6.16
+4                                                      / user-defined path analysis
+@cnty7                                                 / link attribute for path analysis
+                                                       / no turn attribute for analysis
+.max.                                                  / operator to compute path attributes
+1,1                                                    / lower,upper path thresholds
+3                                                      / aggregation for O-D attribute: average
+2                                                      / only selected paths considered
+mf401                                                  / class 1 demand
+                                                       / no matrix to hold class 1 O-D attribute
+~+;mf420;n                                             / matrix to hold class 1 selected demand, leave description
+~+;@hwsv1;n                                            / extra attribute to hold class 1 link volumes, leave description
+                                                       / no extra attribute to save class 1 selected turn volumes
+mf402                                                  / class 2 demand
+                                                       / no matrix to hold class 2 O-D attribute
+~+;mf421;n                                             / matrix to hold class 2 selected demand, leave description
+~+;@hwhv2;n                                            / extra attribute to hold class 2 link volumes, leave description
+                                                       / no extra attribute to save class 2 selected turn volumes 
+                                                       / no class 3 demand (just use path file)
+                                                       / no matrix to hold class 3 O-D attribute
+~+;mf429;n                                             / matrix to hold class 3 selected demand, leave description
+                                                       / no extra attribute to save class 3 selected link volumes
+                                                       / no extra attribute to save class 3 selected turn volumes  
+                                                       / no class 4 demand (just use path file)
+                                                       / no matrix to hold class 4 O-D attribute
+~+;mf430;n                                             / matrix to hold class 4 selected demand, leave description
+                                                       / no extra attribute to save class 4 selected link volumes
+                                                       / no extra attribute to save class 4 selected turn volumes   
+mf410                                                  / class 5 demand
+                                                       / no matrix to hold class 5 O-D attribute
+~+;mf431;n                                             / matrix to hold class 5 selected demand, leave description
+                                                       / no extra attribute to hold class 5 link volumes
+                                                       / no extra attribute to save class 5 selected turn volumes   
+mf411                                                  / class 6 demand
+                                                       / no matrix to hold class 6 O-D attribute
+~+;mf432;n                                             / matrix to hold class 6 selected demand, leave description
+                                                       / no extra attribute to save class 6 selected link volumes
+                                                       / no extra attribute to save class 6 selected turn volumes   
+~+;2;q
+~#
+~# _________________________________________________________________________
+~/  Conduct Path Analysis for TOD %2% - Pass Number 2 [HO SOV1 & HOV2]
+~# _________________________________________________________________________
+6.16
+4                                                      / user-defined path analysis
+@cnty7                                                 / link attribute for path analysis
+                                                       / no turn attribute for analysis
+.max.                                                  / operator to compute path attributes
+1,1                                                    / lower,upper path thresholds
+3                                                      / aggregation for O-D attribute: average
+2                                                      / only selected paths considered
+mf404                                                  / class 1 demand
+                                                       / no matrix to hold class 1 O-D attribute
+~+;mf423;n                                             / matrix to hold class 1 selected demand, leave description
+~+;@hosv1;n                                            / extra attribute to hold class 1 link volumes, leave description
+                                                       / no extra attribute to save class 1 selected turn volumes
+mf405                                                  / class 2 demand
+                                                       / no matrix to hold class 2 O-D attribute
+~+;mf424;n                                             / matrix to hold class 2 selected demand, leave description
+~+;@hohv2;n                                            / extra attribute to hold class 2 link volumes, leave description
+                                                       / no extra attribute to save class 2 selected turn volumes 
+~+; ; ; ; ;                                            / no class 3
+~+; ; ; ; ;                                            / no class 4
+~+; ; ; ; ;                                            / no class 5
+~+; ; ; ; ;                                            / no class 6
+~+;2;q
+~#
+~# _________________________________________________________________________
+~/  Conduct Path Analysis for TOD %2% - Pass Number 3 [NH SOV1 & HOV2]
+~# _________________________________________________________________________
+6.16
+4                                                      / user-defined path analysis
+@cnty7                                                 / link attribute for path analysis
+                                                       / no turn attribute for analysis
+.max.                                                  / operator to compute path attributes
+1,1                                                    / lower,upper path thresholds
+3                                                      / aggregation for O-D attribute: average
+2                                                      / only selected paths considered
+mf407                                                  / class 1 demand
+                                                       / no matrix to hold class 1 O-D attribute
+~+;mf426;n                                             / matrix to hold class 1 selected demand, leave description
+~+;@nhsv1;n                                            / extra attribute to hold class 1 link volumes, leave description
+                                                       / no extra attribute to save class 1 selected turn volumes	
+mf408                                                  / class 2 demand
+                                                       / no matrix to hold class 2 O-D attribute
+~+;mf427;n                                             / matrix to hold class 2 selected demand, leave description
+~+;@nhhv2;n                                            / extra attribute to hold class 2 link volumes, leave description
+                                                       / no extra attribute to save class 2 selected turn volumes 
+~+; ; ; ; ;                                            / no class 3
+~+; ; ; ; ;                                            / no class 4
+~+; ; ; ; ;                                            / no class 5
+~+; ; ; ; ;                                            / no class 6
+~+;2;q
+~#
+~# _________________________________________________________________________
+~/  Conduct Path Analysis for TOD %2% - Pass Number 4 [HW HOV3+]
+~# _________________________________________________________________________
+6.16
+4                                                      / user-defined path analysis
+@cnty7                                                 / link attribute for path analysis
+                                                       / no turn attribute for analysis
+.max.                                                  / operator to compute path attributes
+1,1                                                    / lower,upper path thresholds
+3                                                      / aggregation for O-D attribute: average
+2                                                      / only selected paths considered
+~+; ; ; ; ;                                            / no class 1
+mf403                                                  / class 2 demand
+                                                       / no matrix to hold class 2 O-D attribute
+~+;mf422;n                                             / matrix to hold class 2 selected demand, leave description
+~+;@hwhv3;n                                            / extra attribute to hold class 2 link volumes, leave description
+                                                       / no extra attribute to save class 2 selected turn volumes 
+~+; ; ; ; ;                                            / no class 3
+~+; ; ; ; ;                                            / no class 4
+~+; ; ; ; ;                                            / no class 5
+~+; ; ; ; ;                                            / no class 6
+~+;2;q
+~#
+~# _________________________________________________________________________
+~/  Conduct Path Analysis for TOD %2% - Pass Number 5 [HO HOV3+]
+~# _________________________________________________________________________
+6.16
+4                                                      / user-defined path analysis
+@cnty7                                                 / link attribute for path analysis
+                                                       / no turn attribute for analysis
+.max.                                                  / operator to compute path attributes
+1,1                                                    / lower,upper path thresholds
+3                                                      / aggregation for O-D attribute: average
+2                                                      / only selected paths considered
+~+; ; ; ; ;                                            / no class 1
+mf406                                                  / class 2 demand
+                                                       / no matrix to hold class 2 O-D attribute
+~+;mf425;n                                             / matrix to hold class 2 selected demand, leave description
+~+;@hohv3;n                                            / extra attribute to hold class 2 link volumes, leave description
+                                                       / no extra attribute to save class 2 selected turn volumes 
+~+; ; ; ; ;                                            / no class 3
+~+; ; ; ; ;                                            / no class 4
+~+; ; ; ; ;                                            / no class 5
+~+; ; ; ; ;                                            / no class 6
+~+;2;q
+~#
+~# _________________________________________________________________________
+~/  Conduct Path Analysis for TOD %2% - Pass Number 6 [NH HOV3+]
+~# _________________________________________________________________________
+6.16
+4                                                      / user-defined path analysis
+@cnty7                                                 / link attribute for path analysis
+                                                       / no turn attribute for analysis
+.max.                                                  / operator to compute path attributes
+1,1                                                    / lower,upper path thresholds
+3                                                      / aggregation for O-D attribute: average
+2                                                      / only selected paths considered
+~+; ; ; ; ;                                            / no class 1
+mf409                                                  / class 2 demand
+                                                       / no matrix to hold class 2 O-D attribute
+~+;mf428;n                                             / matrix to hold class 2 selected demand, leave description
+~+;@nhhv3;n                                            / extra attribute to hold class 2 link volumes, leave description
+                                                       / no extra attribute to save class 2 selected turn volumes 
+~+; ; ; ; ;                                            / no class 3
+~+; ; ; ; ;                                            / no class 4
+~+; ; ; ; ;                                            / no class 5
+~+; ; ; ; ;                                            / no class 6
+~+;2;q
+~# ##
+~# ## 
+~# _________________________________________________________________________
+~/  Calculate VMT, VHT, congested VMT and toll charges
+~# _________________________________________________________________________   
+2.41
+~# -- RECALCULATE NH SOV LINK VOLUMES (SO MORE CONSISTENT WITH @VAUTO TOTAL) --
+~+;1;y;@nhsv1;n;(@vauto-(@hwsv1+@hosv1)).max.0; ;all;2;2
+~# -- RECALCULATE NH HOV2 LINK VOLUMES (SO MORE CONSISTENT WITH @VHOV2 TOTAL) --
+~+;1;y;@nhhv2;n;(@vhov2-(@hwhv2+@hohv2)).max.0; ;all;2;2
+~# -- RECALCULATE NH HOV3+ LINK VOLUMES (SO MORE CONSISTENT WITH @VHOV3 TOTAL) --
+~+;1;y;@nhhv3;n;(@vhov3-(@hwhv3+@hohv3)).max.0; ;all;2;2;q
+~# ## 
+~#
+2.41
+~# -- VMT
+~+;1;n;(@hwsv1+@hwhv2+@hwhv3)*len*(@cnty7.eq.1); ;all;5;4;ms420;temp420;Commute VMT TOD %2%;1
+~+;1;n;(@hosv1+@hohv2+@hohv3)*len*(@cnty7.eq.1); ;all;5;4;ms421;temp421;Personal VMT TOD %2%;1
+~+;1;n;(@nhsv1+@nhhv2+@nhhv3)*len*(@cnty7.eq.1); ;all;5;4;ms422;temp422;Business VMT TOD %2%;1
+~+;1;n;(@vbplt+@vlght+@vmed/2)*len*(@cnty7.eq.1); ;all;5;4;ms423;temp423;Med Truck VMT TOD %2%;1
+~+;1;n;(@vhevy/3)*len*(@cnty7.eq.1); ;all;5;4;ms424;temp424;Heavy Truck VMT TOD %2%;1
+~+;1;n;(@vauto+@vhov2+@vhov3+@vbplt+@vlght+@vmed/2+@vhevy/3)*len*(@cnty7.eq.1); ;all;5;4;ms500;temp500;Conformity VMT TOD %2%;1
+~+;1;n;(@vauto)*len*(@cnty7.eq.1); ;all;5;4;ms501;temp501;Conformity SOV VMT TOD %2%;1
+~+;1;n;(@vhov2)*len*(@cnty7.eq.1); ;all;5;4;ms502;temp502;Conformity HOV2 VMT TOD %2%;1
+~+;1;n;(@vhov3)*len*(@cnty7.eq.1); ;all;5;4;ms503;temp503;Conformity HOV3+ VMT TOD %2%;1
+~+;1;n;(@hwsv1+@hosv1+@nhsv1)*len*(@cnty7.eq.1); ;all;5;4;ms508;temp508;All SOV VMT TOD %2%;1
+~+;1;n;(@hwhv2+@hohv2+@nhhv2)*len*(@cnty7.eq.1); ;all;5;4;ms509;temp509;All HOV2 VMT TOD %2%;1
+~+;1;n;(@hwhv3+@hohv3+@nhhv3)*len*(@cnty7.eq.1); ;all;5;4;ms510;temp510;All HOV3+ VMT TOD %2%;1
+~# -- CONGESTED VMT
+~+;1;n;(@hwsv1+@hwhv2+@hwhv3)*len*(@cnty7.eq.1)*(@cngst.eq.1); ;all;5;4;ms425;temp425;Commute Congested VMT TOD %2%;1
+~+;1;n;(@hosv1+@hohv2+@hohv3)*len*(@cnty7.eq.1)*(@cngst.eq.1); ;all;5;4;ms426;temp426;Personal Congested VMT TOD %2%;1
+~+;1;n;(@nhsv1+@nhhv2+@nhhv3)*len*(@cnty7.eq.1)*(@cngst.eq.1); ;all;5;4;ms427;temp427;Business Congested VMT TOD %2%;1
+~+;1;n;(@vbplt+@vlght+@vmed/2)*len*(@cnty7.eq.1)*(@cngst.eq.1); ;all;5;4;ms428;temp428;Med Truck Congested VMT TOD %2%;1
+~+;1;n;(@vhevy/3)*len*(@cnty7.eq.1)*(@cngst.eq.1); ;all;5;4;ms429;temp429;Heavy Truck Congested VMT TOD %2%;1
+~# -- VHT
+~+;1;n;(@hwsv1+@hwhv2+@hwhv3)*@trtime*(@cnty7.eq.1); ;all;5;4;ms430;temp430;Commute VHT TOD %2%;1
+~+;1;n;(@hosv1+@hohv2+@hohv3)*@trtime*(@cnty7.eq.1); ;all;5;4;ms431;temp431;Personal VHT TOD %2%;1
+~+;1;n;(@nhsv1+@nhhv2+@nhhv3)*@trtime*(@cnty7.eq.1); ;all;5;4;ms432;temp432;Business VHT TOD %2%;1
+~+;1;n;(@vbplt+@vlght+@vmed/2)*@trtime*(@cnty7.eq.1); ;all;5;4;ms433;temp433;Med Truck VHT TOD %2%;1
+~+;1;n;(@vhevy/3)*@trtime*(@cnty7.eq.1); ;all;5;4;ms434;temp434;Heavy Truck VHT TOD %2%;1
+~# -- TOLL
+~+;1;n;(@hwsv1+@hwhv2+@hwhv3)*@toll*(@cnty7.eq.1); ;all;5;4;ms435;temp435;Commute TOLLS TOD %2%;1
+~+;1;n;(@hosv1+@hohv2+@hohv3)*@toll*(@cnty7.eq.1); ;all;5;4;ms436;temp436;Personal TOLLS TOD %2%;1
+~+;1;n;(@nhsv1+@nhhv2+@nhhv3)*@toll*(@cnty7.eq.1); ;all;5;4;ms437;temp437;Business TOLLS TOD %2%;1
+~+;1;n;((@vbplt*@toll)+(@vlght*@toll2)+(@vmed/2*@toll3))*(@cnty7.eq.1); ;all;5;4;ms438;temp438;Med Truck TOLLS TOD %2%;1
+~+;1;n;(@vhevy/3)*@toll4*(@cnty7.eq.1); ;all;5;4;ms439;temp439;Heavy Truck TOLLS TOD %2%;1;q
+~# ## 
+~# _________________________________________________________________________
+~#  Calculate TOTAL/INTERNAL/INCOMING/OUTGOING TRIPS BY PURPOSE
+~# _________________________________________________________________________
+3.21
+~+;1;y;ms440;~?q=1;y;temp440;Commute Total Trips TOD %2%;~?q=1;y;0;(mf420+mf421+mf422); ; ;n;+;+;2
+~+;1;y;ms441;~?q=1;y;temp441;Commute Internal Trips TOD %2%;~?q=1;y;0;(mf420+mf421+mf422)*mf433; ; ;n;+;+;2
+~+;1;y;ms442;~?q=1;y;temp442;Commute Incoming Trips TOD %2%;~?q=1;y;0;(mf420+mf421+mf422)*mf434; ; ;n;+;+;2 
+~+;1;y;ms443;~?q=1;y;temp443;Commute Outgoing Trips TOD %2%;~?q=1;y;0;(mf420+mf421+mf422)*mf435; ; ;n;+;+;2
+~#
+~+;1;y;ms444;~?q=1;y;temp444;Personal Total Trips TOD %2%;~?q=1;y;0;(mf423+mf424+mf425); ; ;n;+;+;2
+~+;1;y;ms445;~?q=1;y;temp445;Personal Internal Trips TOD %2%;~?q=1;y;0;(mf423+mf424+mf425)*mf433; ; ;n;+;+;2
+~+;1;y;ms446;~?q=1;y;temp446;Personal Incoming Trips TOD %2%;~?q=1;y;0;(mf423+mf424+mf425)*mf434; ; ;n;+;+;2 
+~+;1;y;ms447;~?q=1;y;temp447;Personal Outgoing Trips TOD %2%;~?q=1;y;0;(mf423+mf424+mf425)*mf435; ; ;n;+;+;2
+~#
+~+;1;y;ms448;~?q=1;y;temp448;Business Total Trips TOD %2%;~?q=1;y;0;(mf426+mf427+mf428); ; ;n;+;+;2
+~+;1;y;ms449;~?q=1;y;temp449;Business Internal Trips TOD %2%;~?q=1;y;0;(mf426+mf427+mf428)*mf433; ; ;n;+;+;2
+~+;1;y;ms450;~?q=1;y;temp450;Business Incoming Trips TOD %2%;~?q=1;y;0;(mf426+mf427+mf428)*mf434; ; ;n;+;+;2 
+~+;1;y;ms451;~?q=1;y;temp451;Business Outgoing Trips TOD %2%;~?q=1;y;0;(mf426+mf427+mf428)*mf435; ; ;n;+;+;2
+~#
+~+;1;y;ms452;~?q=1;y;temp452;Med Truck Total Trips TOD %2%;~?q=1;y;0;(mf429+mf430+mf431); ; ;n;+;+;2
+~+;1;y;ms453;~?q=1;y;temp453;Med Truck Internal Trips TOD %2%;~?q=1;y;0;(mf429+mf430+mf431)*mf433; ; ;n;+;+;2
+~+;1;y;ms454;~?q=1;y;temp454;Med Truck Incoming Trips TOD %2%;~?q=1;y;0;(mf429+mf430+mf431)*mf434; ; ;n;+;+;2 
+~+;1;y;ms455;~?q=1;y;temp455;Med Truck Outgoing Trips TOD %2%;~?q=1;y;0;(mf429+mf430+mf431)*mf435; ; ;n;+;+;2
+~#
+~+;1;y;ms456;~?q=1;y;temp456;Heavy Truck Total Trips TOD %2%;~?q=1;y;0;(mf432); ; ;n;+;+;2
+~+;1;y;ms457;~?q=1;y;temp457;Heavy Truck Internal Trips TOD %2%;~?q=1;y;0;(mf432)*mf433; ; ;n;+;+;2
+~+;1;y;ms458;~?q=1;y;temp458;Heavy Truck Incoming Trips TOD %2%;~?q=1;y;0;(mf432)*mf434; ; ;n;+;+;2 
+~+;1;y;ms459;~?q=1;y;temp459;Heavy Truck Outgoing Trips TOD %2%;~?q=1;y;0;(mf432)*mf435; ; ;n;+;+;2;q
+~# ##
+~# ## 
+~# _________________________________________________________________________
+~/  Accumulate TOD %2% Values into Daily Totals
+~# _________________________________________________________________________
+~x=420
+~:loop1
+~+;~y=%x%;~y+40
+~+;3.21;1;y;ms%y%;n;ms%y%+ms%x%; ; ;2;q
+~x+1
+~+;~?x<460;~$loop1
+~#
+~# ## -- Accumulate person and vehicle trips & QC VMT
+3.21
+~+;1;y;ms400;n;ms400+(ms410+ms411+ms412); ; ;2
+~+;1;y;ms409;~?q=1;y;temp409;temp holder: Commute Vehicle Trips TOD %2%;~?q=1;y;0;(mf401+mf402+mf403); ; ;n;+;+;2
+~+;1;y;ms401;n;ms401+ms409; ; ;2
+~+;1;y;ms402;n;ms402+(ms413+ms414+ms415); ; ;2
+~+;1;y;ms409;~?q=1;y;temp409;temp holder: Personal Vehicle Trips TOD %2%;~?q=1;y;0;(mf404+mf405+mf406); ; ;n;+;+;2
+~+;1;y;ms403;n;ms403+ms409; ; ;2
+~+;1;y;ms404;n;ms404+(ms416+ms417+ms418); ; ;2
+~+;1;y;ms409;~?q=1;y;temp409;temp holder: Business Vehicle Trips TOD %2%;~?q=1;y;0;(mf407+mf408+mf409); ; ;n;+;+;2
+~+;1;y;ms405;n;ms405+ms409; ; ;2
+~+;1;y;ms504;n;ms504+ms500; ; ;2
+~+;1;y;ms505;n;ms505+ms501; ; ;2
+~+;1;y;ms506;n;ms506+ms502; ; ;2
+~+;1;y;ms507;n;ms507+ms503; ; ;2
+~+;1;y;ms511;n;ms511+ms508; ; ;2
+~+;1;y;ms512;n;ms512+ms509; ; ;2
+~+;1;y;ms513;n;ms513+ms510; ; ;2;q
+~# ##
+~# ## 
+~+;1.22;2;9%2%;yes;q
+~# ##
+~# ## 
+~# ## -- Calculate Vehicle Occupancy Rates 
+~x=%2%
+~+;~?x<8;~$>end
+3.21
+~+;1;y;ms406;n;ms400/ms401; ; ;2
+~+;1;y;ms407;n;ms402/ms403; ; ;2
+~+;1;y;ms408;n;ms404/ms405; ; ;2;q
+~$>end
+~#**********************************************************************
+~:error
+~/ +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~/    SUBMIT WITH 3-DIGIT SCENARIO AND TOD PERIOD!!!!!
+~/ +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~/
+~:end
+~o=6
+reports=
+batchin=
+~#**********************************************************************

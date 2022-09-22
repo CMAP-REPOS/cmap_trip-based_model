@@ -27,7 +27,7 @@
 ~/
 ~# ################################
 ~# -- SET PATH TO BATCHIN FILES --
-~t2=M:\proj1\nrf\conformity\c21q2\
+~t2=M:\proj1\nrf\conformity\c21q4\
 ~t3=highway
 ~# ################################
 ~/ ## - batchin source = %t2%%t3% - ##

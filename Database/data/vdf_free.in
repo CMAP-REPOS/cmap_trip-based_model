@@ -1,0 +1,13 @@
+c EMME/2 Module: 4.14(v8.01)   Date: 96-08-02 16:01   User: E170/CATS......rwe
+c Project:       Conformity 1995:  Base 1990 Highway Assignments 
+c modified by DBE 10OCT2004
+c  links w/o @ftime get a time equivalent to 20 mph      
+t  functions
+a fd1  =ul1
+a fd2  =ul1
+a fd3  =ul1
+a fd4  =ul1
+a fd5  =ul1
+a fd6  =length*3
+a fd7  =length*3
+a fd8  =ul1

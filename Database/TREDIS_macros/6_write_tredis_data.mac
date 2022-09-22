@@ -1,0 +1,255 @@
+~/ 6_write_tredis_data.mac
+~/**********************************************************************
+~/**********************************************************************
+~# Craig Heither, 03-03-2016
+~#
+~#  Macro writes data to the final files used by TREDIS.
+~#
+~#  Arguments:   %1% = 3-digit scenario number 
+~#               %2% = Modeling zone that serves as the centroid for the Market Access calculations
+~#
+~#       (e.g. "~<TREDIS_macros\6_write_tredis_data.mac 200 82")   
+~# -------------------------------------------------------------------------------------------------------
+~#
+~x=%0%
+~+;~?!x=2;~$>error
+~#
+~#
+~o|39
+reports=
+~#
+~#  - - - - - - - - - - - - - - - - - - - - - - - - - 
+~r200=348         /** Highway Assignment Data Annualization factor   
+~r201=310         /** Transit Assignment Data Annualization factor   
+~t1=TREDIS_macros\output\tredis_input_data_scen%1%.csv
+~!if exist %t1% (del %t1%)
+~t2=TREDIS_macros\output\QC_VMT_PMT_review_scen%1%.csv
+~!if exist %t2% (del %t2%)
+~t3=TREDIS_macros\output\temp.csv
+~!if exist %t3% (del %t3%)
+~t4=TREDIS_macros\output\tredis_market_access_data_scen%1%_centroid%2%.csv
+~!if exist %t4% (del %t4%)
+~#  - - - - - - - - - - - - - - - - - - - - - - - - - 
+~#
+~# ## -- Highway: Calculate final values -- ##
+~+;~r1=%ms465%;~r1/%ms460%                  / Commuter congested VMT fraction
+~+;~r2=%ms481%;~r2/%ms480%                  / Commuter Internal Trips fraction
+~+;~r3=%ms482%;~r3/%ms480%                  / Commuter Incoming Trips fraction
+~+;~r4=%ms483%;~r4/%ms480%                  / Commuter Outgoing Trips fraction
+~+;~r5=1;~r5-%r2%;~r5-%r3%;~r5-%r4%         / Commuter Through Trips fraction
+~+;~r6=%ms475%;~r6/%ms480%                  / Commuter Tolls per Trip
+~#
+~+;~r7=%ms466%;~r7/%ms461%                  / Personal congested VMT fraction
+~+;~r8=%ms485%;~r8/%ms484%                  / Personal Internal Trips fraction
+~+;~r9=%ms486%;~r9/%ms484%                  / Personal Incoming Trips fraction
+~+;~r10=%ms487%;~r10/%ms484%                / Personal Outgoing Trips fraction
+~+;~r11=1;~r11-%r8%;~r11-%r9%;~r11-%r10%    / Personal Through Trips fraction
+~+;~r12=%ms476%;~r12/%ms484%                / Personal Tolls per Trip
+~#
+~+;~r13=%ms467%;~r13/%ms462%                / Business congested VMT fraction
+~+;~r14=%ms489%;~r14/%ms488%                / Business Internal Trips fraction
+~+;~r15=%ms490%;~r15/%ms488%                / Business Incoming Trips fraction
+~+;~r16=%ms491%;~r16/%ms488%                / Business Outgoing Trips fraction
+~+;~r17=1;~r17-%r14%;~r17-%r15%;~r17-%r16%  / Business Through Trips fraction
+~+;~r18=%ms477%;~r18/%ms488%                / Business Tolls per Trip
+~#
+~+;~r19=%ms468%;~r19/%ms463%                / Light/Medium Duty Truck/Freight congested VMT fraction
+~+;~r20=%ms493%;~r20/%ms492%                / Light/Medium Duty Truck/Freight Internal Trips fraction
+~+;~r21=%ms494%;~r21/%ms492%                / Light/Medium Duty Truck/Freight Incoming Trips fraction
+~+;~r22=%ms495%;~r22/%ms492%                / Light/Medium Duty Truck/Freight Outgoing Trips fraction
+~+;~r23=1;~r23-%r20%;~r23-%r21%;~r23-%r22%  / Light/Medium Duty Truck/Freight Through Trips fraction
+~+;~r24=%ms478%;~r24/%ms492%                / Light/Medium Duty Truck/Freight Tolls per Trip
+~#
+~+;~r25=%ms469%;~r25/%ms464%                / Tractor Trailer Truck/Freight congested VMT fraction
+~+;~r26=%ms497%;~r26/%ms496%                / Tractor Trailer Truck/Freight Internal Trips fraction
+~+;~r27=%ms498%;~r27/%ms496%                / Tractor Trailer Truck/Freight Incoming Trips fraction
+~+;~r28=%ms499%;~r28/%ms496%                / Tractor Trailer Truck/Freight Outgoing Trips fraction
+~+;~r29=1;~r29-%r26%;~r29-%r27%;~r29-%r28%  / Tractor Trailer Truck/Freight Through Trips fraction
+~+;~r30=%ms479%;~r30/%ms496%                / Tractor Trailer Truck/Freight Tolls per Trip
+~#
+~+;~r31=%ms460%;~r31+%ms461%;~r31+%ms462%
+~+;~r31+%ms463%;~r31+%ms464%                / Daily CMAP VMT - All Vehicles   
+~#
+~+;~r103=%ms480%;~r103*%r200%               / Commuter - Passenger Car Vehicle Trips
+~+;~r104=%ms484%;~r104*%r200%               / Personal - Passenger Car Vehicle Trips
+~+;~r105=%ms488%;~r105*%r200%               / Business - Passenger Car Vehicle Trips
+~+;~r106=%ms492%;~r106*%r200%               / Light/Medium Duty Truck Vehicle Trips
+~+;~r107=%ms496%;~r107*%r200%               / Tractor Trailer Truck Vehicle Trips
+~#
+~# ## -- Note: Annualized Auto VMT values are too large for proper reporting of values using scalar matrices
+~# ## --       or registers. These daily values will be annualized by the python script.
+~+;~r108=%ms460%;                           / Commuter - Passenger Car Vehicle Miles (still Daily)
+~+;~r109=%ms461%;                           / Personal - Passenger Car Vehicle Miles (still Daily)
+~+;~r110=%ms462%;                           / Business - Passenger Car Vehicle Miles (still Daily)
+~+;~r111=%ms463%;                           / Light/Medium Duty Truck Vehicle Miles (still Daily)
+~+;~r112=%ms464%;                           / Tractor Trailer Truck Vehicle Miles (still Daily)   
+~#
+~+;~r113=%ms470%;~r113*%r200%               / Commuter - Passenger Car Vehicle Hours
+~+;~r114=%ms471%;~r114*%r200%               / Personal - Passenger Car Vehicle Hours
+~+;~r115=%ms472%;~r115*%r200%               / Business - Passenger Car Vehicle Hours
+~+;~r116=%ms473%;~r116*%r200%               / Light/Medium Duty Truck Vehicle Hours
+~+;~r117=%ms474%;~r117*%r200%               / Tractor Trailer Truck Vehicle Hours     
+~#
+~# ##
+~# ## -- Transit: Calculate final values -- ##
+~+;~r32=%ms538%;~r32*%r201%                 / Commuter - Passenger Rail Passenger Trips
+~+;~r33=%ms539%;~r33*%r201%                 / Commuter - Passenger Rail Electric Passenger Trips
+~+;~r34=%ms540%;~r34*%r201%                 / Commuter - Passenger Bus Passenger Trips
+~+;~r35=%ms541%;~r35*%r201%                 / Personal - Passenger Rail Passenger Trips
+~+;~r36=%ms542%;~r36*%r201%                 / Personal - Passenger Rail Electric Passenger Trips
+~+;~r37=%ms543%;~r37*%r201%                 / Personal - Passenger Bus Passenger Trips
+~+;~r38=%ms544%;~r38*%r201%                 / Business - Passenger Rail Passenger Trips
+~+;~r39=%ms545%;~r39*%r201%                 / Business - Passenger Rail Electric Passenger Trips
+~+;~r40=%ms546%;~r40*%r201%                 / Business - Passenger Bus Passenger Trips
+~#
+~+;~r41=%ms565%;~r41*%r201%                 / Commuter - Passenger Rail Miles
+~+;~r42=%ms568%;~r42*%r201%                 / Commuter - Passenger Rail Electric Miles
+~+;~r43=%ms571%;~r43*%r201%                 / Commuter - Passenger Bus Miles
+~+;~r44=%ms583%;~r44*%r201%                 / Personal - Passenger Rail Miles
+~+;~r45=%ms586%;~r45*%r201%                 / Personal - Passenger Rail Electric Miles
+~+;~r46=%ms589%;~r46*%r201%                 / Personal - Passenger Bus Miles
+~+;~r47=%ms592%;~r47*%r201%                 / Business - Passenger Rail Miles
+~+;~r48=%ms594%;~r48*%r201%                 / Business - Passenger Rail Electric Miles
+~+;~r49=%ms596%;~r49*%r201%                 / Business - Passenger Bus Miles
+~#
+~+;~r50=%ms566%;~r50*%r201%                 / Commuter - Passenger Rail Hours
+~+;~r51=%ms569%;~r51*%r201%                 / Commuter - Passenger Rail Electric Hours
+~+;~r52=%ms572%;~r52*%r201%                 / Commuter - Passenger Bus Hours
+~+;~r53=%ms584%;~r53*%r201%                 / Personal - Passenger Rail Hours
+~+;~r54=%ms587%;~r54*%r201%                 / Personal - Passenger Rail Electric Hours
+~+;~r55=%ms590%;~r55*%r201%                 / Personal - Passenger Bus Hours
+~+;~r56=%ms593%;~r56*%r201%                 / Business - Passenger Rail Hours
+~+;~r57=%ms595%;~r57*%r201%                 / Business - Passenger Rail Electric Hours
+~+;~r58=%ms597%;~r58*%r201%                 / Business - Passenger Bus Hours
+~#
+~r59=%ms556%                                / Commuter - per Passenger Rail Out-of-Vehicle
+~r60=%ms557%                                / Commuter - per Passenger Rail Electric Out-of-Vehicle
+~r61=%ms558%                                / Commuter - per Passenger Bus Out-of-Vehicle
+~r62=%ms559%                                / Personal - per Passenger Rail Out-of-Vehicle
+~r63=%ms560%                                / Personal - per Passenger Rail Electric Out-of-Vehicle
+~r64=%ms561%                                / Personal - per Passenger Bus Out-of-Vehicle
+~r65=%ms562%                                / Business - per Passenger Rail Out-of-Vehicle
+~r66=%ms563%                                / Business - per Passenger Rail Electric Out-of-Vehicle
+~r67=%ms564%                                / Business - per Passenger Bus Out-of-Vehicle
+~#
+~r68=%ms547%                                / Commuter - per Passenger Rail Trip Fee
+~r69=%ms548%                                / Commuter - per Passenger Rail Electric Trip Fee
+~r70=%ms549%                                / Commuter - per Passenger Bus Trip Fee
+~r71=%ms550%                                / Personal - per Passenger Rail Trip Fee
+~r72=%ms551%                                / Personal - per Passenger Rail Electric Trip Fee
+~r73=%ms552%                                / Personal - per Passenger Bus Trip Fee
+~r74=%ms553%                                / Business - per Passenger Rail Trip Fee
+~r75=%ms554%                                / Business - per Passenger Rail Electric Trip Fee
+~r76=%ms555%                                / Business - per Passenger Bus Trip Fee
+~#
+~+;~r101=%ms565%;~r101+%ms568%
+~r101+%ms571%                               / Daily Work Transit PMT
+~+;~r102=%ms583%;~r102+%ms586%
+~+;~r102+%ms589%;~r102+%ms592%
+~+;~r102+%ms594%;~r102+%ms596%              / Daily Non-Work Transit PMT
+~#
+~+;~r150=%r41%;~r150/%r50%                  / Commuter - Passenger Rail Vehicle Speed
+~+;~r151=%r42%;~r151/%r51%                  / Commuter - Passenger Rail Electric Vehicle Speed
+~+;~r152=%r43%;~r152/%r52%                  / Commuter - Passenger Bus Vehicle Speed
+~+;~r153=%r44%;~r153/%r53%                  / Personal - Passenger Rail Vehicle Speed
+~+;~r154=%r45%;~r154/%r54%                  / Personal - Passenger Rail Electric Vehicle Speed
+~+;~r155=%r46%;~r155/%r55%                  / Personal - Passenger Bus Speed
+~+;~r156=%r47%;~r156/%r56%                  / Business - Passenger Rail Speed
+~+;~r157=%r48%;~r157/%r57%                  / Business - Passenger Rail Electric Speed
+~+;~r158=%r49%;~r158/%r58%                  / Business - Passenger Bus Speed
+~#
+~# ## === --- NOT USED --- === ##
+~+;~r77=%ms567%;~r77*%r201%                 / Commuter - Passenger Rail Vehicle Trips
+~+;~r78=%ms570%;~r78*%r201%                 / Commuter - Passenger Rail Electric Vehicle Trips
+~+;~r79=%ms573%;~r79*%r201%                 / Commuter - Passenger Bus Vehicle Trips
+~+;~r80=%ms576%;~r80*%r201%                 / Personal & Business - Passenger Rail Vehicle Trips
+~+;~r81=%ms579%;~r81*%r201%                 / Personal & Business - Passenger Rail Electric Vehicle Trips
+~+;~r82=%ms582%;~r82*%r201%                 / Personal & Business - Passenger Bus Vehicle Trips
+~#
+~+;~r83=%r41%;~r83/%r32%                    / Commuter - Passenger Rail Miles per Passenger Trip
+~+;~r84=%r42%;~r84/%r33%                    / Commuter - Passenger Rail Electric Miles per Passenger Trip
+~+;~r85=%r43%;~r85/%r34%                    / Commuter - Passenger Bus Miles per Passenger Trip
+~+;~r86=%r44%;~r86/%r35%                    / Personal - Passenger Rail Miles per Passenger Trip
+~+;~r87=%r45%;~r87/%r36%                    / Personal - Passenger Rail Electric Miles per Passenger Trip
+~+;~r88=%r46%;~r88/%r37%                    / Personal - Passenger Bus Miles per Passenger Trip
+~+;~r89=%r47%;~r89/%r38%                    / Business - Passenger Rail Miles per Passenger Trip
+~+;~r90=%r48%;~r90/%r39%                    / Business - Passenger Rail Electric Miles per Passenger Trip
+~+;~r91=%r49%;~r91/%r40%                    / Business - Passenger Bus Miles per Passenger Trip
+~#
+~+;~r92=%r50%;~r92/%r32%                    / Commuter - Passenger Rail Hours per Passenger Trip
+~+;~r93=%r51%;~r93/%r33%                    / Commuter - Passenger Rail Electric Hours per Passenger Trip
+~+;~r94=%r52%;~r94/%r34%                    / Commuter - Passenger Bus Hours per Passenger Trip
+~+;~r95=%r53%;~r95/%r35%                    / Personal - Passenger Rail Hours per Passenger Trip
+~+;~r96=%r54%;~r96/%r36%                    / Personal - Passenger Rail Electric Hours per Passenger Trip
+~+;~r97=%r55%;~r97/%r37%                    / Personal - Passenger Bus Hours per Passenger Trip
+~+;~r98=%r56%;~r98/%r38%                    / Business - Passenger Rail Hours per Passenger Trip
+~+;~r99=%r57%;~r99/%r39%                    / Business - Passenger Rail Electric Hours per Passenger Trip
+~+;~r100=%r58%;~r100/%r40%                  / Business - Passenger Bus Hours per Passenger Trip
+~# ## ======================== ##
+~#  - - - - - - - - - - - - - - - - - - - - - - - - - 
+~>>%t3%
+~"Period,Mode,Vehicle Trips,VMT,VHT,Vehicle Occupancy,Fraction Congested,Internal Trips Frac,Incoming Trips Frac,Outgoing Trips Frac,Through Trips Frac,Toll per Trip,Transit Passenger Trips,Transit Passenger Miles,Transit Passenger Hours,Per Passenger Out of Vehicle Time,Fee Per Passenger Trip  
+~"Annual,Passenger Car/Commute           ,%r103%,%r108%,%r113%,%ms406.2%, %r1.3%, %r2.3%, %r3.3%, %r4.3%, %r5.3%, %r6.2%
+~"Annual,Passenger Car/Personal          ,%r104%,%r109%,%r114%,%ms407.2%, %r7.3%, %r8.3%, %r9.3%,%r10.3%,%r11.3%,%r12.2%
+~"Annual,Passenger Car/Business          ,%r105%,%r110%,%r115%,%ms408.2%,%r13.3%,%r14.3%,%r15.3%,%r16.3%,%r17.3%,%r18.2%
+~"Annual,Light/Medium Duty Truck/Freight ,%r106%,%r111%,%r116%, ,%r19.3%,%r20.3%,%r21.3%,%r22.3%,%r23.3%,%r24.2%
+~"Annual,Tractor Trailer Truck/Freight   ,%r107%,%r112%,%r117%, ,%r25.3%,%r26.3%,%r27.3%,%r28.3%,%r29.3%,%r30.2%
+~"Annual,Passenger Rail/Commute          , , , , , , , , , , ,%r32%,%r41%,%r50%,%r59.2%,%r68.2%
+~"Annual,Passenger Rail Electric/Commute , , , , , , , , , , ,%r33%,%r42%,%r51%,%r60.2%,%r69.2%
+~"Annual,Passenger Bus/Commute           , , , , , , , , , , ,%r34%,%r43%,%r52%,%r61.2%,%r70.2%
+~"Annual,Passenger Rail/Personal         , , , , , , , , , , ,%r35%,%r44%,%r53%,%r62.2%,%r71.2%
+~"Annual,Passenger Rail Electric/Personal, , , , , , , , , , ,%r36%,%r45%,%r54%,%r63.2%,%r72.2%
+~"Annual,Passenger Bus/Personal          , , , , , , , , , , ,%r37%,%r46%,%r55%,%r64.2%,%r73.2%
+~"Annual,Passenger Rail/Business         , , , , , , , , , , ,%r38%,%r47%,%r56%,%r65.2%,%r74.2%
+~"Annual,Passenger Rail Electric/Business, , , , , , , , , , ,%r39%,%r48%,%r57%,%r66.2%,%r75.2%
+~"Annual,Passenger Bus/Business          , , , , , , , , , , ,%r40%,%r49%,%r58%,%r67.2%,%r76.2%
+~>>
+~# ## ## ## ##
+~>>%t4%
+~"Mode,Local Market Size,Regional Market Size,Rail Freight Terminal,Rail Passenger Terminal,Airport Terminal,International Air Gateway,Marine Freight Terminal,Terminal Access International Border
+~"Car         ,%ms516%,%ms519%,%ms421.1%,%ms422.1%,%ms423.1%,%ms423.1%,%ms424.1%,%ms425.1%
+~"Rail-Transit,%ms517%,%ms598%
+~"Bus         ,%ms518%,%ms599%
+~>>
+~# ## ## ## ##
+~>>%t2%
+~"Vehicles,Conformity Model Daily VMT,TREDIS Daily VMT  
+~"All  ,%ms504%,%r31%
+~"SOV  ,%ms505%,%ms511%
+~"HOV2 ,%ms506%,%ms512%
+~"HOV3+,%ms507%,%ms513%
+~"---------------
+~"
+~"
+~"Trip Purpose,Conformity Model Daily Transit PMT,TREDIS Daily Transit PMT
+~"Work    ,%ms514%,%r101%
+~"Non-Work,%ms515%,%r102%
+~"---------------
+~"
+~"
+~"Mode,TREDIS Mean Transit Vehicle Speed
+~"Passenger Rail/Commute          ,%r150.1%
+~"Passenger Rail Electric/Commute ,%r151.1%
+~"Passenger Bus/Commute           ,%r152.1%
+~"Passenger Rail/Personal         ,%r153.1%
+~"Passenger Rail Electric/Personal,%r154.1%
+~"Passenger Bus/Personal          ,%r155.1%
+~"Passenger Rail/Business         ,%r156.1%
+~"Passenger Rail Electric/Business,%r157.1%
+~"Passenger Bus/Business          ,%r158.1% 
+~>>
+~# ## ## ## ##
+~# ## -- The Annual Auto VMT values are too large for Emme registers.  This workaround avoids the use of Engineering notation. --
+~!python TREDIS_macros\6a_write_final_file.py %t3% %t1% %r200%
+~#
+~$>end
+~/
+~:error
+~/ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~/    SUBMIT WITH 3-DIGIT SCENARIO AND MARKET ACCESS CENTROID!!!!!
+~/ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~/
+~#  =====================================================================
+~:end
+~o=6
+~/end of macro

@@ -21,13 +21,13 @@
 #                                                                                             #
 ###############################################################################################
 
-import sys, arcpy, os, string
+import sys, arcpy, os
 
 # ---------------------------------------------------------------
 # Local Variables.
 # ---------------------------------------------------------------
     # -- Input -- 
-work = string.replace(os.getcwd(), "prep_macros", "data\\distr")
+work = str.replace(os.getcwd(), "prep_macros", "data\\distr")
 arcpy.env.workspace = os.getcwd() + "\\temp"
 temp = os.getcwd() + "\\temp"
 metra_stop_dbf = "metra.dbf"
@@ -82,9 +82,9 @@ fhdwy_zone_shp = "fhdwy_zn.shp"
 # Rail Station Analysis (DISTR).
 # ---------------------------------------------------------------
 # -- Create Shapefiles for analysis
-print " "
-print "  ---> STEP 1 OF 4: Finding Rail Station Nearest Each Subzone Centroid (DISTR)"
-print " "
+print(" ")
+print("  ---> STEP 1 OF 4: Finding Rail Station Nearest Each Subzone Centroid (DISTR)")
+print(" ")
 arcpy.MakeXYEventLayer_management(metra_stop_dbf, "xcoord", "ycoord", temp_metra_Layer, "PROJCS['NAD_1927_StatePlane_Illinois_East_FIPS_1201',GEOGCS['GCS_North_American_1927',DATUM['D_North_American_1927',SPHEROID['Clarke_1866',6378206.4,294.9786982]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],PROJECTION['Transverse_Mercator'],PARAMETER['False_Easting',500000.0],PARAMETER['False_Northing',0.0],PARAMETER['Central_Meridian',-88.33333333333333],PARAMETER['Scale_Factor',0.999975],PARAMETER['Latitude_Of_Origin',36.66666666666666],UNIT['Foot_US',0.3048006096012192]];IsHighPrecision")
 arcpy.FeatureClassToShapefile_conversion(temp_metra_Layer, temp)
 arcpy.MakeXYEventLayer_management(ctarail_stop_dbf, "xcoord", "ycoord", temp_ctarail_Layer, "PROJCS['NAD_1927_StatePlane_Illinois_East_FIPS_1201',GEOGCS['GCS_North_American_1927',DATUM['D_North_American_1927',SPHEROID['Clarke_1866',6378206.4,294.9786982]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],PROJECTION['Transverse_Mercator'],PARAMETER['False_Easting',500000.0],PARAMETER['False_Northing',0.0],PARAMETER['Central_Meridian',-88.33333333333333],PARAMETER['Scale_Factor',0.999975],PARAMETER['Latitude_Of_Origin',36.66666666666666],UNIT['Foot_US',0.3048006096012192]];IsHighPrecision")
@@ -100,10 +100,10 @@ arcpy.Near_analysis(sz17_2_shp, temp_ctarail_Layer_shp, "528000 Feet", "NO_LOCAT
 # Bus Stop Analysis (DISTR).
 # ---------------------------------------------------------------
 # -- Create Shapefiles for analysis
-print " "
-print "  ---> STEP 2 OF 4: Determining Bus Stop Accessibility (DISTR)"
-print "       (This step takes the most time to complete)"
-print " "
+print(" ")
+print("  ---> STEP 2 OF 4: Determining Bus Stop Accessibility (DISTR)")
+print("       (This step takes the most time to complete)")
+print(" ")
 arcpy.MakeXYEventLayer_management(bus_stop_dbf, "xcoord", "ycoord", temp_bus_Layer, "PROJCS['NAD_1927_StatePlane_Illinois_East_FIPS_1201',GEOGCS['GCS_North_American_1927',DATUM['D_North_American_1927',SPHEROID['Clarke_1866',6378206.4,294.9786982]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],PROJECTION['Transverse_Mercator'],PARAMETER['False_Easting',500000.0],PARAMETER['False_Northing',0.0],PARAMETER['Central_Meridian',-88.33333333333333],PARAMETER['Scale_Factor',0.999975],PARAMETER['Latitude_Of_Origin',36.66666666666666],UNIT['Foot_US',0.3048006096012192]];IsHighPrecision")
 arcpy.FeatureClassToShapefile_conversion(temp_bus_Layer, temp)
 arcpy.MakeXYEventLayer_management(feed_stop_dbf, "xcoord", "ycoord", temp_feed_Layer, "PROJCS['NAD_1927_StatePlane_Illinois_East_FIPS_1201',GEOGCS['GCS_North_American_1927',DATUM['D_North_American_1927',SPHEROID['Clarke_1866',6378206.4,294.9786982]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],PROJECTION['Transverse_Mercator'],PARAMETER['False_Easting',500000.0],PARAMETER['False_Northing',0.0],PARAMETER['Central_Meridian',-88.33333333333333],PARAMETER['Scale_Factor',0.999975],PARAMETER['Latitude_Of_Origin',36.66666666666666],UNIT['Foot_US',0.3048006096012192]];IsHighPrecision")
@@ -137,24 +137,26 @@ for d in dist:
         arcpy.Delete_management(temp_feed_ring_shp, "ShapeFile")
 
     x += 1
-    print " "
-    print "      ---> Iteration {0} of {1} ({2})".format(x, len(dist), mi)
+    print(" ")
+    print("      ---> Iteration {0} of {1} ({2})".format(x, len(dist), mi))
 
 
 # -- Intersect with Zones and Recalculate Area
 arcpy.Intersect_analysis(inFeatBus, temp_bus_intrsct_shp, "ALL", "", "INPUT")
 arcpy.Intersect_analysis(inFeatFeed, temp_feed_intrsct_shp, "ALL", "", "INPUT")
-arcpy.CalculateAreas_stats(temp_bus_intrsct_shp, temp_bus_area_shp)
-arcpy.CalculateAreas_stats(temp_feed_intrsct_shp, temp_feed_area_shp)
+arcpy.management.Copy(temp_bus_intrsct_shp, temp_bus_area_shp)
+arcpy.management.Copy(temp_feed_intrsct_shp, temp_feed_area_shp)
+arcpy.management.CalculateField(temp_bus_area_shp.replace('.shp', '.dbf'), 'F_AREA', '!shape.area!')
+arcpy.management.CalculateField(temp_feed_area_shp.replace('.shp', '.dbf'), 'F_AREA', '!shape.area!')
 
 
 # ---------------------------------------------------------------
 # Park-and-Ride Analysis (M01 & DISTR).
 # ---------------------------------------------------------------
 # -- Create Shapefile for analysis
-print " "
-print "  ---> STEP 3 OF 4: Determining Park-and-Ride Availability and Cost (M01)"
-print " "
+print(" ")
+print("  ---> STEP 3 OF 4: Determining Park-and-Ride Availability and Cost (M01)")
+print(" ")
 arcpy.MakeXYEventLayer_management(pnr_dbf, "xcoord", "ycoord", temp_pnr_Layer, "PROJCS['NAD_1927_StatePlane_Illinois_East_FIPS_1201',GEOGCS['GCS_North_American_1927',DATUM['D_North_American_1927',SPHEROID['Clarke_1866',6378206.4,294.9786982]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],PROJECTION['Transverse_Mercator'],PARAMETER['False_Easting',500000.0],PARAMETER['False_Northing',0.0],PARAMETER['Central_Meridian',-88.33333333333333],PARAMETER['Scale_Factor',0.999975],PARAMETER['Latitude_Of_Origin',36.66666666666666],UNIT['Foot_US',0.3048006096012192]];IsHighPrecision")
 arcpy.FeatureClassToShapefile_conversion(temp_pnr_Layer, temp)
 arcpy.MakeXYEventLayer_management(zncntrd_dbf, "xcoord", "ycoord", temp_zncntrd_Layer, "PROJCS['NAD_1927_StatePlane_Illinois_East_FIPS_1201',GEOGCS['GCS_North_American_1927',DATUM['D_North_American_1927',SPHEROID['Clarke_1866',6378206.4,294.9786982]],PRIMEM['Greenwich',0.0],UNIT['Degree',0.0174532925199433]],PROJECTION['Transverse_Mercator'],PARAMETER['False_Easting',500000.0],PARAMETER['False_Northing',0.0],PARAMETER['Central_Meridian',-88.33333333333333],PARAMETER['Scale_Factor',0.999975],PARAMETER['Latitude_Of_Origin',36.66666666666666],UNIT['Foot_US',0.3048006096012192]];IsHighPrecision")
@@ -169,15 +171,15 @@ arcpy.Near_analysis(sz17_3_shp, temp_pnr_Layer_shp, "528000 Feet", "NO_LOCATION"
 # ---------------------------------------------------------------
 # Bus Wait Analysis (M01).
 # ---------------------------------------------------------------
-print " "
-print "  ---> STEP 4 OF 4: Determining Bus Wait Times (M01)"
-print " "
+print(" ")
+print("  ---> STEP 4 OF 4: Determining Bus Wait Times (M01)")
+print(" ")
 # -- Buffer stops 0.1 miles to account for spatial inaccuracies
 arcpy.Buffer_analysis(temp_bus_Layer_shp, bushdwy_buf_shp, "0.1 Miles", "FULL", "ROUND", "NONE", "")
 arcpy.Identity_analysis(zone_shp, bushdwy_buf_shp, bhdwy_zone_shp, "ALL", "", "NO_RELATIONSHIPS")
 arcpy.Buffer_analysis(temp_feed_Layer_shp, fdhdwy_buf_shp, "0.1 Miles", "FULL", "ROUND", "NONE", "")
 arcpy.Identity_analysis(zone_shp, fdhdwy_buf_shp, fhdwy_zone_shp, "ALL", "", "NO_RELATIONSHIPS")
 
-print "-- SPATIAL ANALYSIS COMPLETED --"
-print " "
+print("-- SPATIAL ANALYSIS COMPLETED --")
+print(" ")
 
