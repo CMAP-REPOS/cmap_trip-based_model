@@ -21,7 +21,7 @@ set drives=C: D: E:
 if '%~1'=='arcpy' (
     set arcpy=y
     rem Directory paths to search for ArcGIS Python.
-    set pydirs="Program Files\ArcGIS\Pro"
+    set pydirs="Program Files\ArcGIS\Pro" "Python27\ArcGIS10.8"
 ) else (
     set arcpy=n
     rem Directory paths to search for Python.

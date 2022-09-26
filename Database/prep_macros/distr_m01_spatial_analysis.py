@@ -146,8 +146,10 @@ arcpy.Intersect_analysis(inFeatBus, temp_bus_intrsct_shp, "ALL", "", "INPUT")
 arcpy.Intersect_analysis(inFeatFeed, temp_feed_intrsct_shp, "ALL", "", "INPUT")
 arcpy.management.Copy(temp_bus_intrsct_shp, temp_bus_area_shp)
 arcpy.management.Copy(temp_feed_intrsct_shp, temp_feed_area_shp)
-arcpy.management.CalculateField(temp_bus_area_shp.replace('.shp', '.dbf'), 'F_AREA', '!shape.area!')
-arcpy.management.CalculateField(temp_feed_area_shp.replace('.shp', '.dbf'), 'F_AREA', '!shape.area!')
+arcpy.management.AddField(temp_bus_area_shp.replace('.shp', '.dbf'), 'F_AREA', 'DOUBLE')
+arcpy.management.AddField(temp_feed_area_shp.replace('.shp', '.dbf'), 'F_AREA', 'DOUBLE')
+arcpy.management.CalculateField(temp_bus_area_shp.replace('.shp', '.dbf'), 'F_AREA', '!shape.area!', 'PYTHON_9.3')
+arcpy.management.CalculateField(temp_feed_area_shp.replace('.shp', '.dbf'), 'F_AREA', '!shape.area!', 'PYTHON_9.3')
 
 
 # ---------------------------------------------------------------
