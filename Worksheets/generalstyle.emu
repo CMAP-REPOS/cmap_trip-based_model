@@ -1,0 +1,160 @@
+50C48697-E940-4ED3-AABD-FEDD2EA3A512 07B0F5AD-A2A7-4B4E-B4A9-06EB441586D6 1 2 0
+# Emme user parameter file generated on Sun Oct 24 10:34:37 2021
+# File: M:/proj1/nrf/Conformity/c21q4/c21q2_100_20210324/Worksheets/generalstyle.emu
+#
+# String Name: name of user parameter object (tr)
+Name = General Style
+# Text Description: description of user parameter object (tr,subst)
+Description = 
+# Flags Flags: bit pattern containing object flags
+Flags = 0x22
+# String TranslationContext: context for translations of configuration texts (subst)
+TranslationContext = GeneralWorksheet
+# Click EditValues: when clicked, opens dialog to edit parameter values (nosave)
+EditValues : (0x80) /EditGeneralStyle
+# Click Modified: clicked by the system when some parameters have been modified (nosave)
+Modified : (0x80) $WorksheetLoaded/
+# String ParameterDefinitions: definition of user parameters
+ParameterDefinitions[] = Style;BackgroundColor;Background color (group BackgroundColor!);0;0;1;stylebutton;Background color:
+ParameterDefinitions[] = Style;Basenet;Link base (group Basenet!);1;0;1;stylebutton;Link base:
+ParameterDefinitions[] = Style;Nodes;Node boxes (group Nodes!);2;0;1;stylebutton;Node boxes:
+ParameterDefinitions[] = Style;MultiBars;Link bars (group MultiBars!);3;0;1;stylebutton;Link bars:
+ParameterDefinitions[] = Style;MultiValue;Multi-values (group MultiValue!);4;0;1;stylebutton;Multi-values:
+ParameterDefinitions[] = Style;MultiPen;Thick colored pens (group MultiPen!);5;0;1;stylebutton;Thick colored pens:
+ParameterDefinitions[] = Style;Rainbow;Rainbow (group Rainbow!);6;0;1;stylebutton;Rainbow:
+ParameterDefinitions[] = Style;Turns;Turns (group Turns!);7;0;1;stylebutton;Turns:
+ParameterDefinitions[] = Style;ShortestPath;Shortest paths (group ShortestPath!);8;0;1;stylebutton;Shortest paths:
+ParameterDefinitions[] = Style;GridValue;Grid values (group GridValue!);9;0;1;stylebutton;Grid values:
+ParameterDefinitions[] = Style;DiagFrame;Diagram frame (group DiagFrame!);10;0;1;stylebutton;Diagram frame:
+ParameterDefinitions[] = Style;Regression;Regression and confidence (group Regression!);11;0;1;stylebutton;Regression and confidence:
+ParameterDefinitions[] = Style;CompBars;Comparison bars (group CompBars!);12;0;1;stylebutton;Comparison bars:
+ParameterDefinitions[] = Style;CompLinks;Comparison links (group CompLinks!);13;0;1;stylebutton;Comparison links:
+ParameterDefinitions[] = Style;Tables;Tables (group Tables!);14;0;1;stylebutton;Tables:
+
+# Style BackgroundColor: Background color (group BackgroundColor!)
+BackgroundColor : $BackgroundColor!/
+BackgroundColor = 0x20ff0000 0x01ffffff 0x00000000 0x00000000
+# Style Basenet: Link base (group Basenet!)
+Basenet : $Basenet!/
+Basenet[] = 0x20008080 0x01008080 0x00000000 0x00000000
+Basenet[] = 0x20b1b1b1 0x01ffffff 0x00000000 0x00000000
+Basenet[] = 0x20ff0000 0x01ff0000 0x00000000 0x00000000
+# Style Nodes: Node boxes (group Nodes!)
+Nodes : $Nodes!/
+Nodes[] = 0x20000000 0x01ffffff 0x00000000 0x00000000
+Nodes[] = 0x20000000 0x01ff5a5a 0x00000000 0x00000000
+Nodes[] = 0x20000000 0x01ffff92 0x00000000 0x00000000
+# Style MultiBars: Link bars (group MultiBars!)
+MultiBars : $MultiBars!/
+MultiBars[] = 0x217d1f15 0x01ff412c 0x00000000 0x00000000
+MultiBars[] = 0x2126377e 0x012088ff 0x00000000 0x00000000
+MultiBars[] = 0x217f7f00 0x01ffff00 0x00000000 0x00000000
+MultiBars[] = 0x21542a7e 0x01aa55ff 0x00000000 0x00000000
+MultiBars[] = 0x21007f00 0x0100ff00 0x00000000 0x00000000
+MultiBars[] = 0x217a517a 0x01ffaaff 0x00000000 0x00000000
+# Style MultiValue: Multi-values (group MultiValue!)
+MultiValue : $MultiValue!/
+MultiValue[] = 0x2000407f 0x01007fff 0x10000000 0x00000020
+MultiValue[] = 0x207f7f00 0x01ffff00 0x10000000 0x00000020
+MultiValue[] = 0x20007f40 0x0100ff7f 0x10000000 0x00000020
+MultiValue[] = 0x207f0040 0x01ff007f 0x10000000 0x00000020
+MultiValue[] = 0x20007f7f 0x0100ffff 0x10000000 0x00000020
+MultiValue[] = 0x2040007f 0x017f00ff 0x10000000 0x00000020
+MultiValue[] = 0x207f4000 0x01ff7f00 0x10000000 0x00000020
+MultiValue[] = 0x20407f00 0x017fff00 0x10000000 0x00000020
+MultiValue[] = 0x207f007f 0x01ff00ff 0x10000000 0x00000020
+MultiValue[] = 0x2000007f 0x010000ff 0x10ffffff 0x00000020
+MultiValue[] = 0x20007f00 0x0100ff00 0x10ffffff 0x00000020
+MultiValue[] = 0x207f0000 0x01ff0000 0x10ffffff 0x00000020
+# Style MultiPen: Thick colored pens (group MultiPen!)
+MultiPen : $MultiPen!/
+MultiPen[] = 0x22ff0000 0x01ffffff 0x00000000 0x00000a00
+MultiPen[] = 0x2200ff00 0x01ffffff 0x00000000 0x00000a00
+MultiPen[] = 0x220000ff 0x01ffffff 0x00000000 0x00000a00
+MultiPen[] = 0x2200ffff 0x01ffffff 0x00000000 0x00000a00
+MultiPen[] = 0x22ff00ff 0x01ffffff 0x00000000 0x00000a00
+MultiPen[] = 0x22ffff00 0x01ffffff 0x00000000 0x00000a00
+MultiPen[] = 0x22ff7f00 0x01ffffff 0x00000000 0x00000a00
+MultiPen[] = 0x227f8000 0x01ffffff 0x00000000 0x00000a00
+MultiPen[] = 0x22008000 0x01ffffff 0x00000000 0x00000a00
+MultiPen[] = 0x22000080 0x01ffffff 0x00000000 0x00000a00
+MultiPen[] = 0x228c00d3 0x01ffffff 0x00000000 0x00000a00
+MultiPen[] = 0x22ff008c 0x01ffffff 0x00000000 0x00000a00
+# Style Rainbow: Rainbow (group Rainbow!)
+Rainbow : $Rainbow!/
+Rainbow[] = 0x217f0040 0x01ff007f 0x00ffffff 0x0000002f
+Rainbow[] = 0x217f007f 0x01ff00ff 0x00ffffff 0x0000002f
+Rainbow[] = 0x2140007f 0x017f00ff 0x00ffffff 0x0000002f
+Rainbow[] = 0x2100007f 0x010000ff 0x00ffffff 0x0000002f
+Rainbow[] = 0x2100407f 0x01007fff 0x00ffffff 0x0000002f
+Rainbow[] = 0x21007f7f 0x0100ffff 0x00000000 0x0000002f
+Rainbow[] = 0x21007f40 0x0100ff7f 0x00000000 0x0000002f
+Rainbow[] = 0x21007f00 0x0100ff00 0x00000000 0x0000002f
+Rainbow[] = 0x21407f00 0x017fff00 0x00000000 0x0000002f
+Rainbow[] = 0x217f7f00 0x01ffff00 0x00000000 0x0000002f
+Rainbow[] = 0x217f4000 0x01ff7f00 0x00000000 0x0000002f
+Rainbow[] = 0x217f0000 0x01ff0000 0x00ffffff 0x0000002f
+# Style Turns: Turns (group Turns!)
+Turns : $Turns!/
+Turns[] = 0x2000ff00 0x0100ff00 0x00000000 0x00000005
+Turns[] = 0x20ff0000 0x01ff0000 0x00000000 0x00000025
+Turns[] = 0x200000ff 0x010000ff 0x00000000 0x00000005
+Turns[] = 0x2000ffff 0x0100ffff 0x00000000 0x00000035
+Turns[] = 0x20ff00ff 0x01ff00ff 0x00000000 0x00000015
+Turns[] = 0x20ffff00 0x01ffff00 0x00000000 0x00000015
+Turns[] = 0x20ff7f00 0x01ff7f00 0x00000000 0x00000015
+Turns[] = 0x207f8000 0x017f8000 0x00000000 0x00000015
+Turns[] = 0x20008000 0x01008000 0x00000000 0x00000015
+Turns[] = 0x20000080 0x01000080 0x00000000 0x00000015
+Turns[] = 0x208c00d3 0x018c00d3 0x00000000 0x00000005
+Turns[] = 0x20ff008c 0x01ff008c 0x00000000 0x00000015
+Turns[] = 0x20545454 0x01545454 0x00000000 0x00000015
+Turns[] = 0x20ababab 0x01ababab 0x00000000 0x00000015
+# Style ShortestPath: Shortest paths (group ShortestPath!)
+ShortestPath : $ShortestPath!/
+ShortestPath[] = 0x20000000 0x017f7f7f 0x00ffffff 0x00000020
+ShortestPath[] = 0x207f0000 0x01ff0000 0x00ffffff 0x00000020
+ShortestPath[] = 0x20007f00 0x0100ff00 0x00ffffff 0x00000020
+ShortestPath[] = 0x2000007f 0x010000ff 0x00ffffff 0x00000020
+ShortestPath[] = 0x20007f7f 0x0100ffff 0x00000000 0x00000020
+ShortestPath[] = 0x207f007f 0x01ff00ff 0x00000000 0x00000020
+ShortestPath[] = 0x207f7f00 0x01ffff00 0x00000000 0x00000020
+ShortestPath[] = 0x207f4000 0x01ff7f00 0x00000000 0x00000020
+ShortestPath[] = 0x2040007f 0x017f00ff 0x00000000 0x00000020
+ShortestPath[] = 0x207f0040 0x01ff007f 0x00000000 0x00000020
+ShortestPath[] = 0x20007f40 0x0100ff7f 0x00000000 0x00000020
+ShortestPath[] = 0x2000407f 0x01007fff 0x00000000 0x00000020
+# Style GridValue: Grid values (group GridValue!)
+GridValue : $GridValue!/
+GridValue[] = 0x21007f7f 0x0100ffff 0x00000000 0x0000002f
+GridValue[] = 0x21007f00 0x0100ff00 0x00000000 0x0000002f
+GridValue[] = 0x217f7f00 0x01ffff00 0x00000000 0x0000002f
+GridValue[] = 0x217f0000 0x01ff0000 0x00ffffff 0x0000002f
+# Style DiagFrame: Diagram frame (group DiagFrame!)
+DiagFrame : $DiagFrame!/
+DiagFrame[] = 0x00000000 0x01c0c0c0 0x28000000 0x00000000
+DiagFrame[] = 0x20000000 0x00ffffff 0x00000000 0x00000000
+DiagFrame[] = 0x00000000 0x00ffffff 0x00000000 0x00000000
+DiagFrame[] = 0x2000ff00 0x00ffffff 0x00000000 0x00000000
+DiagFrame[] = 0x20ff0000 0x00ffffff 0x00000000 0x00000000
+DiagFrame[] = 0x200000ff 0x00ffffff 0x00000000 0x00000000
+# Style Regression: Regression and confidence (group Regression!)
+Regression : $Regression!
+Regression[] = 0x20000000 0x00ffffff 0x00000000 0x00000000
+Regression[] = 0x60000000 0x01ffff00 0x00000000 0x00000000
+# Style CompBars: Comparison bars (group CompBars!)
+CompBars : $CompBars!/
+CompBars[] = 0x20007f00 0x0100ff00 0x00000000 0x00000005
+CompBars[] = 0x207f0000 0x01ff0000 0x00000000 0x00000005
+# Style CompLinks: Comparison links (group CompLinks!)
+CompLinks : $CompLinks!/
+CompLinks[] = 0x20818181 0x01ffff7f 0x00000000 0x00000000
+CompLinks[] = 0x207e5100 0x01ffaa00 0x00000000 0x00000000
+CompLinks[] = 0x202b5500 0x0155aa00 0x00000000 0x00000000
+# Style Tables: Tables (group Tables!)
+Tables : $Tables!/
+Tables[] = 0x21000000 0x01ffffff 0x00000000 0x00000000
+Tables[] = 0x21000000 0x01ffffff 0x08000000 0x00000000
+Tables[] = 0x21000000 0x01ffffff 0x08ff0000 0x00000000
+Tables[] = 0x01000000 0x01ffffff 0x00000000 0x00000000
+

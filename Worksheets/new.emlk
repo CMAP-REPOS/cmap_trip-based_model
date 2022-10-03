@@ -1,0 +1,5 @@
+Emme Link 1
+Name = New worksheet
+Condition = 1
+Link = %<$EmmePath>%/common/new.emw
+
