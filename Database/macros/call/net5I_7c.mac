@@ -32,6 +32,9 @@
 ~#  Ferguson, 02/10/2015 - change from 6 classes to 7 classes by dividing HOV into HOV2 and HOV3+
 ~#
 ~#  Heither, 07-15-2016: no loading of tolls into ul3; calculate vdf7 travel time using speed of incoming link.
+~#         , rev. 07-06-2021: corrected calculation for df7 travel time using speed of incoming link.
+~#
+~#  JLemp, 07-07-2021: Update extra link attributes to new vehicle class framework (3 SOV classes + combined b-plate, light trucks)
 ~#
 ~/  7-class version: S is primary class
 ~/
@@ -43,12 +46,28 @@
 reports=report\iter_%ms98%\net5I_%s%.rxt
 ~o|39
 2.42
-~+;3;@vauto;~?e
+~+;3;@vsov1;~?e
 ~$>erra
 ~+;y;q;~$>enda
 ~:erra
 ~+; ;q
 ~:enda
+~# ----------------
+2.42
+~+;3;@vsov2;~?e
+~$>errH
+~+;y;q;~$>endH
+~:errH
+~+; ;q
+~:endH
+~# ----------------
+2.42
+~+;3;@vsov3;~?e
+~$>errH
+~+;y;q;~$>endH
+~:errH
+~+; ;q
+~:endH
 ~# ----------------
 2.42
 ~+;3;@vhov2;~?e
@@ -104,12 +123,28 @@ reports=report\iter_%ms98%\net5I_%s%.rxt
 ~/
 ~/**********************************************************************
 2.42
-~+;3;@tauto;~?e
+~+;3;@tsov1;~?e
 ~$>erra
 ~+;y;q;~$>enda
 ~:erra
 ~+; ;q
 ~:enda
+~# ----------------
+2.42
+~+;3;@tsov2;~?e
+~$>errH
+~+;y;q;~$>endH
+~:errH
+~+; ;q
+~:endH
+~# ----------------
+2.42
+~+;3;@tsov3;~?e
+~$>errH
+~+;y;q;~$>endH
+~:errH
+~+; ;q
+~:endH
 ~# ----------------
 2.42
 ~+;3;@thov2;~?e
@@ -165,10 +200,13 @@ reports=report\iter_%ms98%\net5I_%s%.rxt
 ~/
 ~/**********************************************************************
 2.42
-~+;2;2;@vauto;class 1: SOV volume iter_%ms98%;0.0
-~+;2;2;@vhov2;class 2: HOV2 volume iter_%ms98%;0.0
-~+;2;2;@vhov3;class 3: HOV3+ volume iter_%ms98%;0.0
-~+;2;2;@vbplt;class 4: b plate truck volume iter_%ms98%;0.0
+~#~+;2;2;@vauto;class 1: SOV volume iter_%ms98%;0.0
+~+;2;2;@vsov1;class 1: SOV VOT1 volume iter_%ms98%;0.0
+~+;2;2;@vsov2;class 2: SOV VOT2 volume iter_%ms98%;0.0
+~+;2;2;@vsov3;class 3: SOV VOT3 volume iter_%ms98%;0.0
+~+;2;2;@vhov2;class 4: HOV2 volume iter_%ms98%;0.0
+~+;2;2;@vhov3;class 4: HOV3+ volume iter_%ms98%;0.0
+~+;2;2;@vbplt;class 5: b plate truck volume iter_%ms98%;0.0
 ~+;2;2;@vlght;class 5: light truck volume iter_%ms98%;0.0
 ~+;2;2;@vmed;class 6: medium truck volume iter_%ms98%;0.0
 ~+;2;2;@vhevy;class 7: heavy truck volume iter_%ms98%;0.0
@@ -178,10 +216,13 @@ reports=report\iter_%ms98%\net5I_%s%.rxt
 ~/  Initialize extra turn attributes for class volumes
 ~/
 ~/**********************************************************************
-~+;2;5;@tauto;class 1: SOV turns iter_%ms98%;0.0
-~+;2;5;@thov2;class 2: HOV2 turns iter_%ms98%;0.0
-~+;2;5;@thov3;class 3: HOV3+ turns iter_%ms98%;0.0
-~+;2;5;@tbplt;class 4: b plate truck turns iter_%ms98%;0.0
+~#~+;2;5;@tauto;class 1: SOV turns iter_%ms98%;0.0
+~+;2;5;@tsov1;class 1: SOV VOT1 turns iter_%ms98%;0.0
+~+;2;5;@tsov2;class 2: SOV VOT2 turns iter_%ms98%;0.0
+~+;2;5;@tsov3;class 3: SOV VOT3 turns iter_%ms98%;0.0
+~+;2;5;@thov2;class 4: HOV2 turns iter_%ms98%;0.0
+~+;2;5;@thov3;class 4: HOV3+ turns iter_%ms98%;0.0
+~+;2;5;@tbplt;class 5: b plate truck turns iter_%ms98%;0.0
 ~+;2;5;@tlght;class 5: light truck turns iter_%ms98%;0.0
 ~+;2;5;@tmed;class 6: medium truck turns iter_%ms98%;0.0
 ~+;2;5;@thevy;class 7: heavy truck turns iter_%ms98%;0.0;q
@@ -276,8 +317,8 @@ vdf=3
 ~+;1;y;ui2;0; ;all;4
 ~+;1;y;ul3;0; ;vdf=7; ;4
 ~+;1;y;ui1;vdf.eq.7; ;2;all;4
-~+;1;y;uj2;(uj1.eq.1)*(len/@speed*60); ;2;all;4
-~+;1;y;tmpl1;ui2; ;vdf=7; ;4
+~+;1;y;uj2;@speed; ;2;all;4
+~+;1;y;tmpl1;len/ui2*60; ;vdf=7; ;4
 ~+;1;y;ul3;tmpl1; ;vdf=7; ;4;q
 ~# 
 ~#

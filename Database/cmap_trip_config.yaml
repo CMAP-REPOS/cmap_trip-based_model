@@ -1,0 +1,254 @@
+---
+
+intrazonal_auto_speed: # miles per hour
+  peak:
+    1: 5      #  Chicago Central Area zone
+    2: 15     #  Chicago zone outside of the Central Area
+    3: 15     #  dense suburban CBD zone
+    4: 25     #  remaining suburban zones
+  offpeak:
+    1: 10     #  Chicago Central Area zone
+    2: 20     #  Chicago zone outside of the Central Area (78-309)
+    3: 20     #  dense suburban CBD zone
+    4: 25     #  remaining suburban zones
+
+parking_costs: # hourly rates in cents, by trip purpose and zone types
+  defaults:
+    HW:
+      1: 80      #  Chicago Central Area zone
+      2: 10      #  Chicago zone outside of the Central Area
+      3: 20      #  dense suburban CBD zone
+      4: 0       #  remaining suburban zones
+    HO:
+      1: 80      #  Chicago Central Area zone
+      2: 10      #  Chicago zone outside of the Central Area
+      3: 20      #  dense suburban CBD zone
+      4: 0       #  remaining suburban zones
+    NH:
+      1: 80      #  Chicago Central Area zone
+      2: 10      #  Chicago zone outside of the Central Area
+      3: 20      #  dense suburban CBD zone
+      4: 0       #  remaining suburban zones
+  cbd_nearby:    # when these CBD zones are missing parking costs, use the given nearby zone rates instead
+    1: 59
+    8: 14
+    32: 33
+    37: 38
+    42: 70
+    46: 47
+    48: 49
+    53: 54
+    58: 59
+    66: 64
+    67: 68
+    72: 64
+    73: 64
+    74: 75
+    69: 70
+
+regional_income_distribution:  # used for NHB trips
+  # income category: fraction of all households in this category
+  1: 0.19771384
+  2: 0.22170351
+  3: 0.22427661
+  4: 0.19496901
+  5: 0.16133703
+
+hov3_occupancy:
+    HBW: 3.36   # both high and low income
+    HBO: 3.31   # also includes Home-based Shopping
+    NHB: 3.39   # also includes Visitors
+
+default_activity_durations:  # number of hours, by trip purpose
+  HW: 10        # both high and low income
+  HO: 6         # also includes Home-based Shopping
+  NH: 3         # also includes Visitors
+
+visitor_trips_growth_factor: 1.0
+
+n_replications: 50  # number of simulated input sets per zone pair
+
+use_compressed_skims: False
+
+taxi:
+  cost:
+    flag_pull: 325          # cents, initial base fare
+    per_mile: 225           # cents
+    per_minute: 41.667      # cents per minute, regulated at 25 cents per 36 seconds
+    airport_departure: 400  # cents
+    airport_zones:
+      - 125   # ORD Terminals 1-2-3
+      - 126   # ORD Terminal 5
+      - 494   # MDW Airfield
+      - 499   # MDW Terminal Groundside
+
+  wait_time:   # in minutes, by zone area type:
+    peak:
+      1: 1      #  Chicago Central Area zone
+      2: 5      #  Chicago zone outside of the Central Area
+      3: 10     #  dense suburban CBD zone
+      4: 15     #  remaining suburban zones
+    offpeak:
+      1: 2      #  Chicago Central Area zone
+      2: 7      #  Chicago zone outside of the Central Area (78-309)
+      3: 10     #  dense suburban CBD zone
+      4: 15     #  remaining suburban zones
+
+tnc:
+  cost:
+    peak:
+      base_fare: 136          # cents, initial base fare
+      per_mile: 109           # cents
+      per_minute: 28          # cents per minute
+      min_fare: 485           # cents
+      booking_fee: 257        # cents, fixed cost not included in min fare, in 2019 $1.85 to the company, 72¢ taxes
+    offpeak:
+      base_fare: 163          # cents, initial base fare
+      per_mile: 109           # cents
+      per_minute: 26          # cents per minute
+      min_fare: 485           # cents
+      booking_fee: 257        # cents, fixed cost not included in min fare, in 2019 $1.85 to the company, 72¢ taxes
+  wait_time:    # in minutes, by zone area type:
+    peak:
+      1: 1      #  Chicago Central Area zone
+      2: 5      #  Chicago zone outside of the Central Area
+      3: 5      #  dense suburban CBD zone
+      4: 15     #  remaining suburban zones
+    offpeak:
+      1: 2      #  Chicago Central Area zone
+      2: 5      #  Chicago zone outside of the Central Area (78-309)
+      3: 5      #  dense suburban CBD zone
+      4: 15     #  remaining suburban zones
+  surcharge_rates:
+    special: 500
+    downtown: 0    # zero in 2019,  in 2020 -> $1.75
+  surcharge_zones:
+    special:  # $5.00 extra fee for TNC trip end in these zones
+      - 7     # Navy Pier
+      - 125   # ORD Terminals 1-2-3
+      - 126   # ORD Terminal 5
+      - 494   # MDW Airfield
+      - 499   # MDW Terminal Groundside
+      - 112   # McCormick Place
+      - 113   # McCormick Place
+    downtown: [ # $1.75 extra fee for TNC trip end in these zones during most hours (6am - 10pm)
+      2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+      32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 49, 50, 51, 52, 55, 56, 57, 60, 61, 62, 63 ]
+
+tnc_pooled:
+  cost:
+    peak:
+      base_fare: 68           # cents, initial base fare
+      per_mile: 106           # cents
+      per_minute: 0           # cents per minute
+      min_fare: 0             # cents
+      booking_fee: 257        # cents, fixed cost not included in min fare, in 2019 $1.85 to the company, 72¢ taxes
+    offpeak:
+      base_fare: 128          # cents, initial base fare
+      per_mile: 101           # cents
+      per_minute: 0           # cents per minute
+      min_fare: 0             # cents
+      booking_fee: 257        # cents, fixed cost not included in min fare, in 2019 $1.85 to the company, 72¢ taxes
+  wait_time:    # in minutes, by zone area type:
+    peak:
+      1: 1      #  Chicago Central Area zone
+      2: 5      #  Chicago zone outside of the Central Area
+      3: 5      #  dense suburban CBD zone
+      4: 15     #  remaining suburban zones
+    offpeak:
+      1: 2      #  Chicago Central Area zone
+      2: 5      #  Chicago zone outside of the Central Area (78-309)
+      3: 5      #  dense suburban CBD zone
+      4: 15     #  remaining suburban zones
+  surcharge_rates:
+    special: 500
+    downtown: 0    # zero in 2019,  in 2020 -> $1.75
+  surcharge_zones:
+    special:  # $5.00 extra fee for TNC trip end in these zones
+      - 7     # Navy Pier
+      - 125   # ORD Terminals 1-2-3
+      - 126   # ORD Terminal 5
+      - 494   # MDW Airfield
+      - 499   # MDW Terminal Groundside
+      - 112   # McCormick Place
+      - 113   # McCormick Place
+    downtown: [ # $1.75 extra fee for TNC trip end in these zones during most hours (6am - 10pm)
+      2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+      32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 49, 50, 51, 52, 55, 56, 57, 60, 61, 62, 63 ]
+
+airports:
+  ORD:
+    passengers: # TAZs
+      - 125   # Terminals 1-2-3
+      - 126   # Terminal 5
+    employees:
+      - 122
+      - 123
+      - 124
+      - 126
+      - 127
+      - 129
+      - 130
+      - 1733
+      - 1734
+      - 1969
+  MDW:
+    passengers:
+      - 494   # Airfield
+      - 499   # Terminal Groundside
+    employees:
+      - 469
+
+time_of_day:
+  pa_split: # fraction of trips where O-D = A-P instead of P-A
+    HBWH: 0.458766
+    HBWL: 0.443403
+    HBO: 0.513308
+    HBS: 0.646806
+    NHB: 0.0 # NHB trips are modeled directly as O-D
+
+super_districts: # aggregates CMAP districts into super-districts
+  1: A
+  2: A
+  3: B
+  4: B
+  5: C
+  6: C
+  7: B
+  8: B
+  9: C
+  10: X
+  11: D
+  12: D
+  13: E
+  14: E
+  15: F
+  16: F
+  17: F
+  18: D
+  19: D
+  20: E
+  21: F
+  22: F
+  23: F
+  24: X
+  25: X
+  26: X
+  27: B
+  28: C
+
+super_district_flow_summaries: # super-district flows for validation summaries
+  - A-A
+  - A-B
+  - A-C
+  - A-D
+  - A-E
+  - A-F
+  - B-B
+  - B-C
+  - C-C
+  - B-DEF
+  - C-DEF
+  - DEF-DEF
+
+...

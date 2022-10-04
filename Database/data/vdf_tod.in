@@ -1,0 +1,31 @@
+c EMME/2 Module: 4.14(v8.01)   Date: 96-08-02 16:01   User: E170/CATS......rwe
+c Project:       Conformity 1995:  Base 1990 Highway Assignments             
+c
+c Function 7 modified by axs, 11/22/99
+c Function 7 modified by kww to represent ETC.
+c Function 2 modified by kww to represent M&O improvements
+c Heither 07-15-2016: old vdf7 (toll plaza delay) replaced by travel time using posted speed of incoming link 
+c bozic 3-23-2017 modified to add el2 to volau (bus veq) 
+c
+t functions
+a fd1  =ul1 * (1 + .15 * (((volau+el2) / ul2) ^ 4)) + ((int(ul3 / 1000)) / 10 
+        .min. ((1 / 60) * (((ul3 .mod. 1000) .gt. 0) * (int(ul3 / 1000) 
+        .gt. 0)) * ((0 .max. (5.96 * ((volau+el2) / ul2) - .39 * 6 * int(ul3 /
+         1000) * (ul3 .mod. 1000) / 100 + .35 * 6 * int(ul3 / 1000) -   
+         4.47)) + (0 .max. (3.38 - 7.32 * (ul3 .mod. 1000) / 100 + 2.65 
+        * (((volau+el2) / ul2) ^ 8))))))
+a fd2  =(1 + (.15 * (((volau+el2) / ul2) .min. 1))) * ((ul1/1.15) *   
+         (1 + .15 * (((volau+el2) / (ul2 + 300)) ^ 8)))
+a fd3  =ul1 * (1 + .15 * (((volau+el2) / ul2) ^ 4)) + ((int(ul3 / 1000)) / 10 
+        .min. ((1 / 60) * (((ul3 .mod. 1000) .gt. 0) * (int(ul3 / 1000) 
+        .gt. 0)) * ((0 .max. (5.96 * ((volau+el2) / ul2) - .39 * 6 * int(ul3 /
+         1000) * (ul3 .mod. 1000) / 100 + .35 * 6 * int(ul3 / 1000) -   
+         4.47)) + (0 .max. (3.38 - 7.32 * (ul3 .mod. 1000) / 100 + 2.65 
+        * (((volau+el2) / ul2) ^ 8))))))
+a fd4  =(1 + (.15 * (((volau+el2) / ul2) .min. 1))) * (ul1 * (1 + .15 * ((  
+         (volau+el2) / ul2) ^ 8)))
+a fd5  =ul1 * (1 + .15 * (((volau+el2) / ul2) ^ 8))
+a fd6  =length*3
+a fd7  =ul1
+a fd8  =ul1 * (1 + .15 * (((volau+el2) / ul2) ^ 10))
+

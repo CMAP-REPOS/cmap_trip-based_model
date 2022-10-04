@@ -1,0 +1,47 @@
+Emme Parameters 1
+# Emme user parameter file generated on Wed Mar 8 15:11:31 2006
+# File: bendlink.emu
+#
+# String Name: name of user parameter object (tr)
+Name = Link Bending
+# Text Description: description of user parameter object (tr,subst)
+Description = 
+# Flags Flags: bit pattern containing object flags
+Flags = 0x22
+# String TranslationContext: context for translations of configuration texts (subst)
+TranslationContext = GeneralWorksheet
+# Click EditValues: when clicked, opens dialog to edit parameter values (nosave)
+EditValues : /EditBendValues
+# String ParameterDefinitions: definition of user parameters
+ParameterDefinitions[] = Bool;BendLinks;allow drawing of bent links;0;0;1;checkbox;Activate link bending
+ParameterDefinitions[] = Integer;BMaxPts;maximum number of intermediate points for bended links (0=use default);0;1;1;spinbox;Spline points:;0;360
+ParameterDefinitions[] = Integer;LkRedrawMargin;redraw margin around straight-line link(pixels);1;1;1;spinbox;Redraw margin:;0;1000
+ParameterDefinitions[] = Float;LinLimit;bend limit;2;1;1;spinbox;Bend limit:;0;1
+ParameterDefinitions[] = String;AngleIAttr;attribute containing the bending angle at the I-node;0;2;1;stringcombo;I-angle attribute:
+ParameterDefinitions[] = String;AngleJAttr;attribute containing the bending angle at the J-node;1;2;1;stringcombo;J-angle attribute:
+ParameterDefinitions[] = String;BendExp;expression for link bend angles: angleI,angleJ,[limit];2;2;1;stringcombo;Bend expression:
+
+# Bool BendLinks: allow drawing of bent links
+BendLinks : $BendLinks!/
+BendLinks = 0
+# Integer BMaxPts: maximum number of intermediate points for bended links (0=use default)
+BMaxPts : $BendMaxPoints!/
+BMaxPts = 0
+# Integer LkRedrawMargin: redraw margin around straight-line link(pixels)
+LkRedrawMargin : $LinkRedrawMargin!/
+LkRedrawMargin = 50
+# Float LinLimit: bend limit
+LinLimit : $LinLimit!/
+LinLimit = 0
+# String AngleIAttr: attribute containing the bending angle at the I-node
+AngleIAttr : $IAngle!/
+AngleIAttr = 
+# String AngleJAttr: attribute containing the bending angle at the J-node
+AngleJAttr : $JAngle!/
+AngleJAttr = 
+# String BendExp: expression for link bend angles: angleI,angleJ,[limit]
+BendExp : (0x4) $BendAngles!/
+BendExp[] = 
+BendExp[] = 
+BendExp[] = if(put(i<j||isOneWay),%<AngleIAttr>%,-Pji->%<AngleJAttr>%),if(get(1),%<AngleJAttr>%,-Pji->%<AngleIAttr>%)
+

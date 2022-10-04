@@ -3,6 +3,7 @@
 ~/
 ~/  iter.master7c.mac %1%
 ~/     where %1% is the three digit alternative ID
+~/           %2% = model iteration for calculations
 ~/
 ~/**********************************************************************
 ~/
@@ -95,9 +96,13 @@
 ~#     
 ~#    Heither, 04-17-2018 - delete toll mode choice matrices (mf111-mf208) to save space
 ~#        
+~#    Lemp, 04-30-2021 - run new time of day skimming script
+~#                       run new toll skimming script for mode choice
+~#                       don't delete the toll skim matrices at end
+~#        
 ~/**********************************************************************
-~/  The assignment performed includes 7 classes: auto/SOV, auto/HOV2, auto/HOV3+,
-~/   b-trucks, light, medium and heavy trucks.
+~/  The assignment performed includes 7 classes: auto/SOV VOT1, auto/SOV VOT2, auto/SOV VOT3,
+~/   auto/HOV, b-trucks+light trucks, medium trucks, and heavy trucks.
 ~/**********************************************************************
 ~/  Following matrices are required by this macro (note that mf11 &mf12
 ~/   are prepared at the start of the macro.
@@ -159,6 +164,10 @@
 ~/      mf18 = period all HOV mode=H vehicle trip table
 ~/      mf92 = period HOV2 mode=H vehicle trip table
 ~/      mf93 = period HOV3+ mode=H vehicle trip table
+~/      mf94 = period SOV VOT1 mode=S vehicle trip table
+~/      mf95 = period SOV VOT2 mode=S vehicle trip table
+~/      mf96 = period SOV VOT3 mode=S vehicle trip table
+~/      mf97 = period b-plate+light trucks vehicle trip table in veq
 ~/**********************************************************************
 ~/  The following network variables and additional attributes are used
 ~/    in this macro:
@@ -167,7 +176,7 @@
 ~/              S = Single occupant auto
 ~/              H = High occupancy vehicle
 ~/              T = General truck
-~/              b = B plate truck
+~/              b = B plate truck (not used anymore, the b-plate+light category uses 'l' mode)
 ~/              l = Light truck
 ~/              m = Medium truck
 ~/              h = heavy truck
@@ -209,13 +218,17 @@
 ~/              intersection, link variable obtained from macro
 ~/              Arterial.Delay
 ~/
-~/     @vauto = auto volume on link (class 1)
+~/     @vsov1 = auto volume on link (class 1)
 ~/
-~/     @vhov2 = auto volume on link (class 2)
+~/     @vsov2 = auto volume on link (class 2)
 ~/
-~/     @vhov3 = auto volume on link (class 3)
+~/     @vsov3 = auto volume on link (class 3)
 ~/
-~/     @vbplt = b plate truck volume on link in veq (class 4)
+~/     @vhov2 = auto volume on link (class 4)
+~/
+~/     @vhov3 = auto volume on link (class 4)
+~/
+~/     @vbplt = b plate truck volume on link in veq (class 5)
 ~/
 ~/     @vlght = light truck volume on link in veq (class 5)
 ~/
@@ -385,6 +398,14 @@ s=%1%%ms98%%y%
 ~/
 ~/**********************************************************************
 ~/
+~/   Time period skim
+~/
+~/**********************************************************************
+~/
+~<macros\call\skimtod5I_7c.mac %1% %y%
+~/
+~/**********************************************************************
+~/
 ~/ Cycle for eight time periods
 ~/
 ~/**********************************************************************
@@ -401,8 +422,10 @@ s=%1%%ms98%%y%
 ~/
 ~<macros\call\skim5I_7c.mac %1%
 ~/
+~<macros\call\toll_skims.mac %1% %ms98%
+~/
 ~# ## -- Report Global Iteration Statistics
-~<macros\call\global_iteration_statistics.mac %ms98%
+~#~<macros\call\global_iteration_statistics.mac %ms98%
 ~#
 ~/**********************************************************************
 ~/  Confirm next iter number and close reports
@@ -415,7 +438,7 @@ s=%1%%ms98%%y%
 ~>>
 ~/********************************************************************** 
 ~/
-~/  Increment full iteration counter ms98
+~/  Increment full iteration counter ms98 from %ms98%
 ~/
 ~/********************************************************************** 
 ~/
@@ -431,9 +454,11 @@ ms98+1
 2
 q
 ~/
+~/ iteration counter now at %ms98%
+~/
 ~#
 ~# ## -- Delete Toll Mode Choice Matrices --
-~<useful_macros/delete.matrices 111 208
+~<useful_macros/delete.matrices 143 208
 q
 ~#
 ~#

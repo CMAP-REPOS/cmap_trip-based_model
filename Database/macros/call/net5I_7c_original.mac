@@ -1,0 +1,321 @@
+~/
+~/**********************************************************************
+~/
+~/  net5I_7c.mac %1% 
+~/     where %1% is the time period number
+~/
+~/  This macro performs extra attribute network processing and loads
+~/    values into ul? fields
+~/
+~/  Taken from Eash by Stryker (with modifications as noted), 12/8/99
+~/  Modified by DBE for emission calc changes with Mobile6, Dec 2002
+~/  Modified by DBE to return link capacity calc (stored in ul2) to 
+~/    original RWE with vdf=1,5 at 75% and vdf=8 at 100%
+~/  Modified by DBE 21Apr2004 for five class assignment.
+~/  Modified by DBE 21Apr2004 for five class assignment w/ turns saved
+~/    in extra attribs.
+~/  Modified by DBE 22May2004 for two class assignment w/ turns saved
+~/    in extra attribs.
+~/  Modified by DBE 1OCT2004 for five class assignment w/ turns as part
+~/    of fulliter
+~/ 
+~#  Heither, 12/03/2010
+~#    Includes DBE's coding for 6 vehicle classes.
+~/
+~#  Heither, 02/07/2013
+~#    Load last TOD period congested link time procedure is skipped due to path-based asmt.
+~#
+~#  Heither, 04-03-2014
+~#    Run Ftime.Capacity & Arterial.Delay for iter 0 (ensures updated attributes).
+~#    Compact macro syntax.
+~#
+~#  Ferguson, 02/10/2015 - change from 6 classes to 7 classes by dividing HOV into HOV2 and HOV3+
+~#
+~#  Heither, 07-15-2016: no loading of tolls into ul3; calculate vdf7 travel time using speed of incoming link.
+~#
+~/  7-class version: S is primary class
+~/
+~/********************************************************************** 
+~/
+~/  Delete extra link attributes for class volumes, if necessary
+~/
+~/**********************************************************************
+reports=report\iter_%ms98%\net5I_%s%.rxt
+~o|39
+2.42
+~+;3;@vauto;~?e
+~$>erra
+~+;y;q;~$>enda
+~:erra
+~+; ;q
+~:enda
+~# ----------------
+2.42
+~+;3;@vhov2;~?e
+~$>errH
+~+;y;q;~$>endH
+~:errH
+~+; ;q
+~:endH
+~# ----------------
+2.42
+~+;3;@vhov3;~?e
+~$>errH
+~+;y;q;~$>endH
+~:errH
+~+; ;q
+~:endH
+~# ----------------
+2.42
+~+;3;@vbplt;~?e
+~$>errb
+~+;y;q;~$>endb
+~:errb
+~+; ;q
+~:endb
+~# ----------------
+2.42
+~+;3;@vlght;~?e
+~$>errl
+~+;y;q;~$>endl
+~:errl
+~+; ;q
+~:endl
+~# ----------------
+2.42
+~+;3;@vmed;~?e
+~$>errm
+~+;y;q;~$>endm
+~:errm
+~+; ;q
+~:endm
+~# ----------------
+2.42
+~+;3;@vhevy;~?e
+~$>errh
+~+;y;q;~$>endh
+~:errh
+~+; ;q
+~:endh
+~# ----------------
+~/********************************************************************** 
+~/
+~/  Delete extra turn attributes for class volumes, if necessary
+~/
+~/**********************************************************************
+2.42
+~+;3;@tauto;~?e
+~$>erra
+~+;y;q;~$>enda
+~:erra
+~+; ;q
+~:enda
+~# ----------------
+2.42
+~+;3;@thov2;~?e
+~$>errH
+~+;y;q;~$>endH
+~:errH
+~+; ;q
+~:endH
+~# ----------------
+2.42
+~+;3;@thov3;~?e
+~$>errH
+~+;y;q;~$>endH
+~:errH
+~+; ;q
+~:endH
+~# ----------------
+2.42
+~+;3;@tbplt;~?e
+~$>errb
+~+;y;q;~$>endb
+~:errb
+~+; ;q
+~:endb
+~# ----------------
+2.42
+~+;3;@tlght;~?e
+~$>errl
+~+;y;q;~$>endl
+~:errl
+~+; ;q
+~:endl
+~# ----------------
+2.42
+~+;3;@tmed;~?e
+~$>errm
+~+;y;q;~$>endm
+~:errm
+~+; ;q
+~:endm
+~# ----------------
+2.42
+~+;3;@thevy;~?e
+~$>errh
+~+;y;q;~$>endh
+~:errh
+~+; ;q
+~:endh
+~# ----------------
+~/**********************************************************************
+~/
+~/  Initialize extra link attributes for class volumes
+~/
+~/**********************************************************************
+2.42
+~+;2;2;@vauto;class 1: SOV volume iter_%ms98%;0.0
+~+;2;2;@vhov2;class 2: HOV2 volume iter_%ms98%;0.0
+~+;2;2;@vhov3;class 3: HOV3+ volume iter_%ms98%;0.0
+~+;2;2;@vbplt;class 4: b plate truck volume iter_%ms98%;0.0
+~+;2;2;@vlght;class 5: light truck volume iter_%ms98%;0.0
+~+;2;2;@vmed;class 6: medium truck volume iter_%ms98%;0.0
+~+;2;2;@vhevy;class 7: heavy truck volume iter_%ms98%;0.0
+~/
+~/**********************************************************************
+~/
+~/  Initialize extra turn attributes for class volumes
+~/
+~/**********************************************************************
+~+;2;5;@tauto;class 1: SOV turns iter_%ms98%;0.0
+~+;2;5;@thov2;class 2: HOV2 turns iter_%ms98%;0.0
+~+;2;5;@thov3;class 3: HOV3+ turns iter_%ms98%;0.0
+~+;2;5;@tbplt;class 4: b plate truck turns iter_%ms98%;0.0
+~+;2;5;@tlght;class 5: light truck turns iter_%ms98%;0.0
+~+;2;5;@tmed;class 6: medium truck turns iter_%ms98%;0.0
+~+;2;5;@thevy;class 7: heavy truck turns iter_%ms98%;0.0;q
+~#
+~# ##########################################################################
+~#  -- Heither, 04-03-2014: run Ftime.Capacity & Arterial.Delay for iter 0.
+~#        This ensures link attributes are updated if edits were made and the
+~#        procedures were not run.
+~x=%ms98%
+~?x=0
+~+;~<prep_macros/call/Ftime.Capacity;~<prep_macros/call/Arterial.Delay
+~# ##########################################################################
+~/
+~/**********************************************************************
+~/
+~/  Initialize ul1, ul2, ul3
+~/
+~/**********************************************************************
+2.41
+~+;1;yes;ul1;0; ;all;2;2
+~+;1;yes;ul2;1; ;all;2;2
+~+;1;yes;ul3;0; ;all;2;2
+~/
+~/**********************************************************************
+~/
+~/  Calculate link capacity and load into ul2
+~/    
+~/    Capacity in BPR volume-delay function is level of service D
+~/      = 0.75*lane capacity/hour*lanes for vdf=1,5
+~/      = lane capacity/hour*lanes for vdf=8
+~/
+~/
+~/  This section was modified by axs so that it can called from 
+~/  tod.mac
+~/
+~/  The capacities for period 1 is factored by 5, all periods are
+~/  factored by the length of the period.
+~/
+~/**********************************************************************
+1
+yes
+ul2
+~/ modification by axs w/ selection of !vdf=6,7 subsequently changed by 
+~/  DBE July2003 for return to RWE original where 0.75 factor applied
+~/  to vdf=1,5 and not to vdf=8
+0.75*@emcap*lan*
+ (5*(%1%==1)+
+  1*((%1%==2)||(%1%==4))+
+  2*((%1%==3)||((%1%>=6)&&(%1%<=8)))+
+  4*(%1%==5))
+
+vdf=1,5
+
+2
+2
+~/
+~/***Capacity calculation for metered ramps added by DBE
+~/
+1
+yes
+ul2
+@emcap*lan*
+ (5*(%1%==1)+
+  1*((%1%==2)||(%1%==4))+
+  2*((%1%==3)||((%1%>=6)&&(%1%<=8)))+
+  4*(%1%==5))
+
+vdf=8
+
+2
+2
+~/
+~/**********************************************************************
+~/
+~/  Load cycle length and g/c ratio from @cycle and @gc into ul3
+~/
+~/**********************************************************************
+1
+yes
+ul3
+(int(@cyclej*10)*1000)+int(@gc*100)
+
+vdf=1
+vdf=3
+
+2
+2
+~#   
+~## -- Calculate Travel Time for vdf=7 Using Posted Speed From Incoming Link --
+~## -- (flag links and use rate from incoming link for toll link - store timau values in ul3) --
+~+;1;y;ui1;0; ;all;4
+~+;1;y;ui2;0; ;all;4
+~+;1;y;ul3;0; ;vdf=7; ;4
+~+;1;y;ui1;vdf.eq.7; ;2;all;4
+~+;1;y;uj2;(uj1.eq.1)*(len/@speed*60); ;2;all;4
+~+;1;y;tmpl1;ui2; ;vdf=7; ;4
+~+;1;y;ul3;tmpl1; ;vdf=7; ;4;q
+~# 
+~#
+~/**********************************************************************
+~/
+~/  Put initial free flow times into ul1.
+~/    (previous timau for links common to current & previous scenarios,
+~/     uncongested travel time for general links not common to 
+~/     scenarios, zero for additional toll links not in previous scenario.)
+~/
+~/**********************************************************************
+~/
+~/ modified by axs
+~/
+~/ put free flow times into ul1
+2.41
+~+;1;y;ul1;@ftime; ;!vdf=6,7; ;2;2
+~+;1;y;ul1;ul3; ;vdf=7; ;2;2;q
+~/
+~#
+~# ## -- Heither, 02-06-2013
+~# ## --  This block is skipped because the path-based asmt uses the paths
+~# ## --  from the time period of the previous global iteration as the starting point.
+~$>skip_ul1
+~/ determine if previous period has an assignment
+~+;~x=%s%;~x-1;s=%%%x%%%;~?e;~$>skip;~?!f&1024;~$>skip
+~/
+~/ get back into current scenario
+~+;~x+1;s=%%%x%%%;~x-1
+~/
+~/ put previous period times into ul1
+~/ compound line modified by DBE 28SEP2009 to report when prior time used
+~+;2.41;2;%x%;timau;ul1;*;1;n;ul1; ;*;2;2;q
+~/
+~:skip
+~/ get back into current scenario if not already there
+~+;~x+1;s=%%%x%%%
+~:skip_ul1
+reports=reports
+~/**********************************************************************
+~/**********************************************************************

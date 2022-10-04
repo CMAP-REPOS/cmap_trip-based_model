@@ -1,0 +1,50 @@
+﻿trip_type,description,purpose_category,pair_type
+1,worker home-based work low-income,HBWL,PA
+2,worker home-based work hi-income,HBWH,PA
+3,worker home-based work-related,HBW,PA
+4,worker home-based school,HBW,PA
+5,worker home-based nonhome/work at residence,HBOR,PA
+6,worker home-based nonhome/work not at residence,HBO,PA
+7,worker home-based shop,HBS,PA
+8,worker work-based nonhome/work at residence,NHBR,PA
+9,worker work-based nonhome/work not at residence,NHB,PA
+10,worker work-based shop,NHBS,PA
+11,worker work-based work,NHB,PA
+12,worker nonhome/work at residence nonhome/work at residence,NHBR,OD
+13,worker nonhome/work at residence nonhome/work not at residence,NHB,OD
+14,worker nonhome/work at residence shop,NHBS,OD
+15,worker nonhome/work not at residence nonhome/work at residence,NHBR,OD
+16,worker nonhome/work not at residence nonhome/work not at residence,NHB,OD
+17,worker nonhome/work not at residence shop,NHBS,OD
+18,worker shop nonhome/work at residence,NHBR,OD
+19,worker shop nonhome/work not at residence,NHB,OD
+20,worker shop shop,NHBS,OD
+21,non-working adult home-based school,HBW,PA
+22,non-working adult home-based nonhome at residence,HBOR,PA
+23,non-working adult home-based nonhome not at residence,HBO,PA
+24,non-working adult home-based shop,HBS,PA
+25,non-working adult nonhome at residence nonhome at residence,NHBR,OD
+26,non-working adult nonhome at residence nonhome not at residence,NHB,OD
+27,non-working adult nonhome at residence shop,NHBS,OD
+28,non-working adult nonhome not at residence nonhome at residence,NHBR,OD
+29,non-working adult nonhome not at residence nonhome not at residence,NHB,OD
+30,non-working adult nonhome not at residence shop,NHBS,OD
+31,non-working adult shop nonhome at residence,NHBR,OD
+32,non-working adult shop nonhome not at residence,NHB,OD
+33,non-working adult shop shop,NHBS,OD
+34,child home-based school,EXCLUDE,PA
+35,child home-based nonhome at residence,HBOR,PA
+36,child home-based nonhome not at residence,HBO,PA
+37,child home-based shop,HBS,PA
+38,child school nonhome at residence,NHBR,PA
+39,child school nonhome not at residence,NHB,PA
+40,child school shop,NHBS,PA
+41,child nonhome at residence nonhome at residence,NHBR,OD
+42,child nonhome at residence nonhome not at residence,NHB,OD
+43,child nonhome at residence shop,NHBS,OD
+44,child nonhome not at residence nonhome at residence,NHBR,OD
+45,child nonhome not at residence nonhome not at residence,NHB,OD
+46,child nonhome not at residence shop,NHBS,OD
+47,child shop nonhome at residence,NHBR,OD
+48,child shop nonhome not at residence,NHB,OD
+49,child shop shop,NHBS,OD

@@ -1,0 +1,76 @@
+~# input_data.mac
+~#  Craig Heither, rev. 02/02/2012
+~# 
+~#  *********************************************************************
+~#    Macro creates the following input data files needed for a regional 
+~#    model run: 
+~#      - per3.timau: TOD period 3 congested highway times for transit skim.
+~#      - hwytime: AM Peak final congested highway skim times (mf44).
+~#      - hwydist: AM Peak final congested highway skim distances (mf45).
+~#
+~#    Files should be created in the source directory and copied to the data\
+~#    directory of the target scenario.
+~#
+~#    File headers are automatically adjusted to include:
+~#      - d matrix=mf01 / a matrix=mf01 (hwytime)
+~#      - d matrix=mf02 / a matrix=mf02 (hwydist)
+~#
+~#
+~#       02-02-2012: revised to change matrix punch parameters.
+~#       12-17-2015: added per5.timau export for OP transit skim. NRF
+~#
+~#  *********************************************************************
+~#  =====================================================================
+~o|39
+~t1=temp1
+~# ---------------------------
+~/ ## CREATE per3.timau ##
+~# ---------------------------
+~!if exist per3.timau (del per3.timau)
+batchout=per3.timau
+s=3
+2.41
+~+;1;n;timau; ;all;3;q
+~#
+~# ---------------------------
+~/ ## CREATE per5.timau ##
+~# ---------------------------
+~!if exist per5.timau (del per5.timau)
+batchout=per5.timau
+s=5
+2.41
+~+;1;n;timau; ;all;3;q
+~#
+~# ---------------------------
+~/ ## CREATE hwytime ## 
+~# ---------------------------
+~!if exist %t1% (del %t1%)
+~!if exist hwytime (del hwytime)
+batchout=%t1%
+3.14
+~+;4;2;8,2;y;4;n
+~+;3;mf44; ;n;n;n;q
+~#
+~#  ##Insert new headers into file##
+~!type %t1% | findstr /B "c t" >> hwytime
+~+;~>>hwytime;~"d matrix=mf01;~"a matrix=mf01  amtime     0 am peak 7-9 am hwy time skim bal4;~>
+~!type %t1% | findstr /V "c t a" >> hwytime
+~#
+~# ---------------------------
+~/ ## CREATE hwydist ## 
+~# ---------------------------
+~!if exist %t1% (del %t1%)
+~!if exist hwydist (del hwydist)
+3.14
+~+;4;2;8,2;y;4;n
+~+;3;mf45; ;n;n;n;q
+~#
+~#  ##Insert new headers into file##
+~!type %t1% | findstr /B "c t" >> hwydist
+~+;~>>hwydist;~"d matrix=mf2;~"a matrix=mf2  amdist     0 am peak 7-9 am hwy distance skim bal4;~>
+~!type %t1% | findstr /V "c t a" >> hwydist
+~!del %t1%
+~#
+~o=6
+batchout=
+~/ end of macro

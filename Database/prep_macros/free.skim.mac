@@ -19,9 +19,10 @@
 ~#    Modified 11/16/10 by CMH: added coding for HOV skim matrices
 ~#    Modified 04/21/11 by CMH: slight modification to asmt setup logic due to Path-Based assignment
 ~#    Modified 07/23/12 by Heither: revised for Path-based asmt and HOV midday skim matrices.
+~#    Modified 07/29/21 by JLemp: copy free flow travel time skims to time period skims (mf461-468) as last step, add toll skims
 ~#
 ~/**********************************************************************
-~/  Time and distance skims are prepared for the following time periods 
+~/  Time, distance, and toll skims are prepared for the following time periods 
 ~/    and stored in these full matricies.
 ~#
 ~/    mf44 = am peak 7-9 am SOV hwy time skims (s=????3)
@@ -32,6 +33,18 @@
 ~/    mf77 = am peak 7-9 am HOV hwy distance skims (s=????3)
 ~/    mf78 = midday 10 am - 2 pm HOV hwy time skims (s=????5)
 ~/    mf79 = midday 10 am - 2 pm HOV hwy distance skims (s=????5)
+~/    mf111 = h-w low inc sov toll skims (s=????3)
+~/    mf112 = h-w low inc hov2 toll skims (s=????3)
+~/    mf113 = h-w low inc hov3+ toll skims (s=????3)
+~/    mf114 = h-w hi inc sov toll skims (s=????3)
+~/    mf115 = h-w hi inc hov2 toll skims (s=????3)
+~/    mf116 = h-w hi inc hov3+ toll skims (s=????3)
+~/    mf117 = h-o sov toll skims (s=????5)
+~/    mf118 = h-o hov2 toll skims (s=????5)
+~/    mf119 = h-o hov3+ toll skims (s=????5)
+~/    mf120 = n-h sov toll skims (s=????5)
+~/    mf121 = n-h hov2 toll skims (s=????5)
+~/    mf122 = n-h hov3+ toll skims (s=????5)
 ~/
 ~/    ms97 = dummy operand for demand matrix in assignment setup (5.11)
 ~#
@@ -62,6 +75,17 @@ q
 ~#
 4.11
 2
+~#
+~/**********************************************************************
+~/  Initialize base toll matricies
+~/**********************************************************************
+~#
+3.21
+~+;1;y;mf111;y;tshwl;low inc h-w sov toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf112;y;th2hwl;low inc h-w hov 2 per toll;~?q=1;y;0;mf111; ; ;n;1;
+~+;1;y;mf117;y;tsho;h-o sov toll;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf118;y;th2ho;h-o hov 2 per toll;~?q=1;y;0;mf117; ; ;n;1;
+q
 ~#
 ~/**********************************************************************
 ~/  Set scenario (x) and make temp copies of scenarios for skimming.
@@ -137,6 +161,7 @@ q
 ~t4=mf45
 ~t5=amdist
 ~t6=am peak 7-9am SOV hwy distance skim init
+~t9=mf111
 ~$>skip
 ~#
 ~:period5
@@ -146,6 +171,7 @@ q
 ~t4=mf47
 ~t5=mddist
 ~t6=midday 10a-2p SOV hwy distance skim init
+~t9=mf117
 ~$>skip
 ~#
 ~:hovam
@@ -155,6 +181,7 @@ q
 ~t4=mf77
 ~t5=amhovd
 ~t6=am peak 7-9am HOV hwy distance skim init
+~t9=mf112
 ~$>skip
 ~#
 ~:hovmid
@@ -164,6 +191,7 @@ q
 ~t4=mf79
 ~t5=mdhovd
 ~t6=midday 10a-2p HOV hwy distance skim init
+~t9=mf118
 ~#
 ~:skip
 ~#
@@ -207,7 +235,6 @@ r
 %t6%
 0.0
 q
-~#
 ~/**********************************************************************
 ~/  Setup highway asmt - save skim distance as path attrib
 ~/**********************************************************************
@@ -240,6 +267,39 @@ no         / don't change header
 ~+;5.22;1;2
 ~/
 ~/**********************************************************************
+~/  Setup highway asmt - save skim distance as path attrib
+~/**********************************************************************
+~#
+5.11
+1          / fixed demand auto assignment
+~+;~?q=2;2 / Do a new assignment (option 2) if there is one present
+3          / option 3 = multiclass asmt
+%t7%       / mode used by primary class
+5          / assign additional demand
+ms97       / dummy matrix for assignment
+           / no veh occupancy matrix
+           / no additional demand matrix
+%t1%       / matrix to hold travel times  
+no         / don't change header
+7          / source for additional attrib = @toll
+@toll      / additional attrib
+           / no additional turn attrib
++          / path operator = addition
+           / threshold = none
+%t9%      / matrix to hold addl attrib (toll)   
+no         / don't change header
+1          / type of OD attrib = addl path attrib
+           / blank for no class 2 mode
+0          / number of iters
+           / default relative gap
+           / default normalized gap
+~#
+~/**********************************************************************
+~/  Run assignment for tolls - scenario %s%, mode %t7%
+~/**********************************************************************
+~+;5.22;1;2
+~/
+~/**********************************************************************
 ~/  Delete Temporary Scenario %x%
 ~/**********************************************************************
 1.22
@@ -256,6 +316,46 @@ q
 ~+;~?z<5;~$startloop
 ~#
 ~/**********************************************************************
+~#  Initialize time of day skim travel time matrices & toll skims
+~/**********************************************************************
+~#
+3.21
+~+;1;y;mf461;y;todtime1;SOV hwy time skim period 1;~?q=1;y;0;mf46; ; ;n;1;
+~+;1;y;mf462;y;todtime2;SOV hwy time skim period 2;~?q=1;y;0;mf44; ; ;n;1;
+~+;1;y;mf463;y;todtime3;SOV hwy time skim period 3;~?q=1;y;0;mf44; ; ;n;1;
+~+;1;y;mf464;y;todtime4;SOV hwy time skim period 4;~?q=1;y;0;mf44; ; ;n;1;
+~+;1;y;mf465;y;todtime5;SOV hwy time skim period 5;~?q=1;y;0;mf46; ; ;n;1;
+~+;1;y;mf466;y;todtime6;SOV hwy time skim period 6;~?q=1;y;0;mf44; ; ;n;1;
+~+;1;y;mf467;y;todtime7;SOV hwy time skim period 7;~?q=1;y;0;mf44; ; ;n;1;
+~+;1;y;mf468;y;todtime8;SOV hwy time skim period 8;~?q=1;y;0;mf44; ; ;n;1;
+~+;1;y;mf113;y;th3hwl;low inc h-w hov 3+ per toll;~?q=1;y;0;mf112; ; ;n;1;
+~+;1;y;mf114;y;tshwh;high inc h-w sov toll;~?q=1;y;0;mf111; ; ;n;1;
+~+;1;y;mf115;y;th2hwh;high inc h-w hov 2 per toll;~?q=1;y;0;mf112; ; ;n;1;
+~+;1;y;mf116;y;th3hwh;high inc h-w hov 3+ per toll;~?q=1;y;0;mf112; ; ;n;1;
+~+;1;y;mf119;y;th3ho;h-o hov 3+ per toll;~?q=1;y;0;mf118; ; ;n;1;
+~+;1;y;mf120;y;tsnh;nh sov toll;~?q=1;y;0;mf117; ; ;n;1;
+~+;1;y;mf121;y;th2nh;nh hov 2 per toll;~?q=1;y;0;mf118; ; ;n;1;
+~+;1;y;mf122;y;th3nh;nh hov 3+ per toll;~?q=1;y;0;mf118; ; ;n;1;q
+~/**********************************************************************
+~#  Convert tolls to cents
+~/**********************************************************************
+~#
+3.21
+~+;1;yes;mf111;no;mf111*100;;;no;2
+~+;1;yes;mf112;no;mf112*100;;;no;2
+~+;1;yes;mf113;no;mf113*100;;;no;2
+~+;1;yes;mf114;no;mf114*100;;;no;2
+~+;1;yes;mf115;no;mf115*100;;;no;2
+~+;1;yes;mf116;no;mf116*100;;;no;2
+~+;1;yes;mf117;no;mf117*100;;;no;2
+~+;1;yes;mf118;no;mf118*100;;;no;2
+~+;1;yes;mf119;no;mf119*100;;;no;2
+~+;1;yes;mf120;no;mf120*100;;;no;2
+~+;1;yes;mf121;no;mf121*100;;;no;2
+~+;1;yes;mf122;no;mf122*100;;;no;2
+q
+~/**********************************************************************
+~#
 ~o=6
 reports=reports
 batchin=batchin

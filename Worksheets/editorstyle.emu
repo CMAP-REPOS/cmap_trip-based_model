@@ -1,0 +1,69 @@
+50C48697-E940-4ED3-AABD-FEDD2EA3A512 07B0F5AD-A2A7-4B4E-B4A9-06EB441586D6 1 0 0
+# Emme user parameter file generated on Thu Oct 25 16:18:54 2007
+# File: editorstyle.emu
+#
+# String Name: name of user parameter object (tr)
+Name = Network Editor Style
+# Text Description: description of user parameter object (tr,subst)
+Description = 
+# Flags Flags: bit pattern containing object flags
+Flags = 0x22
+# Click EditValues: when clicked, opens dialog to edit parameter values (nosave)
+EditValues : (0x80) /EditNetworkStyle
+# String ParameterDefinitions: definition of user parameters
+ParameterDefinitions[] = Style;NodeEditStyle;Node style (group NodeEditStyle!);0;0;1;stylebutton;Nodes:
+ParameterDefinitions[] = Style;NodeSelectStyle;Node select (group NodeSelectStyle!);1;0;1;stylebutton;Node select:
+ParameterDefinitions[] = Style;LinkEditStyle;Link style (group LinkEditStyle!);2;0;1;stylebutton;Links:
+ParameterDefinitions[] = Style;LinkSelectStyle;Link select (group LinkSelectStyle!);3;0;1;stylebutton;Link select:
+ParameterDefinitions[] = Style;LineEditStyle;Line style (group LineEditStyle!);4;0;1;stylebutton;Lines:
+ParameterDefinitions[] = Style;LineSelectStyle;Line select (group LineSelectStyle!);5;0;1;stylebutton;Line select:
+ParameterDefinitions[] = Style;NewLineStyle;New line style (group NewLineStyle!);6;0;1;stylebutton;New line:
+ParameterDefinitions[] = Style;TurnEditStyle;Turn style (group TurnEditStyle!);7;0;1;stylebutton;Turns:
+ParameterDefinitions[] = Style;InterHighlightStyle;Intersection highlight style (group InterHighlightStyle!);8;0;1;stylebutton;Intersection highlight:
+
+# Style NodeEditStyle: Node style (group NodeEditStyle!)
+NodeEditStyle : $NodeEditStyle!/
+NodeEditStyle[] = 0x20000000 0x0100aaff 0x00000000 0x05
+NodeEditStyle[] = 0x20000000 0x01ff4040 0x00000000 0x05
+NodeEditStyle[] = 0x20000000 0x01ffff7f 0x00000000 0x05
+# Style NodeSelectStyle: Node select (group NodeSelectStyle!)
+NodeSelectStyle : $NodeSelectStyle!/
+NodeSelectStyle = 0x24000000 0x01bebebe 0x00000000 0x00
+# Style LinkEditStyle: Link style (group LinkEditStyle!)
+LinkEditStyle : $LinkEditStyle!/
+LinkEditStyle[] = 0x20000000 0x01b3b3b3 0x00000000 0x00
+LinkEditStyle[] = 0x20e6e6e6 0x01e6e6e6 0x00000000 0x00
+LinkEditStyle[] = 0x20ff0000 0x01ff4343 0x00000000 0x00
+# Style LinkSelectStyle: Link select (group LinkSelectStyle!)
+LinkSelectStyle : $LinkSelectStyle!/
+LinkSelectStyle = 0x20000000 0x01beff4f 0x00000000 0x00
+# Style LineEditStyle: Line style (group LineEditStyle!)
+LineEditStyle : $LineEditStyle!/
+LineEditStyle[] = 0x22ff0000 0x01ffffff 0x00000000 0xa00
+LineEditStyle[] = 0x2200ff00 0x01ffffff 0x00000000 0xa00
+LineEditStyle[] = 0x220000ff 0x01ffffff 0x00000000 0xa00
+LineEditStyle[] = 0x2200ffff 0x01ffffff 0x00000000 0xa00
+LineEditStyle[] = 0x22ff00ff 0x01ffffff 0x00000000 0xa00
+LineEditStyle[] = 0x22ffff00 0x01ffffff 0x00000000 0xa00
+LineEditStyle[] = 0x22ff7f00 0x01ffffff 0x00000000 0xa00
+LineEditStyle[] = 0x227f8000 0x01ffffff 0x00000000 0xa00
+LineEditStyle[] = 0x22008000 0x01ffffff 0x00000000 0xa00
+LineEditStyle[] = 0x22000080 0x01ffffff 0x00000000 0xa00
+LineEditStyle[] = 0x228c00d3 0x01ffffff 0x00000000 0xa00
+LineEditStyle[] = 0x22ff008c 0x01ffffff 0x00000000 0xa00
+# Style LineSelectStyle: Line select (group LineSelectStyle!)
+LineSelectStyle : $LineSelectStyle!/
+LineSelectStyle = 0x24000000 0x01ff0000 0x00000000 0x00
+# Style NewLineStyle: New line style (group NewLineStyle!)
+NewLineStyle : $NewLineStyle!/
+NewLineStyle = 0x20000000 0x01000000 0x00000000 0x00
+# Style TurnEditStyle: Turn style (group TurnEditStyle!)
+TurnEditStyle : $TurnEditStyle!/
+TurnEditStyle[] = 0x2000ff00 0x0000ff00 0x00000000 0x05
+TurnEditStyle[] = 0x609a9a9a 0x00ff0000 0x00000000 0x05
+TurnEditStyle[] = 0x200000ff 0x00ff0000 0x00000000 0x05
+TurnEditStyle[] = 0x24ff0000 0x00ff0000 0x00000000 0x05
+# Style InterHighlightStyle: Intersection highlight style (group InterHighlightStyle!)
+InterHighlightStyle : $InterHighlightStyle!/
+InterHighlightStyle = 0x24ff0000 0x00ffffff 0xe0000000 0x00
+

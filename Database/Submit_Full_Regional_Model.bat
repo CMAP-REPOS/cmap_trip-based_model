@@ -8,11 +8,11 @@ rem Nick Ferguson, CMAP
 @echo   - 5 GLOBAL ITERATIONS
 @echo   - 4 AUTO TRIP PURPOSES: HW LOW INCOME, HW HIGH INCOME, HO, NH
 @echo   - PATH-BASED HIGHWAY ASSIGNMENT (7 VEHICLE CLASSES)
-@echo       Class 1: 1 PERSON SOV (ALL PURPOSES)
-@echo       Class 2: 2 PERSON HOV (ALL PURPOSES)
-@echo       Class 3: 3+ PERSON HOV (ALL PURPOSES)
-@echo       Class 4: B-PLATE TRUCK
-@echo       Class 5: LIGHT DUTY TRUCK
+@echo       Class 1: 1 PERSON SOV LOW VOT (ALL PURPOSES)
+@echo       Class 2: 1 PERSON SOV MED VOT (ALL PURPOSES)
+@echo       Class 3: 1 PERSON SOV HIGH VOT (ALL PURPOSES)
+@echo       Class 4: 2+ PERSON HOV (ALL PURPOSES)
+@echo       Class 5: B-PLATE + LIGHT DUTY TRUCK
 @echo       Class 6: MEDIUM DUTY TRUCK
 @echo       Class 7: HEAVY DUTY TRUCK
 @echo.
@@ -62,6 +62,38 @@ set /a rndmint=%random% %%100
 @echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 pause
 @echo.
+
+
+rem define here all the places where we might find the conda installation
+rem If you try to run the model, you know that conda is installed, and the
+rem model fails with "cannot find conda", then visit a conda prompt,
+rem run `where conda`, and add the resulting path to this list.
+for %%x in (
+    %CONDAPATH%
+    %CONDA_PREFIX%
+    %LOCALAPPDATA%\mambaforge
+    %LOCALAPPDATA%\miniforge
+    %LOCALAPPDATA%\miniconda
+    %LOCALAPPDATA%\miniconda3
+    %USERPROFILE%\Anaconda3
+    %USERPROFILE%\Anaconda
+    %USERPROFILE%\Anaconda2
+    %USERPROFILE%\miniconda3
+    %USERPROFILE%\miniconda
+    %USERPROFILE%\miniconda2
+) do (
+    if exist %%x\Scripts\activate.bat (
+      set CONDAPATH=%%x
+      goto condafound
+    )
+)
+@echo cannot find conda in any of the usual places
+goto end
+
+:condafound
+@echo CONDAPATH IS %CONDAPATH%
+@echo.
+
 
 @echo Model run scenario: %val%
 @echo Pre-Distribution/Mode Choice simulations (global iterations 0-3): %iter1%
@@ -131,7 +163,6 @@ if not exist PDNH_M01.TXT (goto mcmiss)
 if not exist PDNH_M023.TXT (goto mcmiss)
 REM ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 REM Craig Heither, 10/28/14 - added to verify household attribute files present for non-work vehicle occupancy model
-if not exist HH_VTYPE_TRIPS_IN.TXT (goto hhmiss)
 copy tg\fortran\TG_HHENUM_OUTPUT.TXT TG_HHENUM_OUTPUT.TXT /y
 echo.
 if not exist TG_HHENUM_OUTPUT.TXT (goto hhmiss)
@@ -162,11 +193,6 @@ if exist reports (del reports)
 call emme -ng 000 -m prep_macros\free.skim.mac %val% 2 >> blog.txt
 @ECHO.
 
-REM MAKE COPIES OF FORTRAN EXECUATBLES TO RUN
-copy PreDist_RnSeed.exe PreDist_RnSeed_%rndmint%.exe /y
-copy ModeChoice_RnSeed.exe ModeChoice_RnSeed_%rndmint%.exe /y
-copy VehOcc.exe VehOcc_%rndmint%.exe /y
-
 @ECHO ==================================================================
 REM - LOOP TO RUN MODEL (Heither 04/2010)
 set /A counter=0
@@ -189,95 +215,51 @@ if %errorlevel% neq 0 (goto end)
 call emme -ng 000 -m macros\init_HOVsim_databk.mac %val% >> blog.txt
 
 
+@ECHO -- Begin Mode-Destination Choice Procedures: %date% %time% >> model_run_timestamp.txt
 REM UPDATE NAMELIST FILES
 if %counter% EQU 0 (python update_Namelist.py %iter1%)
 if %counter% EQU 4 (python update_Namelist.py %iter2%)
 
-
-if %counter% GTR 2 (goto skipdistr)
-@ECHO -- Begin Pre-Distribution: %date% %time% >> model_run_timestamp.txt
 @ECHO.
-@ECHO BEGINNING PRE-DISTRIBUTION - FULL MODEL ITERATION %counter%
+@ECHO RUN CMAP MODE-DESTINATION CHOICE MODEL - FULL MODEL ITERATION %counter%
 @ECHO - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-@ECHO set files for PreDistribution run (NAMELIST file, output log file, zonal interchange random seed file)
-start "Home-Work Pre Distribution Scen. %val%" cmd /c PreDist_RnSeed_%rndmint%.exe PDHW_NAMELIST.TXT HW%counter%_PREDIST_LOG.TXT hwlow_seeds.csv
-start "Home-Other Pre Distribution Scen. %val%" cmd /c PreDist_RnSeed_%rndmint%.exe PDHO_NAMELIST.TXT HO%counter%_PREDIST_LOG.TXT ho_seeds.csv
-PreDist_RnSeed_%rndmint%.exe PDNH_NAMELIST.TXT NH%counter%_PREDIST_LOG.TXT nh_seeds.csv
-:check_PreDist
-timeout 20
-tasklist | findstr /I "PreDist_RnSeed_%rndmint%.exe" > nul
-if %errorlevel% equ 0 (@echo "PreDist still running ..." & goto check_PreDist)
-timeout 5
-move /Y HW%counter%_PREDIST_LOG.TXT report\iter_%counter%\
-move /Y HO%counter%_PREDIST_LOG.TXT report\iter_%counter%\
-move /Y NH%counter%_PREDIST_LOG.TXT report\iter_%counter%\
-@ECHO    -- End Pre-Distribution: %date% %time% >> model_run_timestamp.txt
 
+rem The `CONDAPATH` environment variable should be set before running this .bat
+rem It points to the place where conda is installed
+rem Alternatively if running in a conda prompt itself then CONDA_PREFIX will be set
+IF DEFINED CONDAPATH (
+	ECHO CONDAPATH IS %CONDAPATH%
+) ELSE (
+	IF DEFINED CONDA_PREFIX (
+		set CONDAPATH=%CONDA_PREFIX%
+		ECHO CONDA_PREFIX is %CONDAPATH%
+	) ELSE (
+		ECHO CONDAPATH is not defined, first run set CONDAPATH=C:\... to point to the conda installation
+		pause
+		EXIT /b
+	)
+)
 
-@ECHO -- Begin Trip Distribution: %date% %time% >> model_run_timestamp.txt
+rem Define here the name of the environment to be used
+set ENVNAME=CMAP-TRIP
+
+rem The following command prepares to activate the base environment if it is used.
+if %ENVNAME%==base (set ENVPATH=%CONDAPATH%) else (set ENVPATH=%CONDAPATH%\envs\%ENVNAME%)
+
+rem Activate the conda environment
+rem Using call is required here, see: https://stackoverflow.com/questions/24678144/conda-environments-and-bat-files
+call %CONDAPATH%\Scripts\activate.bat %ENVPATH%
+if %errorlevel% neq 0 (
+  @echo Error in activating conda
+  goto end
+)
+
+call cmap_modedest . --njobs 15 --max_zone_chunk 5
+
+rem Deactivate the environment
+call conda deactivate
+@ECHO    -- End Mode-Destination Choice Procedures: %date% %time% >> model_run_timestamp.txt
 @ECHO.
-@ECHO BEGINNING IOM DISTRIBUTION - FULL MODEL ITERATION %counter%
-@ECHO - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-call emme -ng 000 -m macros\four_purpose_IOM.mac %val% >> blog.txt
-@ECHO    -- End Trip Distribution: %date% %time% >> model_run_timestamp.txt
-:skipdistr
-
-
-@ECHO -- Begin Mode Choice: %date% %time% >> model_run_timestamp.txt
-@ECHO.
-@ECHO BEGINNING MODE CHOICE - FULL MODEL ITERATION %counter%
-@ECHO - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-@ECHO set files for Mode Choice run (NAMELIST file, output log file)
-start "Home-Work Low Income Mode Choice Scen. %val%" cmd /c ModeChoice_RnSeed_%rndmint%.exe MC_HWlow_NAMELIST.TXT HWlow%counter%_MC_LOG.TXT hwlow_seeds.csv
-start "Home-Work High Income Mode Choice Scen. %val%" cmd /c ModeChoice_RnSeed_%rndmint%.exe MC_HWhigh_NAMELIST.TXT HWhigh%counter%_MC_LOG.TXT hwhigh_seeds.csv
-start "Home-Other Mode Choice Scen. %val%" cmd /c ModeChoice_RnSeed_%rndmint%.exe MC_HO_NAMELIST.TXT HO%counter%_MC_LOG.TXT ho_seeds.csv
-ModeChoice_RnSeed_%rndmint%.exe MC_NH_NAMELIST.TXT NH%counter%_MC_LOG.TXT nh_seeds.csv
-:check_ModeChoice
-timeout 20
-tasklist | findstr /I "ModeChoice_RnSeed_%rndmint%.exe" > nul
-if %errorlevel% equ 0 (@echo "Mode Choice still running ..." & goto check_ModeChoice)
-timeout 5
-move /Y HWlow%counter%_MC_LOG.TXT report\iter_%counter%\
-move /Y HWhigh%counter%_MC_LOG.TXT report\iter_%counter%\
-move /Y HO%counter%_MC_LOG.TXT report\iter_%counter%\
-move /Y NH%counter%_MC_LOG.TXT report\iter_%counter%\
-@ECHO    -- End Mode Choice: %date% %time% >> model_run_timestamp.txt
-
-
-@ECHO -- Begin Non-Work Vehicle Occupancy Procedures: %date% %time% >> model_run_timestamp.txt
-@ECHO.
-@ECHO BEGINNING NON-WORK VEHICLE OCCUPANCY SUBMODEL - GLOBAL MODEL ITERATION %counter%
-@ECHO - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-call emme -ng 000 -m macros\nonwork_vehocc_setup.mac 1 >> blog.txt
-
-@ECHO set files for NonWork Vehicle Occupancy run (NAMELIST file, output log file)
-start "Non-Work Vehicle Occupancy - Zn Group 1 Scen. %val%" cmd /c VehOcc_%rndmint%.exe VEHOCC_NAMELIST_1.TXT HVOCC_LOGOUT1_iter%counter%.TXT
-start "Non-Work Vehicle Occupancy - Zn Group 2 Scen. %val%" cmd /c VehOcc_%rndmint%.exe VEHOCC_NAMELIST_2.TXT HVOCC_LOGOUT2_iter%counter%.TXT
-start "Non-Work Vehicle Occupancy - Zn Group 3 Scen. %val%" cmd /c VehOcc_%rndmint%.exe VEHOCC_NAMELIST_3.TXT HVOCC_LOGOUT3_iter%counter%.TXT
-VehOcc_%rndmint%.exe VEHOCC_NAMELIST_4.TXT HVOCC_LOGOUT4_iter%counter%.TXT
-:check_VehOcc
-timeout 20
-tasklist | findstr /I "VehOcc_%rndmint%.exe" > nul
-if %errorlevel% equ 0 (@echo "NonWork Vehicle Occupancy still running ..." & goto check_VehOcc)
-timeout 5
-move /Y HVOCC_LOGOUT1_iter%counter%.TXT report\iter_%counter%\
-move /Y HVOCC_LOGOUT2_iter%counter%.TXT report\iter_%counter%\
-move /Y HVOCC_LOGOUT3_iter%counter%.TXT report\iter_%counter%\
-move /Y HVOCC_LOGOUT4_iter%counter%.TXT report\iter_%counter%\
-
-call emme -ng 000 -m macros\nonwork_vehocc_setup.mac 2 >> blog.txt
-@ECHO    -- End Non-Work Vehicle Occupancy Procedures: %date% %time% >> model_run_timestamp.txt
-
-
-REM   ~~~~~~ Begin using toll mode choice procedures in Global Iteration 1
-if %counter% EQU 0 (goto skip_toll)
-@ECHO -- Begin Toll Mode Choice Procedures: %date% %time% >> model_run_timestamp.txt
-@ECHO.
-@ECHO BEGINNING TOLL MODE CHOICE PROCEDURES - GLOBAL MODEL ITERATION %counter%
-@ECHO - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-call emme -ng 000 -m macros\toll_mode_choice.mac %val% %counter% >> blog.txt
-@ECHO    -- End Toll Mode Choice Procedures: %date% %time% >> model_run_timestamp.txt
-:skip_toll
 
 
 @ECHO -- Begin Time-of-Day Procedures: %date% %time% >> model_run_timestamp.txt
@@ -286,7 +268,6 @@ call emme -ng 000 -m macros\toll_mode_choice.mac %val% %counter% >> blog.txt
 @ECHO - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 call emme -ng 000 -m macros\iter.master7c.mac %val% >> blog.txt
 @ECHO    -- End Time-of-Day Procedures: %date% %time% >> model_run_timestamp.txt
-
 
 @ECHO.
 @ECHO DELETING TEMPORARY PATH FILES - FULL MODEL ITERATION %counter%
@@ -302,10 +283,6 @@ goto while
 :loopend
 @ECHO END OF FULL MODEL LOOP
 @ECHO ==================================================================
-
-if exist PreDist_RnSeed_%rndmint%.exe (del PreDist_RnSeed_%rndmint%.exe /Q)
-if exist ModeChoice_RnSeed_%rndmint%.exe (del ModeChoice_RnSeed_%rndmint%.exe /Q)
-if exist VehOcc_%rndmint%.exe (del VehOcc_%rndmint%.exe /Q)
 
 
 @ECHO Begin Daily Accumulation Procedures: %date% %time% >> model_run_timestamp.txt

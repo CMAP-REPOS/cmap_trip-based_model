@@ -1,0 +1,59 @@
+50C48697-E940-4ED3-AABD-FEDD2EA3A512 07B0F5AD-A2A7-4B4E-B4A9-06EB441586D6 1 1 0
+# Emme user parameter file generated on Wed Dec 12 18:19:34 2007
+# File: general.emu
+#
+# String Name: name of user parameter object (tr)
+Name = User Parameters
+# Text Description: description of user parameter object (tr,subst)
+Description = 
+# Flags Flags: bit pattern containing object flags
+Flags = 0x22
+# String TranslationContext: context for translations of configuration texts (subst)
+TranslationContext = GeneralWorksheet
+# Click EditValues: when clicked, opens dialog to edit parameter values (nosave)
+EditValues : (0x80)
+# String SubParLists: files containing further user parameter objects
+SubParLists[] = %<$ProjectPath>%/Worksheets/generalstyle.emu
+SubParLists[] = %<$ProjectPath>%/Worksheets/editorstyle.emu
+SubParLists[] = %<$ProjectPath>%/Worksheets/bendlink.emu
+# String ParameterDefinitions: definition of user parameters
+ParameterDefinitions[] = Click;EditGenStyle;edit style for General worksheets;1;0;1;pushbutton;Change General Style
+ParameterDefinitions[] = Click;EditNetStyle;edit style in Network Editor;2;0;1;pushbutton;Change Editor Style
+ParameterDefinitions[] = Click;EditBend;edit link bending parameters;3;0;1;pushbutton;Set Link Bending
+ParameterDefinitions[] = String;IncludeBack;layers file to be included in the background;1;1;1;stringcombo;Background layer(s):
+ParameterDefinitions[] = String;IncludeFront;layers file to be included in the foreground;2;1;1;stringcombo;Foreground layer(s):
+ParameterDefinitions[] = String;IncludeOther;layers file to be included for other purposes (print legend, transform...);3;1;1;stringcombo;Other inclusion:
+ParameterDefinitions[] = Float;TrMat;transformation matrix value;4;1;1;multifloat;Transformation matrix:
+
+# Click EditGenStyle: edit style for General worksheets
+EditGenStyle : EditGeneralStyle/
+EditGenStyle = 
+# Click EditNetStyle: edit style in Network Editor
+EditNetStyle : EditNetworkStyle/
+EditNetStyle = 
+# Click EditBend: edit link bending parameters
+EditBend : EditBendValues/
+EditBend = 
+# String IncludeBack: layers file to be included in the background
+IncludeBack : $UserBack!/
+IncludeBack = 
+# String IncludeFront: layers file to be included in the foreground
+IncludeFront : $UserFront!/
+IncludeFront = 
+# String IncludeOther: layers file to be included for other purposes (print legend, transform...)
+IncludeOther : $UserConf!/
+IncludeOther[] = 
+IncludeOther[] = 
+IncludeOther[] = %<$ProjectPath>%/Worksheets/prnlegend.eml
+IncludeOther[] = %<$EmmePath>%/common/transform.eml
+# Float TrMat: transformation matrix value
+TrMat : $TransformationMatrix!/
+TrMat[] = 0
+TrMat[] = 0
+TrMat[] = 1
+TrMat[] = 1
+TrMat[] = 0
+TrMat[] = 0
+TrMat[] = 0
+TrMat[] = 0
+

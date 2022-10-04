@@ -1,0 +1,6 @@
+Emme Link 1
+Name = Emme Classic
+Description = EMME/2 like worksheets
+Condition = 1
+Link = %<$EmmePath>%/common/Emme Classic
+
