@@ -1,0 +1,24 @@
+Craig Heither, 07-09-2013
+
+This folder contains generic template macros to perform a select link analysis following a path-based assignment.
+
+
+_________________________
+
+SELECT LINK ANALYSIS
+_________________________
+
+
+* proj_select_links.in - Text file identifying all base year and future links associated with the facility of interest.
+
+* select_link_demand.mac - macro to determine select link demand.
+
+* select_link_vmt.mac - macro to calculate daily VMT on selected links.
+
+* A shapefile of scenario network x0049 can be created by submitting " ~<emme2shp " when x0049 is active.
+
+
+
+
+
+

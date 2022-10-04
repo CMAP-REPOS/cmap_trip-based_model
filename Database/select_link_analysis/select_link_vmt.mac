@@ -1,0 +1,83 @@
+~# select_link_vmt.mac
+~#  Craig Heither, rev. 05-22-2013
+~# 
+~#  ****************************************************************************************
+~#    Macro performs select link analysis to determine total daily VMT on selected links by
+~#    vehicle class.
+~#
+~#    Must submit with 3-digit scenario number:
+~#     (e.g. "~<select_link_analysis\select_link_vmt.mac 600")
+~#  ****************************************************************************************
+~# -------------------------------------------------------------------------------------------------------
+~#
+~z=%0%
+~+;~?!z=1;~$>error
+~#
+~+;s=%1%;~?e;~$>bad_scen
+~/ Scenario number argument is valid.
+~#
+~o|39
+~#
+~# ______________________________________________
+~# ## -- Set Register Values -- ##
+~# ______________________________________________
+~t1=select_link_analysis\proj_select_links.in
+~t2=select_link_analysis\sel_link_report\sel_link_vmt.rpt
+~#
+~!if exist %t2% (del %t2% /Q)
+reports=%t2%
+~#
+~#
+~# __________________________________________________________________________
+~/ ## -- DETERMINE SELECT LINK VMT BY VEHICLE CLASS -- ##
+~# __________________________________________________________________________
+~/ ## -- Copy %1%49 Network To Temporary Scenario -- ##
+1.22
+~+;2;99998;~?e
+~+; ;q;~$>next
+~+;y;q
+~:next
+~+;1.22;3;%1%49;99998; ;y;q
+~#
+~# ## -- Create Select Link attribute and Assign Value -- ##
+2.42
+~+;2;2;@sellk;~?e
+~$>err1
+~+;select link flag;0;~$>end
+~:err1
+
+~:end
+q
+~#
+2.41
+~+;1;y;@sellk;n;0; ;all;4
+~+;1;y;@sellk;n;1; ;~<%t1%; ;2;2
+~+;1;n;(@sellk.eq.1)*@vadt*len; ;all;2;2
+~+;1;n;(@sellk.eq.1)*(@avlqv+@avmqv/2+@avhqv/3)*len; ;all;2;2
+~+;1;n;(@sellk.eq.1)*lan*len; ;all;2;2
+~+;1;n;(@sellk.eq.1)*len; ;all;2;2;q
+~#
+~#
+~# ## -- Delete Temporary Scenario -- ##
+~+;1.22;2;99998;y;q
+~#  ============================================================================
+~#
+~$>end
+~#
+~:error
+~/ +++++++++++++++++++++++++++++++++++++++
+~/   SUBMIT WITH 3-DIGIT SCENARIO!!!!!!!
+~/ +++++++++++++++++++++++++++++++++++++++
+~$>end
+~#
+~:bad_scen
+~/
+~/ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~/   3-DIGIT SCENARIO DOES NOT MATCH EMMEBANK DATA!!!!!!!
+~/ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~/
+~:end
+~o=6
+reports=
+~/ -- end of macro --
+
