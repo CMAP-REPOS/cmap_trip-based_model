@@ -1,0 +1,69 @@
+Emme Layers 1
+# Emme set of layers generated on Wed May 31 12:46:27 2006
+# File: prnlegend.eml
+#
+[Legend]
+# String Name: layer name that appears on layer control tab (tr,subst)
+Name : (0x0,1)
+Name = PrintLegend
+# Flags Flags: bit pattern containing layer flags
+Flags = 0x3d80000
+# String TranslationContext: context for translations of configuration texts (subst)
+TranslationContext[] = GeneralWorksheet
+TranslationContext[] = GeneralWorksheet
+TranslationContext[] = LegendLayer
+# Bool CFlag: display layer controls
+CFlag = 1
+# Bool SFlag: display layer on screen
+SFlag = 1
+# Bool MFlag: display layer under the magnifier
+MFlag = 1
+# Bool LFlag: include layer in the legend window
+LFlag = 1
+# Bool BFlag: include bounding box in full view
+BFlag = 1
+# Float TextSize: text size for scales and symbols
+TextSize[] = 14
+TextSize[] = 8
+TextSize[] = 8
+# Float TextXPos: horizontal position of text anchor
+TextXPos[] = 0
+TextXPos[] = 0
+TextXPos[] = 0
+# Float TextYPos: vertical position of text anchor
+TextYPos[] = -15
+TextYPos[] = -5
+TextYPos[] = -50
+# Float StyleIndex: style index used for frame and text of item
+StyleIndex[] = 3
+StyleIndex[] = 0
+StyleIndex[] = 0
+# Float ImageSizeFactor: size factor for scaling images
+ImageSizeFactor[] = 1
+ImageSizeFactor[] = 1
+ImageSizeFactor[] = 1
+# Integer TextLayout: layout definition
+TextLayout[] = 48
+TextLayout[] = 331920
+TextLayout[] = 524450
+# Text TextString: text that appears in item (tr,subst)
+TextString[] = %<Caption>%
+TextString[] = %<$ProjectTitle>%\
+Scenario  %<$ScenarioNumber>%: %<$ScenarioTitle>%\
+%<$Date>% %<$Hour>%:%<$Minute>% (%<$User>%)
+TextString[] = 
+# Style FrameStyle: style used for text and frame of items
+FrameStyle[] = 0x20000000 0x01ffffff 0x00000000 0x00
+FrameStyle[] = 0x20000000 0x01ffffff 0x08ff0000 0x00
+FrameStyle[] = 0x20000000 0x01ffffff 0x40000000 0x00
+FrameStyle[] = 0x20000000 0x01ffffff 0x10000000 0x00
+# Style SymbolStyle: style used for graphic part of items
+SymbolStyle : /@LegendSymbolStyle
+SymbolStyle = 0x20000000 0x01ffffff 0x00000000 0x00
+# Float Scale: scale used for scale items
+Scale : /BarScale
+Scale = 0
+# Float Margin: relative margin for item frame
+Margin[] = 0.25
+Margin[] = 0
+

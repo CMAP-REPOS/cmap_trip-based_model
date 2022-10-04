@@ -1,0 +1,560 @@
+~/ 2_tredis_tod_demand.mac
+~/**********************************************************************
+~/**********************************************************************
+~# Craig Heither, 03-02-2016
+~#
+~#  Modified version of ttables macro used to develop data for TREDIS model:
+~#   - Auto trip purposes by occupancy level kept separate
+~#   - Truck trips are in vehicles not VEQs
+~# ---------------------------------------------------------------------
+~#
+~#
+~#   Revisions for zone17 -- Heither, 02-28-2019:
+~#			- Max. non-POE zone (register 250) updated to 3632 [line 28]
+~#			- Change upper bound of 7-county zone definition from 1711 (zone09) to 2926 (zone17) [lines 168-170]
+~#			- Change first operand for matrix convolution from mf835 to mf837 (indexed station zone)
+~#			- Replace [mf"hwtran", mf"temppr", mo"ptemp"] with [mf436, mf437, mo436] beginning line 183
+~#
+~#  Arguments:   %1% = TOD period 
+~#   
+~#    (e.g. "~<TREDIS_macros\2_tredis_tod_demand.mac 1") 
+~#
+~#     Compatible with c16q1 emmebank structure & model setup.
+~# -------------------------------------------------------------------------------------------------------
+~#
+~x=%0%
+~+;~?!x=1;~$>error
+~#
+~#
+~o|39
+~#
+~r250=3632                      /* max. non-POE zone
+~t4=TREDIS_macros\report\tredis_tod_%1%_demand.rpt
+~!if exist %t4% (del %t4%)
+reports=%t4%
+~t3=TREDIS_macros\report\veh_trips_tod_%1%.txt
+~!if exist %t3% (del %t3%)
+~#  - - - - - - - - - - - - - - - - - - - - - - - - - 
+~#
+~# batchin zone flags for fractioning triptables
+batchin=data/tod_flags.in
+3.11
+1
+q
+batchin=
+3.12
+~+;4;3;mo"pflag";md"qflag";y;tod fraction flags;0
+q
+~/ * * * * * * * * * * * * * * * * * *
+~y=%1%
+~# -- Get TOD Factors
+~<<data\tod_factors.p%y%
+~z=1
+~:loop1
+~+;~t0=~@;~?e;~$>eof1
+~rz=%t0%
+~/r%z%=%rz%
+~z+1
+~+;~?z<27;~$loop1
+~:eof1
+~/end of reading factors
+~/
+~/ -- Get TOD Occupancy Rates
+~<<data\tod_occ.p%y%
+~z=31
+~:loop2
+~+;~t0=~@;~?e;~$>eof2
+~rz=%t0%
+~/r%z%=%rz%
+~z+1
+~+;~?z<40;~$loop2
+~:eof2
+~/end of reading occ
+~/
+~/ -- Get Directional Splits
+~<<data\directional.splits
+~z=41
+~:loop3
+~+;~t0=~@;~?e;~$>eof3
+~rz=%t0%
+~/r%z%=%rz%
+~z+1
+~+;~?z<57;~$loop3
+~:eof3
+~/end of reading splits
+~/
+~/ Set Matrix labels
+~t1=p1. 8pm-6am
+~+;~?y=2;~t1=p2. 6am-7am
+~+;~?y=3;~t1=p3. 7am-9am
+~+;~?y=4;~t1=p4. 9am-10am
+~+;~?y=5;~t1=p5. 10am-2pm
+~+;~?y=6;~t1=p6. 2pm-4pm
+~+;~?y=7;~t1=p7. 4pm-6pm
+~+;~?y=8;~t1=p8. 6pm-8pm
+~#
+~# _________________________________________________________________________
+~#   Initialize time period trip tables
+~# _________________________________________________________________________
+3.21
+~+;1;y;mf401;y;HWS1;auto veh SOV1 HW trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf402;y;HWH2;auto veh HOV2 HW trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf403;y;HWH3+;auto veh HOV3+ HW trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf404;y;HOS1;auto veh SOV1 HO trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf405;y;HOH2;auto veh HOV2 HO trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf406;y;HOH3+;auto veh HOV3+ HO trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf407;y;NHS1;auto veh SOV1 NH trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf408;y;NHH2;auto veh HOV2 NH trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf409;y;NHH3+;auto veh HOV3+ NH trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf410;y;medtrk;medium truck vehicle trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
+~+;1;y;mf411;y;hvytrk;heavy truck vehicle trip table:%t1%;~?q=1;y;0;0; ; ;n;1;q
+~#
+~+;~?y>1;~$>not_TOD1
+~# ## -- Initialize this set of matrices on the first pass through ONLY --
+3.21
+~+;1;y;ms400;~?q=1;y;temp400;Commute Person Trips Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms401;~?q=1;y;temp401;Commute Vehicle Trips Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms402;~?q=1;y;temp402;Personal Person Trips Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms403;~?q=1;y;temp403;Personal Vehicle Trips Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms404;~?q=1;y;temp404;Business Person Trips Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms405;~?q=1;y;temp405;Business Vehicle Trips Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms406;~?q=1;y;temp406;Commute Average Vehicle Occupancy;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms407;~?q=1;y;temp407;Personal Average Vehicle Occupancy;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms408;~?q=1;y;temp408;Business Average Vehicle Occupancy;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms460;~?q=1;y;temp460;Commute VMT Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms461;~?q=1;y;temp461;Personal VMT Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms462;~?q=1;y;temp462;Business VMT Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms463;~?q=1;y;temp463;Med Truck VMT Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms464;~?q=1;y;temp464;Heavy Truck VMT Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms465;~?q=1;y;temp465;Commute Congested VMT Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms466;~?q=1;y;temp466;Personal Congested VMT Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms467;~?q=1;y;temp467;Business Congested VMT Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms468;~?q=1;y;temp468;Med Truck Congested VMT Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms469;~?q=1;y;temp469;Heavy Truck Congested VMT Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms470;~?q=1;y;temp470;Commute VHT Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms471;~?q=1;y;temp471;Personal VHT Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms472;~?q=1;y;temp472;Business VHT Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms473;~?q=1;y;temp473;Med Truck VHT Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms474;~?q=1;y;temp474;Heavy Truck VHT Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms475;~?q=1;y;temp475;Commute TOLLS Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms476;~?q=1;y;temp476;Personal TOLLS Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms477;~?q=1;y;temp477;Business TOLLS Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms478;~?q=1;y;temp478;Med Truck TOLLS Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms479;~?q=1;y;temp479;Heavy Truck TOLLS Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms480;~?q=1;y;temp480;Commute Total Trips Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms481;~?q=1;y;temp481;Commute Internal Trips Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms482;~?q=1;y;temp482;Commute Incoming Trips Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms483;~?q=1;y;temp483;Commute Outgoing Trips Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms484;~?q=1;y;temp484;Personal Total Trips Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms485;~?q=1;y;temp485;Personal Internal Trips Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms486;~?q=1;y;temp486;Personal Incoming Trips Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms487;~?q=1;y;temp487;Personal Outgoing Trips Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms488;~?q=1;y;temp488;Business Total Trips Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms489;~?q=1;y;temp489;Business Internal Trips Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms490;~?q=1;y;temp490;Business Incoming Trips Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms491;~?q=1;y;temp491;Business Outgoing Trips Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms492;~?q=1;y;temp492;Med Truck Total Trips Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms493;~?q=1;y;temp493;Med Truck Internal Trips Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms494;~?q=1;y;temp494;Med Truck Incoming Trips Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms495;~?q=1;y;temp495;Med Truck Outgoing Trips Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms496;~?q=1;y;temp496;Heavy Truck Total Trips Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms497;~?q=1;y;temp497;Heavy Truck Internal Trips Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms498;~?q=1;y;temp498;Heavy Truck Incoming Trips Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms499;~?q=1;y;temp499;Heavy Truck Outgoing Trips Daily Accumulation;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms504;~?q=1;y;temp504;QC Review: Conformity Run - ALL Daily CMAP VMT;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms505;~?q=1;y;temp505;QC Review: Conformity Run - SOV Daily CMAP VMT;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms506;~?q=1;y;temp506;QC Review: Conformity Run - HOV2 Daily CMAP VMT;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms507;~?q=1;y;temp507;QC Review: Conformity Run - HOV3+ Daily CMAP VMT;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms511;~?q=1;y;temp511;QC Review: TREDIS - SOV Daily CMAP VMT;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms512;~?q=1;y;temp512;QC Review: TREDIS - HOV2 Daily CMAP VMT;~?q=1;y;0;0; ; ;1;
+~+;1;y;ms513;~?q=1;y;temp513;QC Review: TREDIS - HOV3+ Daily CMAP VMT;~?q=1;y;0;0; ; ;1;
+~+;1;y;mf433;y;intrnl;internal trip constraint matrix;~?q=1;y;0;(p.le.2926).and.(q.le.2926); ; ;n;1;
+~+;1;y;mf434;y;incmng;incoming trip constraint matrix;~?q=1;y;0;(p.gt.2926).and.(q.le.2926); ; ;n;1;
+~+;1;y;mf435;y;outgog;outgoing trip constraint matrix;~?q=1;y;0;(p.le.2926).and.(q.gt.2926); ; ;n;1;
+~+;1;y;mf459;y;parkrd;drive to transit station;~?q=1;y;0;0; ; ;n;1;q
+~# * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+~#
+~# ## PERFORM CONVOLUTION TO GET TRIPS FROM ORIGIN ZONE TO STATION ZONE ##
+~# ## ONLY NECESSARY ONCE - DURING TOD 1 ##
+~+;~?y>1;~$>not_TOD1
+~#
+~# -- create combined HW transit demand matrix (high + low income) --
+3.21
+~+;1;y;mf436;y;hwtran;HW High and Low inc transit trips;~?q=1;y;0;mf40+mf41; ; ;n;2
+~#
+~# -- create matrix of origins for convolution --
+~+;1;y;mo436;y;ptemp;origins to extract first leg demand;~?q=1;y;0;p; ; ;y;1,%r250%; ;2;q
+~#
+~# -- perform convolution --
+3.23
+1
+mf837                    ~/first operand matrix (changed to indexed station zone for transit asmt)
+==                       ~/matrix combination operator
+mo436                    ~/second operand matrix
+y                        ~/use transpose of second operand matrix?
+*                        ~/masking operator 1
+n                        ~/same masking operator for all intermed. zones?
+mf436                    ~/matrix containing masking value
+2                        ~/origin to intermed. zone index
+ 
+ 
+mf437                    ~/results matrix
+y                        ~/initialize matrix?
+temppr1
+temp drive to transit
+0
+y                        ~/submatrix?
+1,%r250%                 ~/origin zones
+ 
+1,%r250%                 ~/intermed. zones
+ 
+1,%r250%                 ~/destinations
+
+
+y
+2
+q
+~#
+~# simplified conversion of matrix from P-A format to O-D format
+3.21
+~+;1;y;mf459;y;parkrd;drive to transit station;~?q=1;y;0;(mf437+mf437')/2; ; ;n;2;q
+~# 
+~# -- delete temporary matrices --
+3.12
+~+;2;mf436;y
+~+;2;mf437;y
+~+;2;mo436;y;q
+~# 
+~:not_TOD1
+~/ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+~#
+~#
+~# _________________________________________________________________________
+~#    Calculate HBW Vehicle trips (TREDIS "Commute")
+~# _________________________________________________________________________
+3.21
+~+;1;yes;mf401;no
+~/  Home to work:SOV1
+(md"qflag".eq.0)*
+   ((%r45%*mf101)*%r5%)+
+(md"qflag".eq.1)*
+   ((%r41%*mf101)*%r1%)+
+(md"qflag".ge.2)*
+   ((%r49%*mf101)*%r9%)+
+~/  Work to home:SOV1
+(mo"pflag".eq.0)*
+   ((%r47%*mf81)*%r7%)+
+(mo"pflag".eq.1)*
+   ((%r43%*mf81)*%r3%)+
+(mo"pflag".ge.2)*
+   ((%r51%*mf81)*%r11%)
+
+
+no
+2
+~/
+~# ## 
+~# ## 
+~+;1;y;ms410;y;tmp410;store HW SOV;~?q=1;y;0;mf401; ; ;n;+;+;1;q
+~t2=HW SOV trips
+~>>%t3%
+~"Period %y% %t2% : %ms410%
+~>>
+~# ## -- Add in drive to transit station trips (assume SOV1) --
+3.21
+~+;1;yes;mf401;no
+~/  drive to transit
+mf401+
+mf459*(%r1%+%r3%)/2
+
+
+no
+2
+~/
+~# ## 
+~# ## 
+~+;1;y;ms411;y;tmp411;store P-n-R trips;~?q=1;y;0;mf459*(%r1%+%r3%)/2; ; ;n;+;+;1;
+~+;1;y;ms410;n;ms410+ms411; ; ;1;q
+~t2=Park-and-Ride trips
+~>>%t3%
+~"Period %y% %t2% : %ms411%
+~>>
+3.21
+~# ## 
+~# ## 
+~+;1;yes;mf402;no
+~/  Home to work:HOV2
+mf402+
+(md"qflag".eq.0)*
+   (put(%r46%*mf102)*%r6%/2.0)+
+(md"qflag".eq.1)*
+   ((%r42%*mf102)*%r2%/2.0)+
+(md"qflag".ge.2)*
+   (get(1)*%r10%/2.0)+
+~/  Work to home:HOV2
+(mo"pflag".eq.0)*
+   (put(%r48%*mf82)*%r8%/2.0)+
+(mo"pflag".eq.1)*
+   ((%r44%*mf82)*%r4%/2.0)+
+(mo"pflag".ge.2)*
+   (get(2)*%r12%/2.0)
+
+
+no
+2
+~/
+~# ## 
+~# ## 
+~+;1;y;ms411;y;tmp411;store HW HOV2;~?q=1;y;0;mf402; ; ;n;+;+;1;q
+~t2=HW HOV2 trips
+~>>%t3%
+~"Period %y% %t2% : %ms411%
+~>>
+3.21
+~+;1;y;ms411;y;tmp411;HW HOV2 person trips;~?q=1;y;0;mf402*2; ; ;n;+;+;1;
+~# ## 
+~# ## 
+~+;1;yes;mf403;no
+~/  Home to work:HOV3+
+mf403+
+(md"qflag".eq.0)*
+   (put(%r46%*mf103)*%r6%/%r33%)+
+(md"qflag".eq.1)*
+   ((%r42%*mf103)*%r2%/%r31%)+
+(md"qflag".ge.2)*
+   (get(1)*%r10%/%r35%)+
+~/  Work to home:HOV3+
+(mo"pflag".eq.0)*
+   (put(%r48%*mf83)*%r8%/%r34%)+
+(mo"pflag".eq.1)*
+   ((%r44%*mf83)*%r4%/%r32%)+
+(mo"pflag".ge.2)*
+   (get(2)*%r12%/%r36%)
+
+
+no
+2
+~/
+~# ## 
+~# ## 
+~+;1;y;ms412;y;tmp412;store HW HOV3;~?q=1;y;0;mf403; ; ;n;+;+;1;q
+~t2=HW HOV3 trips
+~>>%t3%
+~"Period %y% %t2% : %ms412%
+~>>
+3.21
+~+;1;y;ms412;y;tmp412;HW HOV3+ person trips;~?q=1;y;0
+(md"qflag".eq.0)*(put(%r46%*mf103)*%r6%)+
+(md"qflag".eq.1)*((%r42%*mf103)*%r2%)+
+(md"qflag".ge.2)*(get(1)*%r10%)+
+(mo"pflag".eq.0)*(put(%r48%*mf83)*%r8%)+
+(mo"pflag".eq.1)*((%r44%*mf83)*%r4%)+
+(mo"pflag".ge.2)*(get(2)*%r12%)
+~+; ; ;n;+;+;1;
+~# ## 
+~# ## 
+~# _________________________________________________________________________
+~#    Calculate HBO Vehicle trips (TREDIS "Personal")
+~# _________________________________________________________________________
+~#
+~+;1;yes;mf404;no
+mf404+
+~/  Home to other:SOV1
+((%r55%*mf104)*%r15%)+
+~/  Other to home:SOV1
+((%r53%*mf84)*%r13%)
+
+
+no
+2
+~/
+~# ## 
+~# ## 
+~+;1;y;ms413;y;tmp413;store HO SOV;~?q=1;y;0;mf404; ; ;n;+;+;1;q
+~t2=HO SOV trips
+~>>%t3%
+~"Period %y% %t2% : %ms413%
+~>>
+3.21
+~# ## 
+~# ## 
+~+;1;yes;mf405;no
+mf405+
+~/  Home to other:HOV2
+((%r56%*mf105)*%r16%/2.0)+
+~/  Other to home:HOV2
+((%r54%*mf85)*%r14%/2.0)
+
+
+no
+2
+~/
+~# ## 
+~# ## 
+~+;1;y;ms414;y;tmp414;store HO HOV2;~?q=1;y;0;mf405; ; ;n;+;+;1;q
+~t2=HO HOV2 trips
+~>>%t3%
+~"Period %y% %t2% : %ms414%
+~>>
+3.21
+~+;1;y;ms414;y;tmp414;HO HOV2 person trips;~?q=1;y;0;mf405*2; ; ;n;+;+;1;
+~# ## 
+~# ## 
+~+;1;yes;mf406;no
+mf406+
+~/  Home to other:HOV3+
+((%r56%*mf106)*%r16%/%r38%)+
+~/  Other to home:HOV3+
+((%r54%*mf86)*%r14%/%r37%)
+
+
+no
+2
+~/
+~# ## 
+~# ## 
+~+;1;y;ms415;y;tmp415;store HO HOV3;~?q=1;y;0;mf406; ; ;n;+;+;1;q
+~t2=HO HOV3 trips
+~>>%t3%
+~"Period %y% %t2% : %ms415%
+~>>
+3.21
+~+;1;y;ms415;y;tmp415;HO HOV3+ person trips;~?q=1;y;0
+((%r56%*mf106)*%r16%)+((%r54%*mf86)*%r14%)
+~+; ; ;n;+;+;1;
+~# ## 
+~# ## 
+~# _________________________________________________________________________
+~#    Calculate NHB person trips (TREDIS "Business")
+~# _________________________________________________________________________
+~+;1;yes;mf407;no
+mf407+
+~/  non-Home:SOV1
+(mf107*%r17%)+
+~/  External
+(mf08*%r19%)+
+~/  External airport
+mf10*("qflag".ge.2)*%r20%+
+mf10*("pflag".ge.2)*("qflag".eq.0)*%r21%
+
+
+no
+2
+~/
+~# ## 
+~# ## 
+~+;1;y;ms416;y;tmp416;store NH SOV;~?q=1;y;0;(mf107*%r17%); ; ;n;+;+;1;q
+~t2=NH SOV trips
+~>>%t3%
+~"Period %y% %t2% : %ms416%
+~>>
+~+;3.21;1;y;ms416;y;tmp416;store External;~?q=1;y;0;(mf08*%r19%); ; ;n;+;+;1;q
+~t2=External SOV trips
+~>>%t3%
+~"Period %y% %t2% : %ms416%
+~>>
+~+;3.21;1;y;ms416;y;tmp416;store External Air;~?q=1;y;0;mf10*("qflag".ge.2)*%r20%+(mf10*("pflag".ge.2)*("qflag".eq.0)*%r21%); ; ;n;+;+;1;q
+~t2=External Airport SOV trips
+~>>%t3%
+~"Period %y% %t2% : %ms416%
+~>>
+~+;3.21;1;y;ms416;y;tmp416;store NH SOV;~?q=1;y;0;mf407; ; ;n;+;+;1;q
+~# ## 
+~# ## 
+3.21
+~+;1;yes;mf408;no
+mf408+
+~/  non-Home:HOV2
+(mf108*%r18%/2.0)
+
+
+no
+2
+~/
+~# ## 
+~# ## 
+~+;1;y;ms417;y;tmp417;store NH HOV2;~?q=1;y;0;mf408; ; ;n;+;+;1;q
+~t2=NH HOV2 trips
+~>>%t3%
+~"Period %y% %t2% : %ms417%
+~>>
+3.21
+~+;1;y;ms417;y;tmp417;NH HOV2 person trips;~?q=1;y;0;mf408*2; ; ;n;+;+;1;
+~# ## 
+~# ## 
+~+;1;yes;mf409;no
+mf409+
+~/  non-Home:HOV3+
+(mf109*%r18%/%r39%)
+
+
+no
+2
+~/
+~# ## 
+~# ## 
+~+;1;y;ms418;y;tmp418;store NH HOV3;~?q=1;y;0;mf409; ; ;n;+;+;1;q
+~t2=NH HOV3 trips
+~>>%t3%
+~"Period %y% %t2% : %ms418%
+~>>
+~# ##
+3.21
+~+;1;y;ms418;y;tmp418;NH HOV3+ person trips;~?q=1;y;0
+(mf109*%r18%)
+~+; ; ;n;+;+;1;
+~# ## 
+~# ## 
+~# _________________________________________________________________________
+~#   B-Plate and Light Trucks already in vehicle trips - No need to calculate
+~# _________________________________________________________________________
+~# ## 
+~# ## 
+~# _________________________________________________________________________
+~#   Medium Trucks in vehicles (not VEQs)
+~# _________________________________________________________________________
+~+;1;yes;mf410;no
+%r24%*mf06
+
+
+no
+2
+~# ## 
+~# ## 
+~# _________________________________________________________________________
+~#   Heavy Trucks in vehicles (not VEQs)
+~# _________________________________________________________________________
+~+;1;yes;mf411;no
+%r25%*mf07+
+%r26%*mf09
+
+
+no
+2
+q
+~# ## 
+~# ## 
+~# _________________________________________________________________________
+~# ## DELETE REMAINING TEMPORARY MATRICES DURING PERIOD 8 ##
+~# _________________________________________________________________________
+~+;~?y<8;~$>not_TOD8
+3.12
+~+;2;mf459;y;q
+~:not_TOD8
+~# 
+~#
+~$>end
+~/
+~:error
+~/ +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~/    SUBMIT WITH 3-DIGIT SCENARIO AND TOD PERIOD!!!!!
+~/ +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~/
+~#  =====================================================================
+~:end
+~o=6
+reports=
+batchin=
+~/end of macro
+~/**********************************************************************
+

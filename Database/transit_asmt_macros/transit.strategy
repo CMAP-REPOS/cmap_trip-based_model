@@ -1,0 +1,38 @@
+~#transit.strategy
+~#  Heither, revised 01-13-2016
+~# syntax: " ~<transit_asmt_macros\transit.strategy <transit scenario> <from> <to> "
+~#RUNS MODULE 5.35;
+~#
+s=%1%
+~/=================================
+~/ SET ORIGIN & DESTINATION ZONES
+~r1=%2%          / Origin
+~r2=%3%           / Destination
+~/=================================
+~/
+~t1=transit_asmt_macros\report\trip.strategy.scen%1%_%r1%-%r2%.txt
+~!if exist %t1% (del %t1%)
+reports=%t1%
+~o|39
+~/
+~/SET WAIT TIMES (ul2,us3) (per cmh method 9/01)
+2.41
+~+; 1; y; ul2; 0; ; all; 4
+~+; 1; y; ul2; (dwt.gt.0); ; 4; mod=M; ; mod=M; ; 4
+~+; 1; y; us3; 0; ; all; all; 4
+~+; 1; y; us3; hdwy.min.30; ; not mod=M; ; not mod=M; ; 4
+~+; 1; y; us3; (ul2*10).max.1; ; mod=M; ; mod=M; ; 4; q
+~/
+~/SET BASE FARES BY MODE (ut1) 
+2.41
+~+; 1; y; ut1;  0;  ;       all ;    4
+~+; 1; y; ut1; 150;  ; mod=BEC  ;  ; 4
+~+; 1; y; ut1; 150;  ; mod=LPQ  ;  ; 4
+~+; 1; y; ut1; 136;  ; mod=M    ;  ; 4; q
+~o=6
+~/
+~/
+~/ TRANSIT STRATEGY
+5.35
+~+; 2; 1; 3; 100; .001; *; 4; us3; 3; ut1; 1; 1; 1.82; 1.82; 1; 1; 1; y; vol; ; a acnod=%r1% egnod=%r2%; ; 2; ; q
+reports=reports

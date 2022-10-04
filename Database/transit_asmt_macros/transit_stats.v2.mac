@@ -1,0 +1,354 @@
+~/==this has been edited to look at the work and nonwork
+~/==assigned networks separately
+~/==
+~/=========================
+~/FIRST SET UP FOR A TRANSIT ASSIGNMENT
+~/
+~<transit_asmt_macros\transit_asmt_setup.v2.mac %1%
+~/
+~/then do a regular transit assignment
+~<transit_asmt_macros\assign_transit.v2.mac %1%
+~/
+~/now do  the summaries
+~/set up to change to the right scenario
+~x=%1%
+~x+10
+~t1=work
+~o|39
+~/====WORK PURPOSE FIRST============
+s=%x%
+~/Pace Bus
+2.41
+~+;1;n;board; ;mode=P;mode=Q;mode=L; ;*;5;4;ms1;Pbrd;Pace brd;1
+~+;1;n;(voltr*length); ;mode=P;mode=Q;mode=L; ;*;5;4;ms2;Ppmt;Pace pmt;1
+~+;1;n;(voltr*timtr)/60; ;mode=P;mode=Q;mode=L; ;*;5;4;ms3;Ppht;Pace pht;1
+~/CTA BUS
+~+;1;n;board; ;mode=B;mode=E; ;*;5;4;ms4;cbbrd;CTA bus brd;1
+~+;1;n;(voltr*length); ;mode=B;mode=E; ;*;5;4;ms5;cbpmt;CTA bus pmt;1
+~+;1;n;(voltr*timtr)/60; ;mode=B;mode=E; ;*;5;4;ms6;cbpht;CTA pht;1
+~/CTA rail
+~+;1;n;board; ;mode=C; ;*;5;4;ms7;crbrd;CTA rail brd;1
+~+;1;n;(voltr*length); ;mode=C; ;*;5;4;ms8;crpmt;CTA rail pmt;1
+~+;1;n;(voltr*timtr)/60; ;mode=C; ;*;5;4;ms9;crpht;CTA rail pht;1
+~/Metra Rail
+~+;1;n;board; ;mode=M; ;*;5;4;ms10;mbrd;Metra rail brd;1
+~+;1;n;(voltr*length); ;mode=M; ;*;5;4;ms11;mpmt;Metra rail pmt;1
+~+;1;n;(voltr*timtr)/60; ;mode=M; ;*;5;4;ms12;mpht;Metra rail pht;1
+~/Service Length For each Service
+~+;1;n;(ttf.gt.0)*length; ;mode=P;mode=Q;mode=L; ;*;5;4;ms13;Pmi;Pace length;1
+~+;1;n;(ttf.gt.0)*length; ;mode=B;mode=E; ;*;5;4;ms14;cbmi;CTA bus length;1
+~+;1;n;(ttf.gt.0)*length; ;mode=C; ;*;5;4;ms15;crmi;CTA rail length;1
+~+;1;n;(ttf.gt.0)*length; ;mode=M; ;*;5;4;ms16;mmi;Metra rail length;1;q
+~/=========trip table totals
+3.21
+~+;1;y;ms17;y;wauto;work auto person trips;~?q=1;y;0;mf1; ; ;n;+;+;2
+~+;1;y;ms18;y;nauto;nonwork auto pertrips;~?q=1;y;0;mf2+mf3; ; ;n;+;+;2
+~+;1;y;ms19;y;wtran;work tran pertrips;~?q=1;y;0;mf40+mf41; ; ;n;+;+;2
+~+;1;y;ms20;y;ntran;nonwork tran pertrips;~?q=1;y;0;mf42+mf43; ; ;n;+;+;2
+~+;1;y;ms21;y;truck;truck vehicle trips;~?q=1;y;0;mf4+mf5+mf6+mf7; ; ;n;+;+;2;q
+~/
+~/NOW OUTPUT THEM TO A FILE
+~t2=transit_report_%1%_%t1%.txt
+~!if exist %t2% (del %t2%)
+~>>%t2%
+~"Pace_Board     %ms1% 
+~"Pace_PMT       %ms2%
+~"Pace_PHT       %ms3% 
+~"CTA_Bus_Board  %ms4%
+~"CTA_Bus_PMT    %ms5% 
+~"CTA_Bus_PHT    %ms6% 
+~"CTA_Rail_Board %ms7%
+~"CTA_Rail_PMT   %ms8% 
+~"CTA_Rail_PHT   %ms9% 
+~"Metra_Board    %ms10%
+~"Metra_PMT      %ms11% 
+~"Metra_PHT      %ms12% 
+~"Pace_SegMi     %ms13%
+~"CTA_BUS_SeqMi  %ms14%
+~"CTA_Rail_SegMi %ms15%
+~"Metra_SegMi    %ms16%
+~"Work_Auto      %ms17%
+~"Nonwork_Auto   %ms18%
+~"Work_Tran      %ms19%
+~"Nonwork_tran   %ms20%
+~"Trucks_tot     %ms21%
+~>
+~/Rail Line 
+~/CTA Line Boardings Statistics
+2.41
+~+;1;n;board; ;ccl___;cbl___; ;*;5;4;ms1;blbrd;blue line boards;1
+~+;1;n;board; ;cbr___; ;*;5;4;ms2;brbrd;brown line boards;1
+~+;1;n;board; ;cga___;cgc___; ;*;5;4;ms3;grbrd;green line boards;1
+~+;1;n;board; ;crd___; ;*;5;4;ms4;rdbrd;red line boards;1
+~+;1;n;board; ;cye___; ;*;5;4;ms5;yebrd;yellow line boards;1
+~+;1;n;board; ;cpr___; ;*;5;4;ms6;pubrd;purple line boards;1
+~+;1;n;board; ;cpk___; ;*;5;4;ms7;pkbrd;pink line boards;1
+~+;1;n;board; ;cor___; ;*;5;4;ms8;orbrd;orange line boards;q
+/NOW OUTPUT THEM TO A FILE
+~>>%t2%
+~"Blue_Board     %ms1% 
+~"Brown_Board       %ms2%
+~"Green_Board       %ms3% 
+~"Red_Board %ms4%
+~"Yellow_Board    %ms5% 
+~"Purple_Board   %ms6% 
+~"Pink_Board %ms7%
+~"Orange_Board   %ms8% 
+~>
+~/CTA Line PMT Statistics
+2.41
+~+;1;n;voltr*length; ;ccl___;cbl___; ;*;5;4;ms1;blpmt;blue line pmt;1
+~+;1;n;voltr*length; ;cbr___; ;*;5;4;ms2;brpmt;brown line pmt;1
+~+;1;n;voltr*length; ;cga___;cgc___; ;*;5;4;ms3;grpmt;green line pmt;1
+~+;1;n;voltr*length; ;crd___; ;*;5;4;ms4;rdpmt;red line pmt;1
+~+;1;n;voltr*length; ;cye___; ;*;5;4;ms5;yepmt;yellow line pmt;1
+~+;1;n;voltr*length; ;cpr___; ;*;5;4;ms6;pupmt;purple line pmt;1
+~+;1;n;voltr*length; ;cpk___; ;*;5;4;ms7;pkpmt;pink line pmt;1
+~+;1;n;voltr*length; ;cor___; ;*;5;4;ms8;orpmt;orange line pmt;q
+~/NOW OUTPUT THEM TO A FILE
+~>>%t2%
+~"Blue_PMT     %ms1% 
+~"Brown_PMT       %ms2%
+~"Green_PMT       %ms3% 
+~"Red_PMT        %ms4%
+~"Yellow_PMT    %ms5% 
+~"Purple_PMT    %ms6% 
+~"Pink_PMT      %ms7%
+~"Orange_PMT   %ms8% 
+~>
+~/NOW DO SUMMARIES BY LINE
+~/METRA Boardings by Line
+2.41
+~+;1;n;board; ;mbn___; ;*;5;4;ms1;bnbrd;bnsf line boards;1
+~+;1;n;board; ;mhc___; ;*;5;4;ms2;mhbrd;heritage boards;1
+~+;1;n;board; ;mme___; ;*;5;4;ms3;mebrd;med boards;1
+~+;1;n;board; ;mmn___; ;*;5;4;ms4;mnbrd;md-n boards;1
+~+;1;n;board; ;mmw___; ;*;5;4;ms5;mwbrd;md-w boards;1
+~+;1;n;board; ;mnc___; ;*;5;4;ms6;ncbrd;ncs boards;1
+~+;1;n;board; ;mnw___; ;*;5;4;ms7;upbrd;up-nw boards;1
+~+;1;n;board; ;mri___; ;*;5;4;ms8;ribrd;RI boards;1
+~+;1;n;board; ;mss___; ;*;5;4;ms9;ssbrd;SS boards;1
+~+;1;n;board; ;msw___; ;*;5;4;ms10;swbrd;SWS boards;1
+~+;1;n;board; ;mun___; ;*;5;4;ms11;upbrd;UP-N boards;1
+~+;1;n;board; ;muw___; ;*;5;4;ms12;upbrd;UP-W boards;q
+~/output to a file
+~>>%t2%
+~"BNSF_Board     %ms1% 
+~"Hert_Board       %ms2%
+~"MED_Board       %ms3% 
+~"MD-N_Board %ms4%
+~"MDW_Board    %ms5% 
+~"NCS_Board   %ms6% 
+~"UP-NW_Board %ms7%
+~"RID_Board   %ms8% 
+~"CSSSB_Board   %ms9%
+~"SWS_Board   %ms10%
+~"UP-N_Board   %ms11%
+~"UP-W_Board   %ms12%
+~>
+~/METRA PMT
+2.41
+~+;1;n;voltr*length; ;mbn___; ;*;5;4;ms1;bnpmt;bnsf line pmt;1
+~+;1;n;voltr*length; ;mhc___; ;*;5;4;ms2;mhpmt;heritage pmt;1
+~+;1;n;voltr*length; ;mme___; ;*;5;4;ms3;mepmt;med pmt;1
+~+;1;n;voltr*length; ;mmn___; ;*;5;4;ms4;mnpmt;md-n pmt;1
+~+;1;n;voltr*length; ;mmw___; ;*;5;4;ms5;mwpmt;md-w pmt;1
+~+;1;n;voltr*length; ;mnc___; ;*;5;4;ms6;ncpmt;ncs pmt;1
+~+;1;n;voltr*length; ;mnw___; ;*;5;4;ms7;uppmt;up-nw pmt;1
+~+;1;n;voltr*length; ;mri___; ;*;5;4;ms8;ripmt;RI pmt;1
+~+;1;n;voltr*length; ;mss___; ;*;5;4;ms9;sspmt;SS pmt;1
+~+;1;n;voltr*length; ;msw___; ;*;5;4;ms10;swpmt;SWS pmt;1
+~+;1;n;voltr*length; ;mun___; ;*;5;4;ms11;uppmt;UP-N pmt;1
+~+;1;n;voltr*length; ;muw___; ;*;5;4;ms12;uppmt;UP-W pmt;q
+~/output them to the report
+~>>%t2%
+~"BNSF_PMT     %ms1% 
+~"Hert_PMT       %ms2%
+~"MED_PMT       %ms3% 
+~"MD-N_PMT %ms4%
+~"MDW_PMT    %ms5% 
+~"NCS_PMT   %ms6% 
+~"UP-NW_PMT %ms7%
+~"RID_PMT   %ms8% 
+~"CSSSB_PMT   %ms9%
+~"SWS_PMT   %ms10%
+~"UP-N_PMT   %ms11%
+~"UP-W_PMT   %ms12%
+~>
+~y=0
+3.12
+~:delete_loop
+~y+1
+2
+ms%y%
+y
+~?y<21
+~$delete_loop
+q
+~/=====NOW DO NONWORK======
+~x+5
+~t1=nonwork
+s=%x%
+~/Pace Bus
+2.41
+~+;1;n;board; ;mode=P;mode=Q;mode=L; ;*;5;4;ms1;Pbrd;Pace brd;1
+~+;1;n;(voltr*length); ;mode=P;mode=Q;mode=L; ;*;5;4;ms2;Ppmt;Pace pmt;1
+~+;1;n;(voltr*timtr)/60; ;mode=P;mode=Q;mode=L; ;*;5;4;ms3;Ppht;Pace pht;1
+~/CTA BUS
+~+;1;n;board; ;mode=B;mode=E; ;*;5;4;ms4;cbbrd;CTA bus brd;1
+~+;1;n;(voltr*length); ;mode=B;mode=E; ;*;5;4;ms5;cbpmt;CTA bus pmt;1
+~+;1;n;(voltr*timtr)/60; ;mode=B;mode=E; ;*;5;4;ms6;cbpht;CTA pht;1
+~/CTA rail
+~+;1;n;board; ;mode=C; ;*;5;4;ms7;crbrd;CTA rail brd;1
+~+;1;n;(voltr*length); ;mode=C; ;*;5;4;ms8;crpmt;CTA rail pmt;1
+~+;1;n;(voltr*timtr)/60; ;mode=C; ;*;5;4;ms9;crpht;CTA rail pht;1
+~/Metra Rail
+~+;1;n;board; ;mode=M; ;*;5;4;ms10;mbrd;Metra rail brd;1
+~+;1;n;(voltr*length); ;mode=M; ;*;5;4;ms11;mpmt;Metra rail pmt;1
+~+;1;n;(voltr*timtr)/60; ;mode=M; ;*;5;4;ms12;mpht;Metra rail pht;1
+~/Service Length For each Service
+~+;1;n;(ttf.gt.0)*length; ;mode=P;mode=Q;mode=L; ;*;5;4;ms13;Pmi;Pace length;1
+~+;1;n;(ttf.gt.0)*length; ;mode=B;mode=E; ;*;5;4;ms14;cbmi;CTA bus length;1
+~+;1;n;(ttf.gt.0)*length; ;mode=C; ;*;5;4;ms15;crmi;CTA rail length;1
+~+;1;n;(ttf.gt.0)*length; ;mode=M; ;*;5;4;ms16;mmi;Metra rail length;1;q
+~/=========
+~/NOW OUTPUT THEM TO A FILE
+~t2=transit_report_%1%_%t1%.txt
+~!if exist %t2% (del %t2%)
+~>>%t2%
+~"Pace_Board     %ms1% 
+~"Pace_PMT       %ms2%
+~"Pace_PHT       %ms3% 
+~"CTA_Bus_Board  %ms4%
+~"CTA_Bus_PMT    %ms5% 
+~"CTA_Bus_PHT    %ms6% 
+~"CTA_Rail_Board %ms7%
+~"CTA_Rail_PMT   %ms8% 
+~"CTA_Rail_PHT   %ms9% 
+~"Metra_Board    %ms10%
+~"Metra_PMT      %ms11% 
+~"Metra_PHT      %ms12% 
+~"Pace_SegMi     %ms13%
+~"CTA_BUS_SeqMi  %ms14%
+~"CTA_Rail_SegMi %ms15%
+~"Metra_SegMi    %ms16%
+~"Work_Auto      --
+~"Nonwork_Auto   --
+~"Work_Tran      --
+~"Nonwork_tran   --
+~"Trucks_tot     --
+~>
+~/Rail Line 
+~/CTA Line Boardings Statistics
+2.41
+~+;1;n;board; ;ccl___;cbl___; ;*;5;4;ms1;blbrd;blue line boards;1
+~+;1;n;board; ;cbr___; ;*;5;4;ms2;brbrd;brown line boards;1
+~+;1;n;board; ;cga___;cgc___; ;*;5;4;ms3;grbrd;green line boards;1
+~+;1;n;board; ;crd___; ;*;5;4;ms4;rdbrd;red line boards;1
+~+;1;n;board; ;cye___; ;*;5;4;ms5;yebrd;yellow line boards;1
+~+;1;n;board; ;cpr___; ;*;5;4;ms6;pubrd;purple line boards;1
+~+;1;n;board; ;cpk___; ;*;5;4;ms7;pkbrd;pink line boards;1
+~+;1;n;board; ;cor___; ;*;5;4;ms8;orbrd;orange line boards;q
+/NOW OUTPUT THEM TO A FILE
+~>>%t2%
+~"Blue_Board     %ms1% 
+~"Brown_Board       %ms2%
+~"Green_Board       %ms3% 
+~"Red_Board %ms4%
+~"Yellow_Board    %ms5% 
+~"Purple_Board   %ms6% 
+~"Pink_Board %ms7%
+~"Orange_Board   %ms8% 
+~>
+~/CTA Line PMT Statistics
+2.41
+~+;1;n;voltr*length; ;ccl___;cbl___; ;*;5;4;ms1;blpmt;blue line pmt;1
+~+;1;n;voltr*length; ;cbr___; ;*;5;4;ms2;brpmt;brown line pmt;1
+~+;1;n;voltr*length; ;cga___;cgc___; ;*;5;4;ms3;grpmt;green line pmt;1
+~+;1;n;voltr*length; ;crd___; ;*;5;4;ms4;rdpmt;red line pmt;1
+~+;1;n;voltr*length; ;cye___; ;*;5;4;ms5;yepmt;yellow line pmt;1
+~+;1;n;voltr*length; ;cpr___; ;*;5;4;ms6;pupmt;purple line pmt;1
+~+;1;n;voltr*length; ;cpk___; ;*;5;4;ms7;pkpmt;pink line pmt;1
+~+;1;n;voltr*length; ;cor___; ;*;5;4;ms8;orpmt;orange line pmt;q
+~/NOW OUTPUT THEM TO A FILE
+~>>%t2%
+~"Blue_PMT     %ms1% 
+~"Brown_PMT       %ms2%
+~"Green_PMT       %ms3% 
+~"Red_PMT        %ms4%
+~"Yellow_PMT    %ms5% 
+~"Purple_PMT    %ms6% 
+~"Pink_PMT      %ms7%
+~"Orange_PMT   %ms8% 
+~>
+~/NOW DO SUMMARIES BY LINE
+~/METRA Boardings by Line
+2.41
+~+;1;n;board; ;mbn___; ;*;5;4;ms1;bnbrd;bnsf line boards;1
+~+;1;n;board; ;mhc___; ;*;5;4;ms2;mhbrd;heritage boards;1
+~+;1;n;board; ;mme___; ;*;5;4;ms3;mebrd;med boards;1
+~+;1;n;board; ;mmn___; ;*;5;4;ms4;mnbrd;md-n boards;1
+~+;1;n;board; ;mmw___; ;*;5;4;ms5;mwbrd;md-w boards;1
+~+;1;n;board; ;mnc___; ;*;5;4;ms6;ncbrd;ncs boards;1
+~+;1;n;board; ;mnw___; ;*;5;4;ms7;upbrd;up-nw boards;1
+~+;1;n;board; ;mri___; ;*;5;4;ms8;ribrd;RI boards;1
+~+;1;n;board; ;mss___; ;*;5;4;ms9;ssbrd;SS boards;1
+~+;1;n;board; ;msw___; ;*;5;4;ms10;swbrd;SWS boards;1
+~+;1;n;board; ;mun___; ;*;5;4;ms11;upbrd;UP-N boards;1
+~+;1;n;board; ;muw___; ;*;5;4;ms12;upbrd;UP-W boards;q
+~/output to a file
+~>>%t2%
+~"BNSF_Board     %ms1% 
+~"Hert_Board       %ms2%
+~"MED_Board       %ms3% 
+~"MD-N_Board %ms4%
+~"MDW_Board    %ms5% 
+~"NCS_Board   %ms6% 
+~"UP-NW_Board %ms7%
+~"RID_Board   %ms8% 
+~"CSSSB_Board   %ms9%
+~"SWS_Board   %ms10%
+~"UP-N_Board   %ms11%
+~"UP-W_Board   %ms12%
+~>
+~/METRA PMT
+2.41
+~+;1;n;voltr*length; ;mbn___; ;*;5;4;ms1;bnpmt;bnsf line pmt;1
+~+;1;n;voltr*length; ;mhc___; ;*;5;4;ms2;mhpmt;heritage pmt;1
+~+;1;n;voltr*length; ;mme___; ;*;5;4;ms3;mepmt;med pmt;1
+~+;1;n;voltr*length; ;mmn___; ;*;5;4;ms4;mnpmt;md-n pmt;1
+~+;1;n;voltr*length; ;mmw___; ;*;5;4;ms5;mwpmt;md-w pmt;1
+~+;1;n;voltr*length; ;mnc___; ;*;5;4;ms6;ncpmt;ncs pmt;1
+~+;1;n;voltr*length; ;mnw___; ;*;5;4;ms7;uppmt;up-nw pmt;1
+~+;1;n;voltr*length; ;mri___; ;*;5;4;ms8;ripmt;RI pmt;1
+~+;1;n;voltr*length; ;mss___; ;*;5;4;ms9;sspmt;SS pmt;1
+~+;1;n;voltr*length; ;msw___; ;*;5;4;ms10;swpmt;SWS pmt;1
+~+;1;n;voltr*length; ;mun___; ;*;5;4;ms11;uppmt;UP-N pmt;1
+~+;1;n;voltr*length; ;muw___; ;*;5;4;ms12;uppmt;UP-W pmt;q
+~/output them to the report
+~>>%t2%
+~"BNSF_PMT     %ms1% 
+~"Hert_PMT       %ms2%
+~"MED_PMT       %ms3% 
+~"MD-N_PMT %ms4%
+~"MDW_PMT    %ms5% 
+~"NCS_PMT   %ms6% 
+~"UP-NW_PMT %ms7%
+~"RID_PMT   %ms8% 
+~"CSSSB_PMT   %ms9%
+~"SWS_PMT   %ms10%
+~"UP-N_PMT   %ms11%
+~"UP-W_PMT   %ms12%
+~>
+~y=0
+3.12
+~:delete_loop2
+~y+1
+2
+ms%y%
+y
+~?y<16
+~$delete_loop2
+q
+~o=6
+~/FINISHED

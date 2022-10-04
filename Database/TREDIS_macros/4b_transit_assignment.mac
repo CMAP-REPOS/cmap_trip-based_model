@@ -1,0 +1,277 @@
+~/ 4b_transit_assignment.mac
+~#  ****************************************************************************************
+~# Craig Heither, 06-03-2016
+~#
+~#   Macro to perform select line transit assignments to obtain data for TREDIS.
+~#   The assigned transit networks will be stored in the following scenarios:
+~#      -  work trips: <3-digit scenario + 20>
+~#      -  nonwork trips (HO + NH): <3-digit scenario + 25>
+~#      -  Home-other trips: <3-digit scenario + 30>
+~#
+~#    Based on CEB's work and nonwork transit setup; parameters are consistent with c16q3 macros.
+~#
+~#    Macro differs from Skim.Transit.PK & Skim.Transit.OP in the follow ways (in order to get validated 2015 results - rev. 06-03-2016):
+~#       - In PK & OP assignments: Metra headways capped at 60 minutes in wait time calculation.
+~#         -- Rock Island, Metra Electric & South Shore lines always use actual headways.
+~#       - Individual line weights used for CTA rail and Metra lines.
+~#       - Single line weight applied to all CTA buses.
+~#       - Single line weight applied to all Pace buses.
+~#       - Introduced spread factor (used with wait time weight) to give traveler fewer alternatives at a stop (given the same perception factor).
+~#         -- Value under 1 results in strategies closer to a single path.
+~#
+~#  Arguments:   %1% = three digit alternative ID number 
+~#
+~#    (e.g. "~<TREDIS_macros\4b_transit_assignment.mac 200") 
+~#
+~#  ****************************************************************************************
+~# -------------------------------------------------------------------------------------------------------
+~#
+~x=%0%
+~+;~?!x=1;~$>error
+~#
+~+;s=%1%;~?e;~$>bad_scen
+~/ Transit scenario argument is valid.
+~#
+~o|39
+on=25                       /set to 4-digit date
+~#
+~# _________________________________________________________________________
+~# ## -- Set Register Values -- ##
+~# _________________________________________________________________________
+~z=0                       / rail line counter (to apply weights)
+~y=1                       / trip purpose counter
+~r40=%1%                   / base transit scenario to copy
+~+;~r41=%1%;~r41+20        / transit scenario to analyze 
+~r42=1                     / increment transit scenario
+~r43=442                   / transit demand matrix
+~r44=445                   / transit select line demand matrix
+~r45=565                   / ms counter
+~r46=120                   / time period duration (minutes)
+~r50=60                    / AM Peak duration (minutes) used to cap Metra headway in Wait time calculation
+~t1=TREDIS_macros\report\transit_asmt_scen%1%.rpt
+~!if exist %t1% (del %t1% /Q)
+reports=%t1%
+~#
+~#
+~# _________________________________________________________________________
+~# ## -- Run Transit Assignment Loop -- ##
+~# _________________________________________________________________________
+~:purpose_loop
+~#
+~# text registers for mode selection and matrix/scenario labels
+~+;~?y=1;~t3=M
+~+;~?y=2;~t3=C
+~+;~?y=3;~t3=BEPLQ
+~#
+~?r42=1
+~+;~t2=wk;~t4=Commute
+~?r42=2
+~+;~t2=nw;~t4=Personal-Business Comb;~r46=240;~r50=60
+~?r42=3
+~+;~t2=ho;~t4=Personal;~r40=%1%;~r40+5;~r46=240;~r50=60
+~#
+~# _________________________________________________________________________
+~# ## -- Create Transit Assignment Scenario -- ##
+~# _________________________________________________________________________
+1.22
+~+;2;%r41%;~?e
+~+; ;q;~$>done
+yes
+q
+~:done
+~/  COPY SCEN %r40% to %r41% 
+1.22
+~+;3;%r40%;%r41%;%t2% TREDIS transit assignment - %d%;y;q
+~#
+~# _________________________________________________________________________
+~# ## -- Create and Set Select Line Attribute -- ##
+~# _________________________________________________________________________
+2.42
+~+;3;@sline;~?e
+~$>errS
+~+;y;q;~$>endS
+~:errS
+~+; ;q
+~:endS
+~#
+~+;2.42;2;3;@sline;transit select line flag;0;q
+~#
+2.41
+~+;1;y;@sline;n;1; ;mod=%t3%; ;4;q
+~#
+~# _________________________________________________________________________
+~# ## -- Set Line Weights to Balance Boardings -- ##
+~# _________________________________________________________________________
+~r1=1.0     / UP-N
+~r2=1.0     / NCS
+~r3=1.0     / MD-N
+~r4=0.1     / UP-NW
+~r5=0.5     / MD-W
+~r6=0.3     / UP-W
+~r7=0.001   / BNSF
+~r8=1.0     / HC
+~r9=7.3     / RI
+~r10=1.0    / SWS
+~r11=7.3    / ME
+~r12=7.3    / SS
+~r13=0.001  / Blue
+~r14=0.001  / Brown
+~r15=1.2    / Green
+~r16=2.3    / Orange
+~r17=1.5    / Pink
+~r18=0.001  / Purple
+~r19=2.2    / Red
+~r20=1.0    / Yellow
+~r30=3.5    / CTA bus routes
+~r31=6.6    / Pace bus routes
+~#
+~# _________________________________________________________________________
+~# ## -- Set Parameters Used in Regional Model -- ##
+~# _________________________________________________________________________
+~/SET BASE FARES 
+~r21= 150     / CTA BUS AND RAIL
+~r22= 150     / PACE
+~r23= 136     / METRA
+~r24=-120	  / CTA TRANSFER DISCOUNT
+~#
+~/SET COST COEFFICIENTS (should correspond to MC model [or explain why not]).
+~r25=1.82        / WAIT TIME WEIGHT
+~r26=1.82        / AUXILIARY TRANSIT TIME WEIGHT
+~r27=0.01        / BOARDING PENALTY WEIGHT APPLIED TO FARE (low because it's applied to gross fare).
+~r32=0.65        / SPREAD FACTOR (used with Wait Time Weight to allow more/fewer alternatives at a stop)
+~#
+~/SET TRANSIT TIME FUNCTION (ft1=normal  and ft2=brt)
+4.12
+~/first delete existing functions
+~+; 4; ft1,ft2; ; y
+~/add new functions. ft1 and ft2 both reference us1
+~+; 2; ft1; us1; ; ft2; us1; ; ; q 
+~/
+~/SET LINE-HAUL TIMES (us1)
+2.41
+~+; 1; y; us1; 0; ; all; all; 4
+~/THIS IS WHERE BRT IS DIFFERENTIATED FROM REGULAR TRANSIT
+~+;1;y;us1;(@ltime*(ttf.eq.2))+((@ltime.max.@hwytm)*(ttf.eq.1)); ; all; all; 4; q
+~/
+~/SET WAIT TIMES (us3) (revised 01/2016)
+2.41
+~+; 1; y; us3; 0; ; all; all; 4
+~# -- Use actual headway for CTA & Pace --
+~+; 1; y; us3; hdwy; ;mod=CBEPLQ; ;mod=CBEPLQ; ; 4
+~# -- Maximum of %r50% minute headway for Metra --
+~+; 1; y; us3; hdwy.min.%r50%; ; mod=M; ; mod=M; ; 4
+~# -- Use actual headway for Metra Electric, Rock Island & South Shore lines --
+~+; 1; y; us3; hdwy; ;lin=mss___;lin=mme___;lin=mri___; ;lin=mss___;lin=mme___;lin=mri___; ; 4;q
+~/
+~/SET BASE FARES BY MODE (ut1) 
+2.41
+~+; 1; y; ut1;  0;  ;       all ;    4
+~+; 1; y; ut1; %r21%;  ; mod=BEC  ;  ; 4
+~+; 1; y; ut1; %r22%;  ; mod=LPQ  ;  ; 4
+~+; 1; y; ut1; %r23%;  ; mod=M    ;  ; 4; q
+~/
+~/  #################################################
+~/       -- APPLY LINE WEIGHTS TO FARE --
+~z=1
+~:loop
+~#
+2.41
+~/ apply weight to rail line:
+~+;1;y;ut1;ut1*%rz%; ;~<transit_asmt_macros\cntl\rail_%z%.txt; ;4;q
+~z+1
+~+;~?z<21;~$loop
+~/
+2.41
+~/ apply weight to bus routes
+~+;1;y;ut1;ut1*%r30%; ;mod=BE; ;4
+~+;1;y;ut1;ut1*%r31%; ;mod=PLQ; ;4;q
+~/  #################################################
+~/
+~/SET LINK BASED TRANSFER DISCOUNTS (ul1)
+2.41
+~+; 1; y; ul1;  %r24%;  ; mod=bc ;  ;  4 ; q
+~#
+~#==============================================================
+~#	ASSIGN TRANSIT NETWORK
+~#==============================================================
+5.11
+2
+~/new assignment 
+~+;~?f&2048;2
+~+; mf%r43%; ; ; ; ; ; ;   
+~/
+~/assigned modes, skim modes
+~+; BCEPQLMuvwxyzbcmrtdk 
+~/
+~/line headways (per cmh method 10/01)
+~+; 4; us3                           
+~/
+~/line specific boarding penalty 
+~+; 3; ut1    
+~/
+~/wait time factor 
+~+; 1; 0.5
+~/ 
+~/wait, auxiliary, boarding weight
+~/### original ~+; %r25%; %r26%; %r27%
+~+; %r25%,%r32%; %r26%; %r27%
+~/
+~/additional options assignment to select lines
+~/
+~+;y;@sline; ; ; ;3;.max.;1,1; ;mf%r44%
+~+;y;sline;transit select line trips mod=%t3% %t4%;~?q=1;y;0
+~#
+~>>%t1%
+~" *===================================================================*
+~"   -- TRANSIT ASSIGNMENT %s%: MODE %t3% - %t4% --
+~" *===================================================================*
+~>>
+5.31
+2
+~/
+~/REPORT BOARDINGS 
+2.41
+~+;1;n;board; ;all;all;2;2;q
+~#
+~# -- CALCULATE PASSENGER MILES AND PASSENGER HOURS --
+~+;2.41;1;n;(voltr*length)  ; ;mod=%t3%; ;mod=%t3%; ;5;4;ms%r45%;temp%r45%;%t4% mod=%t3% Passenger Miles scen %s%;1;q
+~r45+1
+~+;2.41;1;n;(voltr*timtr)/60; ;mod=%t3%; ;mod=%t3%; ;5;4;ms%r45%;temp%r45%;%t4% mod=%t3% Passenger Hours scen %s%;1;q
+~r45+1
+~+;2.41;1;y;tmpt1;int(%r46%/hdwy); ;mod=%t3%; ;5;4;ms%r45%;temp%r45%;%t4% mod=%t3% Vehicles scen %s%;1;q
+~#
+~# ## -- Increment Counters --
+~+;~r44+1;~r45+1
+~y+1
+~?y=4
+~+;~r42+1;~r40+5;~r41+5;~r43+1;~y-3
+~+;~?r42<4;~$purpose_loop
+~# 
+~# 
+~#  ============================================================================
+~# -- QC REVIEW: CALCULATE PASSENGER MILES FROM CONFORMITY RUNS --
+~+;~x=%1%;~x+10
+s=%x%
+~+;2.41;1;n;(voltr*length); ;all;all;5;4;ms514;temp514;Work Transit Passenger Miles Conformity scen %s%;1;q
+~x+5
+s=%x%
+~+;2.41;1;n;(voltr*length); ;all;all;5;4;ms515;temp515;Non-Work Transit Passenger Miles Conformity scen %s%;1;q
+~#  ============================================================================
+~$>end
+~#
+~:error
+~/ +++++++++++++++++++++++++++++++++++++++
+~/   SUBMIT WITH 3-DIGIT SCENARIO!!!!!!!
+~/ +++++++++++++++++++++++++++++++++++++++
+~$>end
+~#
+~:bad_scen
+~/
+~/ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~/   3-DIGIT SCENARIO DOES NOT MATCH EMMEBANK DATA!!!!!!!
+~/ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~/
+~:end
+~o=6
+reports=
+~/ -- end of macro --

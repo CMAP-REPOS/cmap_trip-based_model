@@ -1,0 +1,125 @@
+~/ 4_tredis_transit_assignment_data.mac
+~/**********************************************************************
+~/**********************************************************************
+~# Craig Heither, 03-03-2016
+~#
+~#  Macro to obtain transit assignment results used to develop data for TREDIS model.
+~#
+~#  Arguments:   %1% = three digit alternative ID number 
+~#
+~#    (e.g. "~<TREDIS_macros\4_tredis_transit_assignment_data.mac 200") 
+~#
+~#**********************************************************************
+~# -------------------------------------------------------------------------------------------------------
+~#
+~# _________________________________________________________________________
+~#  ERROR CHECKING AND SETUP
+~# _________________________________________________________________________
+~x=%0%
+~+;~?!x=1;~$>error
+~#
+~x=%1%
+~+;s=%x%;~?e;~$>bad_scen
+~/ Scenario argument is valid.
+~#
+reports=
+batchin=
+~t1=TREDIS_macros\report\transit_asmt_scen%1%_summary_results.rpt
+~!if exist %t1% (del %t1% /Q)
+~#
+~#
+~# _________________________________________________________________________
+~#  RUN TRANSIT ASSIGNMENTS TO GET TREDIS DATA
+~# _________________________________________________________________________
+~<TREDIS_macros\4a_transit_asmt_setup.mac %1%
+~<TREDIS_macros\4b_transit_assignment.mac %1%
+~o|39
+~#
+~#
+~# _________________________________________________________________________	
+~#  TABULATE TRANSIT ASSIGNMENT RESULTS
+~# _________________________________________________________________________
+reports=%t1%
+3.21
+~# -- CALCULATE BUSINESS (NH) SELECT LINE TRIPS --
+~+;1;y;mf454;y;NHmodM;transit select line trips mod=M Business;~?q=1;y;0;(mf448-mf451).max.0; ; ;n;1;
+~+;1;y;mf455;y;NHmodC;transit select line trips mod=C Business;~?q=1;y;0;(mf449-mf452).max.0; ; ;n;1;
+~+;1;y;mf456;y;NHmodB;transit select line trips mod=BEPLQ Business;~?q=1;y;0;(mf450-mf453).max.0; ; ;n;1;
+~# -- CALCULATE FARES BY MODE AND USER CLASS --
+~+;1;y;ms520;~?q=1;y;temp520;Commute mod=M transit fares;~?q=1;y;0;mf445*mf825*(mf825.le.10000); ; ;n;+;+;2
+~+;1;y;ms521;~?q=1;y;temp521;Commute mod=C transit fares;~?q=1;y;0;mf446*mf825*(mf825.le.10000); ; ;n;+;+;2
+~+;1;y;ms522;~?q=1;y;temp522;Commute mod=BEPLQ transit fares;~?q=1;y;0;mf447*mf825*(mf825.le.10000); ; ;n;+;+;2
+~+;1;y;ms523;~?q=1;y;temp523;Personal mod=M transit fares;~?q=1;y;0;mf451*mf27*(mf27.le.10000); ; ;n;+;+;2
+~+;1;y;ms524;~?q=1;y;temp524;Personal mod=C transit fares;~?q=1;y;0;mf452*mf27*(mf27.le.10000); ; ;n;+;+;2
+~+;1;y;ms525;~?q=1;y;temp525;Personal mod=BEPLQ transit fares;~?q=1;y;0;mf453*mf27*(mf27.le.10000); ; ;n;+;+;2
+~+;1;y;ms526;~?q=1;y;temp526;Business mod=M transit fares;~?q=1;y;0;mf454*mf27*(mf27.le.10000); ; ;n;+;+;2
+~+;1;y;ms527;~?q=1;y;temp527;Business mod=C transit fares;~?q=1;y;0;mf455*mf27*(mf27.le.10000); ; ;n;+;+;2
+~+;1;y;ms528;~?q=1;y;temp528;Business mod=BEPLQ transit fares;~?q=1;y;0;mf456*mf27*(mf27.le.10000); ; ;n;+;+;2
+~# -- CALCULATE OUT-OF-VEHICLE TIME BY MODE AND USER CLASS (WAIT TIME + TRANSFER TIME) --
+~+;1;y;ms529;~?q=1;y;temp529;Commute mod=M transit wait;~?q=1;y;0;mf445*(mf844+mf843)*(mf844.gt.0 .and. mf844.le.10000); ; ;n;+;+;2
+~+;1;y;ms530;~?q=1;y;temp530;Commute mod=C transit wait;~?q=1;y;0;mf446*(mf844+mf843)*(mf844.gt.0 .and. mf844.le.10000); ; ;n;+;+;2
+~+;1;y;ms531;~?q=1;y;temp531;Commute mod=BEPLQ transit wait;~?q=1;y;0;mf447*(mf844+mf843)*(mf844.gt.0 .and. mf844.le.10000); ; ;n;+;+;2
+~+;1;y;ms532;~?q=1;y;temp532;Personal mod=M transit wait;~?q=1;y;0;mf451*(mf24+mf23)*(mf24.gt.0 .and. mf24.le.10000); ; ;n;+;+;2
+~+;1;y;ms533;~?q=1;y;temp533;Personal mod=C transit wait;~?q=1;y;0;mf452*(mf24+mf23)*(mf24.gt.0 .and. mf24.le.10000); ; ;n;+;+;2
+~+;1;y;ms534;~?q=1;y;temp534;Personal mod=BEPLQ transit wait;~?q=1;y;0;mf453*(mf24+mf23)*(mf24.gt.0 .and. mf24.le.10000); ; ;n;+;+;2
+~+;1;y;ms535;~?q=1;y;temp535;Business mod=M transit wait;~?q=1;y;0;mf454*(mf24+mf23)*(mf24.gt.0 .and. mf24.le.10000); ; ;n;+;+;2
+~+;1;y;ms536;~?q=1;y;temp536;Business mod=C transit wait;~?q=1;y;0;mf455*(mf24+mf23)*(mf24.gt.0 .and. mf24.le.10000); ; ;n;+;+;2
+~+;1;y;ms537;~?q=1;y;temp537;Business mod=BEPLQ transit wait;~?q=1;y;0;mf456*(mf24+mf23)*(mf24.gt.0 .and. mf24.le.10000); ; ;n;+;+;2
+~# -- STORE SELECT LINE TRIPS BY MODE AND USER CLASS --
+~+;1;y;ms538;~?q=1;y;temp538;Commute mod=M transit select line trips;~?q=1;y;0;mf445; ; ;n;+;+;2
+~+;1;y;ms539;~?q=1;y;temp539;Commute mod=C transit select line trips;~?q=1;y;0;mf446; ; ;n;+;+;2
+~+;1;y;ms540;~?q=1;y;temp540;Commute mod=BEPLQ transit select line trips;~?q=1;y;0;mf447; ; ;n;+;+;2
+~+;1;y;ms541;~?q=1;y;temp541;Personal mod=M transit select line trips;~?q=1;y;0;mf451; ; ;n;+;+;2
+~+;1;y;ms542;~?q=1;y;temp542;Personal mod=C transit select line trips;~?q=1;y;0;mf452; ; ;n;+;+;2
+~+;1;y;ms543;~?q=1;y;temp543;Personal mod=BEPLQ transit select line trips;~?q=1;y;0;mf453; ; ;n;+;+;2
+~+;1;y;ms544;~?q=1;y;temp544;Business mod=M transit select line trips;~?q=1;y;0;mf454; ; ;n;+;+;2
+~+;1;y;ms545;~?q=1;y;temp545;Business mod=C transit select line trips;~?q=1;y;0;mf455; ; ;n;+;+;2
+~+;1;y;ms546;~?q=1;y;temp546;Business mod=BEPLQ transit select line trips;~?q=1;y;0;mf456; ; ;n;+;+;2
+~# -- CALCULATE PER PASSENGER FARES BY MODE AND USER CLASS --
+~+;1;y;ms547;~?q=1;y;temp547;Commute mod=M transit fares per passenger $;~?q=1;y;0;(ms520/ms538)/100; ; ;2
+~+;1;y;ms548;~?q=1;y;temp548;Commute mod=C transit fares per passenger $;~?q=1;y;0;(ms521/ms539)/100; ; ;2
+~+;1;y;ms549;~?q=1;y;temp549;Commute mod=BEPLQ transit fares per passenger $;~?q=1;y;0;(ms522/ms540)/100; ; ;2
+~+;1;y;ms550;~?q=1;y;temp550;Personal mod=M transit fares per passenger $;~?q=1;y;0;(ms523/ms541)/100; ; ;2
+~+;1;y;ms551;~?q=1;y;temp551;Personal mod=C transit fares per passenger $;~?q=1;y;0;(ms524/ms542)/100; ; ;2
+~+;1;y;ms552;~?q=1;y;temp552;Personal mod=BEPLQ transit fares per passenger $;~?q=1;y;0;(ms525/ms543)/100; ; ;2
+~+;1;y;ms553;~?q=1;y;temp553;Business mod=M transit fares per passenger $;~?q=1;y;0;(ms526/ms544)/100; ; ;2
+~+;1;y;ms554;~?q=1;y;temp554;Business mod=C transit fares per passenger $;~?q=1;y;0;(ms527/ms545)/100; ; ;2
+~+;1;y;ms555;~?q=1;y;temp555;Business mod=BEPLQ transit fares per passenger $;~?q=1;y;0;(ms528/ms546)/100; ; ;2
+~# -- CALCULATE PER PASSENGER OUT-OF-VEHICLE TIME BY MODE AND USER CLASS --
+~+;1;y;ms556;~?q=1;y;temp556;Commute mod=M transit wait per passenger;~?q=1;y;0;ms529/ms538; ; ;2
+~+;1;y;ms557;~?q=1;y;temp557;Commute mod=C transit wait per passenger;~?q=1;y;0;ms530/ms539; ; ;2
+~+;1;y;ms558;~?q=1;y;temp558;Commute mod=BEPLQ transit wait per passenger;~?q=1;y;0;ms531/ms540; ; ;2
+~+;1;y;ms559;~?q=1;y;temp559;Personal mod=M transit wait per passenger;~?q=1;y;0;ms532/ms541; ; ;2
+~+;1;y;ms560;~?q=1;y;temp560;Personal mod=C transit wait per passenger;~?q=1;y;0;ms533/ms542; ; ;2
+~+;1;y;ms561;~?q=1;y;temp561;Personal mod=BEPLQ transit wait per passenger;~?q=1;y;0;ms534/ms543; ; ;2
+~+;1;y;ms562;~?q=1;y;temp562;Business mod=M transit wait per passenger;~?q=1;y;0;ms535/ms544; ; ;2
+~+;1;y;ms563;~?q=1;y;temp563;Business mod=C transit wait per passenger;~?q=1;y;0;ms536/ms545; ; ;2
+~+;1;y;ms564;~?q=1;y;temp564;Business mod=BEPLQ transit wait per passenger;~?q=1;y;0;ms537/ms546; ; ;2
+~# -- CALCULATE BUSINESS PMT & PHT --
+~+;1;y;ms592;~?q=1;y;temp592;Business mod=M Passenger Miles    ;~?q=1;y;0;ms574-ms583; ; ;2
+~+;1;y;ms593;~?q=1;y;temp593;Business mod=M Passenger Hours    ;~?q=1;y;0;ms575-ms584; ; ;2
+~+;1;y;ms594;~?q=1;y;temp594;Business mod=C Passenger Miles    ;~?q=1;y;0;ms577-ms586; ; ;2
+~+;1;y;ms595;~?q=1;y;temp595;Business mod=C Passenger Hours    ;~?q=1;y;0;ms578-ms587; ; ;2
+~+;1;y;ms596;~?q=1;y;temp596;Business mod=BEPLQ Passenger Miles;~?q=1;y;0;ms580-ms589; ; ;2
+~+;1;y;ms597;~?q=1;y;temp597;Business mod=BEPLQ Passenger Hours;~?q=1;y;0;ms581-ms590; ; ;2;q
+~$>end
+~#  =====================================================================
+~:error
+~/ +++++++++++++++++++++++++++++++++++++++
+~/    SUBMIT WITH 3-DIGIT SCENARIO!!!!!
+~/ +++++++++++++++++++++++++++++++++++++++
+~$>end
+~#
+~:bad_scen
+~/
+~/ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~/   3-DIGIT SCENARIO DOES NOT MATCH EMMEBANK DATA!!!!!!!
+~/ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~$>end
+~#  =====================================================================
+~:end
+~o=6
+reports=
+batchin=
+~/end of macro
+

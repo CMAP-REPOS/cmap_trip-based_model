@@ -29,7 +29,7 @@ reports=
 ~/
 ~# ################################
 ~# -- SET GROWTH FACTOR HERE --
-~r104=1.20 ~/growth factor from base year (1% per year)
+~r104=1.15 ~/growth factor from base year (1% per year)
 ~# ################################
 ~#
 ~#

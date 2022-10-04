@@ -1,0 +1,152 @@
+~/ 4a_transit_asmt_setup.mac
+~#  ****************************************************************************************
+~# Craig Heither, 03-03-2016
+~#
+~#   Macro prepares transit person trip matrices for transit assignment by:
+~#     - Creating three transit demand matrices:
+~#         * Work = HW high + HW low
+~#         * Non-Work = HO + NH
+~#         * HO only = HO
+~#     - Demand matrices are convoluted to move trips from origin zones with no transit service 
+~#       to the zone with the nearest transit station.
+~#     - Note: home-based trips are left in P-A format since AM peak transit coding favors the
+~#             inbound commute trip and some lines may not have a reverse commute option.
+~#    Based on CEB's work and nonwork transit setup
+~#
+~#
+~#   Revisions for zone17 -- Heither, 02-28-2019:
+~#			- Max. non-POE zone (register 1) updated to 3632 [line 36]
+~#			- Change t2 to r4 (837,937) in convolution [lines 88-92]
+~#
+~#  Arguments:   %1% = three digit alternative ID number 
+~#
+~#    (e.g. "~<TREDIS_macros\4a_transit_asmt_setup.mac 200") 
+~#
+~#  ****************************************************************************************
+~# -------------------------------------------------------------------------------------------------------
+~#
+~z=%0%
+~+;~?!z=1;~$>error
+~#
+~+;s=%1%;~?e;~$>bad_scen
+~#
+~#
+~# _________________________________________________________________________
+~# ## -- Set Register Values -- ##
+~# _________________________________________________________________________
+~r1=3632                      /* max. non-POE zone
+~t1=TREDIS_macros\report\transit_asmt_setup.rxt
+~#
+~!if exist %t1% (del %t1% /Q)
+reports=%t1%
+~#
+~#
+~# _________________________________________________________________________
+~# ## -- Matrix Cleanup -- ##
+~# _________________________________________________________________________
+3.12
+~+;2;mf440;~?e
+~+; ;~$>next
+y
+~:next
+~+;2;mf441;~?e
+~+; ;~$>next
+y
+~:next
+~+;2;mf442;~?e
+~+; ;~$>next
+y
+~:next
+~+;2;mo"ptemp";~?e
+~+; ;~$>next
+y
+~:next
+~+;2;mf443;~?e
+~+; ;~$>next
+y
+~:next
+~+;2;mf444;~?e
+~+; ;~$>next
+y
+~:next
+q
+~#
+~# -- create combined transit demand matrices for work and nonwork --
+3.21
+~+;1;y;mf440;y;wktran;work transit trips;~?q=1;y;0;mf40+mf41; ; ;n;2
+~+;1;y;mf441;y;nwtran;nonwork transit trips;~?q=1;y;0;mf42+mf43; ; ;n;2
+~# -- create matrix of origins for convolution --
+~+;1;y;mo"ptemp";y;origins for convolution;0;p; ; ;y;1,%r1%; ;2;q
+~#
+~# _________________________________________________________________________
+~# ## -- Perform Matrix Convolution and Create Transit Demand Matrices -- ##
+~# _________________________________________________________________________
+~x=1
+~#
+~:convolution_loop
+~?x=1
+~+;~r4=837;~r2=440;~r3=442;~t3=wkdmd;~t4=work
+~?x=2
+~+;~r4=937;~r2=441;~r3=443;~t3=nwdmd;~t4=nonwork
+~?x=3
+~+;~r4=937;~r2=42;~r3=444;~t3=hodmd;~t4=HO only
+~#
+3.23
+1
+mo"ptemp"                ~/first operand matrix
+==                       ~/matrix combination operator
+mf%r4%                   ~/second operand matrix (peak hour or off-peak) kzone
+n                        ~/use transpose of second operand matrix?  
+*                        ~/masking operator 1
+n                        ~/same masking operator for all intermed. zones?
+mf%r2%                   ~/matrix containing masking value
+3                        ~/intermed. zone to destination index
+ 
+ 
+mf%r3%                   ~/results matrix        
+y                        ~/initialize matrix?
+%t3%
+%t4% transit demand %1% for assignment
+0
+y                        ~/submatrix?
+1,%r1%                   ~/origin zones
+ 
+1,%r1%                   ~/intermed. zones
+ 
+1,%r1%                   ~/destinations
+
+
+y
+2
+q
+~x+1
+~+;~?x<4;~$convolution_loop
+~#
+~# 
+~# _________________________________________________________________________
+~# ## -- Delete Temporary Matrix --
+~# _________________________________________________________________________
+3.12
+~+;2;mo"ptemp";y;q
+~#
+~# 
+~$>end
+~#
+~:error
+~/ +++++++++++++++++++++++++++++++++++++++
+~/   SUBMIT WITH 3-DIGIT SCENARIO!!!!!!!
+~/ +++++++++++++++++++++++++++++++++++++++
+~$>end
+~#
+~:bad_scen
+~/
+~/ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~/   3-DIGIT SCENARIO DOES NOT MATCH EMMEBANK DATA!!!!!!!
+~/ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~/
+~:end
+~/o=6
+batchin=
+reports=
+~/ -- end of macro --
+

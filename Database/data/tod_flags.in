@@ -1,0 +1,65 @@
+c This array is referenced in the time of day macro to flag different triptable fractions
+c Ferguson 9/28/2018: Revised to reflect all O'Hare zones and update to zone17
+t matrices
+d matrix=mo"pflag"
+d matrix=md"qflag"
+a matrix=mo"pflag" default=0 tod fraction flags
+ 1 all:1.00
+ 2 all:1.00
+ 3 all:1.00
+ 4 all:1.00
+ 5 all:1.00
+ 6 all:1.00
+ 7 all:1.00
+ 8 all:1.00
+ 9 all:1.00
+ 10 all:1.00
+ 11 all:1.00
+ 12 all:1.00
+ 13 all:1.00
+ 14 all:1.00
+ 15 all:1.00
+ 16 all:1.00
+ 17 all:1.00
+ 18 all:1.00
+ 19 all:1.00
+ 20 all:1.00
+ 21 all:1.00
+ 22 all:1.00
+ 23 all:1.00
+ 24 all:1.00
+ 25 all:1.00
+ 26 all:1.00
+ 27 all:1.00
+ 28 all:1.00
+ 29 all:1.00
+ 30 all:1.00
+ 31 all:1.00
+ 32 all:1.00
+ 33 all:1.00
+ 34 all:1.00
+ 35 all:1.00
+ 36 all:1.00
+ 37 all:1.00
+ 38 all:1.00
+ 39 all:1.00
+ 40 all:1.00
+ 41 all:1.00
+ 42 all:1.00
+ 43 all:1.00
+ 44 all:1.00
+ 45 all:1.00
+ 46 all:1.00
+ 47 all:1.00
+ 123 all:3.00
+ 124 all:3.00
+ 125 all:3.00
+ 126 all:3.00
+ 127 all:3.00
+ 129 all:3.00
+ 130 all:3.00
+ 494 all:2.00
+ 1733 all:3.00
+ 1734 all:3.00
+ 1969 all:3.00
+ 2907 all:4.00

@@ -1,0 +1,110 @@
+~# RUN_VMT_STATISTICS.MAC
+~#  Craig Heither, 10-29-2018
+~#
+~#  ****************************************************************************************
+~#    Generate a file of model run VMT statistics for comparison to previous runs.
+~#    This creates detailed VMT numbers by district and vdf.
+~#    Includes calculating bus network vmt using @busveq  
+~#    submit with 3-digit scenario number (i.e., " ~<post_macros\run_vmt_statistics.mac 100 " )
+~#  ****************************************************************************************
+~#   Districts (revised for zone17 10-29-2018):
+~#     1: Chicago (zn 1-717)
+~#     2: Cook balance (zn 718-1732)
+~#     3: DuPage (zn 1733-2111)
+~#     4: Kane (zn 2112-2304)
+~#     5: Kendall (zn 2305-2325)
+~#     6: Lake (zn 2326-2583)
+~#     7: McHenry (zn 2584-2702)
+~#     8: Will (zn 2703-2926)
+~#     9: Illinois balance (zn 2927-3247)
+~#    10: Indiana (zn 3248-3467)
+~#    11: Wisconsin (zn 3468-3632)
+~#
+~# =====================================================================================================
+~#
+~z=%0%
+~+;~?!z=1;~$>error
+~#
+~o|39
+~# -- Set Values --                        
+~t1=report\run_vmt_statistics.rpt      
+~!if exist %t1% (del %t1%)
+~#
+~+;~t2=Chicago;~r1=1;~r2=717
+s=%1%49
+~#
+~#
+~>>%t1%
+~"%tp%
+~" 
+~>>
+~#
+~x=1
+~#
+~:loop
+~#
+~# -- Update District --
+~?x=2
+~+;~t2=Cook balance;~r1=718;~r2=1732
+~?x=3;
+~+;~t2=DuPage;~r1=1733;~r2=2111
+~?x=4;
+~+;~t2=Kane;~r1=2112;~r2=2304
+~?x=5;
+~+;~t2=Kendall;~r1=2305;~r2=2325
+~?x=6;
+~+;~t2=Lake;~r1=2326;~r2=2583
+~?x=7;
+~+;~t2=McHenry;~r1=2584;~r2=2702
+~?x=8;
+~+;~t2=Will;~r1=2703;~r2=2926
+~?x=9;
+~+;~t2=Illinois balance;~r1=2927;~r2=3247
+~?x=10;
+~+;~t2=Indiana;~r1=3248;~r2=3467
+~?x=11;
+~+;~t2=Wisconsin;~r1=3468;~r2=3632
+~#
+~#
+~/ -- Calculating Daily VMT: %t2% (zn %r1% - %r2%) --
+2.41
+~+;1;n;(@zone.ge.%r1% .and. @zone.le.%r2%)*(@vadt+(@busveq/3))*len; ;vdf=2;vdf=4; ;5;4;ms10;tmp10;%t2% xway vmt;1
+~+;1;n;(@zone.ge.%r1% .and. @zone.le.%r2%)*(@vadt+(@busveq/3))*len; ;vdf=1; ;5;4;ms11;tmp11;%t2% art vmt;1
+~+;1;n;(@zone.ge.%r1% .and. @zone.le.%r2%)*(@vadt+(@busveq/3))*len; ;vdf=3;vdf=5;vdf=7,8; ;5;4;ms12;tmp12;%t2% ramp-toll vmt;1
+~+;1;n;(@zone.ge.%r1% .and. @zone.le.%r2%)*(@vadt+(@busveq/3))*len; ;vdf=6; ;5;4;ms13;tmp13;%t2% centroid vmt;1;q
+3.21
+~+;1;y;ms14;y;tmp14;%t2% all vmt;~?q=1;y;0;ms10+ms11+ms12+ms13; ; ;1;q
+~#
+~>>%t1%
+~"== %t2% ==
+~"Expressway VMT : %ms10%
+~"Arterial VMT : %ms11%
+~"Ramp/Toll VMT : %ms12%
+~"Centroid VMT : %ms13%
+~"Total District VMT : %ms14%
+~>>
+~#
+~#
+~x+1
+~+;~?x<12;~$loop
+~#
+~#
+~# -- Delete Temporary Matrices --
+~y=10
+~:delms
+~+;3.12;2;ms%y%;y;q
+~y+1
+~+;~?y<15;~$delms
+~#
+~#  =====================================================================
+~$>end
+~#
+~:error
+~/ +++++++++++++++++++++++++++++++++++++++
+~/   SUBMIT WITH 3-DIGIT SCENARIO!!!!!!!
+~/ +++++++++++++++++++++++++++++++++++++++
+~/
+~:end
+~o=6
+~/ DONE!
+

@@ -1,0 +1,188 @@
+
+~#  ****************************************************************************************
+~#  TRANSIT_ASMT_SETUP.V2.MAC
+~#    Craig Heither, 05-17-2013
+~#
+~#   Macro prepares transit person trip matrices for transit assignment by:
+~#     - Combining all four transit trip purposes (HW high, HW low, HO & NH) into one matrix.
+~#     - Demand matrix is convoluted to move trips from origin zones with no transit service 
+~#       to the zone with the nearest transit station.
+~#     - Note: home-based trips are left in P-A format since AM peak transit coding favors the
+~#             inbound commute trip and some lines may not have a reverse commute option.
+~#
+~#
+~#    Must submit with 3-digit scenario number:
+~#      (e.g. "~<transit_asmt_macros\transit_asmt_setup.v2.mac 100")
+~#
+~#	Bozic 12-15-2015 revised to prepare work and non work demand separately
+~#                       using work and nonwork station index files so we can assign them
+~#			to am peak and midday networks
+~#
+~#   Revisions for zone17 -- Heither, 03-01-2019:
+~#			- Max. non-POE zone (register 1) updated to 3632 [line 36]
+~#  ****************************************************************************************
+~# -------------------------------------------------------------------------------------------------------
+~#
+~z=%0%
+~+;~?!z=1;~$>error
+~#
+~+;s=%1%;~?e;~$>bad_scen
+~#
+~/o|39
+~#
+~# _________________________________________________________________________
+~# ## -- Set Register Values -- ##
+~# _________________________________________________________________________
+~r1=3632                      /* max. non-POE zone
+~t1=transit_asmt_macros\report\transit_asmt_setup.rxt
+~#
+~!if exist %t1% (del %t1% /Q)
+reports=%t1%
+~#
+~#
+~# _________________________________________________________________________
+~# ## -- Matrix Cleanup -- ##
+~# _________________________________________________________________________
+3.12
+~+;2;mf"wktrn";~?e
+~+; ;~$>next
+y
+~:next
+~+;2;mf"nwtrn";~?e
+~+; ;~$>next
+y
+~:next
+~+;2;mf"wkdmd";~?e
+~+; ;~$>next
+y
+~:next
+~+;2;mo"ptemp";~?e
+~+; ;~$>next
+y
+~:next
+~+;2;mf"nwdmd";~?e
+~+; ;~$>next
+y
+~:next
+q
+~#
+~# -- create combined transit demand matrices for work and nonwork --
+3.21
+~+;1;y;mf840;y;wktran;work transit trips;~?q=1;y;0;mf40+mf41; ; ;n;2
+~+;1;y;mf940;y;nwtran;nonwork transit trips;~?q=1;y;0;mf42+mf43; ; ;n;2
+~#
+~#============DO WORK TRIPS FIRST==============================================
+~# -- create matrix of origins for WORK convolution --
+~+;1;y;mo"ptemp";y;origins for convolution;0;p; ; ;y;1,%r1%; ;2;q
+~#
+~#
+~# _________________________________________________________________________
+~# ## -- Perform Matrix Convolution and Create WORK Transit Demand Matrix -- ##
+~# _________________________________________________________________________
+~#
+~/o=6
+3.23
+1
+mo"ptemp"                ~/first operand matrix
+==                       ~/matrix combination operator
+mf837                    ~/second operand matrix peak hour kzone
+n                        ~/use transpose of second operand matrix?  
+*                        ~/masking operator 1
+n                        ~/same masking operator for all intermed. zones?
+mf"wktran"               ~/matrix containing masking value
+3                        ~/intermed. zone to destination index
+ 
+ 
+mf"wkdmd"                ~/results matrix        
+y                        ~/initialize matrix?
+work trn dmnd %1% for assignment
+0
+y                        ~/submatrix?
+1,%r1%                   ~/origin zones
+ 
+1,%r1%                   ~/intermed. zones
+ 
+1,%r1%                   ~/destinations
+
+
+y
+2
+q
+~#
+~# 
+~# _________________________________________________________________________
+~# ## -- Delete Temporary WORK Matrices --
+~# _________________________________________________________________________
+~/o|39
+3.12
+~+;2;mf"wktran";y
+~+;2;mo"ptemp";y;q
+~#
+~#============ NOW DO NONWORK TRIPS ==========================================
+~# -- create matrix of origins for NONWORK convolution --
+3.21
+~+;1;y;mo"ptemp";y;origins for convolution;0;p; ; ;y;1,%r1%; ;2;q
+~#
+~#
+~# _________________________________________________________________________
+~# ## -- Perform Matrix Convolution and Create WORK Transit Demand Matrix -- ##
+~# _________________________________________________________________________
+~#
+~/o=6
+3.23
+1
+mo"ptemp"                ~/first operand matrix
+==                       ~/matrix combination operator
+mf937                    ~/second operand matrix offpeak hour kzone
+n                        ~/use transpose of second operand matrix?  
+*                        ~/masking operator 1
+n                        ~/same masking operator for all intermed. zones?
+mf"nwtran"               ~/matrix containing masking value
+3                        ~/intermed. zone to destination index
+ 
+ 
+mf"nwdmd"                ~/results matrix        
+y                        ~/initialize matrix?
+nonwork trn dmd %1% for assignment
+0
+y                        ~/submatrix?
+1,%r1%                   ~/origin zones
+ 
+1,%r1%                   ~/intermed. zones
+ 
+1,%r1%                   ~/destinations
+
+
+y
+2
+q
+~#
+~# 
+~# _________________________________________________________________________
+~# ## -- Delete Temporary NONWORK Matrices --
+~# _________________________________________________________________________
+~/o|39
+3.12
+~+;2;mf"nwtran";y
+~+;2;mo"ptemp";y;q
+~# 
+~$>end
+~#
+~:error
+~/ +++++++++++++++++++++++++++++++++++++++
+~/   SUBMIT WITH 3-DIGIT SCENARIO!!!!!!!
+~/ +++++++++++++++++++++++++++++++++++++++
+~$>end
+~#
+~:bad_scen
+~/
+~/ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~/   3-DIGIT SCENARIO DOES NOT MATCH EMMEBANK DATA!!!!!!!
+~/ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~/
+~:end
+~/o=6
+batchin=
+reports=
+~/ -- end of macro --
+

@@ -1,0 +1,275 @@
+~# select_link_demand.mac
+~#  Craig Heither, rev. 05-18-2015
+~# 
+~#  ****************************************************************************************
+~#    Macro performs select link analysis to determine total daily demand for project specified
+~#    in select_link_analysis\proj_select_links.in.
+~#
+~#    Macro calculates:
+~#                      1. Daily select link demand for each vehicle class and total vehicles
+~#                         (all in VEH).
+~#                      2. Daily and time-of-day select link assigned volumes for each vehicle class (VEQ).
+~#                      3. Daily and time-of-day total select link assigned volumes (VEH).
+~#
+~#
+~#    Must submit with 3-digit scenario number:
+~#      (e.g. "~<select_link_analysis\select_link_demand.mac 600")
+~#
+~#
+~#     revised 10-11-2013: corrected total daily demand calculation
+~#     revised 05-18-2015: SOV is class 1, HOV is class 2
+~#
+~#  ****************************************************************************************
+~# -------------------------------------------------------------------------------------------------------
+~#
+~z=%0%
+~+;~?!z=1;~$>error
+~#
+~+;s=%1%;~?e;~$>bad_scen
+~/ Scenario number argument is valid.
+~#
+~o|39
+~#
+~# ______________________________________________
+~# ## -- Set Register Values -- ##
+~# ______________________________________________
+~t1=select_link_analysis\proj_select_links.in
+~t2=select_link_analysis\sel_link_report\sel_link.rpt
+~x=1                     ~/time period counter
+~#
+~!if exist %t2% (del %t2% /Q)
+reports=%t2%
+~#
+~#
+~# _____________________________________________
+~# ## -- Initialize Select Demand Matrices -- ##
+~# _____________________________________________
+3.21
+~+;1;y;mf63;y;sltot;select link daily total vehicle demand;~?q=1;y;0;0; ; ;n;2
+~+;1;y;mf64;y;sltotS;select link daily mode S veh demand;~?q=1;y;0;0; ; ;n;2       / switch HOV and SOV order (SC edit 5/18/15)
+~+;1;y;mf65;y;slthov;select link daily mode H veh demand;~?q=1;y;0;0; ; ;n;2       / switch SOV and HOV order (SC edit 5/18/15)
+~+;1;y;mf66;y;sltotb;select link daily B truck veh demand;~?q=1;y;0;0; ; ;n;2
+~+;1;y;mf67;y;sltotl;select link daily L truck veh demand;~?q=1;y;0;0; ; ;n;2
+~+;1;y;mf68;y;sltotm;select link daily M truck veh demand;~?q=1;y;0;0; ; ;n;2
+~+;1;y;mf69;y;sltoth;select link daily H truck veh demand;~?q=1;y;0;0; ; ;n;2;q
+~#
+~#
+~# __________________________________________________________________________
+~# ## -- Create Link Attributes in TOD and Daily Accumulation Scenarios -- ##
+~# __________________________________________________________________________
+~:create_attr
+~#
+s=%1%4%x%
+~#
+~# ## -- Create Select Link Flag Attribute and Assign Value -- ##
+~# 
+2.42
+~+;2;2;@sellk;~?e
+~$>err
+~+;select link flag;0;~$>end
+~:err
+
+~:end
+q
+~#
+2.41
+~+;1;y;@sellk;n;0; ;all;4
+~+;1;y;@sellk;n;1; ;~<%t1%; ;2;2;q
+~#
+~#
+~# ## -- Create Link Variables to Hold Select Link Volumes -- ##
+~# 
+~y=1                     ~/vehicle class counter
+~#
+~:slvolume
+~#
+~t3=select link class %y% TOD volumes (VEQ)
+~t4=select link pd %x% total volumes (VEH)
+~?x=9;
+~+;~t3=select link class %y% daily volumes (VEQ);~t4=select link daily total volumes (VEH)
+~#
+2.42
+~+;2;2;@slcl%y%;~?e
+~$>err
+~+;%t3%;0;~$>end
+~:err
+
+~:end
+q
+~#
+2.41
+~+;1;y;@slcl%y%;n;0; ;all;4;q
+~#
+~y+1
+~+;~?y<7;~$slvolume
+~#
+~#
+2.42
+~+;2;2;@slvol;~?e
+~$>err
+~+;%t4%;0;~$>end
+~:err
+
+~:end
+q
+~#
+2.41
+~+;1;y;@slvol;n;0; ;all;4;q
+~#
+~x+1
+~+;~?x<10;~$create_attr
+~#
+~/
+~/  ============================================================================
+~/           ## DETERMINE SELECT LINK DEMAND FOR EACH TIME PERIOD ##
+~/  ============================================================================
+~#
+~x=1
+~#
+~:select_demand
+~#
+s=%1%4%x%
+~#
+~# _______________________________________________________
+~# ## -- Delete Temporary Matrices Prior to Analysis -- ##
+~# _______________________________________________________
+~y=1                     ~/vehicle class counter
+~:delloop
+3.12
+~+;2;mfslc%y%;~?e
+~$>err
+~+;y;~$>end
+~:err
+~+; ;r
+~:end
+q
+~y+1
+~+;~?y<7;~$delloop
+~#
+~#
+~# ________________________________________________
+~/ ## -- Perform Path Analysis TOD Period %x% -- ##
+~# ________________________________________________
+6.16
+4                                                            / user defined path analysis
+@sellk                                                       / link attribute for path analysis
+                                                             / no turn attribute
+.max.                                                        / operator to compute path attributes
+1,1                                                          / lower,upper path thresholds
+3                                                            / aggregation (average)
+2                                                            / selected paths only
+                                                             / no class 1 demand to be analyzed (default to assigned values)
+                                                             / no matrix to hold class 1 O-D attribute
+~+;mfslc1;y;class 1 select link demand tod %x% (VEQ);0       / matrix to hold class 1 selected demand
+~+;@slcl1;n                                                  / extra attribute to hold class 1 link volumes, leave description
+                                                             / no extra attribute to hold class 1 turn volumes
+~+; ;                                                        / no class 2 demand to be analyzed & no matrix to hold class 2 O-D attribute
+~+;mfslc2;y;class 2 select link demand tod %x% (VEQ);0       / matrix to hold class 2 selected demand
+~+;@slcl2;n;                                                 / extra attribute to hold class 2 link volumes, leave description, no class 2 turn volumes
+~+; ;                                                        / no class 3 demand to be analyzed & no matrix to hold class 3 O-D attribute
+~+;mfslc3;y;class 3 select link demand tod %x% (VEQ);0       / matrix to hold class 3 selected demand
+~+;@slcl3;n;                                                 / extra attribute to hold class 3 link volumes, leave description, no class 3 turn volumes
+~+; ;                                                        / no class 4 demand to be analyzed & no matrix to hold class 4 O-D attribute
+~+;mfslc4;y;class 4 select link demand tod %x% (VEQ);0       / matrix to hold class 4 selected demand
+~+;@slcl4;n;                                                 / extra attribute to hold class 4 link volumes, leave description, no class 4 turn volumes
+~+; ;                                                        / no class 5 demand to be analyzed & no matrix to hold class 5 O-D attribute
+~+;mfslc5;y;class 5 select link demand tod %x% (VEQ);0       / matrix to hold class 5 selected demand
+~+;@slcl5;n;                                                 / extra attribute to hold class 5 link volumes, leave description, no class 5 turn volumes
+~+; ;                                                        / no class 6 demand to be analyzed & no matrix to hold class 6 O-D attribute
+~+;mfslc6;y;class 6 select link demand tod %x% (VEQ);0       / matrix to hold class 6 selected demand
+~+;@slcl6;n;                                                 / extra attribute to hold class 6 link volumes, leave description, no class 6 turn volumes
+~+;2;q
+~#
+~#
+~# ________________________________________________________
+~# ## -- Update Time Period Total Select Link Volumes -- ##
+~# ________________________________________________________
+2.41
+~+;1;y;@slvol;n;@slcl1+@slcl2+@slcl3+@slcl4+(@slcl5/2)+(@slcl6/3); ;all;2;2;q
+~#
+~#
+~# _________________________________________________________
+~# ## -- Update Total Daily Vehicle Select Link Demand -- ##
+~# _________________________________________________________
+3.21
+~+;1;y;mfsltotS;n;"sltotS"+"slc1"; ; ;n;2                   / switch HOV and SOV order (SC edit 5/18/15)
+~+;1;y;mfslthov;n;"slthov"+"slc2"; ; ;n;2                   / switch SOV and HOV order (SC edit 5/18/15)
+~+;1;y;mfsltotb;n;"sltotb"+"slc3"; ; ;n;2
+~+;1;y;mfsltotl;n;"sltotl"+"slc4"; ; ;n;2
+~+;1;y;mfsltotm;n;"sltotm"+("slc5"/2); ; ;n;2
+~+;1;y;mfsltoth;n;"sltoth"+("slc6"/3); ; ;n;2;q
+~#
+~#
+~# _____________________________________________________________________
+~# ## -- Update Select Link Volumes in Daily Accumulation Scenario -- ##
+~# _____________________________________________________________________
+s=%1%49
+~#
+~y=1                     ~/vehicle class counter
+~#
+~:sum_tod
+2.41
+~+;2;%1%4%x%;@slcl%y%;tmpl1;all
+~+;1;y;@slcl%y%;n;@slcl%y%+tmpl1; ;all;2;2;q
+~#
+~y+1
+~+;~?y<7;~$sum_tod
+~#
+2.41
+~+;1;y;@slvol;n;@slcl1+@slcl2+@slcl3+@slcl4+(@slcl5/2)+(@slcl6/3); ;all;2;2;q
+~#
+~#
+~# ________________________________________
+~# ## -- Iterate Through Time Periods -- ##
+~# ________________________________________
+~x+1
+~+;~?x<9;~$select_demand
+~#  ============================================================================
+~#  ============================================================================
+~#
+~# ________________________________________________________________
+~# ## -- Sum Total Daily Demand -- ##
+~# ________________________________________________________________
+3.21
+~+;1;y;mfsltot;n
+"sltot"+"slthov"+"sltotS"+"sltotb"+"sltotl"+
+"sltotm"+"sltoth"
+~+; ; ;n;2;q
+~#
+~#
+~# ________________________________________________________________
+~# ## -- Delete TOD Vehicle Class Select Link Demand Matrices -- ##
+~# ________________________________________________________________
+~y=1                     ~/vehicle class counter
+~:delloop2
+3.12
+~+;2;mfslc%y%;~?e
+~$>err
+~+;y;~$>end
+~:err
+~+; ;r
+~:end
+q
+~y+1
+~+;~?y<7;~$delloop2
+~#  ============================================================================
+~#
+~$>end
+~#
+~:error
+~/ +++++++++++++++++++++++++++++++++++++++
+~/   SUBMIT WITH 3-DIGIT SCENARIO!!!!!!!
+~/ +++++++++++++++++++++++++++++++++++++++
+~$>end
+~#
+~:bad_scen
+~/
+~/ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~/   3-DIGIT SCENARIO DOES NOT MATCH EMMEBANK DATA!!!!!!!
+~/ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~/
+~:end
+~o=6
+reports=
+~/ -- end of macro --
+

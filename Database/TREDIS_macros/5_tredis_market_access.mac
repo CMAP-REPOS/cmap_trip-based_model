@@ -1,0 +1,138 @@
+~/ 5_tredis_market_access.mac
+~#  ****************************************************************************************
+~# Craig Heither, rev. 04-01-2016
+~#
+~#  Macro calculates market access data for TREDIS.  Market access thresholds and terminal 
+~#  zones are stored in the registers in the first section of the macro.
+~#
+~#    revised 04-01-2016: uses actual population and employment r/t HW P-As 
+~#
+~#  Arguments:   %1% = Modeling zone that serves as the centroid for the Market Access calculations  
+~# 
+~#    (e.g. "~<TREDIS_macros\5_tredis_market_access.mac 82") 
+~#
+~# Revisions:
+~# 7/11/2018 NRF - Corrected transit access expressions to use half the headway as wait time
+~# 8/10/2018 CEB - Remove multiplication by auto mode share and transit mode share when calculating 
+~#                 market size by mode.  Per Adam Winston of EDRG. 
+~#
+~#   Revisions for zone17 -- Heither, 02-28-2019:
+~#			- Change terminal locations zone numbers in r1-r5 [lines 38-42]
+~#			- Change upper bound of 7-county zone definition from 1711 (zone09) to 2926 (zone17) in t2 [line 43]
+~#
+~#  ****************************************************************************************
+~# -------------------------------------------------------------------------------------------------------
+~#
+~z=%0%
+~+;~?!z=1;~$>error
+~o|39
+~#
+~# _________________________________________________________________________
+~# ## -- Set Register Values -- ##
+~# _________________________________________________________________________
+~x=%1%                     /* market access centroid
+~y=40                      /* local market access threshold in minutes
+~z=180                     /* regional market access threshold in minutes
+~r1=461                    /* Rail Freight Terminal zone (47th ST Yard, truck entrance) [zone 198 in zone09]
+~r2=27                     /* Rail Passenger Terminal zone (Union Station) [also zone 27 in zone09]
+~r3=125                    /* Airport Terminal (O'Hare Core Terminals [T1,T2,T3]) -- also used for International Air Gateway [zone 92 in zone09]
+~r4=677                    /* Marine Freight Terminal (Lake Calumet [Illinois Port District]) [zone 287 in zone09]
+~r5=3390                   /* Terminal Access International Border (zone farthest east in Indiana, near Michigan City on both I-90 and I-80) [zone 1902 in zone09]
+~t2=1,2926
+
+~t1=TREDIS_macros\report\market_access_centroid%1%.rpt
+~#
+~!if exist %t1% (del %t1% /Q)
+reports=%t1%
+~#
+~# _________________________________________________________________________
+~# ## -- Import Population and Employment Data -- ##
+~# _________________________________________________________________________
+batchin=data\md400.in
+3.11
+1
+
+batchin=data\md401.in
+3.11
+1
+
+batchin=data\mo400.in
+3.11
+1
+
+batchin=
+~#
+~# ________________________________________________________________________________________________________________
+~# ## -- Calculate Auto-Rail-Bus Trip Shares between Zones -- ##
+~# ________________________________________________________________________________________________________________
+3.21
+~# -- Rail-Transit shares --
+~+;1;y;mf461;y;rail trip shares;rail trip shares;~?q=1;y;0;(mf827.gt.3)*(mf40+mf41+mf42+mf43)/((mf1+mf2+mf3+mf40+mf41+mf42+mf43).max.1); ; ;y;%t2%; ;%t2%; ;2
+~# -- Bus shares --
+~+;1;y;mf462;y;bus trip shares;bus trip shares;~?q=1;y;0;(mf827.eq.3)*(mf40+mf41+mf42+mf43)/((mf1+mf2+mf3+mf40+mf41+mf42+mf43).max.1); ; ;y;%t2%; ;%t2%; ;2
+~# -- Auto shares --
+~+;1;y;mf463;y;auto trip shares;auto trip shares;~?q=1;y;0;1-(mf461+mf462); ; ;y;%t2%; ;%t2%; ;2
+~# -- each cell sums to 1 to capture market potential --
+~#
+~# ________________________________________________________________________________________________________________
+~# ## -- Calculate Population within 40 Minutes of Market Access Centroid (i.e., Local Market Size) -- ##
+~# ________________________________________________________________________________________________________________
+~# -- flag zones accessible by auto in AM peak --
+~+;1;y;mf457;y;auto access;AM peak auto accessible;~?q=1;y;0;(mf44.le.%y%); ; ;y;%x%; ;%t2%; ;2
+~# -- flag zones accessible by transit (IVT+OVT) in AM peak --
+~+;1;y;mf458;y;transit access;AM peak transit accessible;~?q=1;y;0;((mf842+mf843+(mf844/2)).le.%y%); ; ;y;%x%; ;%t2%; ;2
+~# -- calculate accessible population - Car --
+~+;1;y;ms516;~?q=1;y;temp516;local market size - Car;~?q=1;y;0;(md400*mf457); ; ;n;+;+;2
+~# -- calculate accessible productions - Rail-Transit --
+~+;1;y;ms517;~?q=1;y;temp517;local market size - Rail-Transit;~?q=1;y;0;(mf827.gt.3)*(md400*mf458); ; ;n;+;+;2
+~# -- calculate accessible productions - Bus --
+~+;1;y;ms518;~?q=1;y;temp518;local market size - Bus;~?q=1;y;0;(mf827.eq.3)*(md400*mf458); ; ;n;+;+;2
+~#
+~# ________________________________________________________________________________________________________________
+~# ## -- Calculate Employment within 180 Minutes of Market Access Centroid (i.e., Regional Market Size) -- ##
+~# ________________________________________________________________________________________________________________
+~# -- flag zones accessible by auto in Mid-day --
+~+;1;y;mf459;y;auto access;mid-day auto accessible;~?q=1;y;0;(mf46.le.%z%); ; ;y;%x%; ;%t2%; ;2
+~# -- flag zones accessible by transit (IVT+OVT) in Mid-day  --
+~+;1;y;mf460;y;transit access;mid-day transit accessible;~?q=1;y;0;((mf22+mf23+(mf24/2)).le.%z%); ; ;y;%x%; ;%t2%; ;2
+~# -- calculate accessible employment - Car --
+~+;1;y;ms519;~?q=1;y;temp519;regional market size - Car;~?q=1;y;0;(md401*mf459); ; ;n;+;+;2
+~# -- calculate accessible employment - Rail-Transit --
+~+;1;y;ms598;~?q=1;y;temp598;regional market size - Rail-Transit;~?q=1;y;0;(mf26.gt.3)*(md401*mf460); ; ;n;+;+;2
+~# -- calculate accessible employment - Bus --
+~+;1;y;ms599;~?q=1;y;temp599;regional market size - Bus;~?q=1;y;0;(mf26.eq.3)*(md401*mf460); ; ;n;+;+;2
+~#
+~# ________________________________________________________________________________________________________________
+~# ## -- Calculate Average Drive Time from All Businesses in Study Area to Terminals -- ##
+~#       (reuse scalars beginning with ms420 - they were temporary TOD storage)
+~# ________________________________________________________________________________________________________________
+~# -- sum of regional employment --
+~+;1;y;ms420;~?q=1;y;temp420;sum of regional employment;~?q=1;y;0;mo400; ; ;y;%t2%; ;+;2
+~# -- Average Drive Time to Rail Freight Terminal zone --
+~+;1;y;ms421;~?q=1;y;temp421;Average Drive Time to Rail Freight Terminal;~?q=1;y;0;mo400*mf46; ; ;y;%t2%; ;%r1%; ;+;+;2
+~+;1;y;ms421;n;ms421/%ms420%; ; ;2
+~# -- Average Drive Time to Rail Passenger Terminal zone --
+~+;1;y;ms422;~?q=1;y;temp422;Average Drive Time to Rail Passenger Terminal;~?q=1;y;0;mo400*mf46; ; ;y;%t2%; ;%r2%; ;+;+;2
+~+;1;y;ms422;n;ms422/%ms420%; ; ;2
+~# -- Average Drive Time to Airport Terminal zone --
+~+;1;y;ms423;~?q=1;y;temp423;Average Drive Time to Airport Terminal;~?q=1;y;0;mo400*mf46; ; ;y;%t2%; ;%r3%; ;+;+;2
+~+;1;y;ms423;n;ms423/%ms420%; ; ;2
+~# -- Average Drive Time to Marine Freight Terminal zone --
+~+;1;y;ms424;~?q=1;y;temp424;Average Drive Time to Marine Freight Terminal;~?q=1;y;0;mo400*mf46; ; ;y;%t2%; ;%r4%; ;+;+;2
+~+;1;y;ms424;n;ms424/%ms420%; ; ;2
+~# -- Average Drive Time to International Border zone --
+~+;1;y;ms425;~?q=1;y;temp425;Average Drive Time to International Border Terminal;~?q=1;y;0;mo400*mf46; ; ;y;%t2%; ;%r5%; ;+;+;2
+~+;1;y;ms425;n;ms425/%ms420%; ; ;2;q
+~#
+~$>end
+~#**********************************************************************
+~:error
+~/ ++++++++++++++++++++++++++++++++++++++++++++
+~/   SUBMIT WITH MARKET ACCESS CENTROID!!!!!!
+~/ ++++++++++++++++++++++++++++++++++++++++++++
+~/
+~:end
+~/o=6
+reports=
+~/ -- end of macro --
+

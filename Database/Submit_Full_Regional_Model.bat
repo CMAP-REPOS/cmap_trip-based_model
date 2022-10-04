@@ -42,7 +42,7 @@ rem ====================================================================
 rem Settings
 rem --------
 rem Set the 3-digit scenario number.
-set /a val=200
+set /a val=100
 
 rem Set the iteration value for global iterations 0-3.
 set /a iter1=100
@@ -53,19 +53,18 @@ set /a iter2=100
 rem Select a random integer to label Fortran executables.
 set /a rndmint=%random% %%100
 
-@echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @echo.
-@echo   CONNECT TO EMME
+@echo   Connect to an available Emme license before continuing.
 @echo.
-@echo   Before continuing, please connect to an Emme license.
+@echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @echo.
-@echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 pause
 @echo.
 
 @echo Model run scenario: %val%
-@echo Pre-Distribution/Mode Choice simulations (global iterations 0-3): %iter1%
-@echo Pre-Distribution/Mode Choice simulations (global iteration 4): %iter2%
+REM @echo Pre-Distribution/Mode Choice simulations (global iterations 0-3): %iter1%
+REM @echo Pre-Distribution/Mode Choice simulations (global iteration 4): %iter2%
 @echo.
 
 set /p ok="[RUN MODEL FOR SCENARIO %val%? (y/n)] "
@@ -133,7 +132,6 @@ REM ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 REM Craig Heither, 10/28/14 - added to verify household attribute files present for non-work vehicle occupancy model
 if not exist HH_VTYPE_TRIPS_IN.TXT (goto hhmiss)
 copy tg\fortran\TG_HHENUM_OUTPUT.TXT TG_HHENUM_OUTPUT.TXT /y
-echo.
 if not exist TG_HHENUM_OUTPUT.TXT (goto hhmiss)
 REM ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 REM Craig Heither, 4/13/09
@@ -167,7 +165,7 @@ copy PreDist_RnSeed.exe PreDist_RnSeed_%rndmint%.exe /y
 copy ModeChoice_RnSeed.exe ModeChoice_RnSeed_%rndmint%.exe /y
 copy VehOcc.exe VehOcc_%rndmint%.exe /y
 
-@ECHO ==================================================================
+@ECHO ======================================================================
 REM - LOOP TO RUN MODEL (Heither 04/2010)
 set /A counter=0
 :while
@@ -190,8 +188,8 @@ call emme -ng 000 -m macros\init_HOVsim_databk.mac %val% >> blog.txt
 
 
 REM UPDATE NAMELIST FILES
-if %counter% EQU 0 (python update_Namelist.py %iter1%)
-if %counter% EQU 4 (python update_Namelist.py %iter2%)
+REM if %counter% EQU 0 (python update_Namelist.py %iter1%)
+REM if %counter% EQU 4 (python update_Namelist.py %iter2%)
 
 
 if %counter% GTR 2 (goto skipdistr)
@@ -301,7 +299,7 @@ goto while
 
 :loopend
 @ECHO END OF FULL MODEL LOOP
-@ECHO ==================================================================
+@ECHO ======================================================================
 
 if exist PreDist_RnSeed_%rndmint%.exe (del PreDist_RnSeed_%rndmint%.exe /Q)
 if exist ModeChoice_RnSeed_%rndmint%.exe (del ModeChoice_RnSeed_%rndmint%.exe /Q)
@@ -347,8 +345,8 @@ goto end
 @ECHO ====================================================== >> model_run_timestamp.txt
 @ECHO.
 @ECHO END OF BATCH FILE - MODEL RUN COMPLETED
-@ECHO ==================================================================
-@ECHO ==================================================================
+@ECHO ======================================================================
+@ECHO ======================================================================
 
 :end
 pause
