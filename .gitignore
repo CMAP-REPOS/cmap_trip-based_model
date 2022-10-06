@@ -11,13 +11,13 @@ Database/tg/fortran/*_OUTPUT.TXT
 Database/tg/fortran/MCHW_HH.TXT
 Database/tg/data/tg_results*.csv
 Database/tg/data/tg_summary*.csv
-Database/tg/reports/
 Database/tg/data/*.in
 Database/data/md400.in
 Database/data/md401.in
 Database/data/mo400.in
 Database/tg/data/m01tg.txt
 Database/tg/scripts/*.log
+Database/tg.rpt
 
 # Ignore TG model input files that are scenario-dependent.
 Database/tg/fortran/HH_IN.TXT
