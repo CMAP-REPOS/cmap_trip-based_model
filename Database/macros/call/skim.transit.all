@@ -1,5 +1,5 @@
 ~#CATS MACRO SKIM.TRANSIT
-~#syntax: skim.transit <3 digit id> <global iteration 0-4> <python path>
+~#syntax: skim.transit <3 digit id> <global iteration 0-2> <python path>
 ~# kww 11/01
 ~# revised kww 3/02 to add more coefficients to generalized parking cost
 ~# revised ceb 7/08 to differentiate between brt with ttf=2 and regular time ttf=1
@@ -19,7 +19,18 @@
 ~# revised Heither, 10-11-2018: store maximum internal zone number in z-register; store
 ~#                              Park & Ride Group in mo602 & partition gr (start line 449)
 ~#                              to speed up triple-indexing calculations.
-~#=====================================================================
+~# revised Heither, 10-12-2020: update base fares as part of trip-based model update; separate CTA rail
+~#                              fare added; transfer discount now applies to CTA Rail-CTA Rail
+~# revised Heither, 09-11-2021: minor adjustments to not disturb pre-loaded congested times for Iteration 0
+~#
+~# revised Heither, 10-29-2021: wait time weight & auxiliary time weight revised to 2.00 for consistency with
+~#                              Mode-Dest-TOD\cmap_modedest\fast\transit\approach.py
+~#
+~# revised Heither, 05-06-2022: added fare for Pace express service; adjust matrix convolution logic to 
+~#                              include all CTA rail & Metra stations and Pace parking lots; adjust kzone matrix (mfx21): 
+~#                              use origin zone if zone pair is accessible using transit or intrazonal, else use kzone;
+~#                              corrected final average fare calculation
+~#===========================================================================================================================
 ~#This macro combines three previously separate procedures into one macro.
 ~#
 ~# 1. guess.which.mode
@@ -34,18 +45,11 @@
 ~#  1. transit network to be analyzed must be scenario 4 in the current databank
 ~#      w/ these extra attributes present.
 ~#	  @ltime  = scheduled line haul time
-~#	  @hwytm   = COPIED IN REAL TIME FROM P3 AND P5 
-~#                    congested highway time from a complementary highway asg.
-~#        @zfare  = incremental transit zone fare
+~#	  @hwytm   = COPIED IN REAL TIME FROM Period 3 AND Period 5 
+~#                 (congested highway time from a complementary highway asmt may be pre-loaded).
+~#    @zfare  = incremental transit zone fare
 ~#	  @pspac  = number of off-street parking spaces at station node
 ~#	  @pcost  = daily fee for off street parking at station node
-~#  2. NO LONGER NEEDED, WILL USE THE DATABANK VERSIONS IN REAL TIME
-~#      interzonal highway skims (punched mf format) 
-~#      from complementary highway assignment
-~#        data/hwytime = highway minutes (header must read d mf01, a mf01)
-~#        data/hwydist = highway miles   (header must read d mf02, a mf02)
-~#
-~#   
 ~#
 ~#======================================================================
 ~# SECTION 1: SKIM TIME, DISTANCE AND FARES ON THE TRANSIT NETWORK
@@ -76,14 +80,10 @@
 ~+;s=%1%;~?e;~$>bad_scen
 ~/ Transit scenario argument is valid.
 ~#
-~#x is the global iteration 0-4
-~#but this will always lag 1 iteration because the auto times are not available
-~#until the end of the iteration. Iteration 0 will use iteration 0 We won't be 
-~#be able to use I4 times
-~#empty times
+~# ## -- x is the global iteration 0-2: auto times will lag 1 global iteration
+~# ## -- Iteration 0 will use pre-loaded congested times.
 ~x=%2%
-~?x>0
-~x-1
+~+;~?x>0;~x-1
 ~r17=%1%
 ~r21=%2%
 ~#
@@ -94,7 +94,7 @@ reports=%t1%
 ~y+1
 ~#SET SCENARIO
 s=%r17%
-~#check for peak or offpeak scenario and set matrix series 700 or 800 and 
+~#check for peak or offpeak scenario and set matrix series 800 or 900 and 
 ~#scenario 3 or 5 as the source scenario to copy from
 ~# y=1 is peak, y=2 is offpeak
 ~?y=1
@@ -105,26 +105,30 @@ s=%r17%
 ~# FILL IN @HWYTM
 ~# use ul2 temporarily to store congested highway time from auto scenario
 ~# @hwytm segment attribute was created when the transit network was built
+~# ## -- For Iteration 0: @hwytm has already been filled with pre-loaded congested times. 
+~+;~?r21=0;~$>no_update
 2.41
 ~+; 1; y; @hwytm;n; 0; ; *;*; 4
 ~+; 1; y; ul2; 0; ; *; 4
-~?r21>0
 ~+; 2; %1%%x%%r20%; timau; ul2; *
 ~+;1;y;@hwytm;n;ul2;;*;*;4
 ~+; 1; y; ul2; 0; ; *; 4; q
+~:no_update
 ~#
 ~#
 ~#SET BASE FARES 
-~#
-~r1= 150         / CTA BUS AND RAIL
-~r2= 150         / PACE
-~r3= 136         / METRA
-~r4=-120	 / CTA TRANSFER DISCOUNT
+~# ## 10/2020 - these fares reflect average base transit fares calculated from actual usage of cash/Ventra/single rides/passes. 
+~r1= 151         / CTA BUS
+~r100= 170       / CTA RAIL
+~r2= 158         / PACE
+~r3= 336         / METRA
+~r101=450        / Pace premium service
+~r4= -132	     / CTA BUS TRANSFER DISCOUNT (will be applied to all CTA Bus-CTA Rail-Pace transfers) - not quite right for Pace premium but reasonable
 ~#
 ~#SET COST COEFFICIENTS (should correspond to MC model (or explain why not).
 ~#
-~r5=1.82        / WAIT TIME WEIGHT
-~r6=1.82        / AUXILIARY TRANSIT TIME WEIGHT
+~r5=2.00        / WAIT TIME WEIGHT
+~r6=2.00        / AUXILIARY TRANSIT TIME WEIGHT
 ~r7=0.01        / BOARDING PENALTY WEIGHT APPLIED TO FARE (low because it's applied to gross fare).
 ~#
 ~r8=2.00          / AUTO TIME OPERATING COSTS PER MINUTE
@@ -142,32 +146,30 @@ s=%r17%
 ~#
 ~#INITIALIZE MATRICES using matrix calculator to write over matrices for each iteration
 3.21
-~+; 1;y; mf%r19%03;y; mode; skimmed first mode %r17%;~?q=1;y;0;3;;;n;1;
-~+; 1;y; mf%r19%04;y; mode; skimmed priority mode %r17%;~?q=1;y;0;3;;;n;1;
-~+; 1;y; mf%r19%05;y; mode; skimmed last mode %r17%;~?q=1;y;0;3;;;n;1;
+~+; 1;y; mf%r19%03;y; fmode; skimmed first mode %r17%;~?q=1;y;0;3;;;n;1;
+~+; 1;y; mf%r19%04;y; pmode; skimmed priority mode %r17%;~?q=1;y;0;3;;;n;1;
+~+; 1;y; mf%r19%05;y; lmode; skimmed last mode %r17%;~?q=1;y;0;3;;;n;1;
 ~+; 1;y; mf%r19%06;y; one; dummy for assignment (ones) %r17%;~?q=1;y;0;1;;;n;1;
-~+; 1;y; mf%r19%07;y; min$; skimmed generalized cost %r17%;~?q=1;y;0;0;;;n;1;
-~+; 1;y; mf%r19%08;y; min; skimmed in-vehicle minutes %r17%;~?q=1;y;0;0;;;n;1;
-~+; 1;y; mf%r19%09;y; min; skimmed transfer link minutes %r17%;~?q=1;y;0;0;;;n;1;
-~+; 1;y; mf%r19%10;y; min; skimmed total wait minutes %r17%;~?q=1;y;0;0;;;n;1;
-~+; 1;y; mf%r19%11;y; min; skimmed first wait minutes %r17%;~?q=1;y;0;0;;;n;1;
-~+; 1;y; mf%r19%12;y; min$; skimmed initial fares %r17%;~?q=1;y;0;0;;;n;1;
-~+; 1;y; mf%r19%13;y; miles; skimmed distance %r17%;~?q=1;y;0;0;;;n;1;
-~+; 1;y; mf%r19%15;y; $; zonal fares %r17% ;~?q=1;y;0;0;;;n;1;
-~+; 1;y; mf%r19%16;y; $; xfer link fare discount %r17%;~?q=1;y;0;0;;;n;1;
-~+; 1;y; mf%r19%17;y; $; xfer node boarding tally %r17%;~?q=1;y;0;0;;;n;1;
-~+; 1;y; mf%r19%18;y; $; skimmed final average fare %r17%;~?q=1;y;0;0;;;n;1;
-~+; 1;y; mf%r19%19;y; min$ ;congested hwy generalized cost %r17%;~?q=1;y;0;0;;;n;1;
-~+; 1;y; mf%r19%20;y; min$ ;indexed tran generalized cost %r17%;~?q=1;y;0;0;;;n;1;
-~+; 1;y; mf%r19%21;y; zone ;indexed zone number %r17%;~?q=1;y;0;0;;;n;1;
-~+; 1;y; mf%r19%34;y; ratio;indexed transit/auto only %r17%;~?q=1;y;0;0;;;n;1;
-~+; 1;y; mo%r19%01;y; spaces;off-str prkng daily spaces %r17%;~?q=1;y;0;0;;;n;1;
-~+; 1;y; mo%r19%02;y; cents ;off-str prkng daily cents %r17%;~?q=1;y;0;0;;;n;1;
-~+; 1;y; mo%r19%03;y; spaces;on-str prkng daily spaces %r17%;~?q=1;y;0;0;;;n;1;
-~+; 1;y; mo%r19%04;y; cents ;on-str prkng daily cents %r17%;~?q=1;y;0;0;;;n;1;
-~+; 1;y; mo%r19%05;y; min$; generalized parking cost %r17%;~?q=1;y;0;99999;;;n;1;q
-~#
-~#
+~+; 1;y; mf%r19%07;y; skimgc; skimmed generalized cost %r17%;~?q=1;y;0;0;;;n;1;
+~+; 1;y; mf%r19%08;y; skimiveh; skimmed in-vehicle minutes %r17%;~?q=1;y;0;0;;;n;1;
+~+; 1;y; mf%r19%09;y; skimxfer; skimmed transfer link minutes %r17%;~?q=1;y;0;0;;;n;1;
+~+; 1;y; mf%r19%10;y; skmtwait; skimmed total wait minutes %r17%;~?q=1;y;0;0;;;n;1;
+~+; 1;y; mf%r19%11;y; skmfwait; skimmed first wait minutes %r17%;~?q=1;y;0;0;;;n;1;
+~+; 1;y; mf%r19%12;y; skmifare; skimmed initial fares %r17%;~?q=1;y;0;0;;;n;1;
+~+; 1;y; mf%r19%13;y; skimmi; skimmed distance %r17%;~?q=1;y;0;0;;;n;1;
+~+; 1;y; mf%r19%15;y; zonefare; zonal fares %r17% ;~?q=1;y;0;0;;;n;1;
+~+; 1;y; mf%r19%16;y; xferdisc; xfer link fare discount %r17%;~?q=1;y;0;0;;;n;1;
+~+; 1;y; mf%r19%17;y; xferbrd; xfer node boarding tally %r17%;~?q=1;y;0;0;;;n;1;
+~+; 1;y; mf%r19%18;y; skimfare; skimmed final average fare %r17%;~?q=1;y;0;0;;;n;1;
+~+; 1;y; mf%r19%19;y; hwygc; congested hwy generalized cost %r17%;~?q=1;y;0;0;;;n;1;
+~+; 1;y; mf%r19%20;y; trngc; indexed tran generalized cost %r17%;~?q=1;y;0;0;;;n;1;
+~+; 1;y; mf%r19%21;y; zone; indexed zone number %r17%;~?q=1;y;0;0;;;n;1;
+~+; 1;y; mf%r19%34;y; ratio; indexed transit/auto only %r17%;~?q=1;y;0;0;;;n;1;
+~+; 1;y; mo%r19%01;y; spacesof; off-str prkng daily spaces %r17%;~?q=1;y;0;0;;;n;1;
+~+; 1;y; mo%r19%02;y; centsof; off-str prkng daily cents %r17%;~?q=1;y;0;0;;;n;1;
+~+; 1;y; mo%r19%03;y; spaceson; on-str prkng daily spaces %r17%;~?q=1;y;0;0;;;n;1;
+~+; 1;y; mo%r19%04;y; centson; on-str prkng daily cents %r17%;~?q=1;y;0;0;;;n;1;
+~+; 1;y; mo%r19%05;y; parkgc; generalized parking cost %r17%;~?q=1;y;0;99999;;;n;1;q
 ~#
 ~#
 ~#=========================================================
@@ -193,17 +195,19 @@ s=%r17%
 ~+; 1; y; us3; hdwy; ; all; all; 4;q
 ~#
 ~#SET BASE FARES BY MODE (ut1) 
-~#
+~# ## 10/2020: for separate CTA Rail fare ##
 2.41
 ~+; 1; y; ut1;  0;  ;       all ;    4
-~+; 1; y; ut1; %r1%;  ; mod=BEC  ;  ; 4
-~+; 1; y; ut1; %r2%;  ; mod=LPQ  ;  ; 4
-~+; 1; y; ut1; %r3%;  ; mod=M    ;  ; 4; 6
+~+; 1; y; ut1; %r1%;  ; mod=BE  ;  ; 4
+~+; 1; y; ut1; %r100%;  ; mod=C  ;  ; 4
+~+; 1; y; ut1; %r2%;  ; mod=LP  ;  ; 4
+~+; 1; y; ut1; %r101%;  ; mod=Q  ;  ; 4
+~+; 1; y; ut1; %r3%;  ; mod=M    ;  ; 4; q
 ~#
 ~#SET LINK BASED TRANSFER DISCOUNTS (ul1)
-~#
+~# ## 10/2020: add mode r (CTA Rail-CTA Rail transfer) ##
 2.41
-~+; 1; y; ul1;  %r4%;  ; mod=bc ;  ;  4 ; q
+~+; 1; y; ul1;  %r4%;  ; mod=bcr ;  ;  4 ; q
 ~#
 ~#
 ~#==============================================================
@@ -348,11 +352,12 @@ n
 ~#==============================================================
 3.21
 ~+;1 ; y;mf%r19%18 ;n
-~#
- mf%r19%12*(mf%r19%17 .lt. 1) +(mf%r19%12*(mf%r19%17 .ge. 1) / (mf%r19%17 .max. .00001) )
-+mf%r19%15
-+mf%r19%16*(mf%r19%12 .gt. (-1*mf%r19%16))
-+30*(mf%r19%17 .ge. 2.0)
+~## -- Base Fares plus Zone Fares (constrained by transit disconnect) --
+mf%r19%12 + mf%r19%15 * (mf%r19%17.lt.1000)
+~## -- minus transfer discounts*transfers (constrained by transit disconnect & discount not exceeding base fare) -- 
++(mf%r19%17.gt.1) * (mf%r19%17.lt.1000) * mf%r19%17 * mf%r19%16 * (mf%r19%12 .gt. (-1*mf%r19%16))
+~## -- add one transfer discount back in so first boarding isn't discounted (but only if the transfer discount is applied) --
+-(mf%r19%17.gt.1) * (mf%r19%17.lt.1000) * mf%r19%16 * (mf%r19%12 .gt. (-1*mf%r19%16))
 ~#
 ~+; ; ;n;1;q
 ~#==============================================================
@@ -446,7 +451,10 @@ n
 ~+;1;y;ul3;0;;all;4
 ~+;1;y;ui1;0;;all;4
 ~+;1;y;ul3;@pspacj;; mod=uvw;;2;2
-~+;1;y;ui1;ul3;;4;i=1,%z%;;2;2;q
+~+;1;y;ui1;ul3;;4;i=1,%z%;;2;2
+~## # -- For the convolution this needs to flag all rail stations - not just those with parking [05-06-2022]
+~+;1;y;ui1;ui1 + (i.ge.30000 .and. i.le.49999);;4;i=1,%z%;;2;2;q
+~#
 3.21
 ~+;1;y;mo%r19%01;n;ui1; ; ;n;2
 ~## -- Create Parking Lot Zone Group 10-09-2018 -- ##
@@ -505,23 +513,34 @@ gr1
 y
 1
 q
-
+~#
+~## #-- Adjust kzone matrix - Keep the original zone if: the trip is intrazonal or if there is skimmed transit service available (mf8) and service
+~#  ##   originates within the City of Chicago.
+~#  ## Otherwise, apply the indexed station zone.
+~#  ##   (mf8 is unindexed transit in-vehicle time)  [07-16-2022]
+~#  ##
+3.21
+~+;1;y;mf%r19%21;n
+((mf%r19%08.lt.1000 .and. ga(p).eq.1).or.(p.eq.q))*p +
+((mf%r19%08.ge.1000 .or. ga(p).ne.1).and.(p.ne.q))*mf%r19%21
+~+; ; ;y;1,%z%; ;1,%z%; ;2;q
+~#
 ~# _____________________________________________________
 ~# always use python. 
 ~# python indexing will happen next 
 ~# _____________________________________________________
 ~# Create storage matrices - use matrix calculator to write over matrices
 3.21
-~+;1;y; mf%r19%22;y; min; indxd in-vehicle minute %r17% I%2%;~?q=1;y;0;0;;;n;2
-~+;1;y; mf%r19%23;y; min; indxd walk transfer minute %r17% I%2%;~?q=1;y;0;0;;;n;2
-~+;1;y; mf%r19%24;y; min; indxd total wait minute %r17% I%2%;~?q=1;y;0;0;;;n;2
-~+;1;y; mf%r19%25;y; min; indxd first wait minute %r17% I%2%;~?q=1;y;0;0;;;n;2
-~+;1;y; mf%r19%28;y; $; indxd final average fare %r17% I%2%;~?q=1;y;0;0;;;n;2
-~+;1;y; mf%r19%29;y; $; indxd first mode %r17% I%2%;~?q=1;y;0;0;;;n;2
-~+;1;y; mf%r19%30;y; $; indxd priority mode %r17% I%2%;~?q=1;y;0;0;;;n;2
-~+;1;y; mf%r19%31;y; $; indxd last mode %r17%I%2%;~?q=1;y;0;0;;;n;2
-~+;1;y; mf%r19%32;y; min$; indxd auto generalized cost %r17% I%2%;~?q=1;y;0;0;;;n;2
-~+;1;y; mf%r19%33;y; min; indxd auto min. to transit %r17% I%2%;~?q=1;y;0;0;;;n;2; q
+~+;1;y; mf%r19%22;y; min; indexed in-vehicle minute %r17% I%2%;~?q=1;y;0;0;;;n;2
+~+;1;y; mf%r19%23;y; min; indexed walk transfer minute %r17% I%2%;~?q=1;y;0;0;;;n;2
+~+;1;y; mf%r19%24;y; min; indexed total wait minute %r17% I%2%;~?q=1;y;0;0;;;n;2
+~+;1;y; mf%r19%25;y; min; indexed first wait minute %r17% I%2%;~?q=1;y;0;0;;;n;2
+~+;1;y; mf%r19%28;y; $; indexed final average fare %r17% I%2%;~?q=1;y;0;0;;;n;2
+~+;1;y; mf%r19%29;y; $; indexed first mode %r17% I%2%;~?q=1;y;0;0;;;n;2
+~+;1;y; mf%r19%30;y; $; indexed priority mode %r17% I%2%;~?q=1;y;0;0;;;n;2
+~+;1;y; mf%r19%31;y; $; indexed last mode %r17%I%2%;~?q=1;y;0;0;;;n;2
+~+;1;y; mf%r19%32;y; min$; indexed auto generalized cost %r17% I%2%;~?q=1;y;0;0;;;n;2
+~+;1;y; mf%r19%33;y; min; indexed auto minutes to transit %r17% I%2%;~?q=1;y;0;0;;;n;2; q
 ~#
 ~#increment the scenario number r17 up by 5 to do offpeak
 ~r17+5
@@ -547,7 +566,7 @@ q
 ~:end
 reports=
 ~/
-~/PYTHON PROCESSING TAKES A MINUTES DON'T PANIC
+~/PYTHON PROCESSING TAKES A FEW MINUTES
 ~!%3% macros\call\transit_skim_final_matrices1.py
 ~!%3% macros\call\transit_skim_final_matrices2.py
 ~<macros\call\finish.transit.skims %1% %2%

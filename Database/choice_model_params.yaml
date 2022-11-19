@@ -1,15 +1,15 @@
 ---
 HBWH:
-  AUTO_no_veh             : -2.020659944100635
-  AUTO_sufficient_veh     : 0.38452201292089344
-  Const_BIKE              : -0.894546256455408
+  AUTO_no_veh             : -2.02065994410063
+  AUTO_sufficient_veh     : 0.519104717
+  Const_BIKE              : -1.073455508
   Const_HOV2              : -0.1668500724105203
   Const_HOV3              : -0.21808009101098888
   Const_TAXI              : -2.431094687758224
   Const_TNC1              : -2.008349809498196
   Const_TNC2              : -2.4552699434460092
-  Const_Transit           : 1.2020176935213474
-  Const_WALK              : 2.412909619032794
+  Const_Transit           : 0.601008847
+  Const_WALK              : 1.930328
   "HOV2_distance[1]: up to 5": -0.06488537269714309
   "HOV2_distance[2]: 5 to 10": -0.11540132553118827
   "HOV2_distance[3]: over 10": -0.013216115632247139
@@ -24,16 +24,16 @@ HBWH:
   bike_intrazonal         : -1.6636827478318525
   bike_time               : -0.02778733889066637
   cost                    : -0.011866357529992518
-  "distance[1]: up to 5"  : -0.49797253034846917
+  "distance[1]: up to 5"  : -0.298782
   "distance[2]: 5 to 10"  : -0.25104483509430675
-  "distance[3]: over 10"  : -0.08139140883241654
+  "distance[3]: over 10"  : -0.1017375
   intrazonal              : 0.39465324741439617
   log_attraction          : 1.0
   ovtt_dist               : -0.15984982535729966
   samp_af                 : 1.0
   totaltime               : -0.017030758987881523
-  transit_areatype2       : -1.1455651088664938
-  transit_areatype3       : -2.2752646579816473
+  transit_areatype2       : -1.374678131
+  transit_areatype3       : -2.73031759
   transit_areatype4       : -2.539714312284354
   transit_intrazonal      : 1.625433444479245
   unavail                 : -999.0
@@ -46,16 +46,16 @@ HBWH:
   "walk_time[3]: over 1.0": -0.04511510767486528
 
 HBWL:
-  AUTO_no_veh             : -2.6528066585010657
+  AUTO_no_veh             : -2.65280665850106
   AUTO_sufficient_veh     : 0.6888882063457877
-  Const_BIKE              : -0.9945824184916677
+  Const_BIKE              : -1.09404066
   Const_HOV2              : -0.2460911914792246
   Const_HOV3              : -0.4290101474789843
   Const_TAXI              : -3.8304400020192633
   Const_TNC1              : -2.4175101613361236
   Const_TNC2              : -2.8383847101687665
-  Const_Transit           : 1.0666061148928383
-  Const_WALK              : 3.9081939947504334
+  Const_Transit           : 0.479972752
+  Const_WALK              : 3.517371
   "HOV2_distance[1]: up to 5": -0.11065077093338262
   "HOV2_distance[2]: 5 to 10": -0.049241695312713885
   "HOV2_distance[3]: over 10": -0.002806134912895757
@@ -78,8 +78,8 @@ HBWL:
   ovtt_dist               : -0.07639147912439262
   samp_af                 : 1.0
   totaltime               : -0.014712168298471244
-  transit_areatype2       : -1.0367824806859152
-  transit_areatype3       : -2.790025452472348
+  transit_areatype2       : -1.244138977
+  transit_areatype3       : -3.348030543
   transit_areatype4       : -1.7423132266984915
   transit_intrazonal      : 1.283608900037017
   unavail                 : -999.0
@@ -100,7 +100,7 @@ HBS:
   Const_TAXI              : -5.253618850918264
   Const_TNC1              : -3.816184530139125
   Const_TNC2              : -4.558901351389891
-  Const_Transit           : -0.21404713461576616
+  Const_Transit           : -0.963212106
   Const_WALK              : 6.596691656951593
   "HOV2_distance[1]: up to 5": 0.009034461967573385
   "HOV2_distance[2]: 5 to 10": 0.049284351672991784
@@ -109,7 +109,7 @@ HBS:
   "HOV3_distance[2]: 5 to 10": 0.023282599339480955
   "HOV3_distance[3]: over 10": -0.026850537398658003
   HOV_no_veh              : -2.6988260425637627
-  HOV_sufficient_veh      : 0.5335192902703366
+  HOV_sufficient_veh      : 0.800278935
   Mu-Dest                 : 0.9999995450045109
   Mu-HiredCar             : 0.7499981532551199
   Mu-PrivateCar           : 0.7488587009800751
@@ -144,7 +144,7 @@ HBO:
   Const_TAXI              : -2.942656711989843
   Const_TNC1              : -2.149564398484044
   Const_TNC2              : -2.98711612846131
-  Const_Transit           : 0.5588178180149811
+  Const_Transit           : -0.111763564
   Const_WALK              : 4.670849451686818
   "HOV2_distance[1]: up to 5": 0.017890861068567836
   "HOV2_distance[2]: 5 to 10": -0.00016112775220540623
@@ -153,7 +153,7 @@ HBO:
   "HOV3_distance[2]: 5 to 10": -0.012802115968545311
   "HOV3_distance[3]: over 10": -0.01765617059558345
   HOV_no_veh              : -2.3244238719260717
-  HOV_sufficient_veh      : 0.5834975068797393
+  HOV_sufficient_veh      : 0.700197008
   Mu-Dest                 : 0.9173451660758779
   Mu-HiredCar             : 0.6880089006264855
   Mu-PrivateCar           : 0.6880089368354831
@@ -188,8 +188,8 @@ NHB:
   Const_TAXI              : 4.042014046218436
   Const_TNC1              : 4.50598343908186
   Const_TNC2              : 3.142784557691248
-  Const_Transit           : 6.6153867351119295
-  Const_WALK              : 9.049605277611404
+  Const_Transit           : 5.953848062
+  Const_WALK              : 9.2577501
   "HOV2_distance[1]: up to 5": -0.010314696930721757
   "HOV2_distance[2]: 5 to 10": -0.07671732289392817
   "HOV2_distance[3]: over 10": -0.01813927300629156

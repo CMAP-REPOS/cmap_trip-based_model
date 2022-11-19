@@ -2,7 +2,7 @@
 reports=report\iter_%ms98%\ttables_%s%.rxt
 ~t3=report\iter_%ms98%\tod_veh_trips_and_VOT.txt
 ~#
-~o|39
+~/o|39
 ~/**********************************************************************
 ~/**********************************************************************
 ~/      ttables %1% %2% %3% %4%
@@ -73,6 +73,17 @@ q
 ~/ CMH 06/08 - to eliminate hardcoding of factors in macros (see documentation in Excel file)
 ~/
 ~y=%2%
+~# ## SOV factors for HBW to CBD (r1) & HBW from CBD (r3) -- NEED to Update
+~+;~r1=0.122;~r3=0.168
+~+;~?y=2;~r1=0.096;~r3=0.028
+~+;~?y=3;~r1=0.318;~r3=0.069
+~+;~?y=4;~r1=0.072;~r3=0.026
+~+;~?y=5;~r1=0.154;~r3=0.130
+~+;~?y=6;~r1=0.081;~r3=0.119
+~+;~?y=7;~r1=0.088;~r3=0.271
+~+;~?y=8;~r1=0.069;~r3=0.189
+~# # r4 = Metra share of boardings - used to factor Park and Ride trips
+~r4=0.126
 ~/ -- Get TOD Factors
 ~<<data\tod_factors.p%y%
 ~z=19
@@ -125,7 +136,6 @@ q
 ~/
 ~/**********************************************************************
 3.21
-~# ~+;1;y;mf13;y;modeS;auto veh (mod=S) trip table:%t1%;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf14;y;bplt;b plate truck trips for %t1%;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf15;y;ltrk;light truck trips for %t1%;~?q=1;y;0;0; ; ;n;1;
 ~+;1;y;mf16;y;mtrk;medium truck trips for %t1%;~?q=1;y;0;0; ; ;n;1;
@@ -147,10 +157,10 @@ q
 ~r102=24     / VOT for SOV VOT3
 ~r103=9      / VOT for HOV2 (prev value = 18 for hw low & non-hw, 30 for hw high)
 ~r104=14     / VOT for HOV3+ (prev value = 27 for hw low & non-hw, 45 for hw high)
-~r109=20     / VOT for B-Plate truck
-~r110=25     / VOT for Light truck
-~r111=25     / VOT for Medium truck
-~r112=40     / VOT for Heavy truck
+~r109=24     / VOT for B-Plate truck
+~r110=32     / VOT for Light truck
+~r111=47     / VOT for Medium truck
+~r112=52     / VOT for Heavy truck
 ~r113=18     / VOT for External auto
 ~r114=30     / VOT for AirPass
 ~# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -163,17 +173,17 @@ q
 ~#      -  Auto I-PASS users may not perceive the entire cost because they are not
 ~#         paying out-of-pocket for each transaction (i.e., only see monthly credit
 ~#         card statement).
-~r100*1.00     / SOV VOT1
-~r101*1.00     / SOV VOT2
-~r102*1.00     / SOV VOT3
-~r103*1.00     / HOV2 (prev value = 9.0/8.0)
-~r104*1.00     / HOV3 (prev value = 9.0/8.0)
-~r109*1.00     / B-Plate truck (prev value = 2.0)
-~r110*1.00     / B-plate + Light truck (prev value = 2.0)
-~r111*1.00     / Medium truck (prev value = 2.0)
-~r112*1.00     / Heavy truck (prev value = 2.0)
-~r113*1.00     / External auto (prev value = 3.0)
-~r114*1.00     / AirPass (prev value = 3.0)
+~r100*2.25    / SOV VOT1
+~r101*2.25    / SOV VOT2
+~r102*2.00    / SOV VOT3
+~r103*2.25    / HOV2 (prev value = 9.0/8.0)
+~r104*2.25    / HOV3 (prev value = 9.0/8.0)
+~r109*1.00    / B-Plate truck (prev value = 2.0)
+~r110*1.00    / B-plate + Light truck (prev value = 2.0)
+~r111*1.00    / Medium truck (prev value = 2.0)
+~r112*1.00    / Heavy truck (prev value = 2.0)
+~r113*1.00    / External auto (prev value = 3.0)
+~r114*1.00    / AirPass (prev value = 3.0)
 ~#**********************************************************************
 ~#
 ~# VOT bucket splits for added trip tables (externals, drive-transit, air passenger)
@@ -209,29 +219,28 @@ q
 ~#
 ~#
 ~# -- create combined HW transit demand matrix (high + low income) --
+~# -- These matrices are in O-D format --
 3.21
-~+;1;y;mf"hwtran";y;HW High and Low inc transit trips;0;mf40+mf41; ; ;n;2
+~+;1;y;mf20;y;hwtranst;HW High and Low inc transit trips;~?q=1;y;0;mf40+mf41; ; ;n;2
 ~#
 ~# -- create matrix of origins for convolution --
-~+;1;y;mo"ptemp";y;origins to extract first leg demand;0;p; ; ;y;1,%r250%; ;2;q
+~+;1;y;mo10;~?q=1;y;ptemp;origins to extract first leg demand;0;p; ; ;y;1,%r250%; ;2;q
 ~#
 ~# -- perform convolution --
 3.23
 1
 mf837                    ~/first operand matrix
 ==                       ~/matrix combination operator
-mo"ptemp"                ~/second operand matrix
+mo10                     ~/second operand matrix
 y                        ~/use transpose of second operand matrix?
 *                        ~/masking operator 1
 n                        ~/same masking operator for all intermed. zones?
-mf"hwtran"               ~/matrix containing masking value
+mf20                     ~/matrix containing masking value
 2                        ~/origin to intermed. zone index
  
  
-mf"temppr"               ~/results matrix
-y                        ~/initialize matrix?
-temp drive to transit
-0
+mf59                     ~/results matrix
+n                        ~/change header?
 y                        ~/submatrix?
 1,%r250%                 ~/origin zones
  
@@ -244,15 +253,10 @@ y
 2
 q
 ~#
-~# simplified conversion of matrix from P-A format to O-D format
-3.21
-~+;1;y;mf59;y;parkrd;drive to transit station;~?q=1;y;0;(mf"temppr"+mf"temppr"')/2; ; ;n;2;q
-~# 
 ~# -- delete temporary matrices --
 3.12
-~+;2;mf"hwtran";y
-~+;2;mf"temppr";y
-~+;2;mo"ptemp";y;q
+~+;2;mf20;y
+~+;2;mo10;y;q
 ~# 
 ~:not_TOD1
 ~/ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -281,7 +285,7 @@ no
 ~+;1;y;ms24;y;tmp24;store SOV VOT1;~?q=1;y;0;mf94; ; ;n;+;+;1;q
 ~t2=SOV VOT1 trips
 ~>>%t3%
-~"Period %y% %t2% : %ms10.2%
+~"Period %y% %t2% : %ms24.2%
 ~>>
 3.21
 1
@@ -299,7 +303,7 @@ no
 ~+;1;y;ms25;y;tmp25;store SOV VOT2;~?q=1;y;0;mf95; ; ;n;+;+;1;q
 ~t2=SOV VOT2 trips
 ~>>%t3%
-~"Period %y% %t2% : %ms10.2%
+~"Period %y% %t2% : %ms25.2%
 ~>>
 3.21
 1
@@ -317,7 +321,7 @@ no
 ~+;1;y;ms26;y;tmp26;store HW SOV VOT3;~?q=1;y;0;mf96; ; ;n;+;+;1;q
 ~t2=SOV VOT3 trips
 ~>>%t3%
-~"Period %y% %t2% : %ms10.2%
+~"Period %y% %t2% : %ms26.2%
 ~>>
 3.21
 ~# ## 
@@ -337,7 +341,7 @@ no
 ~+;1;y;ms27;y;tmp27;store HOV2;~?q=1;y;0;mf%r248%; ; ;n;+;+;1;q
 ~t2=HOV2 trips
 ~>>%t3%
-~"Period %y% %t2% : %ms11.2%
+~"Period %y% %t2% : %ms27.2%
 ~>>
 3.21
 ~# ## 
@@ -357,7 +361,7 @@ no
 ~+;1;y;ms28;y;tmp28;store HOV3;~?q=1;y;0;mf%r249%; ; ;n;+;+;1;q
 ~t2=HOV3 trips
 ~>>%t3%
-~"Period %y% %t2% : %ms12.2%
+~"Period %y% %t2% : %ms28.2%
 ~>>
 ~/**********************************************************************
 ~/
@@ -521,7 +525,7 @@ yes
 mf94
 no
 mf94+
-mf59*%r64%*(%r1%+%r3%)/2
+mf59*%r64%*%r4%*(%r1%+%r3%)/2
 
 
 no
@@ -529,7 +533,7 @@ no
 ~/
 ~# ## 
 ~# ## 
-~+;1;y;ms15;y;tmp15;store P-n-R VOT1 trips;~?q=1;y;0;mf59*%r64%*(%r1%+%r3%)/2; ; ;n;+;+;1;q
+~+;1;y;ms15;y;tmp15;store P-n-R VOT1 trips;~?q=1;y;0;mf59*%r64%*%r4%*(%r1%+%r3%)/2; ; ;n;+;+;1;q
 ~t2=Park-and-Ride VOT1 trips
 ~>>%t3%
 ~"Period %y% %t2% : %ms15.2%
@@ -540,7 +544,7 @@ yes
 mf95
 no
 mf95+
-mf59*%r65%*(%r1%+%r3%)/2
+mf59*%r65%*%r4%*(%r1%+%r3%)/2
 
 
 no
@@ -548,7 +552,7 @@ no
 ~/
 ~# ## 
 ~# ## 
-~+;1;y;ms16;y;tmp16;store P-n-R VOT2 trips;~?q=1;y;0;mf59*%r65%*(%r1%+%r3%)/2; ; ;n;+;+;1;q
+~+;1;y;ms16;y;tmp16;store P-n-R VOT2 trips;~?q=1;y;0;mf59*%r65%*%r4%*(%r1%+%r3%)/2; ; ;n;+;+;1;q
 ~t2=Park-and-Ride VOT2 trips
 ~>>%t3%
 ~"Period %y% %t2% : %ms16.2%
@@ -559,7 +563,7 @@ yes
 mf96
 no
 mf96+
-mf59*%r66%*(%r1%+%r3%)/2
+mf59*%r66%*%r4%*(%r1%+%r3%)/2
 
 
 no
@@ -567,7 +571,7 @@ no
 ~/
 ~# ## 
 ~# ## 
-~+;1;y;ms17;y;tmp17;store P-n-R VOT3 trips;~?q=1;y;0;mf59*%r66%*(%r1%+%r3%)/2; ; ;n;+;+;1;q
+~+;1;y;ms17;y;tmp17;store P-n-R VOT3 trips;~?q=1;y;0;mf59*%r66%*%r4%*(%r1%+%r3%)/2; ; ;n;+;+;1;q
 ~t2=Park-and-Ride VOT3 trips
 ~>>%t3%
 ~"Period %y% %t2% : %ms17.2%

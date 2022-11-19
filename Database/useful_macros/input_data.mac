@@ -1,75 +1,83 @@
 ~# input_data.mac
-~#  Craig Heither, rev. 02/02/2012
+~#  Craig Heither, rev. 09-11-2021
 ~# 
-~#  *********************************************************************
-~#    Macro creates the following input data files needed for a regional 
-~#    model run: 
-~#      - per3.timau: TOD period 3 congested highway times for transit skim.
-~#      - hwytime: AM Peak final congested highway skim times (mf44).
-~#      - hwydist: AM Peak final congested highway skim distances (mf45).
+~#  *********************************************************************************
+~#    Macro punches data from a completed model run that can be used to preload
+~#    reasonable congested travel times in Global Iteration 0 of a comparable model
+~#    scenario. The following input data files are created: 
+~#      - per3_timau.txt: TOD period 3 congested highway times for transit skim.
+~#      - per5_timau.txt: TOD period 5 congested highway times for transit skim.
+~#      - preload_mf44.txt: SOV AM Peak congested highway times (mf44) for HBW trips.
+~#      - preload_mf45.txt: SOV AM Peak congested highway distances (mf45) for HBW trips.
+~#      - preload_mf46.txt: SOV midday congested highway times (mf46) for HBO/NHB trips.
+~#      - preload_mf47.txt: SOV midday congested highway distances (mf47) for HBO/NHB trips.
+~#      - preload_mf76.txt: HOV AM Peak congested highway times (mf76) for HBW trips.
+~#      - preload_mf77.txt: HOV AM Peak congested highway distances (mf77) for HBW trips.
 ~#
-~#    Files should be created in the source directory and copied to the data\
-~#    directory of the target scenario.
+~#    Files should be created in the source directory and copied to the defaults_base_year
+~#    folder of the target scenario.
 ~#
-~#    File headers are automatically adjusted to include:
-~#      - d matrix=mf01 / a matrix=mf01 (hwytime)
-~#      - d matrix=mf02 / a matrix=mf02 (hwydist)
+~#    File headers are automatically adjusted to include a line to deleted an existing matrix:
+~#      - e.g.: d matrix=mf44
 ~#
-~#
-~#       02-02-2012: revised to change matrix punch parameters.
-~#       12-17-2015: added per5.timau export for OP transit skim. NRF
-~#
-~#  *********************************************************************
+~#  *********************************************************************************
 ~#  =====================================================================
 ~o|39
 ~t1=temp1
-~# ---------------------------
-~/ ## CREATE per3.timau ##
-~# ---------------------------
-~!if exist per3.timau (del per3.timau)
-batchout=per3.timau
+~t2=defaults_base_year
+~!if not exist %t2% (mkdir %t2%)
+~#
+~# ------------------------------
+~/ ## -- CREATE per3_timau.txt -- ##
+~# ------------------------------
+~t3=per3_timau.txt 
+~!if exist %t2%\%t3% (del %t2%\%t3%)
+batchout=%t2%\%t3%
 s=3
 2.41
 ~+;1;n;timau; ;all;3;q
 ~#
-~# ---------------------------
-~/ ## CREATE per5.timau ##
-~# ---------------------------
-~!if exist per5.timau (del per5.timau)
-batchout=per5.timau
+~# ------------------------------
+~/ ## -- CREATE per5_timau.txt -- ##
+~# ------------------------------
+~t3=per5_timau.txt 
+~!if exist %t2%\%t3% (del %t2%\%t3%)
+batchout=%t2%\%t3% 
 s=5
 2.41
 ~+;1;n;timau; ;all;3;q
 ~#
-~# ---------------------------
-~/ ## CREATE hwytime ## 
-~# ---------------------------
-~!if exist %t1% (del %t1%)
-~!if exist hwytime (del hwytime)
-batchout=%t1%
+~x=1
+~#
+~:loop
+~+;~?x=1;~y=44
+~+;~?x=2;~y=45
+~+;~?x=3;~y=46
+~+;~?x=4;~y=47
+~+;~?x=5;~y=76
+~+;~?x=6;~y=77
+~# ------------------------------
+~/ ## -- PUNCH MF%y% -- ## 
+~# ------------------------------
+~#
+~!if exist %t2%\%t1% (del %t2%\%t1%)
+~t3=preload_mf%y%.txt 
+~!if exist %t2%\%t3% (del %t2%\%t3%)
+batchout=%t2%\%t1%
 3.14
-~+;4;2;8,2;y;4;n
-~+;3;mf44; ;n;n;n;q
+~+;4;2;6,1;y;4;n
+~+;3;mf%y%; ;n;n;n;q
 ~#
 ~#  ##Insert new headers into file##
-~!type %t1% | findstr /B "c t" >> hwytime
-~+;~>>hwytime;~"d matrix=mf01;~"a matrix=mf01  amtime     0 am peak 7-9 am hwy time skim bal4;~>
-~!type %t1% | findstr /V "c t a" >> hwytime
+~!type %t2%\%t1% | findstr /B "c t" >> %t2%\%t3%
+~+;~>>%t2%\%t3%;~"d matrix=mf%y%;~>
+~!type %t2%\%t1% | findstr /B "a" >> %t2%\%t3%
+~!type %t2%\%t1% | findstr /V "c t a" >> %t2%\%t3%
 ~#
-~# ---------------------------
-~/ ## CREATE hwydist ## 
-~# ---------------------------
-~!if exist %t1% (del %t1%)
-~!if exist hwydist (del hwydist)
-3.14
-~+;4;2;8,2;y;4;n
-~+;3;mf45; ;n;n;n;q
+~x+1
+~+;~?x<7;~$loop
 ~#
-~#  ##Insert new headers into file##
-~!type %t1% | findstr /B "c t" >> hwydist
-~+;~>>hwydist;~"d matrix=mf2;~"a matrix=mf2  amdist     0 am peak 7-9 am hwy distance skim bal4;~>
-~!type %t1% | findstr /V "c t a" >> hwydist
-~!del %t1%
+~!del %t2%\%t1%
 ~#
 ~o=6
 batchout=

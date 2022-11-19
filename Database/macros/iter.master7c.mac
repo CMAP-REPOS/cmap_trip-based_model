@@ -99,61 +99,13 @@
 ~#    Lemp, 04-30-2021 - run new time of day skimming script
 ~#                       run new toll skimming script for mode choice
 ~#                       don't delete the toll skim matrices at end
-~#        
+~#   
+~#    Heither, 09-26-2021 - do not move intrazonal transit trips 
+~#    Heithre, 11-11-2021 - remove unneeded matrix calculations    
 ~/**********************************************************************
 ~/  The assignment performed includes 7 classes: auto/SOV VOT1, auto/SOV VOT2, auto/SOV VOT3,
 ~/   auto/HOV, b-trucks+light trucks, medium trucks, and heavy trucks.
 ~/**********************************************************************
-~/  Following matrices are required by this macro (note that mf11 &mf12
-~/   are prepared at the start of the macro.
-~/
-~/    Home based person trips are in production(home end)-attraction
-~/      format.
-~/
-~/      mf01 = auto driver and auto passenger home-work trips
-~/      mf02 = auto driver and auto passenger home-other trips
-~/      mf03 = auto driver and auto passenger nonhome trips
-~/      mf04 = b plate truck trips 
-~/      mf05 = light truck trips
-~/      mf06 = medium truck trips (in trucks, not in VEQs)
-~/      mf07 = heavy truck trips (in trucks, not in VEQs)
-~/      mf08 = external-internal, internal-external and 
-~/             external-external auto trips
-~/      mf09 = external-internal, internal-external and 
-~/             external-external truck trips (in trucks, not VEQs)
-~/      mf10 = air passenger trips to and from ORD (zone 584 is terminal
-~/             and zone 583 is balance of airport) MDW (zone 399), and SSA
-~/             Peotone site (zone 1518) 
-~/      mf56 = auto SOV1 home-work person trips
-~/      mf57 = auto HOV2 home-work person trips
-~/      mf58 = auto HOV3 home-work person trips
-~/
-~/  Demand Matrices Following Non-work Auto Occupancy Submodel
-~/
-~/      mf101 = auto SOV1 home-work person trips (equals mf50+mf53 if they already exist [i.e., Mode Choice run with HW HOV option])
-~/      mf102 = auto HOV2 home-work person trips (equals mf51+mf54 if they already exist [i.e., Mode Choice run with HW HOV option])
-~/      mf103 = auto HOV3 home-work person trips (equals mf52+mf55 if they already exist [i.e., Mode Choice run with HW HOV option])
-~/      mf104 = auto SOV1 home-other person trips [created by Non-work Auto Occupancy Submodel]
-~/      mf105 = auto HOV2 home-other person trips [created by Non-work Auto Occupancy Submodel]
-~/      mf106 = auto HOV3 home-other person trips [created by Non-work Auto Occupancy Submodel]
-~/      mf107 = auto SOV1 non-home person trips [created by Non-work Auto Occupancy Submodel]
-~/      mf108 = auto HOV2 non-home person trips [created by Non-work Auto Occupancy Submodel]
-~/      mf109 = auto HOV3 non-home person trips [created by Non-work Auto Occupancy Submodel]
-~/
-~/  Temporary matrices used in macro
-~/
-~/      mf11 = transpose of mf01
-~/      mf12 = transpose of mf02
-~/      mf73 = transpose of mf56
-~/      mf74 = transpose of mf57
-~/      mf75 = transpose of mf58
-~/      mf81 = transpose of mf101
-~/      mf82 = transpose of mf102
-~/      mf83 = transpose of mf103
-~/      mf84 = transpose of mf104
-~/      mf85 = transpose of mf105
-~/      mf86 = transpose of mf106
-~/
 ~/  Scratch time period matrices used in macro
 ~/
 ~/      mf13 = period mode=S vehicle trip table
@@ -206,11 +158,6 @@
 ~/
 ~/      @toll = toll paid on vdf=7 toll links in dollars
 ~/
-~/     @tollv = maximum volume through toll links assuming zero tolls
-~/              (obtained by assigning trip table to network using
-~/               uncongested travel times and zero tolls), minimum of
-~/               100 vphpl
-~/
 ~/     @cycle = cycle length of signals at signalized intersection,
 ~/              node variable obtained from macro Arterial.Delay
 ~/
@@ -241,30 +188,12 @@
 ~/**********************************************************************
 ~/
 ~:skip
-~/**********************************************************************
-~/
-~/ Process auto person hbw table(s) required for assignment:
-~/   combine low and high income home-work tables by occupancy
-~/ Prepare total hbw auto person table. 
-~/
-~/**********************************************************************
-~/
-reports=report\iter_%ms98%\hw-trip_prep_sim%ms98%.rxt
-~/
-3.21
-~# -- Sum HW SOV Trips --
-~+;1;y;mf56;n;mf50+mf53; ; ;n;2
-~# -- Sum HW HOV2 Trips --
-~+;1;y;mf57;n;mf51+mf54; ; ;n;2
-~# -- Sum HW HOV3 Trips --
-~+;1;y;mf58;n;mf52+mf55; ; ;n;2
-~# -- Sum All HW Trips --
-~+;1;y;mf01;n;mf50+mf51+mf52+mf53+mf54+mf55; ; ;n;2;q
 ~/
 ~#**********************************************************************
 ~# ## Move intrazonal transit trips in zones with no transit to appropriate auto matrices ##
 ~#   ## - Add to All (purpose) trips and SOV (purpose) trips -
 ~#**********************************************************************
+~$>skip_intra
 reports=report\iter_%ms98%\intra_transit_move_sim%ms98%.rxt
 ~#
 ~# ## Loop through calculations to remove trips from transit and add to auto ##
@@ -292,61 +221,9 @@ reports=report\iter_%ms98%\intra_transit_move_sim%ms98%.rxt
 3.12
 ~+;2;mf60;y;q
 ~#
+~:skip_intra
 batchin=
 reports=
-~/
-~/**********************************************************************
-~/
-~/ Transpose auto person hbw, hbo, SOV1, HOV2, HOV3 tables.
-~/
-~/**********************************************************************
-~/
-~# ## Create/Initialize Matrices
-~# ## -- Add Extra Matrices to Hold HBW High-Low Income Trips for VOT Calculation --
-3.21
-~+;1;y;mf11;y;trsp01;transpose of mf01 sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf12;y;trsp02;transpose of mf02 sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf73;y;trsp56;transpose of mf56 sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf74;y;trsp57;transpose of mf57 sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf75;y;trsp58;transpose of mf58 sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf81;y;trs101;transpose of mf101 sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf82;y;trs102;transpose of mf102 sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf83;y;trs103;transpose of mf103 sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf84;y;trs104;transpose of mf104 sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf85;y;trs105;transpose of mf105 sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf86;y;trs106;transpose of mf106 sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf209;y;trs50;transpose of mf50 sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf210;y;trs51;transpose of mf51 sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf211;y;trs52;transpose of mf52 sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf212;y;trs53;transpose of mf53 sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf213;y;trs54;transpose of mf54 sim_%ms98%;~?q=1;y;0;0; ; ;n;1;
-~+;1;y;mf214;y;trs55;transpose of mf55 sim_%ms98%;~?q=1;y;0;0; ; ;n;1;q
-~#
-~## Transpose Matrices
-3.12
-4
-3
-mf01        /transpose from
-mf11        /transpose to
-no          /don't change header
-~/
-~+;4;3;mf02;mf12;no  
-~+;4;3;mf56;mf73;no
-~+;4;3;mf57;mf74;no
-~+;4;3;mf58;mf75;no
-~+;4;3;mf101;mf81;no
-~+;4;3;mf102;mf82;no
-~+;4;3;mf103;mf83;no
-~+;4;3;mf104;mf84;no
-~+;4;3;mf105;mf85;no
-~+;4;3;mf106;mf86;no
-~+;4;3;mf50;mf209;no
-~+;4;3;mf51;mf210;no
-~+;4;3;mf52;mf211;no
-~+;4;3;mf53;mf212;no
-~+;4;3;mf54;mf213;no
-~+;4;3;mf55;mf214;no
-q
 ~/
 ~/**********************************************************************
 ~/
@@ -370,7 +247,9 @@ s=%1%%ms98%%y%
 ~/                        are 92 and 93 when class H is HOV2 and HOV3+
 ~/                        are 13 and 93 when class H is HOV3+
 ~/
+~!@ECHO   --- Begin ttables.mac Period %y%: %date% %time% >> model_run_timestamp.txt
 ~<macros\call\ttables.mac %1% %y% 92 93
+~!@ECHO   --- End ttables.mac Period %y%: %date% %time% >> model_run_timestamp.txt
 ~/
 ~/**********************************************************************
 ~/
@@ -378,7 +257,9 @@ s=%1%%ms98%%y%
 ~/
 ~/**********************************************************************
 ~/
+~!@ECHO   --- Begin net5I_7c.mac Period %y%: %date% %time% >> model_run_timestamp.txt
 ~<macros\call\net5I_7c.mac %y%
+~!@ECHO   --- End net5I_7c.mac Period %y%: %date% %time% >> model_run_timestamp.txt
 ~/
 ~/**********************************************************************
 ~/
@@ -386,7 +267,9 @@ s=%1%%ms98%%y%
 ~/
 ~/**********************************************************************
 ~/
+~!@ECHO   --- Begin assign5I_7c.mac Period %y%: %date% %time% >> model_run_timestamp.txt
 ~<macros\call\assign5I_7c.mac %1% %y%
+~!@ECHO   --- End assign5I_7c.mac Period %y%: %date% %time% >> model_run_timestamp.txt
 ~/
 ~/**********************************************************************
 ~/
@@ -394,7 +277,9 @@ s=%1%%ms98%%y%
 ~/
 ~/**********************************************************************
 ~/
+~!@ECHO   --- Begin balance5I_7c.mac Period %y%: %date% %time% >> model_run_timestamp.txt
 ~<macros\call\balance5I_7c.mac %1%
+~!@ECHO   --- End balance5I_7c.mac Period %y%: %date% %time% >> model_run_timestamp.txt
 ~/
 ~/**********************************************************************
 ~/
@@ -402,7 +287,9 @@ s=%1%%ms98%%y%
 ~/
 ~/**********************************************************************
 ~/
+~!@ECHO   --- Begin skimtod5I_7c.mac Period %y%: %date% %time% >> model_run_timestamp.txt
 ~<macros\call\skimtod5I_7c.mac %1% %y%
+~!@ECHO   --- End skimtod5I_7c.mac Period %y%: %date% %time% >> model_run_timestamp.txt
 ~/
 ~/**********************************************************************
 ~/
@@ -420,9 +307,13 @@ s=%1%%ms98%%y%
 ~/
 ~/********************************************************************** 
 ~/
+~!@ECHO   --- Begin skim5I_7c.mac Period %y%: %date% %time% >> model_run_timestamp.txt
 ~<macros\call\skim5I_7c.mac %1%
+~!@ECHO   --- End skim5I_7c.mac Period %y%: %date% %time% >> model_run_timestamp.txt
 ~/
+~!@ECHO   --- Begin toll_skims.mac Period %y%: %date% %time% >> model_run_timestamp.txt
 ~<macros\call\toll_skims.mac %1% %ms98%
+~!@ECHO   --- End toll_skims.mac Period %y%: %date% %time% >> model_run_timestamp.txt
 ~/
 ~# ## -- Report Global Iteration Statistics
 ~#~<macros\call\global_iteration_statistics.mac %ms98%

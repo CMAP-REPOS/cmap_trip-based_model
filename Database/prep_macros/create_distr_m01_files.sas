@@ -1,5 +1,5 @@
 /* CREATE_DISTR_M01_FILES.SAS
-    Craig Heither, rev. 02-19-2016
+    Craig Heither, rev. 07-13-2022
 
    Program creates the scenario-specific DISTR and M01 files used by Pre-Distribution and Mode Choice based on Eash's
    methodology. 
@@ -46,7 +46,7 @@
         * The area of the zone covered by the minimum distance buffer divided by the area of the zone covered by the maximum
           distance buffer. This value is set to 999 for zones with a minimum distance of 999.
 
-    [Emme vehicle types: 1=mode B, 2=mode E, 3=mode P, 4=mode Q, 5=mode L, 7=mode C, 8=mode M]
+    [expanded Emme vehicle types: 25-27=mode B, 31-33=mode E, 28=mode P, 29=mode Q, 30=mode L, 1-5=mode C, 6-24=mode M]
 
 
 
@@ -77,12 +77,20 @@
 		   
 		   Ferguson 10/2/2018: Updated zone system 09 references to zone system 17.
 		   03/02/2021 Ferguson: Updated paths for removal of tg/sas directory.
+		   
+		   11-08-2021 Heither: M01 and DISTR outputs updated for new model (names and location).
+		   
+		   07-13-2022 Heither: Updated vehicle type values and time period length for 4 transit TOD periods.		   
+		   
 */
 
 *=====================================================================;
 *       ###   DISTR VARIABLES       ###     ;
 %let eash=0.042;                                     *** Eash's estimate of subzone variance;
 %let rlvar=101;                                      *** default value for DISTR rail variance;
+*       ###   TOD PERIOD LENGTHS       ###  ;
+%let ammin=180;                                      *** minutes (6 am - 9 am);
+%let mdmin=420;                                      *** minutes (9 am - 4 pm);
 *=====================================================================;
 
 
@@ -168,22 +176,22 @@ filename error1 "saserr.txt";
 
        *** ## FILE 1. CREATE METRA STATION FILE ## ***;
               **--- Only Metra rail junctions use 49000+ values ---**;
-       data metra(keep=node xcoord ycoord); set itin(where=(veh=8 & node<49000));
+       data metra(keep=node xcoord ycoord); set itin(where=(veh>=6 & veh<=24 & node<49000));
          proc sort nodupkey; by node;
          proc export data=metra outfile="temp\metra.dbf" dbms=dbf replace;
 
        *** ## FILE 2. CREATE CTA RAIL STATION FILE ## ***;
               **--- Only CTA rail junctions use 39000+ values ---**;
-        data ctarail(keep=node xcoord ycoord); set itin(where=(veh=7 & node<39000));
+        data ctarail(keep=node xcoord ycoord); set itin(where=(veh>=1 & veh<=5 & node<39000));
          proc sort nodupkey; by node;
          proc export data=ctarail outfile="temp\ctarail.dbf" dbms=dbf replace;
 
        *** ## FILE 3. CREATE REGULAR BUS STOP FILE ## ***;
-        data bus; set itin(where=(veh<5)); frequent=120/hdwy;
+        data bus; set itin(where=(veh>=25 & veh ne 30)); frequent=&ammin/hdwy;
          proc summary nway; class node; var hdwy; weight frequent; id xcoord ycoord; output out=regbus_am mean=;
         data regbus_am(drop=_type_ _freq_); set regbus_am; hdwy=round(hdwy);
 
-        data bus_mdy; set itin_mdy(where=(veh_mdy<5)); frequent=120/hdwy_mdy;
+        data bus_mdy; set itin_mdy(where=(veh_mdy>=25 & veh_mdy ne 30)); frequent=&mdmin/hdwy_mdy;
          proc summary nway; class node; var hdwy_mdy; weight frequent; id xcoord_mdy ycoord_mdy; output out=regbus_mdy mean=;
         data regbus_mdy(drop=_type_ _freq_); set regbus_mdy; hdwy_mdy=round(hdwy_mdy);
 
@@ -195,11 +203,11 @@ filename error1 "saserr.txt";
 		proc export data=regbus outfile="temp\regbus.dbf" dbms=dbf replace;
 
        *** ## FILE 4. CREATE FEEDER BUS STOP FILE ## ***;
-        data feed; set itin(where=(veh=5)); frequent=120/hdwy;
+        data feed; set itin(where=(veh=30)); frequent=&ammin/hdwy;
          proc summary nway; class node; var hdwy; weight frequent; id xcoord ycoord; output out=fdbus_am mean=;
         data fdbus_am(drop=_type_ _freq_); set fdbus_am; hdwy=round(hdwy);
 
-        data feed_mdy; set itin_mdy(where=(veh_mdy=5)); frequent=120/hdwy_mdy;
+        data feed_mdy; set itin_mdy(where=(veh_mdy=30)); frequent=&mdmin/hdwy_mdy;
          proc summary nway; class node; var hdwy_mdy; weight frequent; id xcoord_mdy ycoord_mdy; output out=fdbus_mdy mean=;
         data fdbus_mdy(drop=_type_ _freq_); set fdbus_mdy; hdwy_mdy=round(hdwy_mdy);
 
@@ -328,7 +336,7 @@ run;
            data _null_; set auto nobs=auto1; call symput('totalobs',left(put(auto1,8.))); run;
            %if %eval(&totalobs) ne %eval(&znnum) %then %do; data _null_; file error1 mod; put "ERROR: in6 has &totalobs observations (not &znnum)."; %end; %let totalobs=0; run;
 
-        data type; infile in7 missover dsd firstobs=4; input zone type; proc sort; by zone;
+        data type; infile in7 missover dsd firstobs=2; input zone type; proc sort; by zone;
            data _null_; set type nobs=type1; call symput('totalobs',left(put(type1,8.))); run;
            %if %eval(&totalobs) ne %eval(&znnum) %then %do; data _null_; file error1 mod; put "ERROR: in7 has &totalobs observations (not &znnum)."; %end; %let totalobs=0; run;
 
@@ -527,18 +535,10 @@ run;
 
          run;
 
-        %hwm01(MCHW_M01)
-        %hwm01(PDHW_M01)
-        %hom01(MCHO_M01)
-        %hom01(PDHO_M01)
-        %hom01(MCNH_M01)
-        %hom01(PDNH_M01)
-        %hwdistr(MCHW_DISTR)
-        %hwdistr(PDHW_DISTR)
-        %hodistr(MCHO_DISTR)
-        %hodistr(PDHO_DISTR)
-        %hodistr(MCNH_DISTR)
-        %hodistr(PDNH_DISTR)
+        %hwm01(ALLPURPOSE_M01)
+        %hwdistr(HW_DISTR)
+        %hodistr(HO_DISTR)
+        %hodistr(NH_DISTR)
          run;
 
   %end;
@@ -550,25 +550,16 @@ run;
    ***           Macros to Write Files              ***;
    *** -------------------------------------------- ***;
 %macro hwm01(fl);
-    *** Write Out HW Files ***; 
+    *** Write Out M01 File ***; 
      data print; set m01;
-      file "..\&fl..TXT" dsd;
+      file "..\defaults_base_year\&fl..TXT" dsd;
        put zone type cost income pr hwbus hobus hwfeed hofeed autocc;
 %mend hwm01;
-
-%macro hom01(fl);
-    *** Write Out HO/NH Files ***; 
-     data print; set m01;
-      if hwbus=99 then hwbus=999; if hobus=99 then hobus=999;
-      if hwfeed=99 then hwfeed=999; if hofeed=99 then hofeed=999;
-      file "..\&fl..TXT" dsd;
-       put zone type cost income pr hwbus hobus hwfeed hofeed;
-%mend hom01;
 
 %macro hwdistr(fl);
     *** Write Out HW Files ***; 
      data print; set distr;
-      file "..\&fl..TXT" dsd;
+      file "..\defaults_base_year\&fl..TXT" dsd;
        put zone mdist mstdv mvar cdist cstdv cvar mindist maxdist p3 fmindist fmaxdist fp3 pkdist pstdv pvar;
 %mend hwdistr;
 
@@ -576,7 +567,7 @@ run;
     *** Write Out HO/NH Files ***; 
      data print; set distr;
       fmindist=999; fmaxdist=999; fp3=999;
-      file "..\&fl..TXT" dsd;
+      file "..\defaults_base_year\&fl..TXT" dsd;
        put zone mdist mstdv mvar cdist cstdv cvar mindist maxdist p3 fmindist fmaxdist fp3 pkdist pstdv pvar;
 %mend hodistr;
 

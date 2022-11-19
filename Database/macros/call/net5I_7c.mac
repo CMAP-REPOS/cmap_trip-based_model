@@ -46,6 +46,14 @@
 reports=report\iter_%ms98%\net5I_%s%.rxt
 ~o|39
 2.42
+~+;3;@vauto;~?e
+~$>erra
+~+;y;q;~$>enda
+~:erra
+~+; ;q
+~:enda
+~# ----------------
+2.42
 ~+;3;@vsov1;~?e
 ~$>erra
 ~+;y;q;~$>enda
@@ -122,6 +130,14 @@ reports=report\iter_%ms98%\net5I_%s%.rxt
 ~/  Delete extra turn attributes for class volumes, if necessary
 ~/
 ~/**********************************************************************
+2.42
+~+;3;@tauto;~?e
+~$>erra
+~+;y;q;~$>enda
+~:erra
+~+; ;q
+~:enda
+~# ----------------
 2.42
 ~+;3;@tsov1;~?e
 ~$>erra
@@ -200,7 +216,7 @@ reports=report\iter_%ms98%\net5I_%s%.rxt
 ~/
 ~/**********************************************************************
 2.42
-~#~+;2;2;@vauto;class 1: SOV volume iter_%ms98%;0.0
+~+;2;2;@vauto;class 1: SOV volume iter_%ms98%;0.0
 ~+;2;2;@vsov1;class 1: SOV VOT1 volume iter_%ms98%;0.0
 ~+;2;2;@vsov2;class 2: SOV VOT2 volume iter_%ms98%;0.0
 ~+;2;2;@vsov3;class 3: SOV VOT3 volume iter_%ms98%;0.0
@@ -216,7 +232,7 @@ reports=report\iter_%ms98%\net5I_%s%.rxt
 ~/  Initialize extra turn attributes for class volumes
 ~/
 ~/**********************************************************************
-~#~+;2;5;@tauto;class 1: SOV turns iter_%ms98%;0.0
+~+;2;5;@tauto;class 1: SOV turns iter_%ms98%;0.0
 ~+;2;5;@tsov1;class 1: SOV VOT1 turns iter_%ms98%;0.0
 ~+;2;5;@tsov2;class 2: SOV VOT2 turns iter_%ms98%;0.0
 ~+;2;5;@tsov3;class 3: SOV VOT3 turns iter_%ms98%;0.0

@@ -12,6 +12,10 @@ Revision history
 08/13/2020 Ferguson: Corrected error in P-A to O-D format conversion
            affecting non-home attractions.
 03/01/2021 Ferguson: Updated write paths for removal of sas directory.
+04/27/2021 Ferguson: Removes puma1 from geog header. Reads trip PAs from
+           two files (not WFH and WFH) and combines them.
+04/29/2021 Ferguson: Reads HH_IN.TXT with new schema and replaces PEF
+           with Sidewalk Index.
 """
 
 import sys
@@ -41,7 +45,8 @@ pth_hh = pth_fortran + "/HH_IN.TXT"
 pth_gq = pth_fortran + "/GQ_IN.TXT"
 pth_attr = pth_fortran + "/ATTR_IN.TXT"
 pth_geog = pth_fortran + "/GEOG_IN.TXT"
-pth_trip = pth_fortran + "/TRIP{}_PA_OUT.TXT".format(num_trip_types)
+pth_not_wfh_trip = pth_fortran + "/TRIP{}_PA_OUT.TXT".format(num_trip_types)
+pth_wfh_trip = pth_fortran + "/TRIP{}_PA_WFH_OUT.TXT".format(num_trip_types)
 
 # Write paths
 pth_data = "../data"
@@ -60,7 +65,6 @@ geog = pd.read_csv(
     'fips',
     'cnty_name',
     'state',
-    'puma1',
     'puma5',
     'zone17',
     'chicago',
@@ -96,25 +100,12 @@ labels_fips = {
 labels_bin = {'1': 'yes', '0': 'no'}
 
 # Households
-hh = pd.read_csv(
-  pth_hh,
-  names=[
-    'subzone17',
-    'col1',
-    'col2',
-    'col3',
-    'col4',
-    'col5',
-    'col6',
-    'wrkautoms',
-    'pef'
-  ]
-)
-hh = hh[['subzone17', 'wrkautoms', 'pef']]
+hh = pd.read_csv(pth_hh, header=None, usecols=[0, 34, 35])
+hh.columns = ['subzone17', 'wrkautoms', 'sdwlkidx']
 labels_hh = dict(
   subzone17 = 'subzone',
   wrkautoms = 'work auto mode share',
-  pef = 'pedestrian environment factor'
+  pef = 'sidewalk index'
 )
 
 # Synthetic household population
@@ -178,11 +169,18 @@ labels_attr = dict(
 )
 
 # Final trip table from TG model
-trip = pd.read_fwf(
-  pth_trip,
+not_wfh_trip = pd.read_fwf(
+  pth_not_wfh_trip,
   widths=[6, 6, 2, 9, 9],
   names=['subzone17', 'zone17', 'trip_type', 'hh_prods', 'hh_attrs']
 )
+wfh_trip = pd.read_fwf(
+  pth_wfh_trip,
+  widths=[6, 6, 2, 9, 9],
+  names=['subzone17', 'zone17', 'trip_type', 'hh_prods', 'hh_attrs']
+)
+trip = not_wfh_trip.append(wfh_trip)
+trip = trip.groupby(['subzone17', 'zone17', 'trip_type']).sum().reset_index()
 
 # Calculate TAZ median household income
 hh_inc = popsyn_hh.merge(geog, on='subzone17', how='left')

@@ -1,9 +1,0 @@
-C***********************************************************************
-C        1         2         3         4         5         6         7
-C23456789012345678901234567890123456789012345678901234567890123456789012
-C***********************************************************************
-C
-C     BIG MATRICES TO HOLD ALL ENUMERATED HOUSEHOLDS IN REGION
-C ## -- Heither, 05-16-2016: Following added for PopSyn procedures --  
-      COMMON/POPSYN/ PSVEH, PSSERIAL
-      INTEGER*4 PSVEH(6000000), PSSERIAL(6000000)

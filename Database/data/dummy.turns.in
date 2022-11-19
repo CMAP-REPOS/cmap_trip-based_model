@@ -1,9 +1,0 @@
-c EMME/2 Module:  2.31(v9.04)  Date: 05-06-18 14:15   User: E170/CATS......kww
-c Project:        CATS Regional Travel Demand Model                           
-c Scenario 10001: period 1.  8 pm to  6 am  
-c this is a dummy turn prohibition.  it needs to be on every scenario
-c  this is because the pp code includes turn attributes which are not available
-c   to module 2.41 if there are no turns coded.                                  
-t turns
-a  5715   5714   6210     0 
-

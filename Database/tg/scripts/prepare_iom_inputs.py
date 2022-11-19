@@ -11,6 +11,7 @@ Revision history
 ----------------
 07/30/2018 Ferguson: Adapted from prepare_iom_inputs.sas.
 03/01/2021 Ferguson: Updated paths for removal of sas directory.
+05/12/2021 Heither: Do not cap income value for m01tg.txt at 999
 '''
 
 import sys
@@ -186,11 +187,11 @@ tg = tg.groupby('zone17').apply(
 tg = tg.reset_index()
 tg['pctdev'] = tg['pctdev'].fillna(0)
 
-# Format median income as nearest 100k in 100k units with a ceiling of
-# 999 and a floor of 0
+# Format median income in 100s of dollars with a floor of 0 
+# and no ceiling
 tg['medinc'] = np.where(
   tg['zmedinc'] > 0,
-  tg['zmedinc'].apply(lambda x: min(round(x, -3) / 100, 999)),
+  tg['zmedinc'].apply(lambda x: round(x, -3) / 100),
   0
 )
 

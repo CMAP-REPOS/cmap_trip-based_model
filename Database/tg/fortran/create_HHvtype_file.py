@@ -1,26 +1,18 @@
 '''
 #####################################################################################
 CREATE_HHVYTPE_FILE.PY
-  Craig Heither, rev. 10-30-2014
+  Craig Heither, rev. 04-15-2021
 
     Script reads enumerated household file created by TG (HI_HHENUM_TRIP_OUT.TXT)
     and geography correspondence file (GEOG_IN.TXT) to create the file
-    Database\HI_HHENUM_IN.TXT required by the non-work vehicle occupancy
+    Database\TG_HHENUM_OUTPUT.TXT required by the non-work vehicle occupancy
     procedures. The file has the following fields:
         subzone, zone, household type (vehicle definition)
 
-
-	Revisions: 10-30-2014 - renamed output file HI_HHENUM_IN.TXT to 
-				TG_HHENUM_OUTPUT.TXT to avoid confusion with another
-				file using the same name.
-
 #####################################################################################
 '''
-
-# ----------------------------------------------------------------------------
-# Import System Modules and Set Variables.
-# ----------------------------------------------------------------------------
-import sys, os, csv
+import os
+import pandas as pd
 
 geog_input = os.getcwd() + "\\tg\\fortran\\GEOG_IN.TXT"                     ### subzone-zone correspondence file
 hh_input = os.getcwd() + "\\tg\\fortran\\HI_HHENUM_TRIP_OUT.TXT"            ### enumerated HH file
@@ -29,28 +21,25 @@ hh_output = os.getcwd() + "\\tg\\fortran\\TG_HHENUM_OUTPUT.TXT"
 if os.path.exists(hh_output):
     os.remove(hh_output)
 
+print("Creating File of Household Types by Subzone ...")
 
 # ----------------------------------------------------------------------------
-#  Read Geography file, create dictionary with key [subzone] & value [zone]. 
+#  Read in Geography file. 
 # ----------------------------------------------------------------------------  
-print("Creating File of Household Types by Subzone")
-subz={}
-reader = csv.reader(open(geog_input), delimiter=',')
-for row in reader:
-    subz[eval(row[0])]=eval(row[6])                     ### assigns key (first object in row [0]) & value (2nd object in row [6]) pair
-                                                        ### eval function converts from string to integers 
-
+geo=pd.read_csv(geog_input, sep=',', header=None)	
+geo.columns=['subzone','county','name','state','puma','zone','chicago','cbd','rc','area','cmap']
+geo.drop(columns=['county','name','state','puma','chicago','cbd','rc','area','cmap'], axis=1, inplace=True)	### drop unnecessary columns
 
 # ----------------------------------------------------------------------------
-#  Read Enumerated HH File, extract subzone & hhvtype fields, write file. 
-# ----------------------------------------------------------------------------
-outFile = open(hh_output, 'w')
-with open(hh_input,'r+b') as hh:
-    data = hh.readlines()
-    for a_line in data:
-        subzn = eval(a_line[:5])
-        hhvtype = eval(a_line[17:20])
-        outFile.write("{0},{1},{2}\n".format(subzn, subz[subzn], hhvtype))
+#  Read in Trip Enumeration file. 
+# ----------------------------------------------------------------------------  
+hh=pd.read_fwf(hh_input, widths=[5,7,4,4], header=None)	
+hh.columns=['subzone','puma','hhtype','hhvtype']
+hh.drop(columns=['puma','hhtype'], axis=1, inplace=True)					### drop unnecessary columns
 
-outFile.close()
-print("Done")
+# ----------------------------------------------------------------------------
+#  Merge dataframes, sort data and write file.
+# ---------------------------------------------------------------------------- 
+hh1 = hh.merge(geo, how='left', on='subzone', copy=False)
+hh1.sort_values(by=['zone', 'subzone'], inplace=True)
+hh1.to_csv(hh_output, columns=['subzone','zone','hhvtype'], header=False, index=False)

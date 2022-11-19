@@ -66,7 +66,6 @@ if os.path.exists(stats):
 # ---------------------------------------------------------------
 a0 = array('i')
 a1 = array('i')
-a2 = array('c')
 with open(embank,'r+b') as f:
     # ## Read first 512 items: this is File 0 - metadata about files ##
     a0.fromfile(f,512)            ## grabs file offset, # of records, words/record & file type: 1-integer, 2-real, 3-text
@@ -76,20 +75,14 @@ with open(embank,'r+b') as f:
     f.seek(offst, 0)
     a1.fromfile(f,80)
     mcent = a1[51]              ## maximum number of centroids defined in emmebank
-    print "\tREADING EMMEBANK: {0} Centroids".format(str(mcent),)
+    print("\tREADING EMMEBANK: {0} Centroids".format(str(mcent),))
 
     # ## Read Project title from File 2 ##
     offst = a0[104] * 4
     f.seek(offst, 0)
-    a2.fromfile(f,80)
-    proj = ''
-    for z in range(0,80):
-        proj = string.replace(proj+a2[z], "  ", "")
 
     # ## Write Emmebank parameters to File to review ##
     outFile = open(stats, 'w')
-    outFile.write("Project: {0} \n".format(proj,))
-    outFile.write("\n")
     outFile.write("Max. scenarios: {0} \n".format((a1[50]),))
     outFile.write("Max. centroids: {0} \n".format((a1[51]),))
     outFile.write("Max. nodes: {0} \n".format((a1[52]),))
@@ -111,23 +104,25 @@ with open(embank,'r+b') as f:
 # Store matrix values in arrays.
 # ---------------------------------------------------------------
  #   -- Input Matrices --
-auto = np.fromfile(mfauto, dtype='f4')						## -- float, 4 bytes
-kzone = np.fromfile(mfkzone, dtype='f4')
-tcost = np.fromfile(mftcost, dtype='f4')
-inveh = np.fromfile(mfinveh, dtype='f4')
-trnfr = np.fromfile(mftrnfr, dtype='f4')
-twait = np.fromfile(mftwait, dtype='f4')
-fwait = np.fromfile(mffwait, dtype='f4')
-afare = np.fromfile(mfafare, dtype='f4')
-fmode = np.fromfile(mffmode, dtype='f4')
-pmode = np.fromfile(mfpmode, dtype='f4')
-lmode = np.fromfile(mflmode, dtype='f4')
-cghwy = np.fromfile(mfcghwy, dtype='f4')
+dt = np.dtype('float32') 
+auto = np.fromfile(mfauto, dtype=dt)						
+kzone = np.fromfile(mfkzone, dtype=dt)
+tcost = np.fromfile(mftcost, dtype=dt)
+inveh = np.fromfile(mfinveh, dtype=dt)
+trnfr = np.fromfile(mftrnfr, dtype=dt)
+twait = np.fromfile(mftwait, dtype=dt)
+fwait = np.fromfile(mffwait, dtype=dt)
+afare = np.fromfile(mfafare, dtype=dt)
+fmode = np.fromfile(mffmode, dtype=dt)
+pmode = np.fromfile(mfpmode, dtype=dt)
+lmode = np.fromfile(mflmode, dtype=dt)
+cghwy = np.fromfile(mfcghwy, dtype=dt)
 
 ## -- create leg1 (p-k) indices
 indxloc = np.arange(mcent*mcent)							## -- array of consecutive numbers representing element index values
-leg1pt1 = np.divide(indxloc,mcent) * mcent					## -- portion of element index defining origin zone (division results in integer value)
-leg1indx = np.add(leg1pt1,kzone.astype('i4')-1,dtype='i4')				## -- add portion of element index defining destination zone
+leg1pt1 = np.divide(indxloc,mcent)
+leg1pt1 = np.multiply(leg1pt1.astype('i4'),mcent,dtype='i4')	## -- portion of element index defining origin zone 
+leg1indx = np.add(leg1pt1,kzone.astype('i4')-1,dtype='i4')	## -- add portion of element index defining destination zone
 print("Kzone 1-1: {0}, Index 1-1: {1}, Kzone 121-2: {2}, Index 121-2: {3} \n".format(kzone[0], leg1indx[0], kzone[437882], leg1indx[437882]))
 
 ## -- create leg2 (k-q) indices
@@ -152,16 +147,16 @@ lmodeval = np.where(kzone>0, lmode[leg2indx], kzone)				## -- skimmed last mode
 threshold = np.where(cghwy>0, np.divide(tcostval,cghwy), cghwy)		## -- ratio of indexed transit cost to auto only cost
 
 ## -- Swap original matrix value back in if the threshold exceeds the cutoff value
-autoval = np.where(threshold>cutoff, 0, autoval)
-tcostval = np.where(threshold>cutoff, 0, tcostval)
-invehval = np.where(threshold>cutoff, inveh, invehval)
-trnfrval = np.where(threshold>cutoff, trnfr, trnfrval)
-twaitval = np.where(threshold>cutoff, twait, twaitval)
-fwaitval = np.where(threshold>cutoff, fwait, fwaitval)
-afareval = np.where(threshold>cutoff, afare, afareval)
-fmodeval = np.where(threshold>cutoff, fmode, fmodeval)
-pmodeval = np.where(threshold>cutoff, pmode, pmodeval)
-lmodeval = np.where(threshold>cutoff, lmode, lmodeval)
+autoval = np.where(threshold>cutoff, 0, autoval).astype(dt)
+tcostval = np.where(threshold>cutoff, 0, tcostval).astype(dt)
+invehval = np.where(threshold>cutoff, inveh, invehval).astype(dt)
+trnfrval = np.where(threshold>cutoff, trnfr, trnfrval).astype(dt)
+twaitval = np.where(threshold>cutoff, twait, twaitval).astype(dt)
+fwaitval = np.where(threshold>cutoff, fwait, fwaitval).astype(dt)
+afareval = np.where(threshold>cutoff, afare, afareval).astype(dt)
+fmodeval = np.where(threshold>cutoff, fmode, fmodeval).astype(dt)
+pmodeval = np.where(threshold>cutoff, pmode, pmodeval).astype(dt)
+lmodeval = np.where(threshold>cutoff, lmode, lmodeval).astype(dt)
 
 
 # ---------------------------------------------------------------
@@ -184,4 +179,4 @@ for m in outmtx:
 
 outFl.close()
 
-print "-- TRANSIT SKIM MATRICES CREATED --"
+print("-- TRANSIT SKIM MATRICES CREATED --")

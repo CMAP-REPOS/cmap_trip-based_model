@@ -1,0 +1,55 @@
+building_type_id,name,is_residential,is_non_residential,is_other,location_id,building_sqft_per_job,source
+1100,Single-family,1,0,0,1,800,Placeholder value for home-based businesses
+1110,Single-family detached,1,0,0,1,800,Placeholder value for home-based businesses
+1120,Single-family attached (townhomes / duplexes),1,0,0,1,800,Placeholder value for home-based businesses
+1130,Mobile homes,1,0,0,1,800,Placeholder value for home-based businesses
+1200,Multifamily (condos / apartments),1,0,0,1,800,Placeholder value for home-based businesses
+1210,Condominium,1,0,0,1,800,Placeholder value for home-based businesses
+1220,Apartment,1,0,0,1,800,Placeholder value for home-based businesses
+2100,Mixed use (residential + nonresidential),1,1,0,1,1242,using res/retail as default value for starters
+2110,Mixed use - residential + retail,1,1,0,1,588,SANDAG neighborhood retail
+2120,Mixed use - residential + office,1,1,0,1,437,"CBECS Microdata ""Mixed-Use Office,"" no factor applied"
+2130,Mixed use - residential + services,1,1,0,1,800,unfounded estimate (CBECS too high)
+3000,Lodging,0,1,0,1,2300,CMAP in-house estimate
+3100,Hotel,0,1,0,1,1500,Modified CMAP estimate
+4000,Storage,0,1,0,1,8960.78,"CBECS Microdata ""Self-Storage"" with factor applied"
+4100,Office (CBD),0,1,0,2,300,wild guess/placeholder
+4100,Office,0,1,0,1,350,Administrative/professional office
+4200,Retail / commercial,0,1,0,1,638.0525,Mean of all sub-categories
+4210,Grocery Store,0,1,0,1,446.59,"CBECS Microdata """"Grocery Store/Food Market"" with factor applied"
+4220,Eating and Drinking,0,1,0,1,356,"CBECS Microdata, midpoint btw ""Bar/Pub/Lounge"" and ""Restaurant/Cafeteria"" with 0.5 factor applied"
+4230,Retail - Neighborhood,0,1,0,1,588,SANDAG neighborhood retail
+4240,Retail - Strip Shopping,0,1,0,1,757.53,"CBECS Microdata ""Strip Shopping Mall"" with factor applied"
+4250,Retail - Shopping Mall,0,1,0,1,903.1,"CBECS Microdata ""Enclosed Shopping Mall"" with factor applied"
+4260,Big Box Retail,0,1,0,1,826,CMAP in-house estimate
+4270,Financial Services,0,1,0,1,304.8,"CBECS Microdata ""Bank/Other Financial"" with factor applied"
+4280,Auto Sales / Parts / Repair,0,1,0,1,922.4,"CBECS Microdata ""Vehicle Service/Repair"" with factor applied"
+5000,Industrial,0,1,0,1,971.43,Mean of all sub-categories
+5100,Light Industrial / Flex,0,1,0,1,463,USGBC light industrial
+5200,Manufacturing,0,1,0,1,535,USGBC manufacturing
+5300,Warehousing / Distribution,0,1,0,1,1916.29,"CBECS Microdata ""Distribution/Shipping Center"" with factor applied"
+6100,School / educational,0,1,0,1,1044.346667,Avg of the three edu categories
+6110,Elementary / Middle School,0,1,0,1,1024.8,"CBECS Microdata ""Elementary/Middle School"" with factor applied"
+6140,High School,0,1,0,1,1105.04,"CBECS Microdata ""High School"" with factor applied"
+6150,College / University,0,1,0,1,1003.2,"CBECS Microdata ""College/University"" with factor applied"
+6200,Medical,0,1,0,1,412.5,avg of the two med categories
+6210,Medical Office Building,0,1,0,1,603,"CBECS Microdata ""Laboratory"""
+6230,Hospital,0,1,0,1,222,"CBECS Summary ""Health Care, Inpatient"" with factor applied"
+6300,Parking structures,0,1,0,1,21000,CMAP in-house estimate
+6400,TCU (Transport Communication Utilities),0,1,0,1,2000,"Very wild guess, and would not include commercial airports"
+6500,Cultural / civic / recreation,0,1,0,1,1765.75,Mean of all sub-categories
+6510,Stadium / Arena / Convention Center,0,1,0,1,1716,"CBECS Summary ""Public Assembly"""
+6520,Museum,0,1,0,1,1884,CMAP in-house estimate
+6530,Religious,0,1,0,1,2463,"CBECS Microdata ""Religious Worship"""
+6540,Other Cultural / Civic / Recreation,0,1,0,1,1000,unfounded estimate; assume to be smaller facilities
+6600,Government,0,1,0,1,590,Mean of all sub-categories
+6610,Administrative / Judicial,0,1,0,1,434,Mean of all sub-categories
+6620,Public Works / Fire / Police,0,1,0,1,256,median from sample of 20 village halls from our government employment survey
+7000,Group quarters,1,1,0,1,4455.5,Average of Dorm & Nursing Home
+7100,College dormitory,1,1,0,1,3127.2,"CBECS Microdata ""Dorm/Frat/Sorority"" with factor applied"
+7200,Nursing home,1,1,0,1,262.32,"CBECS Microdata ""Nursing Home/Assisted Living"" with factor applied"
+7300,Military housing,1,1,0,1,7818,using un-factored dorm/frat/sorority value
+8000,Agriculture and mining,0,1,0,1,2500,unfounded estimate
+8100,Agriculture,0,1,0,1,2500,unfounded estimate
+8200,Mining,0,1,0,1,2500,unfounded estimate
+9000,Other misc.,0,1,0,1,2500,unfounded estimate

@@ -1,7 +1,7 @@
 ~# finish.transit.skims <3 digit id> <global iteration number>
 ~#  ****************************************************************************************
 ~#
-~#   Macro moves peak ransit skim matrices to final locations in preparation of regional model run.
+~#   Macro moves peak transit skim matrices to final locations in preparation of regional model run.
 ~#   Also punches intermediate station zone matrices.
 ~#
 ~#
@@ -27,7 +27,10 @@
 ~#                      also always works in batch mode. Does peak and offpeak.
 ~#    Ferguson 9/19/19 - updated max non-POE zone from 1944 to 3632 for zone17
 ~#    Ferguson 9/23/19 - created register r3 for cutoff value and update it to 0.4   
-~#    Ferguson 10/24/19 - no longer deletes 800/900 range mo matrices for parking spaces and costs         
+~#    Ferguson 10/24/19 - no longer deletes 800/900 range mo matrices for parking spaces and costs      
+~#
+~#    Heither, 05-06-2022 - set mfx37 (transit asmt kzone matrix) equal to updated mfx21; drop mfx39
+~#   
 ~#  ****************************************************************************************
 ~# -------------------------------------------------------------------------------------------------------
 ~#
@@ -55,38 +58,13 @@
 ~# Create kzone matrix (constrained by indexed transit/auto only cutoff value or less) & adjust header
 3.21
 ~+;1;y;mf%r2%35;y;kzonep;Intermed stn zn %z%;~?q=1;y;0;mf%r2%21; ;mf%r2%34;0,%r3%,include;n;2;q
-~# ____________________________________________________________________________________________
-~# Create matrix to flag zones that should not have intrazonal transit trips & adjust header
-~# ____________________________________________________________________________________________
-2.41
-~+;1;y;ui3;0; ;all;4
-~#  ## flag transit access/egress links
-~+;1;y;tmpl1;1; ;mod=uvwxyz; ;4
-~#  ## sum link flags for each node (zone)
-~+;1;y;ui3;tmpl1+tmpl1r; ;4;all;4
-~#  ## switch value to flag nodes with no transit access/egress
-~+;1;y;ui3;(ui3.eq.0); ;all;4;q
-3.21
-~#  ## create matrix flagging zones with no transit access/egress (intrazonal only)
-~+;1;y;mf%r2%36;y;intrap;no intrazonal transit flag %z%;~?q=1;y;0;ui3; ; ;y;1,%r1%; ;1,%r1%; ;2
-~+;1;y;mf%r2%36;n;(p.eq.q)*mf%r2%36; ; ;n;2;q
-2.41
-~+;1;y;ui3;0; ;all;4;q
 ~#
 ~# ____________________________________________________________________________________________
-~# Create indexed station zone matrix for transit assignment: 
-~#   station zone equals origin if: transit service is present in walk access skim & service
-~#   originates in Chicago or trip is intrazonal
+~# Create indexed station zone matrix for transit assignment: equal to mfx21 [05-06-2022]
 ~# ____________________________________________________________________________________________
 3.21
-~#  ## Keep the original zone if: the trip is intrazonal or if there is skimmed transit service available (mf8) and service
-~#  ##   originates within the City of Chicago.
-~#  ## Otherwise, apply the indexed station zone.
-~#  ##   (mf8 is unindexed transit in-vehicle time)
-~#  ##
 ~+;1;y;mf%r2%37;y;kasmtp;indexed stn zn for tran asmt %z%;~?q=1;y;0 
-((mf%r2%08.lt.1000 .and. ga(p).eq.1).or.(p.eq.q))*p +
-((mf%r2%08.ge.1000 .or. ga(p).ne.1).and.(p.ne.q))*mf%r2%21
+mf%r2%21
 ~+; ; ;y;1,%r1%; ;1,%r1%; ;2;q
 ~#
 2.41
@@ -94,8 +72,7 @@
 ~#
 ~/RECALCULATE HEADWAY MATRICES
 3.21
-~+;1;y;mf%r2%38;y;phdway;%z% indxd wait time x 2 I%2%;~?q=1;y;0;mf%r2%24*2; ; ;n;1; 
-~+;1;y;mf%r2%39;y;ohdway;%z% indxd hdwy x 1.25 I%2%;~?q=1;y;0;mf%r2%24*1.25; ; ;n;1; 
+~+;1;y;mf%r2%38;y;phdway;%z% indexed headway (indexed wait time x 2) I%2%;~?q=1;y;0;mf%r2%24*2; ; ;n;1;q 
 q
 ~# ____________________________________________________________________________________________
 ~/DELETE UNNEEDED MATRICES

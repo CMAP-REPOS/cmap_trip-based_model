@@ -158,6 +158,30 @@ q
 ~:end
 ~# ----------------
 2.42
+~+;3;@avs1v;~?e
+~$>err
+~+;y;q;~$>end
+~:err
+~+; ;q
+~:end
+~# ----------------
+2.42
+~+;3;@avs2v;~?e
+~$>err
+~+;y;q;~$>end
+~:err
+~+; ;q
+~:end
+~# ----------------
+2.42
+~+;3;@avs3v;~?e
+~$>err
+~+;y;q;~$>end
+~:err
+~+; ;q
+~:end
+~# ----------------
+2.42
 ~+;3;@avh2v;~?e
 ~$>err
 ~+;y;q;~$>end
@@ -215,6 +239,30 @@ q
 ~# ----------------
 2.42
 ~+;3;@avaut;~?e
+~$>err
+~+;y;q;~$>end
+~:err
+~+; ;q
+~:end
+~# ----------------
+2.42
+~+;3;@avs1t;~?e
+~$>err
+~+;y;q;~$>end
+~:err
+~+; ;q
+~:end
+~# ----------------
+2.42
+~+;3;@avs2t;~?e
+~$>err
+~+;y;q;~$>end
+~:err
+~+; ;q
+~:end
+~# ----------------
+2.42
+~+;3;@avs3t;~?e
 ~$>err
 ~+;y;q;~$>end
 ~:err
@@ -331,6 +379,9 @@ q
 ~/  Initialize @avauv = daily auto volume (MSA) mode = S
 ~/             @avh2v = daily HOV2 volume (MSA) mode = H
 ~/             @avh3v = daily HOV3+ volume (MSA) mode = H
+~/             @avs1v = daily SOV VOT1 volume (MSA) mode = S
+~/             @avs2v = daily SOV VOT2 volume (MSA) mode = S
+~/             @avs3v = daily SOV VOT3 volume (MSA) mode = S
 ~/             @avbqv = b plate truck daily volume (MSA veq)
 ~/             @avlqv = light truck daily volume (MSA veq)
 ~/             @avmqv = medium truck daily volume (MSA veq)
@@ -342,6 +393,9 @@ q
 ~/             @avh3t = daily HOV3+ turns (MSA) mode = H
 ~/             @avh2t = daily HOV2 turns (MSA) mode = H
 ~/             @avaut = daily auto turns (MSA) mode = S
+~/             @avs1t = daily SOV VOT1 turns (MSA) mode = S
+~/             @avs2t = daily SOV VOT2 turns (MSA) mode = S
+~/             @avs3t = daily SOV VOT3 turns (MSA) mode = S
 ~/             @avbqt = b plate truck daily turns (MSA veq)
 ~/             @avlqt = light truck daily turns (MSA veq)
 ~/             @avmqt = medium truck daily turns (MSA veq)
@@ -353,6 +407,9 @@ q
 ~/**********************************************************************
 2.42
 ~+;2;2;@avauv;daily (MSA) SOV volume (mode=S);0.0
+~+;2;2;@avs1v;daily (MSA) SOV VOT1 volume (mode=S);0.0
+~+;2;2;@avs2v;daily (MSA) SOV VOT2 volume (mode=S);0.0
+~+;2;2;@avs3v;daily (MSA) SOV VOT3 volume (mode=S);0.0
 ~+;2;2;@avh2v;daily (MSA) HOV2 volume (mode=H);0.0
 ~+;2;2;@avh3v;daily (MSA) HOV3+ volume (mode=H);0.0
 ~+;2;2;@avbqv;daily (MSA) b-truck volume - veq;0.0
@@ -362,6 +419,9 @@ q
 ~+;2;2;@busveq;daily (MSA) transit bus volume - veq;0.0
 ~/
 ~+;2;5;@avaut;daily (MSA) SOV turns (mode=S);0.0
+~+;2;5;@avs1t;daily (MSA) SOV VOT1 turns (mode=S);0.0
+~+;2;5;@avs2t;daily (MSA) SOV VOT2 turns (mode=S);0.0
+~+;2;5;@avs3t;daily (MSA) SOV VOT3 turns (mode=S);0.0
 ~+;2;5;@avh2t;daily (MSA) HOV2 turns (mode=H);0.0
 ~+;2;5;@avh3t;daily (MSA) HOV3+ turns (mode=H);0.0
 ~+;2;5;@avbqt;daily (MSA) b-truck turns - veq;0.0
@@ -396,13 +456,16 @@ q
 ~:vclass
 ~r15+1
 ~+;~?r15=1;~t1=@avauv
-~+;~?r15=2;~t1=@avh2v
-~+;~?r15=3;~t1=@avh3v
-~+;~?r15=4;~t1=@avbqv
-~+;~?r15=5;~t1=@avlqv
-~+;~?r15=6;~t1=@avmqv
-~+;~?r15=7;~t1=@avhqv
-~+;~?r15=8;~t1=@busveq
+~+;~?r15=2;~t1=@avs1v
+~+;~?r15=3;~t1=@avs2v
+~+;~?r15=4;~t1=@avs3v
+~+;~?r15=5;~t1=@avh2v
+~+;~?r15=6;~t1=@avh3v
+~+;~?r15=7;~t1=@avbqv
+~+;~?r15=8;~t1=@avlqv
+~+;~?r15=9;~t1=@avmqv
+~+;~?r15=10;~t1=@avhqv
+~+;~?r15=11;~t1=@busveq
 ~/
 ~/**********************************************************************
 ~/
@@ -430,12 +493,15 @@ q
 ~/
 ~/**********************************************************************
 ~+;~?r15=1;~t2=@avaut
-~+;~?r15=2;~t2=@avh2t
-~+;~?r15=3;~t2=@avh3t
-~+;~?r15=4;~t2=@avbqt
-~+;~?r15=5;~t2=@avlqt
-~+;~?r15=6;~t2=@avmqt
-~+;~?r15=7;~t2=@avhqt
+~+;~?r15=2;~t2=@avs1t
+~+;~?r15=3;~t2=@avs2t
+~+;~?r15=4;~t2=@avs3t
+~+;~?r15=5;~t2=@avh2t
+~+;~?r15=6;~t2=@avh3t
+~+;~?r15=7;~t2=@avbqt
+~+;~?r15=8;~t2=@avlqt
+~+;~?r15=9;~t2=@avmqt
+~+;~?r15=10;~t2=@avhqt
 ~/
 ~/**********************************************************************
 ~/
@@ -452,7 +518,7 @@ q
 ~/         accumulate turn volume attrib
 ~+;1;yes;%t2%;no;%t2%+@sumt; ;all;all;2;2;q
 ~/
-~+;~?r15<8;~$vclass
+~+;~?r15<11;~$vclass
 ~$scenario
 ~/
 ~/**********************************************************************
@@ -473,7 +539,8 @@ q
 yes
 @vadt
 no
-@avauv+@avh2v+@avh3v+@avbqv+@avlqv+(@avmqv/2)+(@avhqv/3)+(@busveq/3)
+@avs1v+@avs2v+@avs3v+@avh2v+@avh3v+@avbqv+@avlqv+(@avmqv/2)+
+(@avhqv/3)+(@busveq/3)
 
 all
 2
@@ -508,7 +575,7 @@ all
 yes
 @tadt
 no
-@avaut+@avh2t+@avh3t+@avbqt+@avlqt+(@avmqt/2)+(@avhqt/3)
+@avs1t+@avs2t+@avs3t+@avh2t+@avh3t+@avbqt+@avlqt+(@avmqt/2)+(@avhqt/3)
 
 all
 all

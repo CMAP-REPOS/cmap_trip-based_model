@@ -6,27 +6,19 @@ rem Matt Stratton, CMAP
 rem Nick Ferguson, CMAP
 
 echo This script:
-echo   1) Runs the Trip Generation model.
-echo   2) Creates the trip generation files to import into the emmebank
-echo      and runs distribute.trucks, distribute.poes, and airport.tg.
-echo.
+echo   1) Converts UrbanSim outputs into Trip Generation model inputs.
+echo   2) Uses UrbanSim land use data to develop trip allocation factors
+echo      for heavy trucks.
+echo   3) Runs the work-from-home allocation model.
+echo   4) Runs the Trip Generation model.
+echo   5) Creates the trip generation files to import into the emmebank
+echo      and runs distribute.trucks and distribute.poes.
+
 echo ===================================================================
 echo.
 
 rem Revision history
 rem ----------------
-rem 09/15/2010 Heither: airport.tg replaces zero.out.airports, del
-rem            MCHW_HH.TXT if needed
-rem 03/11/2011 Heither: logic changed so each Module is independent &
-rem            must be submitted separately.
-rem 12/07/2011 Heither: additional saspath logic added; verify ALL
-rem            required files in ..\tg\sas\data; copy MCHW_HH.TXT to
-rem            Database folder.
-rem 10/23/2014 Heither: various housekeeping (update SAS path for
-rem            version 9.4; drop check for Windows XP; renumber
-rem            modules); add Python call for script
-rem            create_HHvtype_file.py; updated arguments added to call
-rem            distribute.trucks macro
 rem 04/21/2015 Heither: revised TG file cleanup; conditional execution
 rem            of python script (trip generation mode only)
 rem 06/30/2015 Heither: additional error-checking logic to trap NaN
@@ -43,6 +35,7 @@ rem            activate_python_env.bat.
 rem 09/15/2020 Ferguson: Replaced summary_tg_results.sas with
 rem            summarize_tg_results.py.
 rem 03/01/2021 Ferguson: Updated paths for removal os sas directory.
+rem 05/14/2021 Heither: Include option to run both modules in one pass.
 
 rem ====================================================================
 
@@ -51,11 +44,15 @@ rem --------
 rem In case CMD.exe is doing stuff in the wrong directory, this command
 rem changes the directory to where the batch file was called from.
 cd %~dp0
+set dt=%date%
+set tm=%time%
 
-echo Module list (each must be submitted separately):
-echo   1) Run trip generation model.
+echo Run module list:
+echo   1) Run trip generation model ONLY (items 1-3 above).
 echo   2) Import trip generation files into emmebank and run distribute
-echo      macros.
+echo      macros ONLY (item 4 above).
+echo   3) Run the trip generation model, import files into the emmebank
+echo      and run distribute macros. Use this for UrbanSim data. (All items)
 echo.
 
 set /p choice="[SELECT A MODULE TO RUN] "
@@ -64,6 +61,7 @@ if not "%choice%"=="" (
     set choice=%choice:~0,1%
     if "%choice%"=="1" (goto one)
     if "%choice%"=="2" (goto two)
+    if "%choice%"=="3" (goto notes)	
 )
 
 echo !!! "%choice%" IS NOT A VALID SELECTION !!!
@@ -71,6 +69,50 @@ echo Please resubmit the program and select a number from the module list.
 echo.
 pause
 goto end
+
+:notes
+rem Notes for running both modules. Move these up front.
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+echo.
+echo   CONNECT TO EMME
+echo.
+echo   Before continuing, please connect to an Emme license.
+echo.
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pause
+echo.
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+echo.
+echo   SET GROWTH FACTOR
+echo.
+echo   Before continuing, please update the growth factor variable in
+echo   each of the following scripts:
+echo     * prep_macros\distribute.trucks
+echo     * prep_macros\distribute.poes
+echo.
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pause
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+echo.
+echo   WORK FROM HOME RATES
+echo.
+echo   Do the WFH rates and industry files need to be updated?
+echo.
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pause
+echo.
+set sc=
+set /p sc="[ENTER 3-DIGIT SCENARIO NUMBER (E.G., 400)] "
+echo.
+if not '%sc%'=='' (set sc=%sc:~0,3%)
+if not '%sc%'=='' (goto next)
+goto badscen
+
+:next
+set /a val=%sc%
+if %val% geq 100 (goto one)
+goto badscen
+
 
 rem Run trip generation mode.
 :one
@@ -106,8 +148,31 @@ echo.
 
 call activate_python_env.bat
 @echo.
+cd tg\scripts
+echo Updating Trip Generation inputs with UrbanSim data ...
+python urbansim_update_tg_input_files.py
+if %ERRORLEVEL% NEQ 0 (goto urbansim_issue)
+@echo.
+echo Updating Heavy Truck Trip allocation weights with UrbanSim data ...
+python urbansim_hcv_allocation.py
+if %ERRORLEVEL% NEQ 0 (goto hcv_issue)
+cd ..\fortran
 
-cd tg\fortran
+rem Run the Work-from-Home procedures.
+set savedir="%cd%"
+set validationfiles=N
+set usualwfhpct=0.0510
+set tc14pct=0.1031
+
+cd wfhmodule
+set filedir="%cd%"
+echo.
+echo Starting the work-from-home allocation model ...
+echo  wfh arguments: %filedir% %savedir% %validationfiles% %usualwfhpct% %tc14pct%
+python wfhflag.py %filedir% %savedir% %validationfiles% %usualwfhpct% %tc14pct%
+if %ERRORLEVEL% NEQ 0 (goto wfh_issue)
+cd ..
+pause
 
 rem Check for necessary input files.
 if not exist HH_IN.TXT (goto socec_data_error)
@@ -121,15 +186,14 @@ if exist *OUTPUT.TXT (del *OUTPUT.TXT)
 if exist MCHW_HH.TXT (del MCHW_HH.TXT)
 
 TG_PopSyn.exe
-
 cd ..\scripts
 
+echo Creating summary files ...
 python summarize_tg_results.py %project% %run%
 python prepare_iom_inputs.py %project% %run%
 echo.
 
 cd ..\data
-
 if not exist hoa.in (goto python_error)
 if not exist hop.in (goto python_error)
 if not exist hwahi.in (goto python_error)
@@ -139,27 +203,21 @@ if not exist hwplo.in (goto python_error)
 if not exist nha.in (goto python_error)
 if not exist nhp.in (goto python_error)
 if not exist m01tg.txt (goto python_error)
-
 if not exist m01auto.csv (goto m01_data_error)
 if not exist m01type.csv (goto m01_data_error)
 
 cd %~dp0
 
-rem Submit the following only if the TG model was run in trip generation
-rem mode.
-if exist tg\fortran\MCHW_HH.TXT (
-    python tg\fortran\create_HHvtype_file.py
-    echo.
-)
+python tg\fortran\create_HHvtype_file.py
 
 echo Module 1 finished.
 echo.
 echo ===================================================================
 echo.
+if "%choice%"=="3" (goto macros)
 goto last
 
-rem Import production and attraction files, then run distribution
-rem macros.
+rem Import production and attraction files, then run distribution macros.
 :two
 echo ===================================================================
 echo.
@@ -183,7 +241,6 @@ echo   Before continuing, please update the growth factor variable in
 echo   each of the following scripts:
 echo     * prep_macros\distribute.trucks
 echo     * prep_macros\distribute.poes
-echo     * prep_macros\airport.tg
 echo.
 echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 pause
@@ -216,7 +273,7 @@ echo Preparing emmebank for model run...
 call emme -ng 000 -m useful_macros\cleanup.for.rerun %val% 1 >> tg.rpt
 echo.
 
-echo Importing production and attraction matrices...
+echo Importing production and attraction matrices (used only for b/l/m truck distribution)...
 call emme -ng 000 -m prep_macros\import.tg.results 1 >> tg.rpt
 echo.
 
@@ -231,10 +288,6 @@ echo.
 
 echo Distributing POEs...
 call emme -ng 000 -m prep_macros\distribute.poes 1 >> tg.rpt
-echo.
-
-echo Setting airport work attractions...
-call emme -ng 000 -m prep_macros\airport.tg 1 >> tg.rpt
 echo.
 
 cd %~dp0
@@ -271,6 +324,24 @@ echo.
 pause
 goto end
 
+:urbansim_issue
+echo !!! THE URBANSIM FILES DID NOT PROCESS PROPERLY !!!
+echo.
+pause
+goto end
+
+:hcv_issue
+echo !!! THE HEAVY COMMERCIAL VEHICLE ALLOCATION DID NOT PROCESS PROPERLY !!!
+echo.
+pause
+goto end
+
+:wfh_issue
+echo !!! THE WORK FROM HOME ALLOCATION MODEL DID NOT RUN PROPERLY !!!
+echo.
+pause
+goto end
+
 :filemiss1
 echo !!! tg\fortran\MCHW_HH.TXT DOES NOT EXIST !!!
 echo.
@@ -287,6 +358,8 @@ goto end
 
 :last
 echo End of batch file.
+@ECHO Trip Generation Model Start Time: %dt% %tm%
+@ECHO Trip Generation Model End Time  : %date% %time%
 echo.
 pause
 

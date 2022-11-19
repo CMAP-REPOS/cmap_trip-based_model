@@ -7,28 +7,6 @@
 ~/         where %1% = three digit alternative ID number
 ~/               %2% = time period number
 ~/
-~/  The replaceable parameter is used in weighting @tollv below
-~/
-~/  arranged by Stryker, 9/22 - based on work by Eash
-~/  Revised by DBE for emission calc changes with Mobile6, Dec 2002 ***
-~/  Revised by DBE to have correct number of hours applied to @tollv
-~/          pseudo capacity consistent with time period.  the calling   
-~/          macro was also modified to pass the scenario counter (=%y%)
-~/          which is the last digit of scenario).  Also increased number
-~/          of iterations: tollv 25 to 30 & tod 35 to 50 - 4Sep2003
-~/  Revised by DBE 21Apr2004 for five class assignment.
-~/  Revised by DBE 21Apr2004 for five class assignment w/ turns saved
-~/          in extra attribs.
-~/  Revised by DBE 22May2004 for two class assignment w/ turns saved
-~/          in extra attribs for use in full model batch run.
-~/  Revised by DBE 1OCT2004 for five class assignment with turns within
-~/          fulliter
-~/  Revised by DBE 15OCT2004 for new vdf for initial paths (w/ vdf=9)
-~/  Revised by DBE 29JUL2009 for I-290 HOV
-~/  Modified by DBE for multi-CPU test (5.21 changed to 5.22) with
-~/   relative gap = 0.05
-~/   normalized gap (time) = 0.10
-~/   interations increased: 300 for tollv and 500 for tod
 ~/
 ~/  7-class version: S is primary class
 ~/
@@ -71,13 +49,10 @@ batchin=data\vdf_tod.in
 ~/***Set up path-based assignment
 ~# Use bucket rounding to convert to integers rather than using 5.25 option 1
 3.21
-~# ~+;1;y;mf13;n;(bint(mf13).max.0); ; ;n;2
 ~+;1;y;mf94;n;(bint(mf94).max.0); ; ;n;2
 ~+;1;y;mf95;n;(bint(mf95).max.0); ; ;n;2
 ~+;1;y;mf96;n;(bint(mf96).max.0); ; ;n;2
 ~+;1;y;mf18;n;(bint(mf18).max.0); ; ;n;2
-~# ~+;1;y;mf14;n;(bint(mf14).max.0); ; ;n;2
-~# ~+;1;y;mf15;n;(bint(mf15).max.0); ; ;n;2
 ~+;1;y;mf97;n;(bint(mf97).max.0); ; ;n;2
 ~+;1;y;mf16;n;(bint(mf16).max.0); ; ;n;2
 ~+;1;y;mf17;n;(bint(mf17).max.0); ; ;n;2;q

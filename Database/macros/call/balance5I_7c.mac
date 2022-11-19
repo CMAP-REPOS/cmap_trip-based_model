@@ -20,6 +20,7 @@
 ~#    Revised: Heither, 10-30-2014: more compact code
 ~#    Revised 02/10/2015 by NRF to change from 6 classes to 7 classes by dividing HOV into HOV2 and HOV3+
 ~#    Revised 07/07/2021 by JLemp move to new vehicle class framework (3 SOV classes, combined b-plate + light trucks)
+~#    Revised 09/26/2021 by Heither: update @avauv - replace @vauto with @vsov1+@vsov2+@vsov3
 ~#
 ~/  7-class version: S is primary class
 ~#
@@ -43,6 +44,15 @@ reports=report\iter_%ms98%\bal_%s%.sim_%ms98%.rxt
 ~/**********************************************************************
 ~#
 2.41
+~#                  # -- SOV Total -- #
+~+;1;yes;@avauv;yes;SOV veh MSA average volume iter_%ms98%
+((@vsov1+@vsov2+@vsov3)/(%ms98%+1))+(@avauv*(1-1/(%ms98%+1)))
+~+; ;all;2;2
+~#
+~+;1;yes;@avaut;yes;SOV veh MSA average turns iter_%ms98%
+(@tauto/(%ms98%+1))+(@avaut*(1-1/(%ms98%+1)))
+~+; ;all;all;2;2
+~#
 ~#                  # -- SOV VOT1 -- #
 ~+;1;yes;@avs1v;yes;SOV1 veh MSA average volume iter_%ms98%
 (@vsov1/(%ms98%+1))+(@avs1v*(1-1/(%ms98%+1)))
@@ -138,6 +148,30 @@ reports=report\iter_%ms98%\bal_%s%.sim_%ms98%.rxt
 ~/  Delete old extra attributes, if necessary
 ~#
 ~/**********************************************************************
+2.42
+~+;3;@vauto;~?e
+~$>err
+~+;yes;q;~$>end
+~:err
+~+; ;q
+~:end
+~# ----------------
+2.42
+~+;3;@avauv;~?e
+~$>err
+~+;yes;q;~$>end
+~:err
+~+; ;q
+~:end
+~# ----------------
+2.42
+~+;3;@avaut;~?e
+~$>err
+~+;yes;q;~$>end
+~:err
+~+; ;q
+~:end
+~# ----------------
 2.42
 ~+;3;@avs1v;~?e
 ~$>err
@@ -284,7 +318,9 @@ reports=report\iter_%ms98%\bal_%s%.sim_%ms98%.rxt
 ~# ----------------
 ~#
 ~/**********************************************************************
-~/  Initialize @avs1v = period averaged SOV VOT1 volume (mode = S)
+~/  Initialize @avauv = period averaged auto volume (mode = S)
+~/             @avaut = period averaged auto turn volume (mode = S)
+~/             @avs1v = period averaged SOV VOT1 volume (mode = S)
 ~/             @avs1t = period averaged SOV VOT1 turn volume (mode = S)
 ~/             @avs2v = period averaged SOV VOT2 volume (mode = S)
 ~/             @avs2t = period averaged SOV VOT2 turn volume (mode = S)
@@ -305,6 +341,9 @@ reports=report\iter_%ms98%\bal_%s%.sim_%ms98%.rxt
 ~#
 ~/**********************************************************************
 2.42
+~+;2;2;@avauv;SOV veh MSA average volume iter_%ms98%;0.0
+~+;2;5;@avaut;SOV veh MSA average turns iter_%ms98%;0.0
+~#
 ~+;2;2;@avs1v;SOV1 veh MSA average volume iter_%ms98%;0.0
 ~+;2;5;@avs1t;SOV1 veh MSA average turns iter_%ms98%;0.0
 ~#
@@ -340,6 +379,9 @@ reports=report\iter_%ms98%\bal_%s%.sim_%ms98%.rxt
 ~/**********************************************************************
 ~#
 2.41
+~+;1;yes;@avauv;no;@vsov1+@vsov2+@vsov3; ;all;2;2
+~+;1;yes;@avaut;no;@tauto; ;all;all;2;2
+~#
 ~+;1;yes;@avs1v;no;@vsov1; ;all;2;2
 ~+;1;yes;@avs1t;no;@tsov1; ;all;all;2;2
 ~#
@@ -384,7 +426,7 @@ reports=report\iter_%ms98%\bal_%s%.sim_%ms98%.rxt
 ~z=%ms98%
 ~z+1
 ~t9=%ts%
-~?z=5
+~?z=3
 ~$>nocopy
 1.22
 3

@@ -24,13 +24,13 @@
         -----------------------------             -------------------------               ----------------------------------
          11: Motorcycle                     -     10: Motorcycles                    -    (use auto distribution)
          21: Passenger Car                  -     20: Passenger Cars                 -    autos
-         31: Passenger Truck                -     30: Other 2 axle-4 tire vehicles   -    b-plate trucks
-         32: Light Commercial Truck         -     30: Other 2 axle-4 tire vehicles   -    light duty trucks
+         31: Passenger Truck                -     30: Other 2 axle-4 tire vehicles   -    autos
+         32: Light Commercial Truck         -     30: Other 2 axle-4 tire vehicles   -    b-plates
          41: Intercity Bus                  -     40: Buses                          -    (use transit bus distribution)
          42: Transit Bus                    -     40: Buses                          -    transit bus
          43: School Bus                     -     40: Buses                          -    (use transit bus distribution)
          51: Refuse Truck                   -     50: Single Unit Trucks             -    (use medium duty trucks under 200 miles distribution)
-         52: Single Unit Short-haul Truck   -     50: Single Unit Trucks             -    medium duty trucks under 200 miles
+         52: Single Unit Short-haul Truck   -     50: Single Unit Trucks             -    light trucks + medium duty trucks under 200 miles
          53: Single Unit Long-haul Truck    -     50: Single Unit Trucks             -    medium duty trucks 200+ miles
          54: Motor Home                     -     50: Single Unit Trucks             -    (use medium duty trucks 200+ miles distribution)
          61: Combination Short-haul Truck   -     60: Combination Trucks             -    heavy duty trucks under 200 miles
@@ -54,17 +54,27 @@
                       also redefine the nonattainment area zones for the Z17 Bozic
         - NRF 12-18-2018: Read in data\moves_avgSpeedBinID.csv to create template with all speed bins (line 293)
         - SCB 10-15-2020: Edit hourVMTFraction calculation for source types 53 and 54 (start at line 630)
+		- SCB 04-26-2022: Update link data import procedures for new trip-based model (separate time of day periods), 
+						update sourcetype-model class correspondence and HPMS assignment
 
  ----------------------------------------------------------------------------------- */
 
 *** ============================== ***;
-%let project=c21q2;
-%let run=200_20210324;
-%let year=2020;                                   ** scenario year **;
+%let project=c22q2;
+%let run=100;
+%let year=2019;                                   ** scenario year **;
 *** ============================== ***;
 
 filename in0 "..\data\moves.longhaul.data";
-filename in1 "..\data\moves.data";
+filename in1 "..\data\moves_pd1.data";
+filename in2 "..\data\moves_pd2.data";
+filename in3 "..\data\moves_pd3.data";
+filename in4 "..\data\moves_pd4.data";
+filename in5 "..\data\moves_pd5.data";
+filename in6 "..\data\moves_pd6.data";
+filename in7 "..\data\moves_pd7.data";
+filename in8 "..\data\moves_pd8.data";
+
 ***filename in2 "..\data\bus.link"; **==DON'T NEED THIS ANYMORE.  BUS VEHICLES ARE ON THE NETWORK;
 
 options nodate pagesize=156 linesize=135 nocenter nonumber noxwait;
@@ -93,6 +103,77 @@ data a(drop=flag); infile in1;
      otherwise input @1 i j period miles lanes vdf zone emcap
                   timau ftime avauv avh2v avh3v avbqv avlqv avmqv avhqv areatype isramp busveq im;
     end;
+
+data a2(drop=flag); infile in2;
+  input @3 flag $1. @;
+    select(flag);
+     when('i') delete;
+     otherwise input @1 i j period miles lanes vdf zone emcap
+                  timau ftime avauv avh2v avh3v avbqv avlqv avmqv avhqv areatype isramp busveq im;
+    end;
+
+data a3(drop=flag); infile in3;
+  input @3 flag $1. @;
+    select(flag);
+     when('i') delete;
+     otherwise input @1 i j period miles lanes vdf zone emcap
+                  timau ftime avauv avh2v avh3v avbqv avlqv avmqv avhqv areatype isramp busveq im;
+    end;
+
+data a4(drop=flag); infile in4;
+  input @3 flag $1. @;
+    select(flag);
+     when('i') delete;
+     otherwise input @1 i j period miles lanes vdf zone emcap
+                  timau ftime avauv avh2v avh3v avbqv avlqv avmqv avhqv areatype isramp busveq im;
+    end;
+
+data a5(drop=flag); infile in5;
+  input @3 flag $1. @;
+    select(flag);
+     when('i') delete;
+     otherwise input @1 i j period miles lanes vdf zone emcap
+                  timau ftime avauv avh2v avh3v avbqv avlqv avmqv avhqv areatype isramp busveq im;
+    end;
+
+data a6(drop=flag); infile in6;
+  input @3 flag $1. @;
+    select(flag);
+     when('i') delete;
+     otherwise input @1 i j period miles lanes vdf zone emcap
+                  timau ftime avauv avh2v avh3v avbqv avlqv avmqv avhqv areatype isramp busveq im;
+    end;
+
+data a7(drop=flag); infile in7;
+  input @3 flag $1. @;
+    select(flag);
+     when('i') delete;
+     otherwise input @1 i j period miles lanes vdf zone emcap
+                  timau ftime avauv avh2v avh3v avbqv avlqv avmqv avhqv areatype isramp busveq im;
+    end;
+
+data a8(drop=flag); infile in8;
+  input @3 flag $1. @;
+    select(flag);
+     when('i') delete;
+     otherwise input @1 i j period miles lanes vdf zone emcap
+                  timau ftime avauv avh2v avh3v avbqv avlqv avmqv avhqv areatype isramp busveq im;
+    end;
+
+proc append base=a data=a2;
+run;
+proc append base=a data=a3;
+run;
+proc append base=a data=a4;
+run;
+proc append base=a data=a5;
+run;
+proc append base=a data=a6;
+run;
+proc append base=a data=a7;
+run;
+proc append base=a data=a8;
+run;
 
 data a(drop=avh2v avh3v); set a(where=(i>0 & j>0));
  avauv=avauv+avh2v+avh3v;                                      *** combine SOV, HOV2, and HOV3+ into auto category;
@@ -143,6 +224,7 @@ data a; set a;
   hdshvehmi=hdshveh*miles;
   hdlhvehmi=hdlhveh*miles;
   vubusmi=vubus*miles;
+  sushvehmi=ldvehmi+mdshvehmi;
 
 
   if period=1 then hours=5;
@@ -173,6 +255,8 @@ data a; set a;
     mdshvehhr=miles/mph*mdshveh; mdlhvehhr=miles/mph*mdlhveh;
     hdshvehhr=miles/mph*hdshveh; hdlhvehhr=miles/mph*hdlhveh;
   end;
+  
+  sushvehhr = ldvehhr+mdshvehhr;
 
  *** -- PREPARE SPEED BINS -- ***;
   if            mph< 2.5 then avgSpeedBinID=1;
@@ -205,8 +289,8 @@ data a; set a;
 
 
 data sums; set a;
-  allvmt=sum(auvehmi,bpvehmi,ldvehmi,mdshvehmi,mdlhvehmi,hdshvehmi,hdlhvehmi,vubusmi);
-  allvht=sum(auvehhr,bpvehhr,ldvehhr,mdshvehhr,mdlhvehhr,hdshvehhr,hdlhvehhr,vubushr);
+  allvmt=sum(auvehmi,bpvehmi,sushvehmi,mdlhvehmi,hdshvehmi,hdlhvehmi,vubusmi);
+  allvht=sum(auvehhr,bpvehhr,sushvehhr,mdlhvehhr,hdshvehhr,hdlhvehhr,vubushr);
  proc summary nway data=sums; class im; var allvmt allvht; output out=j1 sum(allvmt)=All_VMT sum(allvht)=All_VHT;
   proc print; format All_VMT All_VHT comma15.2; var im All_VMT All_VHT; sum All_VMT All_VHT; title "VMT and VHT Totals - First Stage";
 
@@ -218,19 +302,14 @@ data junk(drop=_type_ _freq_); set junk(where=(vubus=0));
 ***;
 
 
- proc summary nway data=a; var auvehmi bpvehmi ldvehmi mdshvehmi mdlhvehmi hdshvehmi hdlhvehmi vubusmi auvehhr bpvehhr ldvehhr
-   mdshvehhr mdlhvehhr hdshvehhr hdlhvehhr vubushr; class im roadTypeID period avgSpeedBinID; id hours; output out=b1 sum=;
+ proc summary nway data=a; var auvehmi bpvehmi sushvehmi mdlhvehmi hdshvehmi hdlhvehmi vubusmi auvehhr bpvehhr sushvehhr mdlhvehhr hdshvehhr hdlhvehhr vubushr; class im roadTypeID period avgSpeedBinID; id hours; output out=b1 sum=;
 
 
   *** VMT Verification ***;
-   proc summary nway data=b1; class im; var auvehmi bpvehmi ldvehmi mdshvehmi mdlhvehmi hdshvehmi hdlhvehmi vubusmi auvehhr bpvehhr ldvehhr
-     mdshvehhr mdlhvehhr hdshvehhr hdlhvehhr vubushr; output out=junk sum=;
-    proc print data=junk; format auvehmi bpvehmi ldvehmi mdshvehmi mdlhvehmi hdshvehmi hdlhvehmi vubusmi auvehhr bpvehhr ldvehhr
-       mdshvehhr mdlhvehhr hdshvehhr hdlhvehhr vubushr comma15.2;
-       var im auvehmi bpvehmi ldvehmi mdshvehmi mdlhvehmi hdshvehmi hdlhvehmi vubusmi auvehhr bpvehhr ldvehhr
-          mdshvehhr mdlhvehhr hdshvehhr hdlhvehhr vubushr;
-       sum auvehmi bpvehmi ldvehmi mdshvehmi mdlhvehmi hdshvehmi hdlhvehmi vubusmi auvehhr bpvehhr ldvehhr
-          mdshvehhr mdlhvehhr hdshvehhr hdlhvehhr vubushr;
+   proc summary nway data=b1; class im; var auvehmi bpvehmi sushvehmi mdlhvehmi hdshvehmi hdlhvehmi vubusmi auvehhr bpvehhr sushvehhr mdlhvehhr hdshvehhr hdlhvehhr vubushr; output out=junk sum=;
+    proc print data=junk; format auvehmi bpvehmi sushvehmi mdlhvehmi hdshvehmi hdlhvehmi vubusmi auvehhr bpvehhr sushvehhr mdlhvehhr hdshvehhr hdlhvehhr vubushr comma15.2;
+       var im auvehmi bpvehmi sushvehmi mdlhvehmi hdshvehmi hdlhvehmi vubusmi auvehhr bpvehhr sushvehhr mdlhvehhr hdshvehhr hdlhvehhr vubushr;
+       sum auvehmi bpvehmi sushvehmi mdlhvehmi hdshvehmi hdlhvehmi vubusmi auvehhr bpvehhr sushvehhr mdlhvehhr hdshvehhr hdlhvehhr vubushr;
        title1 " "; title2 "- +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -"; title3 "&project &run Totals Before";
 
 
@@ -239,9 +318,9 @@ data b1(drop=_type_ _freq_); set b1;
 
   if period=1 then hours=10;  *** set to actual number of temporal hours, other periods OK;
 
-  auvehmi=auvehmi/hours; bpvehmi=bpvehmi/hours; ldvehmi=ldvehmi/hours; mdshvehmi=mdshvehmi/hours; mdlhvehmi=mdlhvehmi/hours;
+  auvehmi=auvehmi/hours; bpvehmi=bpvehmi/hours; sushvehmi=sushvehmi/hours; mdlhvehmi=mdlhvehmi/hours;
   hdshvehmi=hdshvehmi/hours; hdlhvehmi=hdlhvehmi/hours; vubusmi=vubusmi/hours;
-  auvehhr=auvehhr/hours; bpvehhr=bpvehhr/hours; ldvehhr=ldvehhr/hours; mdshvehhr=mdshvehhr/hours; mdlhvehhr=mdlhvehhr/hours;
+  auvehhr=auvehhr/hours; bpvehhr=bpvehhr/hours; sushvehhr=sushvehhr/hours; mdlhvehhr=mdlhvehhr/hours;
   hdshvehhr=hdshvehhr/hours; hdlhvehhr=hdlhvehhr/hours; vubushr=vubushr/hours;
 
   if period=1 then do;
@@ -271,9 +350,9 @@ data b1; set b1;
 
 *SEPARATE INTO VEHICLE CLASSES & RECOMBINE;
 data b2(keep=roadTypeID period avgSpeedBinID vmt vht hr hourDayID sourceTypeID im); set b1; vmt=auvehmi; vht=auvehhr; sourceTypeID=21;   ** passenger car;
-data b3(keep=roadTypeID period avgSpeedBinID vmt vht hr hourDayID sourceTypeID im); set b1; vmt=bpvehmi; vht=bpvehhr; sourceTypeID=31;   ** passenger truck;
-data b4(keep=roadTypeID period avgSpeedBinID vmt vht hr hourDayID sourceTypeID im); set b1; vmt=ldvehmi; vht=ldvehhr; sourceTypeID=32;   ** light commercial truck;
-data b5(keep=roadTypeID period avgSpeedBinID vmt vht hr hourDayID sourceTypeID im); set b1; vmt=mdshvehmi; vht=mdshvehhr; sourceTypeID=52;  ** SU short haul truck;
+data b3(keep=roadTypeID period avgSpeedBinID vmt vht hr hourDayID sourceTypeID im); set b1; vmt=auvehmi; vht=auvehhr; sourceTypeID=31;   ** passenger truck;
+data b4(keep=roadTypeID period avgSpeedBinID vmt vht hr hourDayID sourceTypeID im); set b1; vmt=bpvehmi; vht=bpvehhr; sourceTypeID=32;   ** light commercial truck;
+data b5(keep=roadTypeID period avgSpeedBinID vmt vht hr hourDayID sourceTypeID im); set b1; vmt=sushvehmi; vht=sushvehhr; sourceTypeID=52;  ** SU short haul truck;
 data b6(keep=roadTypeID period avgSpeedBinID vmt vht hr hourDayID sourceTypeID im); set b1; vmt=mdlhvehmi; vht=mdlhvehhr; sourceTypeID=53;  ** SU long haul truck;
 data b7(keep=roadTypeID period avgSpeedBinID vmt vht hr hourDayID sourceTypeID im); set b1; vmt=hdshvehmi; vht=hdshvehhr; sourceTypeID=61;  ** MU short haul truck;
 data b8(keep=roadTypeID period avgSpeedBinID vmt vht hr hourDayID sourceTypeID im); set b1; vmt=hdlhvehmi; vht=hdlhvehhr; sourceTypeID=62;  ** MU long haul truck;
@@ -549,8 +628,8 @@ data review(drop=_type_ _freq_); set review(where=(roadTypeVMTFraction<0.998 or 
 *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*;
  *** -- CALCULATE SHARE OF RAMP VHT DIVIDED BY FREEWAY VMT -- ***;
 data rmp; set a(where=(roadTypeID in (2,4)));
-   fwyvht=sum(auvehhr,bpvehhr,ldvehhr,mdshvehhr,mdlhvehhr,hdshvehhr,hdlhvehhr,vubushr);
-   fwyvmt=sum(auvehmi,bpvehmi,ldvehmi,mdshvehmi,mdlhvehmi,hdshvehmi,hdlhvehmi,vubusmi);
+   fwyvht=sum(auvehhr,bpvehhr,sushvehhr,mdlhvehhr,hdshvehhr,hdlhvehhr,vubushr);
+   fwyvmt=sum(auvehmi,bpvehmi,sushvehmi,mdlhvehmi,hdshvehmi,hdlhvehmi,vubusmi);
    if isramp then do; rampvht=fwyvht; rampvmt=fwyvmt; end;
    else do; rampvht=0; rampvmt=0; end;
 
@@ -735,9 +814,9 @@ proc export data=vmtshare outfile="..\data\MOVES_&project._scen&run..xlsx" dbms=
 *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*;
  *** -- CALCULATE TOTAL VMT BY HPMS VEHICLE TYPE -- ***;
 data hpms; set b(where=(sourceTypeID in (21,31,32,42,52,53,61,62)));        *** modeled vehicle types only ***;
-  if sourceTypeID=21 then HPMSVtypeID=20;
-  else if 31<=sourceTypeID<=32 then HPMSVtypeID=30;
-  else if sourceTypeID<=42 then HPMSVtypeID=40;                    *** transit bus vmt only ***;
+  if sourceTypeID=21 then HPMSVtypeID=25;
+  else if sourceTypeID=32 then HPMSVtypeID=25;
+  else if sourceTypeID=42 then HPMSVtypeID=40;                    *** transit bus vmt only ***;
   else if 52<=sourceTypeID<=53 then HPMSVtypeID=50;
   else if 61<=sourceTypeID<=62 then HPMSVtypeID=60;
 

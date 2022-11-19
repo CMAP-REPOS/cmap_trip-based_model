@@ -7,7 +7,8 @@
 ~#                              Heither 05-09-2017 - implement ATRI data calibration: use heavy truck seed matrix & ATRI distance distribution
 ~#                              Heither 03-22-2018 - implement updated B-Plate trips and distribution
 ~#                              Heither 09-26-2018 - Now called by truck.class.skim.mac.
-~#                                                   
+~#                              Heither 10-10-2021 - Updated b-plate trips.
+~#                              Hirst   07-15-2022 - Updated l-m-h truck distance bin distribution parameters and shares.                     
 ~#                                
 ~#  ************************************************************************************************
 ~#    Truck trip distribution macro.
@@ -29,7 +30,7 @@ reports=
 ~/
 ~# ################################
 ~# -- SET GROWTH FACTOR HERE --
-~r104=1.20 ~/growth factor from base year (1% per year)
+~r104=1.19 ~/growth factor from base year (1% per year)
 ~# ################################
 ~#
 ~#
@@ -39,9 +40,8 @@ reports=
 ~+;~t2=mf47  ;~/ impedance base
 ~/
 ~/INITIALIZE CONTROL TOTALS ("WORKING POPULATION")
-~/   These are estimates for Year 2000
-~/
-~r100=2085000 ~/b-plate
+~# ##   These are estimates for Year 2000 that will be factored to Scenario values
+~r100=1468500 ~/b-plate
 ~r101= 246500 ~/light
 ~r102= 229500 ~/medium
 ~r103= 395000 ~/heavy - 108750
@@ -189,36 +189,36 @@ q
 ~/
 ~/allocate these totals to the following impedances classes
 ~/
-~r1*0.171725
-~r2*0.191605
-~r3*0.171725
-~r4*0.144745
-~r5*0.119185
-~r6*0.037296
-~r7*0.029756
-~r8*0.023376
-~r9*0.019316
-~r10*0.015256
-~r11*0.012356
-~r12*0.010036
-~r13*0.008296
-~r14*0.006556
-~r15*0.005396
-~r16*0.004816
-~r17*0.004236
-~r18*0.003656
-~r19*0.003076
-~r20*0.002496
-~r21*0.002496
-~r22*0.001916
-~r23*0.001336
-~r24*0.001336
-~r25*0.001336
-~r26*0.001336
-~r27*0.001336
-~r28*0.001336
-~r29*0.001336
-~r30*0.001336
+~r1*0.178718
+~r2*0.220934
+~r3*0.199109
+~r4*0.170969
+~r5*0.072135
+~r6*0.030531
+~r7*0.022991
+~r8*0.021611
+~r9*0.017551
+~r10*0.013491
+~r11*0.010591
+~r12*0.008271
+~r13*0.006531
+~r14*0.004791
+~r15*0.003631
+~r16*0.003051
+~r17*0.002471
+~r18*0.001891
+~r19*0.001311
+~r20*0.000731
+~r21*0.000731
+~r22*0.000151
+~r23*0.000976
+~r24*0.000976
+~r25*0.000976
+~r26*0.000976
+~r27*0.000976
+~r28*0.000976
+~r29*0.000976
+~r30*0.000976
 ~/
 ~# -- Set balancing parameters
 ~+;3.22;3;30;0.001;n
@@ -242,9 +242,13 @@ mf"index"       /this is the 3d index matrix
 ~/ lcv balancing
 ~/***************
 ~/
+~:skipb
 ~+;3.12;2;mf"index";y;q
 ~# ## -- collapse impedance matrix to 30 discrete values - mode l
-~+;3.21;1;y;mf"index";y;index for 3rd dimension;0;(int(%t4%/2)+1).min.30;;;n;2;q
+~+;3.21;1;y;mf"index";y;index for 3rd dimension;0
+((int(%t4%/3)+1).min.30)*(%t4%.le.42)+
+((int(%t4%/7)+9).min.30)*(%t4%.gt.42)
+~+;;;n;2;q
 ~#
 ~/set each register equal to the total number of trucks held in this class
 ~/
@@ -255,36 +259,36 @@ mf"index"       /this is the 3d index matrix
 ~/
 ~/allocate these totals to the following impedances classes
 ~/
-~r1*0.108367
-~r2*0.124367
-~r3*0.115367
-~r4*0.100367
-~r5*0.084367
-~r6*0.070367
-~r7*0.059367
-~r8*0.047367
-~r9*0.040367
-~r10*0.034367
-~r11*0.028367
-~r12*0.023367
-~r13*0.020367
-~r14*0.017367
-~r15*0.015367
-~r16*0.013367
-~r17*0.012367
-~r18*0.010367
-~r19*0.009367
-~r20*0.008367
-~r21*0.008367
-~r22*0.005367
-~r23*0.005367
-~r24*0.005367
-~r25*0.005367
-~r26*0.005367
-~r27*0.005367
-~r28*0.005367
-~r29*0.005367
-~r30*0.005367
+~r1*0.259768
+~r2*0.146156
+~r3*0.089304
+~r4*0.059545
+~r5*0.048923
+~r6*0.040260
+~r7*0.035209
+~r8*0.027762
+~r9*0.023621
+~r10*0.020121
+~r11*0.021569
+~r12*0.020121
+~r13*0.019879
+~r14*0.017112
+~r15*0.033398
+~r16*0.027047
+~r17*0.023370
+~r18*0.016416
+~r19*0.013593
+~r20*0.016945
+~r21*0.008700
+~r22*0.008366
+~r23*0.005376
+~r24*0.003538
+~r25*0.003138
+~r26*0.002396
+~r27*0.002210
+~r28*0.001458
+~r29*0.001458
+~r30*0.003240
 ~/
 ~# -- Set balancing parameters
 ~+;3.22;3;30;0.001;n
@@ -310,7 +314,10 @@ mf"index"       /this is the 3d index matrix
 ~/
 ~+;3.12;2;mf"index";y;q
 ~# ## -- collapse impedance matrix to 30 discrete values - mode m
-~+;3.21;1;y;mf"index";y;index for 3rd dimension;0;(int(%t5%/2)+1).min.30;;;n;2;q
+~+;3.21;1;y;mf"index";y;index for 3rd dimension;0
+((int(%t5%/3)+1).min.30)*(%t5%.le.42)+
+((int(%t5%/7)+9).min.30)*(%t5%.gt.42)
+~+;;;n;2;q
 ~#
 ~/set each register equal to the total number of trucks held in this class
 ~/
@@ -321,36 +328,36 @@ mf"index"       /this is the 3d index matrix
 ~/
 ~/allocate these totals to the following impedances classes
 ~/
-~r1*0.098133
-~r2*0.113133
-~r3*0.107133
-~r4*0.096133
-~r5*0.084133
-~r6*0.071133
-~r7*0.061133
-~r8*0.050133
-~r9*0.043133
-~r10*0.036133
-~r11*0.030133
-~r12*0.026133
-~r13*0.022133
-~r14*0.019133
-~r15*0.016133
-~r16*0.014133
-~r17*0.013133
-~r18*0.011133
-~r19*0.010133
-~r20*0.009133
-~r21*0.008133
-~r22*0.008133
-~r23*0.008133
-~r24*0.007133
-~r25*0.007133
-~r26*0.007133
-~r27*0.007133
-~r28*0.005133
-~r29*0.005133
-~r30*0.005133
+~r1*0.259768
+~r2*0.146156
+~r3*0.089304
+~r4*0.059545
+~r5*0.048923
+~r6*0.040260
+~r7*0.035209
+~r8*0.027762
+~r9*0.023621
+~r10*0.020121
+~r11*0.021569
+~r12*0.020121
+~r13*0.019879
+~r14*0.017112
+~r15*0.033398
+~r16*0.027047
+~r17*0.023370
+~r18*0.016416
+~r19*0.013593
+~r20*0.016945
+~r21*0.008700
+~r22*0.008366
+~r23*0.005376
+~r24*0.003538
+~r25*0.003138
+~r26*0.002396
+~r27*0.002210
+~r28*0.001458
+~r29*0.001458
+~r30*0.003240
 ~/
 ~# -- Set balancing parameters
 ~+;3.22;3;30;0.0015;n
@@ -375,14 +382,14 @@ mf"index"       /this is the 3d index matrix
 ~/***************
 ~/
 ~+;3.12;2;mf"index";y;q
-~# ## -- collapse impedance matrix to 30 discrete values - mode h: now bins based on ATRI data (05-09-2017)
-~# ##   --- use 2-mile bins for trips under 18 miles
-~# ##   --- use 3-mile bins for trips 18 miles up to 30 miles
-~# ##   --- use 5-mile bins for trips of 30 miles or more
+~# ## -- collapse impedance matrix to 30 discrete values - mode h bins based on ATRI data (07-15-2022)
+~# ##   --- use 4-mile bins for trips under 21 miles
+~# ##   --- use 5-mile bins for trips 21 miles up to 60 miles
+~# ##   --- use 6-mile bins for trips of 60 miles or more
 ~+;3.21;1;y;mf"index";y;index for 3rd dimension;0
-(%t6%.lt.18)*((int(%t6%/2)+1).min.30) +
-(%t6%.ge.18 .and. %t6%.lt.30)*((int(%t6%/3)+4).min.30) +
-(%t6%.ge.30)*((int(%t6%/5)+8).min.30)
+(%t6%.lt.21)*((int(%t6%/4)+1).min.30) +
+(%t6%.ge.21 .and. %t6%.lt.60)*((int(%t6%/5)+2).min.30) +
+(%t6%.ge.60)*((int(%t6%/6)+4).min.30)
 
 ~+;;n;2;q
 ~#
@@ -395,36 +402,36 @@ mf"index"       /this is the 3d index matrix
 ~/
 ~/allocate these totals to the following impedances classes - ATRI data analysis
 ~/
-~r1*0.125
-~r2*0.096
-~r3*0.088
-~r4*0.052
-~r5*0.031
-~r6*0.031
-~r7*0.026
-~r8*0.023
-~r9*0.021
-~r10*0.038
-~r11*0.039
-~r12*0.030
-~r13*0.035
-~r14*0.045
-~r15*0.037
-~r16*0.033
-~r17*0.033
-~r18*0.027
-~r19*0.021
-~r20*0.020
-~r21*0.020
-~r22*0.018
-~r23*0.016
-~r24*0.017
-~r25*0.012
-~r26*0.010
-~r27*0.010
-~r28*0.010
-~r29*0.006
-~r30*0.030
+~r1*0.212225
+~r2*0.133344
+~r3*0.064493
+~r4*0.050090
+~r5*0.044123
+~r6*0.051613
+~r7*0.054098
+~r8*0.047683
+~r9*0.037776
+~r10*0.034973
+~r11*0.033847
+~r12*0.028403
+~r13*0.023242
+~r14*0.025412
+~r15*0.021295
+~r16*0.022380
+~r17*0.019727
+~r18*0.017539
+~r19*0.014589
+~r20*0.012537
+~r21*0.011899
+~r22*0.006784
+~r23*0.005649
+~r24*0.005466
+~r25*0.004368
+~r26*0.004322
+~r27*0.003469
+~r28*0.003574
+~r29*0.002667
+~r30*0.002412
 ~/
 ~# -- Set balancing parameters
 ~+;3.22;3;30;0.001;n

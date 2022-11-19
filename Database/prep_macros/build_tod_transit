@@ -1,84 +1,58 @@
 
 ~# BUILD_TOD_TRANSIT
-~#   Craig Heither, last revised 06-04-2015
+~#   Craig Heither, 07-13-2022
 ~#
 ~#  ************************************************************************************************
-~#    Macro used to create AM Peak transit network for skimming and time-of-day
-~#    transit networks
+~#    Macro used to create AM Peak and Midday transit networks for skimming to provide transit 
+~#    information to the destination-mode choice model.
+~#
 ~#    For AM Peak network: segment variable @hwytm is populated with data from file: data\per3.timau.
 ~#
-~#    Must provide 3-digit scenario when submitting and a second argument (0,1,2) to indicate which 
-~#    transit networks wil be built. Codes:
-~#             0 - only the AM Peak skimming network and Midday transit networks will be created.
-~#             1 - only the TOD transit networks will be created.
-~#             2 - all transit networks will be created.
+~#    Must provide 3-digit scenario when submitting
+~#      (e.g. " ~<prep_macros\build_tod_transit 100 ")
 ~#
-~# (e.g. "~<prep_macros\build_tod_transit 100 0")
-~#
-~#
-~#      Revisions:
-~#                09-15-2014 - import linkshape information into transit scenario
-~#                NRF 06-04-2015 - changed scenario 200 year from 2016 to 2015
-~#                CEB 12-18-2015 to bring in midday congested times into midday p5 scenario
-~#                CEB 11-1-2017 no longer brings in congested time from /data because transit skim
-~#                              is now integrated into global iterations.
-~#                NRF 12-12-2017 calls build_transit_error_check.bat just before end of macro
-~#                               to check for batchin errors.
 ~#  ************************************************************************************************
 ~# =================================================================================================
 ~z=%0%
-~+;~?!z=2;~$>error
+~+;~?!z=1;~$>error
 ~z=%2%
 ~/
 ~# ################################
 ~# -- SET PATH TO BATCHIN FILES --
-~t2=M:\proj1\nrf\conformity\c21q2\
+~t2=M:\proj1\nrf\Conformity\c22q2_v2\
 ~t7=transit
 ~# ################################
 ~/ ## - batchin source  = %t2%%t7% - ##
 ~#
 ~#
-~/ -- SET SCENARIO --
-on=25                       /set to 4-digit date
 ~o|39
-~#
 ~/ -- SET VARIABLES --
+on=25                       /set to 4-digit date
 ~x=%1%
-~t1=2015
-~+;~?x=200;~t1=2020
-~+;~?x=300;~t1=2025
-~+;~?x=400;~t1=2030
-~+;~?x=500;~t1=2035
-~+;~?x=600;~t1=2040
+~t1=2019
+~+;~?x=200;~t1=2025
+~+;~?x=300;~t1=2030
+~+;~?x=400;~t1=2035
+~+;~?x=500;~t1=2040
+~+;~?x=600;~t1=2045
 ~+;~?x=700;~t1=2050
-~t4=am
+~t4=am (6am-9am)
 ~t5=transit skim network - %d%
 ~t6=%t1%
 ~#
-~y=0
-~#  -- FLAG FOR TOD NETWORK PROCESSING ONLY: SKIP AM SKIM PROCESSING --
-~+;~?z=1;~$>skipzero   
-~#
+~y=0  / loop counter
+~z=2  / transit TOD period
 ~#
 ~:loop
-~+;~?y=1;~t1=%t6% p1. 8pm-6am
-~+;~?y=2;~t1=%t6% p2. 6am-7am
-~+;~?y=3;~t1=%t6% p3. 7am-9am
-~+;~?y=4;~t1=%t6% p4. 9am-10am
-~+;~?y=5;~t1=%t6% p5. 10am-2pm
-~+;~?y=6;~t1=%t6% p6. 2pm-4pm
-~+;~?y=7;~t1=%t6% p7. 4pm-6pm
-~+;~?y=8;~t1=%t6% p8. 6pm-8pm
-~?y>0
-~+;~t5=transit network;~t4=%y%
+~+;~?y=5;~t4=midday (9am-4pm)
 ~#
-~/ -- BUILD TRANSIT NETWORK %t4% --
+~/ -- BUILD TRANSIT NETWORK %z% --
 ~+;~x=%1%;~x+%y%
 s=%x%
 ~+;~?e;~$>new
 ~+;1.22; 2; %x%; y; q
 ~:new
-~+;1.22; 1; %x%; %t1% %t5%; y; q
+~+;1.22; 1; %x%; %t1% %t4% %t5%; y; q
 ~#
 ~/ -- SET REPORT --
 ~t3=report\build_%s%transit.rpt
@@ -90,16 +64,16 @@ batchin=%t2%%t7%\tranmodes.txt
 ~+;2.01; 1; 2; q
 batchin=%t2%%t7%\transveh.txt
 ~+;2.02; 1; 2; q
-batchin=%t2%%t7%\%1%\bus.network_%t4%
+batchin=%t2%%t7%\%1%\bus.network_%z%
 ~+;2.11; 2;
-batchin=%t2%%t7%\%1%\rail.network_%t4%
+batchin=%t2%%t7%\%1%\rail.network_%z%
 ~+;2.11; 2;
-batchin=%t2%%t7%\%1%\access.network_%t4%
+batchin=%t2%%t7%\%1%\access.network_%z%
 ~+;2.11; 2;
 ~/ -- Transit Lines --
-batchin=%t2%%t7%\%1%\rail.itinerary_%t4%
+batchin=%t2%%t7%\%1%\rail.itinerary_%z%
 ~+;2.21; 2
-batchin=%t2%%t7%\%1%\bus.itinerary_%t4%
+batchin=%t2%%t7%\%1%\bus.itinerary_%z%
 ~+;2.21; 2
 ~/
 ~/ -- CREATE EXTRA ATTRIBUTES --
@@ -110,8 +84,6 @@ batchin=%t2%%t7%\%1%\bus.itinerary_%t4%
 ~+; 2; 1; @pspac; off-street parking spaces at station; 0
 ~+; 2; 1; @zone; CMAP zone; 0
 ~+; 2; 4; @ltime; line service time in minutes; 0
-~/ -- we still need the extra attribute even though
-~/ -- we don't fill it in this macro anymore cb 11-1-2017
 ~+; 2; 4; @hwytm; per. 3 congested hwy time from %1%; 0
 ~+; 2; 4; @zfare; incremental zone fare; 0; q
 ~/
@@ -122,15 +94,19 @@ batchin=%t2%%t7%\%1%\bus.itinerary_%t4%
 ~+; 1; y; @zfare; n; us2; ; all; all; 4
 ~+; 1; y; us2; 0; ; all; all; 4; q
 ~#
-batchin=%t2%%t7%\%1%\busnode.extatt_%t4%
+batchin=%t2%%t7%\%1%\busnode.extatt_%z%
 2.41
 ~+; 3; @atype; n; all; 1,2; n; y
 ~+; 3; @zone; n; all; 1,3; n; y; q
-batchin=%t2%%t7%\%1%\railnode.extatt_%t4%
+batchin=%t2%%t7%\%1%\railnode.extatt_%z%
 2.41
 ~+; 3; @pspac; n; all; 1,2; n; y
 ~+; 3; @pcost; n; all; 1,3; n; y
 ~+; 3; @zone; n; all; 1,4; n; y; q
+batchin=defaults_base_year\per3_timau.txt
+2.41
+~+; 3; tmpl1; all; 1,2,3; n; y
+~+; 1; y; @hwytm; n; tmpl1; ; all; all; 2; 2; q
 ~/
 ~# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 ~# BATCHIN 17-12-0001 PARK-N-RIDE PARKING FILE BEGINNING C12Q1 scenario 200
@@ -176,13 +152,17 @@ batchin=%t2%%t7%\cermakbrt_parking.csv
 ~" * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 ~>>
 ~#
+~# ## -- Time period duration (minutes) -- ##
+~r1=180
+~+;~?y=5;~r1=420
+~#r1
 2.41
 ~+; 1; y; us2; 0; ; *; *; 4
-~+; 1; y; us2; 120/hdwy*len; ; mod=BE; ; mod=BE; ;2; 2
+~+; 1; y; us2; %r1%/hdwy*len; ; mod=BE; ; mod=BE; ;2; 2
 ~+; 1; y; us2; 0; ; *; *; 4
-~+; 1; y; us2; 120/hdwy*len; ; mod=LPQ; ; mod=LPQ; ;2; 2
+~+; 1; y; us2; %r1%/hdwy*len; ; mod=LPQ; ; mod=LPQ; ;2; 2
 ~+; 1; y; us2; 0; ; *; *; 4
-~+; 1; y; us2; 120/hdwy*len; ; mod=C; ; mod=C; ;2; 2
+~+; 1; y; us2; %r1%/hdwy*len; ; mod=C; ; mod=C; ;2; 2
 ~+; 1; y; us2; 0; ; *; *; 4
 ~+; 1; y; us2; len; ; mod=M; ; mod=M; ;2; 2
 ~+; 1; y; us2; 0; ; *; *; 4; q
@@ -194,11 +174,11 @@ batchin=%t2%%t7%\cermakbrt_parking.csv
 ~>>
 ~#
 2.41
-~+; 1; y; us2; (120/hdwy*@ltime)/60; ; mod=BE; ; mod=BE; ;2; 2
+~+; 1; y; us2; (%r1%/hdwy*@ltime)/60; ; mod=BE; ; mod=BE; ;2; 2
 ~+; 1; y; us2; 0; ; *; *; 4
-~+; 1; y; us2; (120/hdwy*@ltime)/60; ; mod=LPQ; ; mod=LPQ; ;2; 2
+~+; 1; y; us2; (%r1%/hdwy*@ltime)/60; ; mod=LPQ; ; mod=LPQ; ;2; 2
 ~+; 1; y; us2; 0; ; *; *; 4
-~+; 1; y; us2; (120/hdwy*@ltime)/60; ; mod=C; ; mod=C; ;2; 2
+~+; 1; y; us2; (%r1%/hdwy*@ltime)/60; ; mod=C; ; mod=C; ;2; 2
 ~+; 1; y; us2; 0; ; *; *; 4
 ~+; 1; y; us2; @ltime/60; ; mod=M; ; mod=M; ;2; 2
 ~+; 1; y; us2; 0; ; *; *; 4; q
@@ -219,21 +199,14 @@ batchin=%t2%%t7%\cermakbrt_parking.csv
 ~+;2.14; 3; 2; q
 ~+;2.41; 1; n; lan*len; ; mod=BEPLQb; ; 2; 2; q
 ~/
-~# -- END AM PEAK NETWORK PROCESSING --
-~# =============================================================================================
-~#
 ~#
 ~# ## -- Import Shape Points -- ##
 ~t8=report\scen_%s%_transit_linkshape.rpt
 ~!if exist %t8% (del %t8%)
-~!emmelinkshp -i %t2%linkshape\linkshape_%1%.in >> %t8%
+~!emmelinkshp -i %t2%linkshape\linkshape_%1%.in >> %t8% 
 ~#
-~#
-~:skipzero
-~y+1
-~#  -- FLAG FOR AM SKIM NETWORK/MIDDAY NETWORK PROCESSING ONLY --
-~+;~?z=0;~y+4     
-~#  
+~y+5
+~z+1 
 ~+;~?y<9;~$loop
 ~/******************************************************************                   
 ~#
@@ -241,7 +214,7 @@ batchin=%t2%%t7%\cermakbrt_parking.csv
 ~/
 ~:error
 ~/ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-~/   SUBMIT WITH TRANSIT SCENARIO AND PROCESSING CODE!!!!!!
+~/        SUBMIT WITH 3-DIGIT TRANSIT SCENARIO !!!!!!
 ~/ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ~#
 ~:end
@@ -249,6 +222,7 @@ batchin=%t2%%t7%\cermakbrt_parking.csv
 batchin=
 reports=
 s=
+~# ## -- Run check to identify transit network errors -- ##
 ~!prep_macros\build_transit_error_check.bat %1%
 ~/ end of macro
 

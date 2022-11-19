@@ -1,0 +1,82 @@
+~# PRELOAD_CONGESTED_TIMES.MAC
+~#   Craig Heither, 09-11-2021
+~#
+~#  ************************************************************************************************
+~#    Macro loads congested skims from a comparable model run to provide realistic times for the 
+~#    destination-mode choice during global Iteration 0.
+~#    
+~#    AM Peak transit network: segment variable @hwytm is populated with data from per3_timau.txt.
+~#    Midday transit network: segment variable @hwytm is populated with data from per5_timau.txt.
+~#
+~#    Must provide 3-digit scenario when submitting: 
+~# 		(e.g. "~<prep_macros\preload_congested_times.mac 200")
+~#
+~#  ************************************************************************************************
+~# =================================================================================================
+~x=%0%
+~?!x=1
+~$>error
+~/
+~o|39
+~#
+~t2=report\iter_0\preload_times.rpt
+~!if exist %t2% (del %t2%)
+reports=%t2%
+~# ==============================
+~# ## -- Update @hwytm -- ##
+~# ==============================
+~+;s=%1%;~?e;~$>bad_scen
+~/ Transit scenario argument is valid.
+~#
+~t1=defaults_base_year\per3_timau.txt
+batchin=%t1%
+2.41
+~+; 3; tmpl1; all; 1,2,3; n; y
+~+; 1; y; @hwytm; n; tmpl1; ; all; all; 2; 2; q
+~#
+~+;~z=%1%;~z+5
+~+;s=%z%;~?e;~$>bad_scen
+~/ Transit scenario argument is valid.
+~#
+~t1=defaults_base_year\per5_timau.txt
+batchin=%t1%
+2.41
+~+; 3; tmpl1; all; 1,2,3; n; y
+~+; 1; y; @hwytm; n; tmpl1; ; all; all; 2; 2; q
+~#
+~# ==============================
+~/ ## -- Import matrices -- ##
+~# ==============================
+~x=1
+~#
+~:loop
+~+;~?x=1;~y=44
+~+;~?x=2;~y=45
+~+;~?x=3;~y=46
+~+;~?x=4;~y=47
+~+;~?x=5;~y=76
+~+;~?x=6;~y=77
+batchin=defaults_base_year\preload_mf%y%.txt
+~+;3.11;2
+~x+1
+~+;~?x<7;~$loop
+~#
+~#
+~:error
+~/ SUBMIT WITH TRANSIT SCENARIO!!!!!!!
+~$>end
+~#
+~:bad_scen
+~/
+~/ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~/   3-DIGIT SCENARIO DOES NOT MATCH EMMEBANK DATA!!!!!!!
+~/ ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+~$>end
+~#
+~:end
+~o=6
+~/
+batchin=
+reports=
+~/ Done!
+q

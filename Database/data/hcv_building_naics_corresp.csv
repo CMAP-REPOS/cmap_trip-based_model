@@ -1,0 +1,74 @@
+building_type_id,name,NAICS
+1100,Single-family,0
+1110,Single-family detached,0
+1120,Single-family attached (townhomes / duplexes),0
+1130,Mobile homes,0
+1200,Multifamily (condos / apartments),0
+1210,Condominium,0
+1220,Apartment,0
+2100,Mixed use (residential + nonresidential),71
+2110,Mixed use - residential + retail,44
+2120,Mixed use - residential + office,51
+2120,Mixed use - residential + office,52
+2120,Mixed use - residential + office,53
+2120,Mixed use - residential + office,54
+2120,Mixed use - residential + office,55
+2130,Mixed use - residential + services,81
+3000,Lodging,72
+3100,Hotel,72
+4000,Storage,81
+4100,Office (CBD),51
+4100,Office (CBD),52
+4100,Office (CBD),53
+4100,Office (CBD),54
+4100,Office (CBD),55
+4100,Office,51
+4100,Office,52
+4100,Office,53
+4100,Office,54
+4100,Office,55
+4200,Retail / commercial,44
+4200,Retail / commercial,42
+4210,Grocery Store,44
+4220,Eating and Drinking,72
+4230,Retail - Neighborhood,44
+4240,Retail - Strip Shopping,44
+4250,Retail - Shopping Mall,44
+4260,Big Box Retail,44
+4270,Financial Services,52
+4280,Auto Sales / Parts / Repair,81
+4280,Auto Sales / Parts / Repair,44
+5000,Industrial,31
+5100,Light Industrial / Flex,31
+5200,Manufacturing,31
+5300,Warehousing / Distribution,48
+6100,School / educational,61
+6110,Elementary / Middle School,61
+6140,High School,61
+6150,College / University,61
+6200,Medical,62
+6210,Medical Office Building,62
+6230,Hospital,62
+6300,Parking structures,81
+6400,TCU (Transport Communication Utilities),22
+6400,TCU (Transport Communication Utilities),48
+6500,Cultural / civic / recreation,71
+6510,Stadium / Arena / Convention Center,71
+6520,Museum,71
+6530,Religious,81
+6540,Other Cultural / Civic / Recreation,71
+6600,Government,92
+6610,Administrative / Judicial,92
+6620,Public Works / Fire / Police,92
+7000,Group quarters,62
+7100,College dormitory,61
+7200,Nursing home,62
+7300,Military housing,92
+8000,Agriculture and mining,11
+8000,Agriculture and mining,21
+8100,Agriculture,11
+8200,Mining,21
+9000,Other misc.,56
+9000,Other misc.,81
+9000,Other misc.,51
+9000,Other misc.,23
