@@ -1,9 +1,9 @@
 0CAFACB7-AD3C-40E4-80DD-675DE315EA7F 07B0F5AD-A2A7-4B4E-B4A9-06EB441586D6 2 2 0
-# Emme project file generated on Wed Aug 3 16:00:25 2022
-# File: M:/proj1/nrf/Conformity/c22q2_v2/c22q2_100/cmap_trip-based_model/c22q2_100.emp
+# Emme project file generated on Tue Nov 8 13:58:11 2022
+# File: M:/proj1/nrf/Conformity/c22q4/c22q4_100/cmap_trip-based_model/c22q4_100.emp
 #
 # String Name: name of preference configuration (tr)
-Name = c22q2_100
+Name = c22q4_100
 # Text Description: description of preference configuration (tr,subst)
 Description = Created by Claire Bozic 4-24-2017
 # String TranslationContext: context for translations of configuration texts (subst)

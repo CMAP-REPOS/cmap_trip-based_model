@@ -36,6 +36,7 @@ rem 09/15/2020 Ferguson: Replaced summary_tg_results.sas with
 rem            summarize_tg_results.py.
 rem 03/01/2021 Ferguson: Updated paths for removal os sas directory.
 rem 05/14/2021 Heither: Include option to run both modules in one pass.
+rem 11/08/2022 Ferguson: Removed call to activate_python_env.bat. Uses only conda env.
 
 rem ====================================================================
 
@@ -146,7 +147,61 @@ if "%run%" == "" (
 echo ===================================================================
 echo.
 
-call activate_python_env.bat
+rem The `CONDAPATH` environment variable should be set before running this .bat
+rem It points to the place where conda is installed
+rem Alternatively if running in a conda prompt itself then CONDA_PREFIX will be set
+if defined CONDAPATH (
+	goto condafound
+)
+if defined CONDA_PREFIX (
+	set CONDAPATH=%CONDA_PREFIX%
+	echo CONDA_PREFIX is %CONDAPATH%
+	goto condafound
+)
+rem define here all the places where we might find the conda installation
+rem If you try to run the model, you know that conda is installed, and the
+rem model fails with "cannot find conda", then visit a conda prompt,
+rem run `where conda`, and add the resulting path to this list.
+for %%x in (
+    %CONDAPATH%
+    %CONDA_PREFIX%
+    %LOCALAPPDATA%\mambaforge
+    %LOCALAPPDATA%\miniforge
+    %LOCALAPPDATA%\miniconda
+    %LOCALAPPDATA%\miniconda3
+    %USERPROFILE%\Anaconda3
+    %USERPROFILE%\Anaconda
+    %USERPROFILE%\Anaconda2
+    %USERPROFILE%\miniconda3
+    %USERPROFILE%\miniconda
+    %USERPROFILE%\miniconda2
+) do (
+    if exist %%x\Scripts\activate.bat (
+      set CONDAPATH=%%x
+      goto condafound
+    )
+)
+@echo Cannot find conda in any of the usual places.
+@echo CONDAPATH is not defined, first run set CONDAPATH=C:\... to point to the conda installation.
+goto end
+
+:condafound
+@echo CONDAPATH IS %CONDAPATH%
+@echo.
+
+rem Define here the name of the environment to be used
+set ENVNAME=CMAP-TRIP
+
+rem The following command prepares to activate the base environment if it is used.
+if %ENVNAME%==base (set ENVPATH=%CONDAPATH%) else (set ENVPATH=%CONDAPATH%\envs\%ENVNAME%)
+
+rem Activate the conda environment
+rem Using call is required here, see: https://stackoverflow.com/questions/24678144/conda-environments-and-bat-files
+call %CONDAPATH%\Scripts\activate.bat %ENVPATH%
+if %errorlevel% neq 0 (
+  @echo Error in activating conda
+  goto end
+)
 @echo.
 cd tg\scripts
 echo Updating Trip Generation inputs with UrbanSim data ...
@@ -357,6 +412,8 @@ pause
 goto end
 
 :last
+rem Deactivate the environment
+call conda deactivate
 echo End of batch file.
 @ECHO Trip Generation Model Start Time: %dt% %tm%
 @ECHO Trip Generation Model End Time  : %date% %time%

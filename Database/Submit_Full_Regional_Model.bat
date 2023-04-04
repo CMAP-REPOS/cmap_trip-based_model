@@ -23,7 +23,7 @@ rem ----------------
 rem 07/16/2020 Ferguson: Refined the Python search to use a virtual
 rem            environment with custom package requirements by calling
 rem            activate_python_env.bat.
-
+rem 11/08/2022 Ferguson: Removed call to activate_python_env.bat. Uses only conda env.
 rem ====================================================================
 rem Settings
 rem --------
@@ -36,7 +36,7 @@ if exist cache\choice_simulator_trips_out.001 (rmdir /S /Q cache\choice_simulato
 if exist cache\choice_simulator_trips_out.002 (rmdir /S /Q cache\choice_simulator_trips_out.002)
 if exist cache\choice_simulator_trips_out.003 (rmdir /S /Q cache\choice_simulator_trips_out.003)
 if exist cache\choice_simulator_trips_out.004 (rmdir /S /Q cache\choice_simulator_trips_out.004)
-del cache\logs\*.* /Q    
+del cache\logs\*.* /Q   
 del usemacro_* /Q  
 
 @echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -68,7 +68,17 @@ if not "%choice%"=="" (
 	)
 )
 :proceed
-
+rem The `CONDAPATH` environment variable should be set before running this .bat
+rem It points to the place where conda is installed
+rem Alternatively if running in a conda prompt itself then CONDA_PREFIX will be set
+if defined CONDAPATH (
+	goto condafound
+)
+if defined CONDA_PREFIX (
+	set CONDAPATH=%CONDA_PREFIX%
+	echo CONDA_PREFIX is %CONDAPATH%
+	goto condafound
+)
 rem define here all the places where we might find the conda installation
 rem If you try to run the model, you know that conda is installed, and the
 rem model fails with "cannot find conda", then visit a conda prompt,
@@ -92,13 +102,13 @@ for %%x in (
       goto condafound
     )
 )
-@echo cannot find conda in any of the usual places
+@echo Cannot find conda in any of the usual places.
+@echo CONDAPATH is not defined, first run set CONDAPATH=C:\... to point to the conda installation.
 goto end
 
 :condafound
 @echo CONDAPATH IS %CONDAPATH%
 @echo.
-
 
 @echo Model run scenario: %val%
 @echo.
@@ -110,7 +120,19 @@ if not "%ok%"=="Y" (goto end)
 @echo ==================================================================
 @echo.
 
-call activate_python_env.bat
+rem Define here the name of the environment to be used
+set ENVNAME=CMAP-TRIP
+
+rem The following command prepares to activate the base environment if it is used.
+if %ENVNAME%==base (set ENVPATH=%CONDAPATH%) else (set ENVPATH=%CONDAPATH%\envs\%ENVNAME%)
+
+rem Activate the conda environment
+rem Using call is required here, see: https://stackoverflow.com/questions/24678144/conda-environments-and-bat-files
+call %CONDAPATH%\Scripts\activate.bat %ENVPATH%
+if %errorlevel% neq 0 (
+  @echo Error in activating conda
+  goto end
+)
 @echo.
 
 REM ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -195,41 +217,9 @@ call emme -ng 000 -m macros\init_HOVsim_databk.mac %val% >> blog.txt
 @ECHO RUN CMAP MODE-DESTINATION CHOICE MODEL - FULL MODEL ITERATION %counter%
 @ECHO - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-rem The `CONDAPATH` environment variable should be set before running this .bat
-rem It points to the place where conda is installed
-rem Alternatively if running in a conda prompt itself then CONDA_PREFIX will be set
-IF DEFINED CONDAPATH (
-	ECHO CONDAPATH IS %CONDAPATH%
-) ELSE (
-	IF DEFINED CONDA_PREFIX (
-		set CONDAPATH=%CONDA_PREFIX%
-		ECHO CONDA_PREFIX is %CONDAPATH%
-	) ELSE (
-		ECHO CONDAPATH is not defined, first run set CONDAPATH=C:\... to point to the conda installation
-		pause
-		EXIT /b
-	)
-)
-
-rem Define here the name of the environment to be used
-set ENVNAME=CMAP-TRIP
-
-rem The following command prepares to activate the base environment if it is used.
-if %ENVNAME%==base (set ENVPATH=%CONDAPATH%) else (set ENVPATH=%CONDAPATH%\envs\%ENVNAME%)
-
-rem Activate the conda environment
-rem Using call is required here, see: https://stackoverflow.com/questions/24678144/conda-environments-and-bat-files
-call %CONDAPATH%\Scripts\activate.bat %ENVPATH%
-if %errorlevel% neq 0 (
-  @echo Error in activating conda
-  goto end
-)
-
 call cmap_modedest . --njobs %jobs% --max_zone_chunk %zones%
 if %ERRORLEVEL% NEQ 0 (goto issue)
 
-rem Deactivate the environment
-call conda deactivate
 del cache\choice_simulator_trips_out\choice_simulator_util_*.pq /Q
 @ECHO    -- End Mode-Destination Choice Procedures: %date% %time% >> model_run_timestamp.txt
 @ECHO.
@@ -271,7 +261,6 @@ call emme -ng 000 -m macros\Daily.Total.Asmt5I_7c.mac %val% >> blog.txt
 python tg\scripts\urbansim_skims.py
 goto last
 
-
 :filemiss
 @ECHO on
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -304,6 +293,9 @@ goto end
 goto end
 
 :last
+rem Deactivate the environment
+call conda deactivate
+
 @ECHO ====================================================== >> model_run_timestamp.txt
 @ECHO END CMAP REGIONAL MODEL RUN - SCENARIO %val% >> model_run_timestamp.txt
 @ECHO Model Run End Time: %date% %time% >> model_run_timestamp.txt
