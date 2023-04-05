@@ -403,6 +403,44 @@ def model_builder(
 		application_mode=False,
 		explicit_av=True,
 ):
+	"""
+	Construct a larch Model for mode and destination choice.
+
+	This function creates the structure of the model and sets parameter
+	values within that structure if given.  To ensure consistency, the
+	same code is used to contruct models for estimation and for application,
+	although slight changes in structure are applied based on the arguments
+	as documented below.
+
+	Parameters
+	----------
+	purpose : str
+	include_actual_dest : bool
+		The "actual" observed destination is included for estimation, but
+		not in application.
+	n_sampled_dests : int
+		For estimation, only a subset of destinations are sampled using a
+		weighted importance sampling.  In application, this is set to the
+		full number of zones and no sampling weights are applied.
+	parameter_values : Mapping
+		The values to use for model parameters.  Typically not provided here
+		for estimation, but should be provided for application.
+	constraints : bool
+		Whether to include estimation constraints in the model specification.
+		In application, parameters are not changed so constraints are
+		unnecessary.
+	n_threads : int, default -1
+		Number of threads to use for computation.  Set to -1 to use threads for
+		all processessor cores.
+	application_mode
+	explicit_av
+
+	Returns
+	-------
+
+	"""
+
+
 	log.debug(f"model_builder({purpose}, n_sampled_dests={n_sampled_dests})")
 
 	n_modes = len(mode9names)
