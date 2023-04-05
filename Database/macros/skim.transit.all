@@ -567,8 +567,8 @@ q
 reports=
 ~/
 ~/PYTHON PROCESSING TAKES A FEW MINUTES
-~!%3% macros\call\transit_skim_final_matrices1.py
-~!%3% macros\call\transit_skim_final_matrices2.py
-~<macros\call\finish.transit.skims %1% %2%
+~!%3% macros\transit_skim_final_matrices1.py
+~!%3% macros\transit_skim_final_matrices2.py
+~<macros\finish.transit.skims %1% %2%
 ~:skip
 

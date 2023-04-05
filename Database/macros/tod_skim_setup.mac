@@ -2,7 +2,7 @@
 ~/**********************************************************************
 ~/**********************************************************************
 ~#
-~/  Macro skimTOD5I_7c.mac %1% %2%
+~/  Macro TOD_skim_setup.mac %1% %2%
 ~/   Where %1% = three digit alternative ID number.
 ~/         %2% = time period number
 ~#
@@ -51,6 +51,16 @@ q
 ~/**********************************************************************
 ~#
 ~z=%s%
+~# ## -- Delete temp scenario if it exists -- ##
+1.22
+2
+90
+~?e
+~+; ;q;~$>next
+yes
+q
+~:next
+~# ## -- Copy scenario -- ##
 1.22
 3
 %z%
@@ -128,55 +138,10 @@ all
 2
 q
 ~#
-~/**********************************************************************
-~/  Setup and run highway asmt sov on scenario %x%
-~/**********************************************************************
 ~#
 el1=@avtot
-5.25
-2               / assignment setup and execution
-~+;~?q=2;2      / if paths from this assignment are available, option 2=new setup
-1               / option 1 = no additional volumes
-S               / mode used by primary class
-                / blank for no fixed link cost (or weight) for class
-ms97            / demand matrix (veq) for class 1
-
-~+;~?q=3;2      / if existing assignment, option 2=start with existing paths [from previous global iteration] & reset iteration counter
-2000            / maximum memory for paths (MB)
-0.05            / initial path cost equality tolerance
-30              / refinement iteration
-0.01            / refined proportion
-5               / compute gap every __ iterations
-0               / max. iterations
-0.5             / best relative gap in %
-0.005           / relative gap
-0.05            / normalized gap (excess average time)
-2
-~#
-~#**********************************************************************
-~#  Get time skims for time period
-~#**********************************************************************
-6.16      
-1               / Type of result - Time or cost for shortest path
-mf%r1%          / Matrix to hold shortest path for class 1 (SOV)
-no              / Change header information
-2         
-q
-~#
-~/**********************************************************************
-~/  Delete Temporary Scenario %x%
-~/**********************************************************************
-1.22
-2
-%x%
-yes
-q
-~#
-~/**********************************************************************
-~/  Reset scenario.
-~/**********************************************************************
-s=%z%
 ~/**********************************************************************
 reports=
 batchin=
 ~/**********************************************************************
+q

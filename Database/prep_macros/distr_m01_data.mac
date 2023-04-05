@@ -1,5 +1,6 @@
 ~# distr_m01_data.mac
 ~#  Craig Heither, 08/12/2014
+~#  Karly Cazzato, 03/21/2023 - @zone added to node data punch.
 ~# 
 ~#  ****************************************************************************************
 ~#    Macro punches transit network and itinerary data so it can be analyzed to create
@@ -31,7 +32,7 @@ batchout=%t1%\%t2%
 ~/ -- PUNCH NODE DATA --
 batchout=%t1%\%t3%
 2.41
-~+;1;n;@pspac+@pcost+xi+yi; ;5000,99999; ;3;q
+~+;1;n;@pspac+@pcost+xi+yi+@zone; ;5000,99999; ;3;q
 ~#
 ~#
 ~# -- MIDDAY NETWORK --
@@ -50,7 +51,7 @@ batchout=%t1%\%t2%
 ~/ -- PUNCH NODE DATA --
 batchout=%t1%\%t3%
 2.41
-~+;1;n;@pspac+@pcost+xi+yi; ;5000,29999; ;3;q
+~+;1;n;@pspac+@pcost+xi+yi+@zone; ;5000,29999; ;3;q
 ~$>end
 ~#
 ~:error

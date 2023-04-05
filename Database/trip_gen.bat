@@ -19,13 +19,6 @@ echo.
 
 rem Revision history
 rem ----------------
-rem 04/21/2015 Heither: revised TG file cleanup; conditional execution
-rem            of python script (trip generation mode only)
-rem 06/30/2015 Heither: additional error-checking logic to trap NaN
-rem            errors in matrix balancing
-rem 05/25/2016 Heither: modified to call new tg executable
-rem            (TG_PopSyn.exe) & verify existence of POPSYN_HH.CSV
-rem 03/09/2018 Heither: Automatically find Python and SAS executables.
 rem 10/05/2018 Heither: Change Module 2 so truck.class.skim.mac is the
 rem            primary truck distribution macro; use Python version of
 rem            prepare_iom_inputs.
@@ -37,6 +30,7 @@ rem            summarize_tg_results.py.
 rem 03/01/2021 Ferguson: Updated paths for removal os sas directory.
 rem 05/14/2021 Heither: Include option to run both modules in one pass.
 rem 11/08/2022 Ferguson: Removed call to activate_python_env.bat. Uses only conda env.
+rem 02/20/2023 Heither: Read arguments from batch_file.yaml to run model.
 
 rem ====================================================================
 
@@ -45,13 +39,33 @@ rem --------
 rem In case CMD.exe is doing stuff in the wrong directory, this command
 rem changes the directory to where the batch file was called from.
 cd %~dp0
+rem -- Read model run settings from batch_file.yaml --
+for /f "tokens=2 delims==" %%a in (batch_file.yaml) do (set sc=%%a & goto break1)
+:break1
+for /f "eol=# skip=2 tokens=2 delims==" %%b in (batch_file.yaml) do (set wfhFile=%%b & goto break2)
+:break2
+for /f "eol=# skip=3 tokens=2 delims==" %%c in (batch_file.yaml) do (set wfh=%%c & goto break3)
+:break3
+for /f "eol=# skip=4 tokens=2 delims==" %%d in (batch_file.yaml) do (set tc14=%%d & goto break4)
+:break4
+set sc=%sc:~0,3%
+@echo.
+@echo ========================================
+@echo     --- Model Run Settings ---
+@echo  Scenario = %sc%
+@echo  Create WFH validation file = %wfhFile%
+@echo  Usual WFH share = %wfh%
+@echo  WFH 1-4 days share = %tc14%
+@echo ========================================
+@echo.
+rem
 set dt=%date%
 set tm=%time%
 
 echo Run module list:
-echo   1) Run trip generation model ONLY (items 1-3 above).
+echo   1) Run trip generation model ONLY (items 1-4 above).
 echo   2) Import trip generation files into emmebank and run distribute
-echo      macros ONLY (item 4 above).
+echo      macros ONLY (item 5 above).
 echo   3) Run the trip generation model, import files into the emmebank
 echo      and run distribute macros. Use this for UrbanSim data. (All items)
 echo.
@@ -102,24 +116,14 @@ echo.
 echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 pause
 echo.
-set sc=
-set /p sc="[ENTER 3-DIGIT SCENARIO NUMBER (E.G., 400)] "
-echo.
-if not '%sc%'=='' (set sc=%sc:~0,3%)
-if not '%sc%'=='' (goto next)
-goto badscen
 
-:next
-set /a val=%sc%
-if %val% geq 100 (goto one)
-goto badscen
-
-
-rem Run trip generation mode.
+rem -- Run trip generation model. --
 :one
-echo ===================================================================
-echo.
+set /a val=%sc%
+if %val% geq 100 (goto runit)
+goto badscen
 
+:runit
 rem Supply project and run titles.
 set /p project="[ENTER PROJECT TITLE (E.G., c20q2)] "
 echo.
@@ -213,21 +217,16 @@ python urbansim_hcv_allocation.py
 if %ERRORLEVEL% NEQ 0 (goto hcv_issue)
 cd ..\fortran
 
-rem Run the Work-from-Home procedures.
+rem -- Run the Work-from-Home procedures. --
 set savedir="%cd%"
-set validationfiles=N
-set usualwfhpct=0.0510
-set tc14pct=0.1031
-
 cd wfhmodule
 set filedir="%cd%"
 echo.
 echo Starting the work-from-home allocation model ...
-echo  wfh arguments: %filedir% %savedir% %validationfiles% %usualwfhpct% %tc14pct%
-python wfhflag.py %filedir% %savedir% %validationfiles% %usualwfhpct% %tc14pct%
+echo  wfh arguments: %filedir% %savedir% %wfhFile% %wfh% %tc14%
+python wfhflag.py %filedir% %savedir% %wfhFile% %wfh% %tc14%
 if %ERRORLEVEL% NEQ 0 (goto wfh_issue)
 cd ..
-pause
 
 rem Check for necessary input files.
 if not exist HH_IN.TXT (goto socec_data_error)
@@ -301,15 +300,6 @@ echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 pause
 echo.
 
-rem Supply 3-digit scenario to run macros.
-set sc=
-set /p sc="[ENTER 3-DIGIT SCENARIO NUMBER (E.G., 400)] "
-echo.
-if not '%sc%'=='' (set sc=%sc:~0,3%)
-if not '%sc%'=='' (goto next)
-goto badscen
-
-:next
 set /a val=%sc%
 if %val% geq 100 (goto macros)
 goto badscen
@@ -351,6 +341,7 @@ echo Module 2 finished.
 echo.
 goto last
 
+rem ------------------------------------------------------------
 :socec_data_error
 echo !!! MISSING SOCEC FILES !!!
 echo Socioeconomic input files are missing from tg\fortran.
@@ -412,8 +403,10 @@ pause
 goto end
 
 :last
+if "%choice%"=="2" (goto skip_env)
 rem Deactivate the environment
 call conda deactivate
+:skip_env
 echo End of batch file.
 @ECHO Trip Generation Model Start Time: %dt% %tm%
 @ECHO Trip Generation Model End Time  : %date% %time%

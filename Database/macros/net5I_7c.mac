@@ -1,7 +1,7 @@
 ~/
 ~/**********************************************************************
 ~/
-~/  net5I_7c.mac %1% 
+~/  net5I_7c.mac %1%
 ~/     where %1% is the time period number
 ~/
 ~/  This macro performs extra attribute network processing and loads
@@ -341,38 +341,15 @@ vdf=3
 ~/**********************************************************************
 ~/
 ~/  Put initial free flow times into ul1.
-~/    (previous timau for links common to current & previous scenarios,
-~/     uncongested travel time for general links not common to 
-~/     scenarios, zero for additional toll links not in previous scenario.)
 ~/
 ~/**********************************************************************
-~/
-~/ modified by axs
 ~/
 ~/ put free flow times into ul1
 2.41
 ~+;1;y;ul1;@ftime; ;!vdf=6,7; ;2;2
 ~+;1;y;ul1;ul3; ;vdf=7; ;2;2;q
 ~/
-~#
-~# ## -- Heither, 02-06-2013
-~# ## --  This block is skipped because the path-based asmt uses the paths
-~# ## --  from the time period of the previous global iteration as the starting point.
-~$>skip_ul1
-~/ determine if previous period has an assignment
-~+;~x=%s%;~x-1;s=%%%x%%%;~?e;~$>skip;~?!f&1024;~$>skip
-~/
-~/ get back into current scenario
-~+;~x+1;s=%%%x%%%;~x-1
-~/
-~/ put previous period times into ul1
-~/ compound line modified by DBE 28SEP2009 to report when prior time used
-~+;2.41;2;%x%;timau;ul1;*;1;n;ul1; ;*;2;2;q
-~/
-~:skip
-~/ get back into current scenario if not already there
-~+;~x+1;s=%%%x%%%
-~:skip_ul1
 reports=reports
 ~/**********************************************************************
 ~/**********************************************************************
+q

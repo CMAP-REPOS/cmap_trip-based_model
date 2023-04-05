@@ -621,7 +621,7 @@ q
 ~/   Call macro to calculate vht for each time period and summarize in
 ~/    daily accumulation scenario (XXXX9).
 ~/**********************************************************************
-~<macros\call\vht.summary_v3_7c.mac %1%
+~<macros\vht.summary_v3_7c.mac %1%
 ~/
 reports=
 ~/**********************************************************************
