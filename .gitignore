@@ -53,6 +53,8 @@ Database/data/bus.link
 data_tables.db
 Database/defaults_base_year/ALLPURPOSE_M01.TXT
 Database/defaults_base_year/*_DISTR.TXT
+Database/prep_macros/.RData
+Database/prep_macros/*.Rout
 
 # Ignore regional model input files that are scenario-dependent.
 Database/defaults_base_year/per*_timau.txt
