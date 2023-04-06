@@ -56,6 +56,14 @@ if %errorlevel% neq 0 (
     goto end
 )
 
+@echo Updating conda...
+call conda update -n base -c defaults conda
+if %errorlevel% neq 0 (
+    @echo Error in updating conda.
+    goto end
+)
+@echo.
+
 rem Backup existing env and build new env from file.
 if exist %ENVPATH% (
     @echo Saving backup of %ENVNAME%...
@@ -66,14 +74,6 @@ if exist %ENVPATH% (
     )
     @echo.
 )
-
-@echo Updating conda...
-call conda update -n base -c defaults conda
-if %errorlevel% neq 0 (
-    @echo Error in updating conda.
-    goto end
-)
-@echo.
 
 @echo Creating %ENVNAME% from %SPECPATH%...
 call conda env create -f %SPECPATH%
