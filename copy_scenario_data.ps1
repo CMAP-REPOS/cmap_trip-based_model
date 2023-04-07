@@ -25,6 +25,6 @@ foreach($item in $items){
         else{
             throw "Can't use this to delete existing files from network drives."}}
     #Write-Host "Copying $source_db$item to $destination_db..."
-    Copy-Item "$source_db$item" -destination $destination_db -recurse -verbose}
+    Copy-Item "$source_db$item" -destination "$destination_db$item" -recurse -verbose}
 
 Write-Host "Finished."
