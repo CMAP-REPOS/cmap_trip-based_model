@@ -19,7 +19,7 @@ $items = @("emmebank"
 foreach($item in $items){
     if(Test-Path "$destination_db$item"){
         $existing_item = "$destination_db$item"
-        if(($existing_item -like "C:*") -or ($existing_item -like "D:*") -or ($existing_item -like "E:*")){
+        if(($existing_item -like "C:*") -or ($existing_item -like "D:*") -or ($existing_item -like "E:*") -or ($existing_item -like "F:*")){
             Write-Host "`n`n`n`nReplacing $existing_item..."
             Remove-Item $existing_item -recurse -confirm}
         else{
