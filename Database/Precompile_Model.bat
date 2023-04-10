@@ -21,6 +21,7 @@ for %%x in (
     %LOCALAPPDATA%\miniforge
     %LOCALAPPDATA%\miniconda
     %LOCALAPPDATA%\miniconda3
+    %LOCALAPPDATA%\Anaconda3
     %USERPROFILE%\Anaconda3
     %USERPROFILE%\Anaconda
     %USERPROFILE%\Anaconda2
