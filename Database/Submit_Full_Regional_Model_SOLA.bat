@@ -408,6 +408,8 @@ set /A counter=counter-1
 if "%check%" NEQ "None" (%empypath% macros/complete_select_link.py %file1% %val%%counter%9 %val%%counter%0)
 @ECHO End Daily Accumulation Procedures: %date% %time% >> model_run_timestamp.txt
 
+REM Run macro to write link data for MOVES emissions analysis.
+call emme -ng 000 -m post_macros\punch.moves.data.mac %val% >> blog.txt
 
 REM The following two lines delete the trip and utility files from global iterations 0 and 1 to reduce storage space. Comment them out to retain.
 if exist cache\choice_simulator_trips_out.001 (rmdir /S /Q cache\choice_simulator_trips_out.001)
