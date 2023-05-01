@@ -12,7 +12,7 @@
 ## (which is used by complete_toll_skim_matrices.py) and part of the Emme macro punch.moves.data.mac,
 ## which ran the long distance truck trip path analysis.
 ##
-## Heither rev. 03-13-2023
+## Heither rev. 04-14-2023
 ## ==========================================================================================
 import os
 import sys
@@ -46,11 +46,17 @@ calcSpec = {
 calcSpec2 = {
     "type": "NETWORK_CALCULATION",
 	"result": "@mvlen",
-    "expression": "length * (i < 3633 && j < 3633) + 50 * (i > 3632 || j > 3632)",
+    "expression": "length",
 	"aggregation": None,
     "selections": {
         "link": "all"}}
-
+calcSpec2b = {
+    "type": "NETWORK_CALCULATION",
+	"result": "@mvlen",
+    "expression": "50",
+	"aggregation": None,
+    "selections": {
+        "link": "i=3633,3649 or j=3633,3649"}}
 my_emmebank = my_modeller.emmebank
 
 
@@ -1100,6 +1106,7 @@ with _m.logbook_trace("SOLA Traffic Assignment for Time Period %s" % tmPeriod):
     create_extra(extra_attribute_type="LINK", extra_attribute_name="@h200", extra_attribute_description="heavy truck long distance volau (MOVES)", overwrite=True)
     create_extra(extra_attribute_type="LINK", extra_attribute_name="@mvlen", extra_attribute_description="length - truck long distance (MOVES)", overwrite=True)
     report=netcalc(calcSpec2, full_report=False)
+    report=netcalc(calcSpec2b, full_report=False)
 
     if tmPeriod == 3:
         new_att = create_extra(extra_attribute_type="LINK",
