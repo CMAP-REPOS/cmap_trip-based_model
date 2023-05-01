@@ -38,16 +38,27 @@ for /f "eol=# skip=4 tokens=2 delims==" %%d in (batch_file.yaml) do (set tc14=%%
 :break4
 for /f "eol=# skip=6 tokens=2 delims==" %%e in (batch_file.yaml) do (set selLinkFile=%%e & goto break5)
 :break5
+for /f "eol=# skip=10 tokens=2 delims==" %%f in (batch_file.yaml) do (set utilFile=%%f & goto break6)
+:break6
+for /f "eol=# skip=12 tokens=2 delims==" %%g in (batch_file.yaml) do (set UrbansimFile=%%g & goto break7)
+:break7
+
 set val=%val:~0,3%
+set utilFile=%utilFile:~0,1%
+set UrbansimFile=%UrbansimFile:~0,1%
+
 @echo.
-@echo ========================================
+@echo ================================================
 @echo     --- Model Run Settings ---
 @echo  Scenario = %val%
 @echo  Create WFH validation file = %wfhFile%
 @echo  Usual WFH share = %wfh%
 @echo  WFH 1-4 days share = %tc14%
 @echo  Select Link file = %selLinkFile%
-@echo ========================================
+@echo  Save utility files = %utilFile%
+@echo  Create UrbanSim travel time file = %UrbansimFile%
+@echo ================================================
+
 set check=%selLinkFile:~0,4%
 if "%check%" NEQ "None" (
     if not exist Select_Link\%selLinkFile% (goto no_select_link_file)
@@ -401,10 +412,14 @@ if "%check%" NEQ "None" (%empypath% macros/complete_select_link.py %file1% %val%
 REM The following two lines delete the trip and utility files from global iterations 0 and 1 to reduce storage space. Comment them out to retain.
 if exist cache\choice_simulator_trips_out.001 (rmdir /S /Q cache\choice_simulator_trips_out.001)
 if exist cache\choice_simulator_trips_out.002 (rmdir /S /Q cache\choice_simulator_trips_out.002)
+REM Delete utility files if flag is False.
+if "%utilFile%"=="F" (del cache\choice_simulator_trips_out\choice_simulator_util_*.pq /Q)
 
 :USskim
+if "%UrbansimFile%"=="F" (goto skip_UrbanSim)
 @ECHO Creating skim file for UrbanSim ...
 python tg\scripts\urbansim_skims.py
+:skip_UrbanSim
 goto last
 
 REM ======================================================================

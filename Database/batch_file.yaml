@@ -6,4 +6,8 @@ tc14pct=0.1031
 # ---------------- Select link analysis file: provide file name (ex: RSP32.txt [stored in Database\Select_Link\]) or use None
 selectLinkFile=None
 # ---------------- Transit Assignment input: include the file path to transit transaction files in double quotes (spaces are OK), stop at the directory above transit\
-transit_file_path="M:\catslib\modelprod\c22q4"
+transit_file_path=
+# ---------------- Save Destination-Mode Choice model utility files in cache folder? Default is False.
+util_files=False
+# ---------------- Create travel time file for UrbanSim? Default is False.
+UrbanSim_file=False
