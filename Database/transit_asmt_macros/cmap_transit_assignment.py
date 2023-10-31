@@ -263,7 +263,19 @@ class TransitAssignment(_m.Tool()): #, gen_utils.Snapshot
                 "type": "NETWORK_CALCULATION"
             }
             netcalc(easbp)
-              
+            # Pace boardings over-assigned; Pace travel time sometimes incorrectly coded to be faster than CTA
+            # adding an extra 35 minutes of boarding penalty to Pace 
+            bpPace={
+                "result": "@easbp",
+                "expression": "@easbp+35",
+                "aggregation": None,
+                "selections": {
+                "transit_line": "mode=PLQ"
+                },
+                "type": "NETWORK_CALCULATION"
+            }
+            netcalc(bpPace)
+
             create_extra('NODE', '@wconf', 'Wait convenience final factor', overwrite=True, scenario=scenario)
             wconf_bus={
                "result": "@wconf",
@@ -281,8 +293,17 @@ class TransitAssignment(_m.Tool()): #, gen_utils.Snapshot
                 },                
                 "type": "NETWORK_CALCULATION"
             }            
+            wconf_brown={
+                "result": "@wconf",
+                "expression": "1.0",
+                "selections": {
+                    "node": "lin=cbr___"
+                },                
+                "type": "NETWORK_CALCULATION"
+            }            
             netcalc(wconf_bus)
             netcalc(wconf_rail)
+            netcalc(wconf_brown)
             if summary:
                 create_matrix = _m.Modeller().tool("inro.emme.data.matrix.create_matrix")           
                 temp_matrix = create_matrix(matrix_id = "ms1", matrix_name = "TEMP_SUM", matrix_description = "temp mf sum", scenario = self.scenario, default_value = 0, overwrite = True)
@@ -903,7 +924,7 @@ class TransitAssignment(_m.Tool()): #, gen_utils.Snapshot
                     "headway_fraction": 1,
                     "effective_headways": "@hdwef",
                     # Increase Spread Factor (Transit Options)
-                    "spread_factor": 10,
+                    "spread_factor": 1,
                     "perception_factor": "@wconf"
                 }
             },
@@ -1287,7 +1308,7 @@ class TransitAssignment(_m.Tool()): #, gen_utils.Snapshot
             assign_transit = modeller.tool(
                 "inro.emme.transit_assignment.extended_transit_assignment")
             add_volumes = False
-            for amode, parameters in skim_parameters.iteritems():
+            for amode, parameters in skim_parameters.items():
                 for uc in self.user_classes:
                     spec = _copy(base_spec)
                     self.define_aux_perception(amode)

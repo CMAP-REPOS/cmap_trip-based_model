@@ -4,19 +4,10 @@ REM  Heither, rev. 03-18-2023
 
 cd %~dp0
 cd ..
-@echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@echo.
-@echo   BEFORE CONTINUING:
-@echo.
-@echo   - Please connect to an Emme license.
-@echo.
-@echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo.
 rem -- Read model run settings from batch_file.yaml --
 for /f "tokens=2 delims==" %%a in (batch_file.yaml) do (set val=%%a & goto break1)
 :break1
-for /f "eol=# skip=9 tokens=2 delims==" %%b in (batch_file.yaml) do (set transitFilePath=%%b & goto break2)
-:break2
 set val=%val:~0,3%
 @echo.
 @echo ========================================
@@ -51,10 +42,10 @@ call :CheckEmpty1 %infile%
 if exist %infile% (del %infile% /Q)
 
 REM -- Submit with name of .emp file 
-%empypath% cmap_transit_assignment_runner.py %file1% 1
+%empypath% cmap_transit_assignment_runner.py %file1% 1 %val%
 REM -- Summarize transit boardings
 cd ..
-set /a val=%val% + 21
+set /a val=%val%+21
 call emme -ng 000 -m transit_asmt_macros/summarize_transit_boardings.mac %val%
 echo.
 REM -- Delete transit assignment matrices
@@ -96,6 +87,3 @@ goto end
 :end
 pause
 exit
-
-
-

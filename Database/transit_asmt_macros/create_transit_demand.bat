@@ -1,6 +1,6 @@
 @echo off
 REM Prepare data for TOD transit assignments.
-REM  Heither, rev. 12-16-2022
+REM  Heither, rev. 08-16-2023
 
 @echo create_transit_demand.bat
 @echo  Batch file does the following:
@@ -13,27 +13,30 @@ REM  Heither, rev. 12-16-2022
 
 cd %~dp0
 cd ..
-@echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@echo.
-@echo   BEFORE CONTINUING:
-@echo.
-@echo   - Please connect to an Emme license.
-@echo   - Ensure the path to the transit network transaction files
-@echo      is correct.
-@echo.
-@echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @echo.
 rem -- Read model run settings from batch_file.yaml --
 for /f "tokens=2 delims==" %%a in (batch_file.yaml) do (set val=%%a & goto break1)
 :break1
-for /f "eol=# skip=8 tokens=2 delims==" %%b in (batch_file.yaml) do (set transitFilePath=%%b & goto break2)
+for /f "eol=# skip=8 tokens=2 delims==" %%f in (batch_file.yaml) do (set transitAsmt=%%f & goto break2)
 :break2
+for /f "eol=# skip=11 tokens=2 delims==" %%b in (batch_file.yaml) do (set transitFilePath=%%b & goto break3)
+:break3
+for /f "eol=# skip=13 tokens=2 delims==" %%h in (batch_file.yaml) do (set selLineFile=%%h & goto break4)
+:break4
+for /f "eol=# skip=19 tokens=2 delims==" %%k in (batch_file.yaml) do (set RSPrun=%%k & goto break5)
+:break5
+
 set val=%val:~0,3%
+set transitAsmt=%transitAsmt:~0,1%
+set RSPrun=%RSPrun:~0,1%
 @echo.
 @echo ==============================================================
 @echo     --- Model Run Settings ---
 @echo  Scenario = %val%
-@echo  Transit transaction file path = %transitFilePath%
+@echo  Run transit assignment = %transitAsmt%
+if "%transitAsmt%" EQU "T" (@echo  Location of transit network files = %transitFilePath%)
+if "%transitAsmt%" EQU "T" (@echo  Transit assignment select line file = %selLineFile%)
+@echo  RSP evaluation run = %RSPrun%
 @echo ==============================================================
 pause
 
@@ -72,7 +75,7 @@ REM -- Build TOD transit networks
 call emme -ng 000 -m transit_asmt_macros\setup_transit_asmt_1_build_transit_asmt_networks.mac %val% %transitFilePath%
 if %ERRORLEVEL% NEQ 0 (goto issue)
 REM -- Create matrices to hold TOD transit demand
-%empypath% transit_asmt_macros/setup_transit_asmt_2_initialize_matrices.py %file1%
+%empypath% transit_asmt_macros/setup_transit_asmt_2_initialize_matrices.py %file1% %RSPrun%
 if %ERRORLEVEL% NEQ 0 (goto issue)
 
 rem ###############################################################################
@@ -136,7 +139,7 @@ if %errorlevel% neq 0 (
 rem ###############################################################################
 
 REM -- Fill matrices with demand
-python transit_asmt_macros\setup_transit_asmt_3_TOD_transit_demand.py
+python transit_asmt_macros\setup_transit_asmt_3_TOD_transit_demand.py %RSPrun%
 if %ERRORLEVEL% NEQ 0 (goto issue)
 @echo.
 REM -- Clean up, if needed

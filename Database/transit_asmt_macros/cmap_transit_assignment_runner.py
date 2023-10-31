@@ -11,6 +11,7 @@ import traceback
 
 empFl = sys.argv[1]
 msa_iteration = int(sys.argv[2])
+scenValue = int(sys.argv[3])
 directory = os.getcwd().replace('\\Database\\transit_asmt_macros','')
 empFile = os.path.join(directory,empFl)
 emmme_out = os.getcwd().replace('transit_asmt_macros','report')
@@ -25,11 +26,10 @@ databank = desktop.data_explorer().active_database().core_emmebank
 copy_att = _m.Modeller().tool("inro.emme.data.network.copy_attribute")
 netcalc = _m.Modeller().tool("inro.emme.network_calculation.network_calculator")
 
-## NOTE: Update scenNum for future year scenarios
-scens = [{"periodNum": 1, "scenNum": 121, "period": "NT"},
-   {"periodNum": 3, "scenNum": 123, "period": "AM"},
-   {"periodNum": 5, "scenNum": 125, "period": "MD"},
-   {"periodNum": 7, "scenNum": 127, "period": "PM"}
+scens = [{"periodNum": 1, "scenNum": scenValue+21, "period": "NT"},
+   {"periodNum": 3, "scenNum": scenValue+23, "period": "AM"},
+   {"periodNum": 5, "scenNum": scenValue+25, "period": "MD"},
+   {"periodNum": 7, "scenNum": scenValue+27, "period": "PM"}
 ]
 
 data_explorer = desktop.data_explorer()
@@ -70,8 +70,16 @@ for s in scens:
     }    
     netcalc([spec1,spec2])
 
+        ## -- Delete mf1 and mf2 if they exist to prevent an error -- ##
     try:
-        cmap_transit_assignment.TransitAssignment().__call__(str(s['periodNum']), matrix_count, current_scenario, ccr_periods = "ALL", num_processors = 60)  ## Heither test this
+        for i in range(1,3):
+            m = "mf%s" % i
+            delete_matrix(matrix=my_emmebank.matrix(m))
+    except:
+        print("MF1 and MF2 did not need to be removed")
+
+    try:
+        cmap_transit_assignment.TransitAssignment().__call__(str(s['periodNum']), matrix_count, current_scenario, ccr_periods = "AM,PM", num_processors = 60)
         if msa_iteration == 4:
             cmap_network.CMapNetwork().__call__(databank.scenario(s['scenNum']), runPrep = False, export = True, 
                                                 output_directory = "%s\\scen%s" % (EMME_OUTPUT, s['scenNum']))          

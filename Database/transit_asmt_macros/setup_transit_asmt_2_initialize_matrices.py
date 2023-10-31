@@ -2,7 +2,7 @@
 ##
 ## Initialize matrices to hold time-of-day transit demand.
 ##
-## Heither 11-22-2022
+## Heither rev. 08-19-2023
 ## ==========================================================================================
 import os
 import sys
@@ -10,6 +10,7 @@ import inro.modeller as _m
 import inro.emme.desktop.app as _app
 
 empFl = sys.argv[1]
+RspFlag = sys.argv[2]
 directory = os.getcwd().replace('\\Database','')
 empFile = os.path.join(directory,empFl)
 my_app = _app.start_dedicated(project=empFile, visible=False, user_initials="CMAP")
@@ -88,4 +89,19 @@ new_mf512 = matrix_init(matrix_id="mf512",
                         matrix_description="Period PM transit demand (O-D format) - VOT 3",
 						overwrite=True,
                         default_value=0) 
-                        
+
+## -- Create matrices to hold HBW transit demand for RSP evaluations -- ##
+if RspFlag == "T":
+    mtx1 = ("mf513", "mf514", "mf515", "mf516", "mf517", "mf518", "mf519", "mf520", "mf521", "mf522", "mf523", "mf524") 
+    vot = ("VOT1", "VOT2", "VOT3", "VOT1", "VOT2", "VOT3", "VOT1", "VOT2", "VOT3", "VOT1", "VOT2", "VOT3")
+    tod = ("NT", "NT", "NT", "AM", "AM", "AM", "MD", "MD", "MD", "PM", "PM", "PM")
+    x = 0
+    for matrix in mtx1:
+        new_mtx = matrix_init(matrix_id="%s" %(mtx1[x]),
+                              matrix_name="TRN_HBW_%s_%s"%(vot[x],tod[x]),
+                              matrix_description="Period %s HBW transit demand (O-D format) %s"%(tod[x],vot[x]),
+                              overwrite=True, default_value=0)
+                              
+        x += 1
+    
+    print("RSP HBW transit demand matrices created")
