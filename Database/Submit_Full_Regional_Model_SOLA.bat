@@ -25,7 +25,8 @@ rem            environment with custom package requirements by calling
 rem            activate_python_env.bat.
 rem 02/25/2023 Heither: Read parameters from batch_file.yaml
 rem 03/23/2023 Cazzato: Run create DISTR/M01 files 
-rem ====================================================================
+rem 10/05/2023 Heither: Updated batch_file.yaml parameters, transit assignment
+rem =========================================================================================
 cd %~dp0
 rem -- Read model run settings from batch_file.yaml --
 for /f "tokens=2 delims==" %%a in (batch_file.yaml) do (set val=%%a & goto break1)
@@ -36,60 +37,105 @@ for /f "eol=# skip=3 tokens=2 delims==" %%c in (batch_file.yaml) do (set wfh=%%c
 :break3
 for /f "eol=# skip=4 tokens=2 delims==" %%d in (batch_file.yaml) do (set tc14=%%d & goto break4)
 :break4
-for /f "eol=# skip=6 tokens=2 delims==" %%e in (batch_file.yaml) do (set selLinkFile=%%e & goto break5)
+for /f "eol=# skip=7 tokens=2 delims==" %%e in (batch_file.yaml) do (set selLinkFile=%%e & goto break5)
 :break5
-for /f "eol=# skip=10 tokens=2 delims==" %%f in (batch_file.yaml) do (set utilFile=%%f & goto break6)
+for /f "eol=# skip=9 tokens=2 delims==" %%f in (batch_file.yaml) do (set transitAsmt=%%f & goto break6)
 :break6
-for /f "eol=# skip=12 tokens=2 delims==" %%g in (batch_file.yaml) do (set UrbansimFile=%%g & goto break7)
+for /f "eol=# skip=12 tokens=2 delims==" %%g in (batch_file.yaml) do (set transitFilePath=%%g & goto break7)
 :break7
+for /f "eol=# skip=14 tokens=2 delims==" %%h in (batch_file.yaml) do (set selLineFile=%%h & goto break8)
+:break8
+for /f "eol=# skip=16 tokens=2 delims==" %%i in (batch_file.yaml) do (set utilFile=%%i & goto break9)
+:break9
+for /f "eol=# skip=18 tokens=2 delims==" %%j in (batch_file.yaml) do (set UrbansimFile=%%j & goto break10)
+:break10
+for /f "eol=# skip=20 tokens=2 delims==" %%k in (batch_file.yaml) do (set RSPrun=%%k & goto break11)
+:break11
 
 set val=%val:~0,3%
+set transitAsmt=%transitAsmt:~0,1%
 set utilFile=%utilFile:~0,1%
 set UrbansimFile=%UrbansimFile:~0,1%
+set RSPrun=%RSPrun:~0,1%
+REM -- Count number of select link files --
+set tempCnt=0
+for %%a in (%selLinkFile:None=%) do set /a tempCnt+=1
+set a/ tempCnt=5-tempCnt
+@echo %tempCnt% select link files submitted.
+
+REM -- Get path to INRO Python installation, redirect errors to nul in case file not found, read first path from file --
+set infile=path.txt
+if exist %infile% (del %infile% /Q)
+dir "C:\Program Files\INRO\*python.exe" /s /b >> %infile% 2>nul
+set /p empypath=<%infile%
+set paren="
+set empypath=%paren%%empypath%%paren%
+echo Emme pypath = %empypath%
+call :CheckEmpty1 %infile%
+:pythonpass
+if exist %infile% (del %infile% /Q)
+
+REM -- Get name of .emp file --
+set infile=empfile.txt
+cd ..
+if exist %infile% (del %infile% /Q)
+dir "*.emp" /b >> %infile% 2>nul
+set /p file1=<%infile%
+echo file1 = %file1%
+call :CheckEmpty %infile%
+:filepass
+if exist %infile% (del %infile% /Q)
+cd Database
 
 @echo.
-@echo ================================================
+@echo ==================================================================================
 @echo     --- Model Run Settings ---
 @echo  Scenario = %val%
 @echo  Create WFH validation file = %wfhFile%
 @echo  Usual WFH share = %wfh%
 @echo  WFH 1-4 days share = %tc14%
-@echo  Select Link file = %selLinkFile%
+@echo  Highway assignment select link files = %selLinkFile%
+@echo  Run transit assignment = %transitAsmt%
+if "%transitAsmt%" EQU "T" (@echo  Location of transit network files = %transitFilePath%)
+if "%transitAsmt%" EQU "T" (@echo  Transit assignment select line file = %selLineFile%)
 @echo  Save utility files = %utilFile%
 @echo  Create UrbanSim travel time file = %UrbansimFile%
-@echo ================================================
+@echo  RSP evaluation run = %RSPrun%
+@echo ==================================================================================
+@echo.
 
-set check=%selLinkFile:~0,4%
-if "%check%" NEQ "None" (
-    if not exist Select_Link\%selLinkFile% (goto no_select_link_file)
+set /a trnAsmt=0
+if "%transitAsmt%" EQU "T" (set /a trnAsmt+=1)
+set check2=%selLineFile:~0,4%
+REM Remove trailing spaces from transitFilePath
+set transitFilePath=%transitFilePath:~0,-1%
+
+if "%check2%" NEQ "None" (
+    if not exist Select_Line\%selLineFile% (goto no_select_line_file)
+)
+
+@echo -- Verifying select link files --
+call %empypath% macros\verify_select_link.py %file1% %selLinkFile% %RSPrun% %trnAsmt%
+if %ERRORLEVEL% GTR 0 (goto end)
+
+if %trnAsmt% EQU 1 (
+    if not exist %transitFilePath%\transit\tranmodes.txt (goto transit_files_missing)
 )
 
 REM Clean up prior to run
 if exist cache\choice_simulator_trips_out (rmdir /S /Q cache\choice_simulator_trips_out)
 if exist cache\choice_simulator_trips_out.001 (rmdir /S /Q cache\choice_simulator_trips_out.001)
 if exist cache\choice_simulator_trips_out.002 (rmdir /S /Q cache\choice_simulator_trips_out.002)
-if exist cache\choice_simulator_trips_out.003 (rmdir /S /Q cache\choice_simulator_trips_out.003)
-if exist cache\choice_simulator_trips_out.004 (rmdir /S /Q cache\choice_simulator_trips_out.004)
 del cache\logs\*.* /Q    
 if exist usemacro_* (del usemacro_* /Q)
 if exist errors (del errors /Q)
-
-@echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@echo.
-@echo   CONNECT TO EMME
-@echo.
-@echo   Before continuing, please connect to an Emme license.
-@echo.
-@echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-pause
-@echo.
 
 echo.
 echo Select Destination Choice-Mode Choice model run mode:
 echo   1) Minimize run time (default) - resources allocated to support a single model run.
 echo   2) Balanced - resources allocated to support two simultaneous model runs.
 echo.
-set /a jobs=40
+set /a jobs=38
 set /a zones=10
 set /a sola_threads=63
 set /p choice="[SELECT A MODEL RUN MODE] "
@@ -172,30 +218,6 @@ if %errorlevel% neq 0 (
   goto end
 )
 
-REM -- Get name of .emp file --
-set infile=empfile.txt
-cd ..
-if exist %infile% (del %infile% /Q)
-dir "*.emp" /b >> %infile% 2>nul
-set /p file1=<%infile%
-echo file1 = %file1%
-call :CheckEmpty %infile%
-:filepass
-if exist %infile% (del %infile% /Q)
-cd Database
-
-REM -- Get path to INRO Python installation, redirect errors to nul in case file not found, read first path from file --
-set infile=path.txt
-if exist %infile% (del %infile% /Q)
-dir "C:\Program Files\INRO\*python.exe" /s /b >> %infile% 2>nul
-set /p empypath=<%infile%
-set paren="
-set empypath=%paren%%empypath%%paren%
-echo Emme pypath = %empypath%
-call :CheckEmpty1 %infile%
-:pythonpass
-if exist %infile% (del %infile% /Q)
-
 REM ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 copy tg\fortran\TG_HHENUM_OUTPUT.TXT TG_HHENUM_OUTPUT.TXT /y
 copy tg\fortran\TRIP49_PA_OUT.TXT defaults_base_year\TRIP49_PA_OUT.TXT /y
@@ -266,7 +288,7 @@ if not exist tg\data\m01tg.txt (goto filemiss2)
 if not exist tg\data\m01type.csv (goto filemiss2)
 @ECHO.
 @ECHO -- OBTAINING TRANSIT NETWORK DATA FROM EMME --
-call emme -ng 000 -m prep_macros\distr_m01_data.mac %val% >> prep_macros\report.txt
+call %empypath% prep_macros/distr_m01_data.py %file1%  %val% >> prep_macros\report.txt
 if %ERRORLEVEL% GTR 0 (goto issue)
 cd prep_macros
 @ECHO.
@@ -286,7 +308,7 @@ CD ..
 
 @ECHO   ***  Cleaning up databank.  ***
 if exist cleanup.rpt (del cleanup.rpt)
-call emme -ng 000 -m useful_macros\cleanup.for.rerun %val% 2 >> cleanup.rpt
+call %empypath% useful_macros\cleanup_for_rerun.py %file1% %val%>> cleanup.rpt
 if exist reports (del reports)
 
 REM RUN FREESKIM TO CREATE TIME, DISTANCE AND TOLL MATRICES
@@ -339,14 +361,6 @@ rem del cache\choice_simulator_trips_out\choice_simulator_util_*.pq /Q
 REM -- Loop through time-of-day procedures --
 set /A tod_cntr=1
 :tod_loop
-REM -- Flag for periods when toll skimming is run --
-set toll=F
-if %tod_cntr% equ 3 (set toll=T)
-if %tod_cntr% equ 5 (set toll=T)
-REM -- Flag which SOLA assignment script to run --
-set sola_cmd=macros/SOLA_assignment.py
-if %counter% EQU 2 (set sola_cmd=macros/SOLA_assignment_final_global_iteration.py)
-if %counter% EQU 2 if "%check%" NEQ "None" (set sola_cmd=macros/SOLA_assignment_final_global_iteration_SelectLink.py)
 REM
 @ECHO   --- Begin ttables.mac Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 call emme -ng 000 -m macros\ttables.mac %val% %tod_cntr% 92 93 >> blog.txt
@@ -356,12 +370,8 @@ call emme -ng 000 -m macros\net5I_7c.mac %tod_cntr% >> blog.txt
 @ECHO   --- End net5I_7c.mac Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO   --- Begin assignment Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO --- Begin assignment Period %tod_cntr%: %date% %time% ---
-if "%toll%"=="T" (%empypath% macros/init_toll_skim_matrices.py %file1% %tod_cntr%)
-if %ERRORLEVEL% NEQ 0 (goto issue)
 @ECHO  -- Run TOD assignment --
-%empypath% %sola_cmd% %file1% %tod_cntr% %sola_threads% %selLinkFile%
-if %ERRORLEVEL% NEQ 0 (goto issue)
-if "%toll%"=="T" (%empypath% macros/complete_toll_skim_matrices.py %file1% %tod_cntr%)
+call %empypath% macros/SOLA_assignment.py %file1% %tod_cntr% %sola_threads% %counter% %RSPrun% %tempCnt% %selLinkFile% %trnAsmt%
 if %ERRORLEVEL% NEQ 0 (goto issue)
 @ECHO   --- End assignment Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO --- End assignment Period %tod_cntr%: %date% %time% ---
@@ -372,7 +382,7 @@ call emme -ng 000 -m macros\balance5I_7c.mac %val% >> blog.txt
 @ECHO   --- Begin time-of-day skim Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO --- Complete time of day skims ---
 call emme -ng 000 -m macros\TOD_skim_setup.mac %val% %tod_cntr% >> blog.txt
-%empypath% macros/TOD_skim.py %file1% %tod_cntr% %val%%counter%%tod_cntr% %sola_threads%
+call %empypath% macros/TOD_skim.py %file1% %tod_cntr% %val%%counter%%tod_cntr% %sola_threads%
 if %ERRORLEVEL% NEQ 0 (goto issue)
 @ECHO    -- End Time-of-Day Procedures Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO -- End Time-of-Day Procedures for Period %tod_cntr%: %date% %time% --
@@ -382,9 +392,9 @@ if %tod_cntr% LSS 9 (goto tod_loop)
 REM -- End time-of-day loop --
 @ECHO   --- Begin Global Iteration MSA skims: %date% %time% >> model_run_timestamp.txt
 @ECHO --- Begin Global Iteration MSA skims: %date% %time% ---
-%empypath% macros/MSA_iteration_skims.py %file1% 3 %val%%counter%3 %counter% %sola_threads%
+call %empypath% macros/MSA_iteration_skims.py %file1% 3 %val%%counter%3 %counter% %sola_threads%
 if %ERRORLEVEL% NEQ 0 (goto issue)
-%empypath% macros/MSA_iteration_skims.py %file1% 5 %val%%counter%5 %counter% %sola_threads%
+call %empypath% macros/MSA_iteration_skims.py %file1% 5 %val%%counter%5 %counter% %sola_threads%
 if %ERRORLEVEL% NEQ 0 (goto issue)
 @ECHO   --- End Global Iteration MSA skims: %date% %time% >> model_run_timestamp.txt
 @ECHO --- End Global Iteration MSA skims: %date% %time%
@@ -405,11 +415,17 @@ goto while
 call emme -ng 000 -m macros\Daily.Total.Asmt5I_7c.mac %val% >> blog.txt
 REM Run script to complete select link analysis, if necessary
 set /A counter=counter-1
-if "%check%" NEQ "None" (%empypath% macros/complete_select_link.py %file1% %val%%counter%9 %val%%counter%0)
+if %tempCnt% EQU 0 (goto skip_sel_link)
+if %trnAsmt% EQU 1 (goto skip_sel_link)
+call %empypath% macros/complete_select_link.py %file1% %val%%counter%9 %val%%counter%0 %tempCnt% %RSPrun% 
+if %ERRORLEVEL% NEQ 0 (goto issue)
+:skip_sel_link
 @ECHO End Daily Accumulation Procedures: %date% %time% >> model_run_timestamp.txt
 
-REM Run macro to write link data for MOVES emissions analysis.
-call emme -ng 000 -m post_macros\punch.moves.data.mac %val% >> blog.txt
+REM Run script to write link data for MOVES emissions analysis. 
+call %empypath% post_macros\punchmovesdata.py
+@ECHO Link Data Written for MOVES Emissions Analysis: %date% %time% >> model_run_timestamp.txt
+call %empypath% post_macros\final_run_statistics.py
 
 REM The following two lines delete the trip and utility files from global iterations 0 and 1 to reduce storage space. Comment them out to retain.
 if exist cache\choice_simulator_trips_out.001 (rmdir /S /Q cache\choice_simulator_trips_out.001)
@@ -420,8 +436,43 @@ if "%utilFile%"=="F" (del cache\choice_simulator_trips_out\choice_simulator_util
 :USskim
 if "%UrbansimFile%"=="F" (goto skip_UrbanSim)
 @ECHO Creating skim file for UrbanSim ...
-python tg\scripts\urbansim_skims.py
+call python tg\scripts\urbansim_skims.py
 :skip_UrbanSim
+
+REM The following lines run transit assignment.
+if "%transitAsmt%" EQU "T" (
+    @ECHO Begin Transit Assignment setup: %date% %time% >> model_run_timestamp.txt
+    REM -- Build TOD transit networks
+    call emme -ng 000 -m transit_asmt_macros\setup_transit_asmt_1_build_transit_asmt_networks.mac %val% %transitFilePath%
+    if %ERRORLEVEL% NEQ 0 (goto issue)
+    REM -- Create matrices to hold TOD transit demand
+    if "%RSPrun%" EQU "T" (@ECHO -- Creating HBW transit demand matrices >> model_run_timestamp.txt)
+    call %empypath% transit_asmt_macros/setup_transit_asmt_2_initialize_matrices.py %file1% %RSPrun%
+    if %ERRORLEVEL% NEQ 0 (goto issue)
+    REM -- Fill matrices with demand (point to conda environment)
+    call python transit_asmt_macros\setup_transit_asmt_3_TOD_transit_demand.py %RSPrun%
+    if %ERRORLEVEL% NEQ 0 (goto issue)
+    @ECHO End Transit Assignment setup >> model_run_timestamp.txt
+    @ECHO Submit Transit Assignment >> model_run_timestamp.txt 
+    cd transit_asmt_macros
+    call %empypath% cmap_transit_assignment_runner.py %file1% 1 %val%
+    if %ERRORLEVEL% GTR 0 (goto issue)
+    cd ..
+    REM -- Delete transit assignment matrices
+    call %empypath% transit_asmt_macros\delete_transit_skims.py %file1%
+    if %ERRORLEVEL% GTR 0 (goto issue)
+    if "%check2%" NEQ "None" (
+        REM -- Run select line analysis
+        call %empypath% transit_asmt_macros\transit_select_line.py %file1% %val% %selLineFile%
+        if %ERRORLEVEL% GTR 0 (goto issue)
+        @ECHO -- Completed Select Line Analysis >> model_run_timestamp.txt
+        REM -- Summarize select line boardings
+        call %empypath% transit_asmt_macros\select_line_boardings.py %file1% %val% %RSPrun% %selLineFile%
+        if %ERRORLEVEL% GTR 0 (goto issue)
+        @ECHO -- Completed Select Line Boarding Analysis >> model_run_timestamp.txt
+    )
+    @ECHO End Transit Assignment: %date% %time% >> model_run_timestamp.txt
+)
 goto last
 
 REM ======================================================================
@@ -506,9 +557,17 @@ goto pythonpass
 pause
 goto end
 
-:no_select_link_file
+:transit_files_missing
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO    SELECT LINK FILE %selLinkFile% IS SPECIFIED BUT DOES NOT EXIST.
+@ECHO    TRANSIT TRANSACTION FILES ARE MISSING IN %transitFilePath%\transit.
+@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@ECHO.
+pause
+goto end
+
+:no_select_line_file
+@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@ECHO    SELECT LINE FILE %selLineFile% IS SPECIFIED BUT DOES NOT EXIST.
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @ECHO.
 pause

@@ -89,15 +89,6 @@ goto end
 rem Notes for running both modules. Move these up front.
 echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo.
-echo   CONNECT TO EMME
-echo.
-echo   Before continuing, please connect to an Emme license.
-echo.
-echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-pause
-echo.
-echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-echo.
 echo   SET GROWTH FACTOR
 echo.
 echo   Before continuing, please update the growth factor variable in
@@ -195,7 +186,7 @@ goto end
 @echo.
 
 rem Define here the name of the environment to be used
-set ENVNAME=CMAP-TRIP
+set ENVNAME=CMAP-TRIP2
 
 rem The following command prepares to activate the base environment if it is used.
 if %ENVNAME%==base (set ENVPATH=%CONDAPATH%) else (set ENVPATH=%CONDAPATH%\envs\%ENVNAME%)
@@ -277,16 +268,6 @@ rem Import production and attraction files, then run distribution macros.
 echo ===================================================================
 echo.
 
-echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-echo.
-echo   CONNECT TO EMME
-echo.
-echo   Before continuing, please connect to an Emme license.
-echo.
-echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-pause
-echo.
-
 rem Set distribution factors before running.
 echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo.
@@ -315,8 +296,32 @@ copy tg\fortran\MCHW_HH.TXT MCHW_HH.TXT /y
 copy tg\fortran\TG_HHENUM_OUTPUT.TXT TG_HHENUM_OUTPUT.TXT /y
 echo.
 
+REM -- Get path to INRO Python installation, redirect errors to nul in case file not found, read first path from file --
+set infile=path.txt
+if exist %infile% (del %infile% /Q)
+dir "C:\Program Files\INRO\*python.exe" /s /b >> %infile% 2>nul
+set /p empypath=<%infile%
+set paren="
+set empypath=%paren%%empypath%%paren%
+echo Emme pypath = %empypath%
+call :CheckEmpty1 %infile%
+:pythonpass
+if exist %infile% (del %infile% /Q)
+
+REM -- Get name of .emp file --
+set infile=empfile.txt
+cd ..
+if exist %infile% (del %infile% /Q)
+dir "*.emp" /b >> %infile% 2>nul
+set /p file1=<%infile%
+echo file1 = %file1%
+call :CheckEmpty %infile%
+:filepass
+if exist %infile% (del %infile% /Q)
+cd Database
+
 echo Preparing emmebank for model run...
-call emme -ng 000 -m useful_macros\cleanup.for.rerun %val% 1 >> tg.rpt
+call %empypath% useful_macros\cleanup_for_rerun.py %file1% %val%>> tg.rpt
 echo.
 
 echo Importing production and attraction matrices (used only for b/l/m truck distribution)...
@@ -403,6 +408,31 @@ echo.
 pause
 goto end
 
+:CheckEmpty
+if %~z1 == 0 (goto badfile)
+goto filepass
+
+:badfile
+@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@ECHO    COULD NOT FIND .EMP FILE.
+@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@ECHO.
+pause
+goto end
+
+:CheckEmpty1
+if %~z1 == 0 (goto badpython)
+goto pythonpass
+
+:badpython
+@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@ECHO    COULD NOT FIND EMME PYTHON INSTALLATION.
+@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@ECHO.
+pause
+goto end
+
+
 :last
 if "%choice%"=="2" (goto skip_env)
 rem Deactivate the environment
@@ -413,7 +443,6 @@ echo End of batch file.
 @ECHO Trip Generation Model End Time  : %date% %time%
 echo.
 pause
-
 
 :end
 exit
