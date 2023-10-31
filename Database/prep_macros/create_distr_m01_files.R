@@ -91,19 +91,19 @@ zones <- read_sf(dsn = "../data/distr/zone17.shp", layer = "zone17") #zone area 
 #format node cost and location files 
 stops <- in1 %>%
   select(-result) %>%
-  rename(node = inode, pspac = X.pspac, pcost = X.pcost, xcoord = xi, ycoord = yi, zone = X.zone) %>%
+  rename(node = i_node, pspac = X.pspac, pcost = X.pcost, xcoord = xi, ycoord = yi, zone = X.zone) %>%
   group_by(node)
 stops_mdy <- in1M %>%
   select(-result) %>%
-  rename(node = inode, pspac = X.pspac, pcost = X.pcost, xcoord = xi, ycoord = yi, zone = X.zone) %>%
+  rename(node = i_node, pspac = X.pspac, pcost = X.pcost, xcoord = xi, ycoord = yi, zone = X.zone) %>%
   group_by(node)
 
 #format itinerary data
 itin <- in2 %>%
   select(-result) %>%
-  rename(anode = inode, node = jnode, dwtime = dwt) %>%
+  rename(anode = i_node, node = j_node, dwtime = dwt) %>%
   mutate(ord = 1:nrow(in2)) %>% 
-  group_by(line) %>%
+  group_by(transit_line) %>%
   arrange(ord) %>%
   slice(1L, row_number()) %>%
   mutate(node = case_when(row_number() == 1 ~ anode, row_number() != 1 ~ node),
@@ -115,9 +115,9 @@ itin <- in2 %>%
 
 itin_mdy <- in2M %>%
   select(-result) %>%
-  rename(anode = inode, node = jnode, dwtime = dwt) %>%
+  rename(anode = i_node, node = j_node, dwtime = dwt) %>%
   mutate(ord_mdy = 1:nrow(in2M)) %>% 
-  group_by(line) %>%
+  group_by(transit_line) %>%
   arrange(ord_mdy) %>%
   slice(1L, row_number()) %>%
   mutate(node = case_when(row_number() == 1 ~ anode, row_number() != 1 ~ node),
