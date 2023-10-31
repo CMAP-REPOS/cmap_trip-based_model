@@ -3,8 +3,8 @@ HBWH:
   AUTO_no_veh             : -2.02065994410063
   AUTO_sufficient_veh     : 0.519104717
   Const_BIKE              : -1.073455508
-  Const_HOV2              : -0.1668500724105203
-  Const_HOV3              : -0.21808009101098888
+  Const_HOV2              : -0.366850072
+  Const_HOV3              : -0.418080091
   Const_TAXI              : -2.431094687758224
   Const_TNC1              : -2.008349809498196
   Const_TNC2              : -2.4552699434460092
@@ -33,9 +33,12 @@ HBWH:
   samp_af                 : 1.0
   totaltime               : -0.017030758987881523
   transit_areatype2       : -1.374678131
-  transit_areatype3       : -2.73031759
+  transit_areatype3       : -3.139865229
   transit_areatype4       : -2.539714312284354
   transit_intrazonal      : 1.625433444479245
+  "trlong_distance[1]: up to 5"  : -0.01200000
+  "trlong_distance[2]: 5 to 10"  : -0.010000000
+  "trlong_distance[3]: over 10"  : 0.015773475
   unavail                 : -999.0
   walk_areatype2          : 0.14897576853778294
   walk_areatype3          : -0.2521336910917878
@@ -49,8 +52,8 @@ HBWL:
   AUTO_no_veh             : -2.65280665850106
   AUTO_sufficient_veh     : 0.6888882063457877
   Const_BIKE              : -1.09404066
-  Const_HOV2              : -0.2460911914792246
-  Const_HOV3              : -0.4290101474789843
+  Const_HOV2              : -0.446091191
+  Const_HOV3              : -0.629010147
   Const_TAXI              : -3.8304400020192633
   Const_TNC1              : -2.4175101613361236
   Const_TNC2              : -2.8383847101687665
@@ -79,9 +82,12 @@ HBWL:
   samp_af                 : 1.0
   totaltime               : -0.014712168298471244
   transit_areatype2       : -1.244138977
-  transit_areatype3       : -3.348030543
+  transit_areatype3       : -3.850235124
   transit_areatype4       : -1.7423132266984915
   transit_intrazonal      : 1.283608900037017
+  "trlong_distance[1]: up to 5"  : -0.01200000
+  "trlong_distance[2]: 5 to 10"  : -0.010000000
+  "trlong_distance[3]: over 10"  : 0.015773475
   unavail                 : -999.0
   walk_areatype2          : 0.6464997024100183
   walk_areatype3          : 0.08905949310792599
@@ -124,6 +130,7 @@ HBS:
   ovtt_dist               : -0.24676210635714393
   samp_af                 : 1.0
   totaltime               : -0.029999974183577006
+  transit_areatype3       : -0.50
   transit_intrazonal      : 2.8338857824883283
   transit_walk_is_short   : 1.6523636871767535
   unavail                 : -999.0
@@ -168,6 +175,7 @@ HBO:
   ovtt_dist               : -0.27476678574258023
   samp_af                 : 1.0
   totaltime               : -0.025445664453527323
+  transit_areatype3       : -1.10
   transit_intrazonal      : 2.156252935615256
   transit_walk_is_short   : 0.5258498636999133
   unavail                 : -999.0
@@ -213,6 +221,7 @@ NHB:
   ovtt_dist               : -0.2685200927091494
   samp_af                 : 1.0
   totaltime               : -0.029999828486821336
+  transit_areatype3       : -1.10
   transit_intrazonal      : 3.5821317514431454
   transit_walk_is_short   : 0.7232169644952281
   unavail                 : -999.0

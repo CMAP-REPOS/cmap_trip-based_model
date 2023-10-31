@@ -248,13 +248,15 @@ def model_utility_for_dest(
 		) + utility_destination
 	if 'W' not in purpose.upper():
 		m.utility_co[jTRANSIT] += (
-			P("transit_walk_is_short") * X(f"hard_sigmoid({dest_label}_transit_approach_walktime_{peaky}, 4.0, 2.0)")
+			+ P("transit_walk_is_short") * X(f"hard_sigmoid({dest_label}_transit_approach_walktime_{peaky}, 4.0, 2.0)")
+			+ P("transit_areatype3") * X(f"fmax(ozone_areatype, {dest_label}_areatype)==3")
 		)
 	else:
 		m.utility_co[jTRANSIT] += (
 			+ P("transit_areatype2") * X(f"fmin(ozone_areatype, {dest_label}_areatype)==2")
 			+ P("transit_areatype3") * X(f"fmin(ozone_areatype, {dest_label}_areatype)==3")
 			+ P("transit_areatype4") * X(f"fmin(ozone_areatype, {dest_label}_areatype)==4")
+			+ piecewise_linear(f"{dest_label}_auto_dist_PEAK", "trlong_distance", breaks=[5, 10])
 		)
 
 	if purpose.upper() in {'NH', 'NHB'}:
