@@ -3,7 +3,7 @@ param([string]$recent_conformity = $(throw '-conformity_code is required.'),
       [string]$source_dir = 'M:\catslib\modelprod\',
       [string]$destination_dir = $PSScriptRoot)
 
-$source_db = "$source_dir$recent_conformity\$($recent_conformity+'_'+$scenario)_*\cmap_trip-based_model\Database\"
+$source_db = "$source_dir$recent_conformity\$($recent_conformity+'_'+$scenario)*\cmap_trip-based_model\Database\"
 $destination_db = "$destination_dir\Database\"
 $items = @("emmebank"
            "emmemat"
