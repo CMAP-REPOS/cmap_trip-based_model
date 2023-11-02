@@ -1,6 +1,6 @@
 # To use this file:
 # conda env create -f conda-environment.yml
-name: CMAP-TRIP
+name: CMAP-TRIP2
 channels:
   - tmip
   - conda-forge
