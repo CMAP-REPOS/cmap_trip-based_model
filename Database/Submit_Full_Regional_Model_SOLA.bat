@@ -205,7 +205,7 @@ if not "%ok%"=="Y" (goto end)
 @echo.
 
 rem Define here the name of the environment to be used
-set ENVNAME=CMAP-TRIP
+set ENVNAME=CMAP-TRIP2
 
 rem The following command prepares to activate the base environment if it is used.
 if %ENVNAME%==base (set ENVPATH=%CONDAPATH%) else (set ENVPATH=%CONDAPATH%\envs\%ENVNAME%)
