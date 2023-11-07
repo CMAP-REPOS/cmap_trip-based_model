@@ -69,7 +69,8 @@ Database/cleanup.rpt
 Database/model_run_timestamp.txt
 Database/PATHS_*_*
 Database/data/UrbanSim_skims
-Database/cache
+Database/cache/*
+!Database/cache/*.pkl
 Database/computed_auto_propensity.csv
 Database/defaults_base_year/*_OUT.TXT
 
