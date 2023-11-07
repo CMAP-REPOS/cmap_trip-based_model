@@ -123,7 +123,7 @@ goto end
 @echo.
 
 rem Define here the name of the environment to be used
-set ENVNAME=CMAP-TRIP
+set ENVNAME=CMAP-TRIP2
 
 rem The following command prepares to activate the base environment if it is used.
 if %ENVNAME%==base (set ENVPATH=%CONDAPATH%) else (set ENVPATH=%CONDAPATH%\envs\%ENVNAME%)
@@ -151,6 +151,12 @@ set /a strat=%strat% + 2
 if exist STRATS_s%strat% (rmdir /S /Q STRATS_s%strat%)
 set /a strat=%strat% + 2
 if exist STRATS_s%strat% (rmdir /S /Q STRATS_s%strat%)
+
+REM -- Adjust emmebank matrices if needed --
+set /a trnAsmt=0
+if "%transitAsmt%" EQU "T" (set /a trnAsmt+=1)
+call %empypath% macros\verify_select_link.py %file1% "None" %RSPrun% %trnAsmt%
+if %ERRORLEVEL% GTR 0 (goto issue)
 
 @echo ALL TOD TRANSIT ASSIGNMENT SETUP COMPLETED.
 goto end
