@@ -5,12 +5,15 @@ import os
 import logging
 import shutil
 import tbmtools.project as tbm
+from tbmtools.results import vehicle_trips
 from tbmtools.results import person_trips
+from tbmtools.results import skims
 from tbmtools.results import transit_network
 from tbmtools.results import highway_network
 from tbmtools.results import sharing
 
 logging.basicConfig(filename='export_model_data.log',
+                    filemode='w',
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
@@ -28,14 +31,11 @@ def main():
     print(Path.cwd())
     
     projdir = Path('../..').resolve()
-    macdir = Path('./macros').resolve()
     outdir = Path('../output').resolve()
 
     modeller = tbm.connect(args.project_file)
     logging.info(f'Connected to {modeller.desktop.project_file_name()}')
-
-    run_macro = modeller.tool('inro.emme.prompt.run_macro')
-    
+      
     # Make output directories.
     outdir.mkdir(exist_ok=True)
     outdir.joinpath('trips').mkdir(exist_ok=True)
@@ -48,18 +48,17 @@ def main():
     outdir.joinpath('prods_attrs').mkdir(exist_ok=True)
     logging.info(f'Writing output to {outdir}')
 
-    logging.info(f'Running {macdir.joinpath("call_all.mac")}')
+    # Export vehicle trips and skims.
+    logging.info('Starting vehicle trips')
+    vehicle_trips.export_matrices(outdir, modeller)
+    logging.info('Starting skims')
+    skims.flag_transit_disconnects(modeller)
+    skims.export_matrices(outdir, modeller)
 
-    # Export auto vehicle trips, transit person trips, highway network
-    # transaction files and transit network transaction files. Prepare
-    # scenarios for network shapefiles. Flag O-Ds in transit matrices
-    # that are not connected to transit. Export skims.
-    run_macro(str(macdir.joinpath('call_all.mac')),
-              f'{macdir} {outdir} {args.year}')
-
-    # Export trip roster and auto person trips.
+    # Export trip roster, auto person trips, and transit person trips.
     logging.info('Starting person trips')
-    person_trips.export_matrices(projdir, outdir)
+    person_trips.export_auto_matrices(projdir, outdir)
+    person_trips.export_transit_matrices(outdir, modeller)
 
     # Export peak (AM peak) and off-peak (midday) transit network,
     # itineraries, and attributes as Emme transaction files and
@@ -110,8 +109,10 @@ def main():
     file = sorted(dir.glob('tg_results*.csv'))[0]
     shutil.copy(file, outdir)
     file_copy = outdir.joinpath(file.name)
-    copy_name = f'tg_results_{args.title}_{args.year}.csv'
-    file_copy.rename(file_copy.with_name(copy_name))
+    renamed_copy = file_copy.with_name(f'tg_results_{args.title}_{args.year}.csv')
+    if renamed_copy.exists(): 
+        os.remove(renamed_copy)
+    file_copy.rename(renamed_copy)
 
     # Copy productions and attractions to output directory.
     files = sorted(dir.glob('*.in'))

@@ -2,9 +2,9 @@ from pathlib import Path
 import pandas as pd
 from tbmtools.results import trip_roster
 
-def export_matrices(projdir, outdir):
+def export_auto_matrices(projdir, outdir):
     """
-    Generate daily person trip matrices from trip roster and export to CSV.
+    Generate daily auto person trip matrices from trip roster and export to CSV.
 
     Parameters:  projdir : str or path object
                      Path to Emme project directory.
@@ -173,3 +173,32 @@ def export_matrices(projdir, outdir):
                                            .pivot(index=mtx_header, columns=q, values='trips')\
                                            .to_csv(mtxdir.joinpath(f'{name}.csv'))
     return mtxdir
+
+def export_transit_matrices(outdir, modeller):
+    """
+    Export transit person trip matrices from Emme.
+    """
+    create_matrix = modeller.tool('inro.emme.data.matrix.create_matrix')
+    compute_matrix = modeller.tool('inro.emme.matrix_calculation.matrix_calculator')
+    export_matrix_data = modeller.tool('inro.emme.data.matrix.export_matrix_to_csv')
+    delete_matrix = modeller.tool('inro.emme.data.matrix.delete_matrix')
+    matrix_names = {'mf40': 'hbwL_transit',
+                    'mf41': 'hbwH_transit',
+                    'mf42': 'hbo_transit',
+                    'mf43': 'nhb_transit',
+                    'mf99': 'hbw_transit'}
+    # Sum low and high income home-work transit trips.
+    create_matrix(matrix_id='mf99',
+                  matrix_name=matrix_names['mf99'],
+                  matrix_description='home-based work transit person trips')
+    spec = {'type': 'MATRIX_CALCULATION',
+            'expression': 'mf40 + mf41',
+            'result': 'mf99'}
+    compute_matrix(spec)
+    # Export transit trips.
+    export_matrix_data(matrices=[i for i in list(matrix_names.keys()) if i not in ['mf40', 'mf41']],
+                       export_path=outdir.joinpath('trips'))
+    # Export home-work transit trips by income level.
+    export_matrix_data(matrices=['mf40', 'mf41'],
+                       export_path=outdir.joinpath('work_trips'))
+    delete_matrix('mf99')
