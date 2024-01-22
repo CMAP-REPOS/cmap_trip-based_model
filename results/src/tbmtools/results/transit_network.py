@@ -1,13 +1,13 @@
 from pathlib import Path
 import csv
 
-def export(path, scenario, format, modeller, emmebank, period=[0, 5]):
+def export(outdir, scenario, format, modeller, emmebank, period=[0, 5]):
     """
     Write transit network, itineraries, and attributes to Emme
     transaction files or Esri shapefiles.
 
-    Parameters:  path : str or path object
-                     Path to destination directory.
+    Parameters:  outdir : str or path object
+                     Path to output directory.
 
                  scenario : int
                      3-digit scenario number.
@@ -25,12 +25,14 @@ def export(path, scenario, format, modeller, emmebank, period=[0, 5]):
 
     Returns:     None
     """
-    if isinstance(path, str):
-        path = Path(path).resolve()
+    if isinstance(outdir, str):
+        outdir = Path(outdir).resolve()
     if not isinstance(period, list):
         period = [period]
-
-    # Construct Emme Modeller tools.
+    # Make output subdirectories.
+    transitdir = outdir.joinpath('networks', 'transit')
+    transitdir.mkdir(parents=True, exist_ok=True)
+    # Construct Modeller tools.
     export_basenet = modeller.tool('inro.emme.data.network.base.export_base_network')
     export_lines = modeller.tool('inro.emme.data.network.transit.export_transit_lines')
     net_calc = modeller.tool('inro.emme.network_calculation.network_calculator')
@@ -48,10 +50,10 @@ def export(path, scenario, format, modeller, emmebank, period=[0, 5]):
             f_tag = str(p)
         if format == 'transaction':
             # Write network transaction file.
-            export_basenet(export_file=path.joinpath(f'network_{f_tag}.txt'),
+            export_basenet(export_file=transitdir.joinpath(f'network_{f_tag}.txt'),
                            scenario=s)
             # Write itinerary transaction file.
-            export_lines(export_file=path.joinpath(f'itins_{f_tag}.txt'),
+            export_lines(export_file=transitdir.joinpath(f'itins_{f_tag}.txt'),
                          scenario=s)
             # Write attribute transaction file.
             spec = {'type': 'NETWORK_CALCULATION',
@@ -61,10 +63,10 @@ def export(path, scenario, format, modeller, emmebank, period=[0, 5]):
             report = net_calc(specification=spec,
                               scenario=s,
                               full_report=True)
-            with open(path.joinpath(f'attribs_{f_tag}.txt'), 'w', newline='') as f:
+            with open(transitdir.joinpath(f'attribs_{f_tag}.txt'), 'w', newline='') as f:
                 txtwriter = csv.writer(f, delimiter=' ')
                 txtwriter.writerows(report['table'])
         elif format == 'shape':
             # Write shapefiles.
-            net_to_shp(export_path=path.joinpath(f'transit_{f_tag}-{scenario}'),
+            net_to_shp(export_path=transitdir.joinpath(f'transit_{f_tag}-{scenario}'),
                        scenario=s)

@@ -52,16 +52,20 @@ def export_matrices(outdir, modeller):
     Export peak and off-peak transit skims and highway time and distance
     skim matrices.
     """
+    # Make output subdirectory.
+    skimdir = outdir.joinpath('skims')
+    skimdir.mkdir(exist_ok=True)
+    # Construct Modeller tool.
     export_matrix_data = modeller.tool('inro.emme.data.matrix.export_matrix_to_csv')
     # Export peak transit skims.
     export_matrix_data(matrices=[i for i in list(SKIM_MATRIX_IDS['transit']['peak'].values())],
-                       export_path=outdir.joinpath('skims'))
+                       export_path=skimdir)
     # Export off-peak transit skims.
     export_matrix_data(matrices=[i for i in list(SKIM_MATRIX_IDS['transit']['off-peak'].values())],
-                       export_path=outdir.joinpath('skims'))
+                       export_path=skimdir)
     # Export am highway skims.
     export_matrix_data(matrices=[i for i in list(SKIM_MATRIX_IDS['highway']['am'].values())],
-                       export_path=outdir.joinpath('skims'))
+                       export_path=skimdir)
     # Export md highway skims.
     export_matrix_data(matrices=[i for i in list(SKIM_MATRIX_IDS['highway']['md'].values())],
-                       export_path=outdir.joinpath('skims'))
+                       export_path=skimdir)

@@ -1,13 +1,13 @@
 from pathlib import Path
 import csv
 
-def export_by_tod(path, scenario, format, modeller, emmebank, period=[1, 2, 3, 4, 5, 6, 7, 8]):
+def export_by_tod(outdir, scenario, format, modeller, emmebank, period=[1, 2, 3, 4, 5, 6, 7, 8]):
     """
     Write highway network and attributes to Emme transaction files or
     Esri shapefiles.
 
-    Parameters:  path : str or path object
-                     Path to destination directory.
+    Parameters:  outdir : str or path object
+                     Path to output directory.
 
                  scenario : int
                      3-digit scenario number.
@@ -25,12 +25,14 @@ def export_by_tod(path, scenario, format, modeller, emmebank, period=[1, 2, 3, 4
 
     Returns:     None
     """
-    if isinstance(path, str):
-        path = Path(path).resolve()
+    if isinstance(outdir, str):
+        outdir = Path(outdir).resolve()
     if not isinstance(period, list):
         period = [period]
-
-    # Construct Emme Modeller tools.
+    # Make output subdirectories.
+    hwydir = outdir.joinpath('networks', 'highway')
+    hwydir.mkdir(parents=True, exist_ok=True)
+    # Construct Modeller tools.
     copy_scen = modeller.tool('inro.emme.data.scenario.copy_scenario')
     create_attrib = modeller.tool('inro.emme.data.extra_attribute.create_extra_attribute')
     export_basenet = modeller.tool('inro.emme.data.network.base.export_base_network')
@@ -58,14 +60,14 @@ def export_by_tod(path, scenario, format, modeller, emmebank, period=[1, 2, 3, 4
         
         if format == 'transaction':
             # Write network transaction file.
-            export_basenet(export_file=path.joinpath(f'network_p{p}.txt'))
+            export_basenet(export_file=hwydir.joinpath(f'network_p{p}.txt'))
             # Write attribute transaction file.
             spec = {'type': 'NETWORK_CALCULATION',
                     'expression': '@speed + @width + @parkl + @toll + @sigic + @tipid + @ftime + @emcap + @avelw + @vadt + timau',
                     'selections': {'link': 'all'}}
             report = net_calc(specification=spec,
                               full_report=True)
-            with open(path.joinpath(f'attribs_p{p}.txt'), 'w', newline='') as f:
+            with open(hwydir.joinpath(f'attribs_p{p}.txt'), 'w', newline='') as f:
                 txtwriter = csv.writer(f, delimiter=' ')
                 txtwriter.writerows(report['table'])
         elif format == 'shape':
@@ -96,17 +98,17 @@ def export_by_tod(path, scenario, format, modeller, emmebank, period=[1, 2, 3, 4
             else:
                 f_tag = 'p' + str(p)
             # Write shapefile.
-            net_to_shp(export_path=path.joinpath(f'highway_{f_tag}-{scenario}'))
+            net_to_shp(export_path=hwydir.joinpath(f'highway_{f_tag}-{scenario}'))
         change_scen(p)
         delete_scen(emmebank.scenario(99))
 
-def export_daily(path, scenario, format, modeller, emmebank):
+def export_daily(outdir, scenario, format, modeller, emmebank):
     """
     Write highway network and attributes to Emme transaction files or
     Esri shapefiles.
 
-    Parameters:  path : str or path object
-                     Path to destination directory.
+    Parameters:  outdir : str or path object
+                     Path to output directory.
 
                  scenario : int
                      3-digit scenario number.
@@ -121,9 +123,11 @@ def export_daily(path, scenario, format, modeller, emmebank):
 
     Returns:     None
     """
-    if isinstance(path, str):
-        path = Path(path).resolve()
-
+    if isinstance(outdir, str):
+        outdir = Path(outdir).resolve()
+    # Make output subdirectories.
+    hwydir = outdir.joinpath('networks', 'highway')
+    hwydir.mkdir(parents=True, exist_ok=True)
     # Construct Emme Modeller tools.
     export_basenet = modeller.tool('inro.emme.data.network.base.export_base_network')
     net_calc = modeller.tool('inro.emme.network_calculation.network_calculator')
@@ -134,16 +138,16 @@ def export_daily(path, scenario, format, modeller, emmebank):
 
     if format == 'transaction':
         # Write network transaction file.
-        export_basenet(export_file=path.joinpath(f'network_daily.txt'))
+        export_basenet(export_file=hwydir.joinpath(f'network_daily.txt'))
         # Write attribute transaction file.
         spec = {'type': 'NETWORK_CALCULATION',
                 'expression': '@vadt',
                 'selections': {'link': 'all'}}
         report = net_calc(specification=spec,
                             full_report=True)
-        with open(path.joinpath(f'attribs_daily.txt'), 'w', newline='') as f:
+        with open(hwydir.joinpath(f'attribs_daily.txt'), 'w', newline='') as f:
             txtwriter = csv.writer(f, delimiter=' ')
             txtwriter.writerows(report['table'])
     elif format == 'shape':
         # Write shapefile.
-        net_to_shp(export_path=path.joinpath(f'highway-{scenario}'))
+        net_to_shp(export_path=hwydir.joinpath(f'highway-{scenario}'))
