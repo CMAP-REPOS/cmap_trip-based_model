@@ -1,5 +1,5 @@
-param([string]$recent_conformity = $(throw '-conformity_code is required.'),
-      [string]$scenario = $(throw '-scenario_code is required.'),
+param([string]$recent_conformity = $(throw 'A required argument is missing for the following parameter: -recent_conformity <conformity code>.'),
+      [string]$scenario = $(throw 'A required argument is missing for the following parameter: -scenario <scenario code>.'),
       [string]$source_dir = 'M:\catslib\modelprod\',
       [string]$destination_dir = $PSScriptRoot)
 
