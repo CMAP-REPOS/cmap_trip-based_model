@@ -1331,7 +1331,7 @@ def aggregate_to_vehicle_matrixes(
     log.info(f" hov2")
     vehicle_trips[3, ...] = xr.DataArray.from_series(
         trips
-        .query(f"mode == {mode9codes.HOV2}")
+        .query(f"mode in ({mode9codes.HOV2},{mode9codes.TAXI},{mode9codes.TNC1})")    ##-- Heither .query(f"mode == {mode9codes.HOV2}")
         .groupby(["timeperiod", "o_zone", "d_zone"])['trips']
         .sum()
     ).reindex(
@@ -1342,7 +1342,7 @@ def aggregate_to_vehicle_matrixes(
     # count up all HOV3 person trips, divide by occupancy
     vehicle_trips[4, ...] += xr.DataArray.from_series(
         trips
-        .query(f"purpose in ('HBWH', 'HBWL') and mode == {mode9codes.HOV3}")
+        .query(f"purpose in ('HBWH', 'HBWL') and mode in ({mode9codes.HOV3},{mode9codes.TNC2})")    ##-- Heither .query(f"purpose in ('HBWH', 'HBWL') and mode == {mode9codes.HOV3}")
         .groupby(["timeperiod", "o_zone", "d_zone"])['trips']
         .sum()
     ).reindex(
@@ -1350,7 +1350,7 @@ def aggregate_to_vehicle_matrixes(
     ).fillna(0).values / dh.cfg.hov3_occupancy['HBW']
     vehicle_trips[4, ...] += xr.DataArray.from_series(
         trips
-        .query(f"purpose in ('HBO', 'HBS') and mode == {mode9codes.HOV3}")
+        .query(f"purpose in ('HBO', 'HBS') and mode in ({mode9codes.HOV3},{mode9codes.TNC2})")      ##-- Heither .query(f"purpose in ('HBO', 'HBS') and mode == {mode9codes.HOV3}")
         .groupby(["timeperiod", "o_zone", "d_zone"])['trips']
         .sum()
     ).reindex(
@@ -1358,7 +1358,7 @@ def aggregate_to_vehicle_matrixes(
     ).fillna(0).values / dh.cfg.hov3_occupancy['HBO']
     vehicle_trips[4, ...] += xr.DataArray.from_series(
         trips
-        .query(f"purpose in ('NHB', 'VISIT') and mode == {mode9codes.HOV3}")
+        .query(f"purpose in ('NHB', 'VISIT') and mode in ({mode9codes.HOV3},{mode9codes.TNC2})")      ##-- Heither .query(f"purpose in ('NHB', 'VISIT') and mode == {mode9codes.HOV3}")
         .groupby(["timeperiod", "o_zone", "d_zone"])['trips']
         .sum()
     ).reindex(
