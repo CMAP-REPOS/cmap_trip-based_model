@@ -314,13 +314,13 @@ if exist reports (del reports)
 REM RUN FREESKIM TO CREATE TIME, DISTANCE AND TOLL MATRICES
 @ECHO.
 @ECHO   ***  Skimming highway network.  ***
-call emme -ng 000 -m prep_macros\free.skim.mac %val% 2 >> blog.txt
+call %empypath% prep_macros\free.skim.mac.py %file1% %val%
+if %ERRORLEVEL% neq 0 (goto issue)
 @ECHO.
 
 REM IF PRELOAD=1, REPLACE UNCONGESTED TIME AND DISTANCE MATRICES
 if %preload% EQU 1 (@echo   ***  Preloading congested times and distances.  ***)
-if %preload% EQU 1 (call emme -ng 000 -m prep_macros\preload_congested_times.mac %val% >> blog.txt)
-
+if %preload% EQU 1 (call %empypath% prep_macros\preload_congested_times_mac.py %file1% %val%)
 
 @ECHO ==================================================================
 REM - LOOP TO RUN MODEL
@@ -331,7 +331,23 @@ if %counter% GTR 2 (goto loopend)
 @ECHO.
 @ECHO BEGINNING TRANSIT SKIM - FULL MODEL ITERATION %counter%
 @ECHO - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-call emme -ng 000 -m macros\skim.transit.all %val% %counter% python >> blog.txt
+REM AM Peak Skim
+call %empypath% macros/skim_transit.py %file1% %val% %counter% AM
+if %ERRORLEVEL% neq 0 (goto issue)
+call %empypath% macros/transit_triple_indexing.py %file1% AM
+if %ERRORLEVEL% neq 0 (goto issue)
+call %empypath% macros/transit_skim_final_matrices1.py
+if %ERRORLEVEL% neq 0 (goto issue)
+call %empypath% macros/transit_skim_wrapup.py %file1% AM
+if %ERRORLEVEL% neq 0 (goto issue)
+REM Midday Skim
+call %empypath% macros/skim_transit.py %file1% %val% %counter% MD
+if %ERRORLEVEL% neq 0 (goto issue)
+call %empypath% macros/transit_triple_indexing.py %file1% MD
+if %ERRORLEVEL% neq 0 (goto issue)
+call %empypath% macros/transit_skim_final_matrices2.py
+if %ERRORLEVEL% neq 0 (goto issue)
+call %empypath% macros/transit_skim_wrapup.py %file1% MD
 if %ERRORLEVEL% neq 0 (goto issue)
 @ECHO    -- End of Transit Skim Procedures: %date% %time% >> model_run_timestamp.txt
 
@@ -339,18 +355,15 @@ if %ERRORLEVEL% neq 0 (goto issue)
 @ECHO PREPARING EMMEBANK - FULL MODEL ITERATION %counter%
 @ECHO - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 rem @ECHO on
-call emme -ng 000 -m macros\init_HOVsim_databk.mac %val% >> blog.txt
+call %empypath% macros\init_HOVsim_databk_mac.py %val% %counter% %file1%
+if %ERRORLEVEL% neq 0 (goto issue)
 
 @ECHO -- Begin Mode-Destination Choice Procedures: %date% %time% >> model_run_timestamp.txt
-
 @ECHO.
 @ECHO RUN CMAP MODE-DESTINATION CHOICE MODEL - FULL MODEL ITERATION %counter%
 @ECHO - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
 call cmap_modedest . --njobs %jobs% --max_zone_chunk %zones%
 if %ERRORLEVEL% NEQ 0 (goto issue)
-
-rem del cache\choice_simulator_trips_out\choice_simulator_util_*.pq /Q
 @ECHO    -- End Mode-Destination Choice Procedures: %date% %time% >> model_run_timestamp.txt
 @ECHO.
 

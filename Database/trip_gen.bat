@@ -329,7 +329,7 @@ call emme -ng 000 -m prep_macros\import.tg.results 1 >> tg.rpt
 echo.
 
 echo Skimming highway network...
-call emme -ng 000 -m prep_macros\free.skim.mac %val% 1 >> tg.rpt
+call %empypath% prep_macros\free.skim.mac.py %file1% %val%
 echo.
 
 echo Distributing trucks...
