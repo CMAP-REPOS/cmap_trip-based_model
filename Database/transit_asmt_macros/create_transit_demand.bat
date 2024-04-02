@@ -1,7 +1,7 @@
 @echo off
 REM Prepare data for TOD transit assignments.
-REM  Heither, rev. 08-16-2023
-
+REM  Heither, rev. 01-18-2024
+@echo -------------------------------------------------------------------------------------------------
 @echo create_transit_demand.bat
 @echo  Batch file does the following:
 @echo   1) Create TOD transit network scenarios.
@@ -10,6 +10,18 @@ REM  Heither, rev. 08-16-2023
 @echo      have been moved to boarding zones).
 @echo ===================================================================
 @echo.
+@echo To run a transit assignment, use the following settings in batch_file.yaml:
+@echo    - scenario: set to appropriate value
+@echo    - runTransitAsmt: set to True
+@echo    - transit_file_path: include the file path to transit transaction files
+@echo.
+@echo To add a select line analysis to the transit assignment:
+@echo    - transitSelectFile: transit select line analysis file in Database\Select_Line
+@echo                        (provide a file name with "_", like rsp57_line.txt or metra_lines.txt) 
+@echo.
+@echo To add an analysis of HBW demand (in addition to all demand) to the select line analysis:
+@echo    - RSP: set to True [it doesn't matter if it is an actual RSP, this merely sets a flag]
+@echo -------------------------------------------------------------------------------------------------
 
 cd %~dp0
 cd ..
@@ -38,6 +50,16 @@ if "%transitAsmt%" EQU "T" (@echo  Location of transit network files = %transitF
 if "%transitAsmt%" EQU "T" (@echo  Transit assignment select line file = %selLineFile%)
 @echo  RSP evaluation run = %RSPrun%
 @echo ==============================================================
+
+set /a trnAsmt=0
+if "%transitAsmt%" EQU "T" (set /a trnAsmt+=1)
+set check2=%selLineFile:~0,4%
+REM Remove trailing spaces from transitFilePath
+set transitFilePath=%transitFilePath:~0,-1%
+
+if "%check2%" NEQ "None" (
+    if not exist Select_Line\%selLineFile% (goto no_select_line_file)
+)
 pause
 
 REM -- Get name of .emp file --
@@ -191,6 +213,14 @@ goto end
 @ECHO          THE LAST PROCEDURE DID NOT TERMINATE PROPERLY!
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @ECHO.
+goto end
+
+:no_select_line_file
+@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@ECHO    SELECT LINE FILE %selLineFile% IS SPECIFIED BUT DOES NOT EXIST.
+@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+@ECHO.
+pause
 goto end
 
 :end
