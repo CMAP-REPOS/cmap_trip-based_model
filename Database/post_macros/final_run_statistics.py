@@ -53,6 +53,7 @@ print('Final Run Statistics.py \nStarting...')
 import os
 import numpy as np, pandas as pd
 import re
+import yaml
 
 #input/output locations
 workspace = os.getcwd() # 'Database' folder
@@ -82,9 +83,10 @@ modeller = _m.Modeller(desktop=desktop)
 emmebank = modeller.emmebank
 
 #grab model year, scenario number to use in tools
-model_year = re.findall(r'c\d{2}q\d{1}_\d{1}00', workspace)[0]  #e.g., 'c23q4_400'
-model = model_year[0:5]                                  # e.g., 'c23q4'
-scenyear = model_year[-3:]                               # e.g., '400'
+with open(workspace + r'\batch_file.yaml') as f:
+    config = yaml.safe_load(f)
+model = config['model_version']  # e.g., 'c23q4'
+scenyear = config['scenario_code']  # e.g., '400'
 
 #emme tools
 net_calc = modeller.tool('inro.emme.network_calculation.network_calculator')

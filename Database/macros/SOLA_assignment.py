@@ -385,7 +385,7 @@ if globalIter == 2:
                     "results": {"selected_link_volumes": "@h200"}
                 },
             ]
-    class7_path = class7_path + final6
+    class7_path = class7_path + final7
 
     ### --> 4. Save select link volumes and demand for select link analyses, and EDA volumes for RSPs
     if numSelLinkFiles > 0:
