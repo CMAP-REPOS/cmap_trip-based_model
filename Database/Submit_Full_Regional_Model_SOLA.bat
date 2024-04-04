@@ -29,34 +29,40 @@ rem 10/05/2023 Heither: Updated batch_file.yaml parameters, transit assignment
 rem =========================================================================================
 cd %~dp0
 rem -- Read model run settings from batch_file.yaml --
-for /f "tokens=2 delims==" %%a in (batch_file.yaml) do (set val=%%a & goto break1)
+for /f "eol=# skip=2 tokens=2 delims=:" %%a in (batch_file.yaml) do (set val=%%a & goto break1)
 :break1
-for /f "eol=# skip=2 tokens=2 delims==" %%b in (batch_file.yaml) do (set wfhFile=%%b & goto break2)
+for /f "eol=# skip=4 tokens=2 delims=:" %%b in (batch_file.yaml) do (set wfhFile=%%b & goto break2)
 :break2
-for /f "eol=# skip=3 tokens=2 delims==" %%c in (batch_file.yaml) do (set wfh=%%c & goto break3)
+for /f "eol=# skip=5 tokens=2 delims=:" %%c in (batch_file.yaml) do (set wfh=%%c & goto break3)
 :break3
-for /f "eol=# skip=4 tokens=2 delims==" %%d in (batch_file.yaml) do (set tc14=%%d & goto break4)
+for /f "eol=# skip=6 tokens=2 delims=:" %%d in (batch_file.yaml) do (set tc14=%%d & goto break4)
 :break4
-for /f "eol=# skip=7 tokens=2 delims==" %%e in (batch_file.yaml) do (set selLinkFile=%%e & goto break5)
+for /f "eol=# skip=9 tokens=2 delims=:" %%e in (batch_file.yaml) do (set selLinkFile=%%e & goto break5)
 :break5
-for /f "eol=# skip=9 tokens=2 delims==" %%f in (batch_file.yaml) do (set transitAsmt=%%f & goto break6)
+for /f "eol=# skip=11 tokens=2 delims=:" %%f in (batch_file.yaml) do (set transitAsmt=%%f & goto break6)
 :break6
-for /f "eol=# skip=12 tokens=2 delims==" %%g in (batch_file.yaml) do (set transitFilePath=%%g & goto break7)
+for /f "eol=# skip=14 tokens=2 delims=:" %%g in (batch_file.yaml) do (set transitFilePath=%%g & goto break7)
 :break7
-for /f "eol=# skip=14 tokens=2 delims==" %%h in (batch_file.yaml) do (set selLineFile=%%h & goto break8)
+for /f "eol=# skip=16 tokens=2 delims=:" %%h in (batch_file.yaml) do (set selLineFile=%%h & goto break8)
 :break8
-for /f "eol=# skip=16 tokens=2 delims==" %%i in (batch_file.yaml) do (set utilFile=%%i & goto break9)
+for /f "eol=# skip=18 tokens=2 delims=:" %%i in (batch_file.yaml) do (set utilFile=%%i & goto break9)
 :break9
-for /f "eol=# skip=18 tokens=2 delims==" %%j in (batch_file.yaml) do (set UrbansimFile=%%j & goto break10)
+for /f "eol=# skip=20 tokens=2 delims=:" %%j in (batch_file.yaml) do (set UrbansimFile=%%j & goto break10)
 :break10
-for /f "eol=# skip=20 tokens=2 delims==" %%k in (batch_file.yaml) do (set RSPrun=%%k & goto break11)
+for /f "eol=# skip=22 tokens=2 delims=:" %%k in (batch_file.yaml) do (set RSPrun=%%k & goto break11)
 :break11
 
-set val=%val:~0,3%
-set transitAsmt=%transitAsmt:~0,1%
-set utilFile=%utilFile:~0,1%
-set UrbansimFile=%UrbansimFile:~0,1%
-set RSPrun=%RSPrun:~0,1%
+set val=%val:~1,3%
+set wfhFile=%wfhFile:~1%
+set wfh=%wfh:~1%
+set tc14=%tc14:~1%
+set selLinkFile=%selLinkFile:~1%
+set transitAsmt=%transitAsmt:~1,1%
+set transitFilePath=%transitFilePath:~1%
+set selLineFile=%selLineFile:~1%
+set utilFile=%utilFile:~1,1%
+set UrbansimFile=%UrbansimFile:~1,1%
+set RSPrun=%RSPrun:~1,1%
 REM -- Count number of select link files --
 set tempCnt=0
 for %%a in (%selLinkFile:None=%) do set /a tempCnt+=1
