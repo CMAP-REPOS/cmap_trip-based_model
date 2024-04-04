@@ -20,20 +20,22 @@ cd %~dp0
 cd ..
 echo.
 rem -- Read model run settings from batch_file.yaml --
-for /f "tokens=2 delims==" %%a in (batch_file.yaml) do (set val=%%a & goto break1)
+for /f "eol=# skip=2 tokens=2 delims=:" %%a in (batch_file.yaml) do (set val=%%a & goto break1)
 :break1
-for /f "eol=# skip=8 tokens=2 delims==" %%f in (batch_file.yaml) do (set transitAsmt=%%f & goto break2)
+for /f "eol=# skip=11 tokens=2 delims=:" %%f in (batch_file.yaml) do (set transitAsmt=%%f & goto break2)
 :break2
-for /f "eol=# skip=11 tokens=2 delims==" %%b in (batch_file.yaml) do (set transitFilePath=%%b & goto break3)
+for /f "eol=# skip=14 tokens=2 delims=:" %%b in (batch_file.yaml) do (set transitFilePath=%%b & goto break3)
 :break3
-for /f "eol=# skip=13 tokens=2 delims==" %%h in (batch_file.yaml) do (set selLineFile=%%h & goto break4)
+for /f "eol=# skip=16 tokens=2 delims=:" %%h in (batch_file.yaml) do (set selLineFile=%%h & goto break4)
 :break4
-for /f "eol=# skip=19 tokens=2 delims==" %%k in (batch_file.yaml) do (set RSPrun=%%k & goto break5)
+for /f "eol=# skip=22 tokens=2 delims=:" %%k in (batch_file.yaml) do (set RSPrun=%%k & goto break5)
 :break5
 
-set val=%val:~0,3%
-set transitAsmt=%transitAsmt:~0,1%
-set RSPrun=%RSPrun:~0,1%
+set val=%val:~1,3%
+set transitAsmt=%transitAsmt:~1,1%
+set transitFilePath=%transitFilePath:~1%
+set selLineFile=%selLineFile:~1%
+set RSPrun=%RSPrun:~1,1%
 @echo.
 @echo ==============================================================
 @echo     --- Model Run Settings ---

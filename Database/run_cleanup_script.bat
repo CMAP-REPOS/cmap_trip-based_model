@@ -4,9 +4,9 @@ rem Craig Heither, CMAP
 
 cd %~dp0
 rem -- Read model run settings from batch_file.yaml --
-for /f "tokens=2 delims==" %%a in (batch_file.yaml) do (set val=%%a & goto break1)
+for /f "eol=# skip=2 tokens=2 delims=:" %%a in (batch_file.yaml) do (set val=%%a & goto break1)
 :break1
-set val=%val:~0,3%
+set val=%val:~1,3%
 
 REM -- Get path to INRO Python installation, redirect errors to nul in case file not found, read first path from file --
 set infile=path.txt

@@ -40,15 +40,18 @@ rem In case CMD.exe is doing stuff in the wrong directory, this command
 rem changes the directory to where the batch file was called from.
 cd %~dp0
 rem -- Read model run settings from batch_file.yaml --
-for /f "tokens=2 delims==" %%a in (batch_file.yaml) do (set sc=%%a & goto break1)
+for /f "eol=# skip=2 tokens=2 delims=:" %%a in (batch_file.yaml) do (set sc=%%a & goto break1)
 :break1
-for /f "eol=# skip=2 tokens=2 delims==" %%b in (batch_file.yaml) do (set wfhFile=%%b & goto break2)
+for /f "eol=# skip=4 tokens=2 delims=:" %%b in (batch_file.yaml) do (set wfhFile=%%b & goto break2)
 :break2
-for /f "eol=# skip=3 tokens=2 delims==" %%c in (batch_file.yaml) do (set wfh=%%c & goto break3)
+for /f "eol=# skip=5 tokens=2 delims=:" %%c in (batch_file.yaml) do (set wfh=%%c & goto break3)
 :break3
-for /f "eol=# skip=4 tokens=2 delims==" %%d in (batch_file.yaml) do (set tc14=%%d & goto break4)
+for /f "eol=# skip=6 tokens=2 delims=:" %%d in (batch_file.yaml) do (set tc14=%%d & goto break4)
 :break4
-set sc=%sc:~0,3%
+set sc=%sc:~1,3%
+set wfhFile=%wfhFile:~1%
+set wfh=%wfh:~1%
+set tc14=%tc14:~1%
 @echo.
 @echo ========================================
 @echo     --- Model Run Settings ---
