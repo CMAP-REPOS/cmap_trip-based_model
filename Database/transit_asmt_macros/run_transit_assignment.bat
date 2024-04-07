@@ -70,37 +70,28 @@ if exist %infile% (del %infile% /Q)
 cd Database/transit_asmt_macros
 if exist usemacro_* (del usemacro_* /Q)
 
-REM -- Get path to INRO Python installation, redirect errors to nul in case file not found, read first path from file --
-set infile=path.txt
-if exist %infile% (del %infile% /Q)
-dir "C:\Program Files\INRO\*python.exe" /s /b >> %infile% 2>nul
-set /p empypath=<%infile%
-set paren="
-set empypath=%paren%%empypath%%paren%
-echo Emme pypath = %empypath%
-call :CheckEmpty1 %infile%
-:pythonpass
-if exist %infile% (del %infile% /Q)
+rem Activate Emme env
+call %~dp0..\..\Scripts\manage\env\activate_env.cmd emme
 
 REM -- Submit with name of .emp file 
-%empypath% cmap_transit_assignment_runner.py %file1% 1 %val%
+python cmap_transit_assignment_runner.py %file1% 1 %val%
 REM -- Summarize transit boardings
 cd ..
 set /a val21=%val%+21
 call emme -ng 000 -m transit_asmt_macros/summarize_transit_boardings.mac %val21%
 echo.
 REM -- Delete transit assignment matrices
-%empypath% transit_asmt_macros/delete_transit_skims.py %file1%
+python transit_asmt_macros/delete_transit_skims.py %file1%
 @echo.
 @echo MATRICES DELETED.
 
 if "%check2%" NEQ "None" (
         REM -- Run select line analysis
-        call %empypath% transit_asmt_macros\transit_select_line.py %file1% %val% %selLineFile%
+        call python transit_asmt_macros\transit_select_line.py %file1% %val% %selLineFile%
         if %ERRORLEVEL% GTR 0 (goto issue)
         @ECHO -- Completed Select Line Analysis 
         REM -- Summarize select line boardings
-        call %empypath% transit_asmt_macros\select_line_boardings.py %file1% %val% %RSPrun% %selLineFile%
+        call python transit_asmt_macros\select_line_boardings.py %file1% %val% %RSPrun% %selLineFile%
         if %ERRORLEVEL% GTR 0 (goto issue)
         @ECHO -- Completed Select Line Boarding Analysis
     )
@@ -113,18 +104,6 @@ goto filepass
 :badfile
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @ECHO    COULD NOT FIND .EMP FILE.
-@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO.
-pause
-goto end
-
-:CheckEmpty1
-if %~z1 == 0 (goto badpython)
-goto pythonpass
-
-:badpython
-@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO    COULD NOT FIND EMME PYTHON INSTALLATION.
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @ECHO.
 pause

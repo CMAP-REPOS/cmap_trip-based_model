@@ -1,5 +1,5 @@
 # To use this file:
-# conda env create -f conda-environment.yml
+# conda env create -f environment.yml
 name: CMAP-TRIP2
 channels:
   - tmip
@@ -53,5 +53,6 @@ dependencies:
   - xarray=0.20
   - zarr=2.10
   - pip:
-    - -e .
-    - -e ./sharrow
+    # Uses relative paths to local packages
+    - -e ../../../src/Mode-Dest-TOD
+    - -e ../../../src/Mode-Dest-TOD/sharrow

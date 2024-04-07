@@ -24,21 +24,12 @@ call :CheckEmpty %infile%
 if exist %infile% (del %infile% /Q)
 cd Database
 
-REM -- Get path to INRO Python installation, redirect errors to nul in case file not found, read first path from file --
-set infile=path.txt
-if exist %infile% (del %infile% /Q)
-dir "C:\Program Files\INRO\*python.exe" /s /b >> %infile% 2>nul
-set /p empypath=<%infile%
-set paren="
-set empypath=%paren%%empypath%%paren%
-echo Emme pypath = %empypath%
-call :CheckEmpty1 %infile%
-:pythonpass
-if exist %infile% (del %infile% /Q)
+rem Activate Emme Python env
+call %~dp0..\..\Scripts\manage\env\activate_env.cmd emme
 
 echo.
 REM -- Delete transit assignment matrices
-%empypath% transit_asmt_macros/delete_transit_skims.py %file1%
+python transit_asmt_macros/delete_transit_skims.py %file1%
 @echo.
 @echo MATRICES DELETED.
 goto end
@@ -51,18 +42,6 @@ goto filepass
 :badfile
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @ECHO    COULD NOT FIND .EMP FILE.
-@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO.
-pause
-goto end
-
-:CheckEmpty1
-if %~z1 == 0 (goto badpython)
-goto pythonpass
-
-:badpython
-@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO    COULD NOT FIND EMME PYTHON INSTALLATION.
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @ECHO.
 pause

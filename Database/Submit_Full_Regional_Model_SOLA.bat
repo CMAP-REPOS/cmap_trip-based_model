@@ -69,18 +69,6 @@ for %%a in (%selLinkFile:None=%) do set /a tempCnt+=1
 set a/ tempCnt=5-tempCnt
 @echo %tempCnt% select link files submitted.
 
-REM -- Get path to INRO Python installation, redirect errors to nul in case file not found, read first path from file --
-set infile=path.txt
-if exist %infile% (del %infile% /Q)
-dir "C:\Program Files\INRO\*python.exe" /s /b >> %infile% 2>nul
-set /p empypath=<%infile%
-set paren="
-set empypath=%paren%%empypath%%paren%
-echo Emme pypath = %empypath%
-call :CheckEmpty1 %infile%
-:pythonpass
-if exist %infile% (del %infile% /Q)
-
 REM -- Get name of .emp file --
 set infile=empfile.txt
 cd ..
@@ -120,8 +108,11 @@ if "%check2%" NEQ "None" (
     if not exist Select_Line\%selLineFile% (goto no_select_line_file)
 )
 
+rem Activate Emme Python env
+call %~dp0..\Scripts\manage\env\activate_env.cmd emme
+
 @echo -- Verifying select link files --
-call %empypath% macros\verify_select_link.py %file1% %selLinkFile% %RSPrun% %trnAsmt%
+call python macros\verify_select_link.py %file1% %selLinkFile% %RSPrun% %trnAsmt%
 if %ERRORLEVEL% GTR 0 (goto end)
 
 if %trnAsmt% EQU 1 (
@@ -157,49 +148,6 @@ if not "%choice%"=="" (
 	)
 )
 :proceed
-rem The `CONDAPATH` environment variable should be set before running this .bat
-rem It points to the place where conda is installed
-rem Alternatively if running in a conda prompt itself then CONDA_PREFIX will be set
-if defined CONDAPATH (
-	goto condafound
-)
-if defined CONDA_PREFIX (
-	set CONDAPATH=%CONDA_PREFIX%
-	echo CONDA_PREFIX is %CONDAPATH%
-	goto condafound
-)
-rem define here all the places where we might find the conda installation
-rem If you try to run the model, you know that conda is installed, and the
-rem model fails with "cannot find conda", then visit a conda prompt,
-rem run `where conda`, and add the resulting path to this list.
-for %%x in (
-    %CONDAPATH%
-    %CONDA_PREFIX%
-    %LOCALAPPDATA%\mambaforge
-    %LOCALAPPDATA%\miniforge
-    %LOCALAPPDATA%\miniconda
-    %LOCALAPPDATA%\miniconda3
-    %LOCALAPPDATA%\Anaconda3
-    %USERPROFILE%\Anaconda3
-    %USERPROFILE%\Anaconda
-    %USERPROFILE%\Anaconda2
-    %USERPROFILE%\miniconda3
-    %USERPROFILE%\miniconda
-    %USERPROFILE%\miniconda2
-) do (
-    if exist %%x\Scripts\activate.bat (
-      set CONDAPATH=%%x
-      goto condafound
-    )
-)
-@echo cannot find conda in any of the usual places.
-@echo CONDAPATH is not defined, first run set CONDAPATH=C:\... to point to the conda installation.
-goto end
-
-:condafound
-@echo CONDAPATH IS %CONDAPATH%
-@echo.
-
 @echo Model run scenario: %val%
 @echo.
 
@@ -208,23 +156,8 @@ set /p ok="[RUN MODEL FOR SCENARIO %val%? (y/n)] "
 set ok=%ok:y=Y%
 if not "%ok%"=="Y" (goto end)
 @echo ==================================================================
+
 @echo.
-
-rem Define here the name of the environment to be used
-set ENVNAME=CMAP-TRIP2
-
-rem The following command prepares to activate the base environment if it is used.
-if %ENVNAME%==base (set ENVPATH=%CONDAPATH%) else (set ENVPATH=%CONDAPATH%\envs\%ENVNAME%)
-
-rem Activate the conda environment
-rem Using call is required here, see: https://stackoverflow.com/questions/24678144/conda-environments-and-bat-files
-call %CONDAPATH%\Scripts\activate.bat %ENVPATH%
-if %errorlevel% neq 0 (
-  @echo Error in activating conda
-  goto end
-)
-
-REM ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 copy tg\fortran\TG_HHENUM_OUTPUT.TXT TG_HHENUM_OUTPUT.TXT /y
 copy tg\fortran\TRIP49_PA_OUT.TXT defaults_base_year\TRIP49_PA_OUT.TXT /y
 copy tg\fortran\TRIP49_PA_WFH_OUT.TXT defaults_base_year\TRIP49_PA_WFH_OUT.TXT /y
@@ -294,7 +227,7 @@ if not exist tg\data\m01tg.txt (goto filemiss2)
 if not exist tg\data\m01type.csv (goto filemiss2)
 @ECHO.
 @ECHO -- OBTAINING TRANSIT NETWORK DATA FROM EMME --
-call %empypath% prep_macros/distr_m01_data.py %file1%  %val% >> prep_macros\report.txt
+call python prep_macros/distr_m01_data.py %file1%  %val% >> prep_macros\report.txt
 if %ERRORLEVEL% GTR 0 (goto issue)
 cd prep_macros
 @ECHO.
@@ -314,19 +247,19 @@ CD ..
 
 @ECHO   ***  Cleaning up databank.  ***
 if exist cleanup.rpt (del cleanup.rpt)
-call %empypath% useful_macros\cleanup_for_rerun.py %file1% %val%>> cleanup.rpt
+call python useful_macros\cleanup_for_rerun.py %file1% %val%>> cleanup.rpt
 if exist reports (del reports)
 
 REM RUN FREESKIM TO CREATE TIME, DISTANCE AND TOLL MATRICES
 @ECHO.
 @ECHO   ***  Skimming highway network.  ***
-call %empypath% prep_macros\free.skim.mac.py %file1% %val%
+call python prep_macros\free.skim.mac.py %file1% %val%
 if %ERRORLEVEL% neq 0 (goto issue)
 @ECHO.
 
 REM IF PRELOAD=1, REPLACE UNCONGESTED TIME AND DISTANCE MATRICES
 if %preload% EQU 1 (@echo   ***  Preloading congested times and distances.  ***)
-if %preload% EQU 1 (call %empypath% prep_macros\preload_congested_times_mac.py %file1% %val%)
+if %preload% EQU 1 (call python prep_macros\preload_congested_times_mac.py %file1% %val%)
 
 @ECHO ==================================================================
 REM - LOOP TO RUN MODEL
@@ -338,22 +271,22 @@ if %counter% GTR 2 (goto loopend)
 @ECHO BEGINNING TRANSIT SKIM - FULL MODEL ITERATION %counter%
 @ECHO - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 REM AM Peak Skim
-call %empypath% macros/skim_transit.py %file1% %val% %counter% AM
+call python macros/skim_transit.py %file1% %val% %counter% AM
 if %ERRORLEVEL% neq 0 (goto issue)
-call %empypath% macros/transit_triple_indexing.py %file1% AM
+call python macros/transit_triple_indexing.py %file1% AM
 if %ERRORLEVEL% neq 0 (goto issue)
-call %empypath% macros/transit_skim_final_matrices1.py
+call python macros/transit_skim_final_matrices1.py
 if %ERRORLEVEL% neq 0 (goto issue)
-call %empypath% macros/transit_skim_wrapup.py %file1% AM
+call python macros/transit_skim_wrapup.py %file1% AM
 if %ERRORLEVEL% neq 0 (goto issue)
 REM Midday Skim
-call %empypath% macros/skim_transit.py %file1% %val% %counter% MD
+call python macros/skim_transit.py %file1% %val% %counter% MD
 if %ERRORLEVEL% neq 0 (goto issue)
-call %empypath% macros/transit_triple_indexing.py %file1% MD
+call python macros/transit_triple_indexing.py %file1% MD
 if %ERRORLEVEL% neq 0 (goto issue)
-call %empypath% macros/transit_skim_final_matrices2.py
+call python macros/transit_skim_final_matrices2.py
 if %ERRORLEVEL% neq 0 (goto issue)
-call %empypath% macros/transit_skim_wrapup.py %file1% MD
+call python macros/transit_skim_wrapup.py %file1% MD
 if %ERRORLEVEL% neq 0 (goto issue)
 @ECHO    -- End of Transit Skim Procedures: %date% %time% >> model_run_timestamp.txt
 
@@ -361,8 +294,11 @@ if %ERRORLEVEL% neq 0 (goto issue)
 @ECHO PREPARING EMMEBANK - FULL MODEL ITERATION %counter%
 @ECHO - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 rem @ECHO on
-call %empypath% macros\init_HOVsim_databk_mac.py %val% %counter% %file1%
+call python macros\init_HOVsim_databk_mac.py %val% %counter% %file1%
 if %ERRORLEVEL% neq 0 (goto issue)
+
+rem Activate Python env
+call %~dp0..\Scripts\manage\env\activate_env.cmd
 
 @ECHO -- Begin Mode-Destination Choice Procedures: %date% %time% >> model_run_timestamp.txt
 @ECHO.
@@ -372,6 +308,9 @@ call cmap_modedest . --njobs %jobs% --max_zone_chunk %zones%
 if %ERRORLEVEL% NEQ 0 (goto issue)
 @ECHO    -- End Mode-Destination Choice Procedures: %date% %time% >> model_run_timestamp.txt
 @ECHO.
+
+rem Activate Emme Python env
+call %~dp0..\Scripts\manage\env\activate_env.cmd emme
 
 @ECHO -- Begin Time-of-Day Procedures: %date% %time% >> model_run_timestamp.txt
 @ECHO.
@@ -390,7 +329,7 @@ call emme -ng 000 -m macros\net5I_7c.mac %tod_cntr% >> blog.txt
 @ECHO   --- Begin assignment Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO --- Begin assignment Period %tod_cntr%: %date% %time% ---
 @ECHO  -- Run TOD assignment --
-call %empypath% macros/SOLA_assignment.py %file1% %tod_cntr% %sola_threads% %counter% %RSPrun% %tempCnt% %selLinkFile% %trnAsmt%
+call python macros/SOLA_assignment.py %file1% %tod_cntr% %sola_threads% %counter% %RSPrun% %tempCnt% %selLinkFile% %trnAsmt%
 if %ERRORLEVEL% NEQ 0 (goto issue)
 @ECHO   --- End assignment Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO --- End assignment Period %tod_cntr%: %date% %time% ---
@@ -401,7 +340,7 @@ call emme -ng 000 -m macros\balance5I_7c.mac %val% >> blog.txt
 @ECHO   --- Begin time-of-day skim Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO --- Complete time of day skims ---
 call emme -ng 000 -m macros\TOD_skim_setup.mac %val% %tod_cntr% >> blog.txt
-call %empypath% macros/TOD_skim.py %file1% %tod_cntr% %val%%counter%%tod_cntr% %sola_threads%
+call python macros/TOD_skim.py %file1% %tod_cntr% %val%%counter%%tod_cntr% %sola_threads%
 if %ERRORLEVEL% NEQ 0 (goto issue)
 @ECHO    -- End Time-of-Day Procedures Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO -- End Time-of-Day Procedures for Period %tod_cntr%: %date% %time% --
@@ -411,9 +350,9 @@ if %tod_cntr% LSS 9 (goto tod_loop)
 REM -- End time-of-day loop --
 @ECHO   --- Begin Global Iteration MSA skims: %date% %time% >> model_run_timestamp.txt
 @ECHO --- Begin Global Iteration MSA skims: %date% %time% ---
-call %empypath% macros/MSA_iteration_skims.py %file1% 3 %val%%counter%3 %counter% %sola_threads%
+call python macros/MSA_iteration_skims.py %file1% 3 %val%%counter%3 %counter% %sola_threads%
 if %ERRORLEVEL% NEQ 0 (goto issue)
-call %empypath% macros/MSA_iteration_skims.py %file1% 5 %val%%counter%5 %counter% %sola_threads%
+call python macros/MSA_iteration_skims.py %file1% 5 %val%%counter%5 %counter% %sola_threads%
 if %ERRORLEVEL% NEQ 0 (goto issue)
 @ECHO   --- End Global Iteration MSA skims: %date% %time% >> model_run_timestamp.txt
 @ECHO --- End Global Iteration MSA skims: %date% %time%
@@ -436,15 +375,15 @@ REM Run script to complete select link analysis, if necessary
 set /A counter=counter-1
 if %tempCnt% EQU 0 (goto skip_sel_link)
 if %trnAsmt% EQU 1 (goto skip_sel_link)
-call %empypath% macros/complete_select_link.py %file1% %val%%counter%9 %val%%counter%0 %tempCnt% %RSPrun% 
+call python macros/complete_select_link.py %file1% %val%%counter%9 %val%%counter%0 %tempCnt% %RSPrun% 
 if %ERRORLEVEL% NEQ 0 (goto issue)
 :skip_sel_link
 @ECHO End Daily Accumulation Procedures: %date% %time% >> model_run_timestamp.txt
 
 REM Run script to write link data for MOVES emissions analysis. 
-call %empypath% post_macros\punchmovesdata.py
+call python post_macros\punchmovesdata.py
 @ECHO Link Data Written for MOVES Emissions Analysis: %date% %time% >> model_run_timestamp.txt
-call %empypath% post_macros\final_run_statistics.py
+call python post_macros\final_run_statistics.py
 
 REM The following two lines delete the trip and utility files from global iterations 0 and 1 to reduce storage space. Comment them out to retain.
 if exist cache\choice_simulator_trips_out.001 (rmdir /S /Q cache\choice_simulator_trips_out.001)
@@ -466,27 +405,31 @@ if "%transitAsmt%" EQU "T" (
     if %ERRORLEVEL% NEQ 0 (goto issue)
     REM -- Create matrices to hold TOD transit demand
     if "%RSPrun%" EQU "T" (@ECHO -- Creating HBW transit demand matrices >> model_run_timestamp.txt)
-    call %empypath% transit_asmt_macros/setup_transit_asmt_2_initialize_matrices.py %file1% %RSPrun%
+    call python transit_asmt_macros/setup_transit_asmt_2_initialize_matrices.py %file1% %RSPrun%
     if %ERRORLEVEL% NEQ 0 (goto issue)
     REM -- Fill matrices with demand (point to conda environment)
+    rem Activate Python env
+    call %~dp0..\Scripts\manage\env\activate_env.cmd
     call python transit_asmt_macros\setup_transit_asmt_3_TOD_transit_demand.py %RSPrun%
     if %ERRORLEVEL% NEQ 0 (goto issue)
     @ECHO End Transit Assignment setup >> model_run_timestamp.txt
+    rem Activate Emme Python env
+    call %~dp0..\Scripts\manage\env\activate_env.cmd emme
     @ECHO Submit Transit Assignment >> model_run_timestamp.txt 
     cd transit_asmt_macros
-    call %empypath% cmap_transit_assignment_runner.py %file1% 1 %val%
+    call python cmap_transit_assignment_runner.py %file1% 1 %val%
     if %ERRORLEVEL% GTR 0 (goto issue)
     cd ..
     REM -- Delete transit assignment matrices
-    call %empypath% transit_asmt_macros\delete_transit_skims.py %file1%
+    call python transit_asmt_macros\delete_transit_skims.py %file1%
     if %ERRORLEVEL% GTR 0 (goto issue)
     if "%check2%" NEQ "None" (
         REM -- Run select line analysis
-        call %empypath% transit_asmt_macros\transit_select_line.py %file1% %val% %selLineFile%
+        call python transit_asmt_macros\transit_select_line.py %file1% %val% %selLineFile%
         if %ERRORLEVEL% GTR 0 (goto issue)
         @ECHO -- Completed Select Line Analysis >> model_run_timestamp.txt
         REM -- Summarize select line boardings
-        call %empypath% transit_asmt_macros\select_line_boardings.py %file1% %val% %RSPrun% %selLineFile%
+        call python transit_asmt_macros\select_line_boardings.py %file1% %val% %RSPrun% %selLineFile%
         if %ERRORLEVEL% GTR 0 (goto issue)
         @ECHO -- Completed Select Line Boarding Analysis >> model_run_timestamp.txt
     )
@@ -559,18 +502,6 @@ goto filepass
 :badfile
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @ECHO    COULD NOT FIND .EMP FILE.
-@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO.
-pause
-goto end
-
-:CheckEmpty1
-if %~z1 == 0 (goto badpython)
-goto pythonpass
-
-:badpython
-@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO    COULD NOT FIND EMME PYTHON INSTALLATION.
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @ECHO.
 pause

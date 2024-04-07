@@ -1,0 +1,8 @@
+# To use this file:
+# conda env create -f emme-plus_environment.yml
+name: emme-plus
+channels:
+  - conda-forge
+dependencies:
+  - python=3.7.6
+  - pyyaml
