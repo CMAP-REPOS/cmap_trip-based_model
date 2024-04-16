@@ -384,6 +384,10 @@ REM Run script to write link data for MOVES emissions analysis.
 call python post_macros\punchmovesdata.py
 @ECHO Link Data Written for MOVES Emissions Analysis: %date% %time% >> model_run_timestamp.txt
 call python post_macros\final_run_statistics.py
+rem Run script to create input files for MOVES.
+call python post_macros\createMOVESinputfile.py
+if %ERRORLEVEL% NEQ 0 (goto issue)
+@echo %DATE% %TIME% - INFO - MOVES files created >> model_run_timestamp.txt
 
 REM The following two lines delete the trip and utility files from global iterations 0 and 1 to reduce storage space. Comment them out to retain.
 if exist cache\choice_simulator_trips_out.001 (rmdir /S /Q cache\choice_simulator_trips_out.001)
