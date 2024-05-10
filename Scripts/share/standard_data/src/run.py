@@ -14,12 +14,12 @@ def main():
         config = yaml.safe_load(f)
     config['scenario_code'] = batch_file_config['scenario_code']
     config['model_version'] = batch_file_config['model_version']
-    # standard_data.export(project_file=proj_dir.joinpath(config['project_filename']),
-    #                      title=config['title'],
-    #                      scenario_code=scenario_code)
-    # standard_data.compress(title=config['title'],
-    #                        scenario_code=scenario_code,
-    #                        transit_dir=config['transit_dir'])
+    standard_data.export(project_file=proj_dir.joinpath(config['project_filename']),
+                         title=config['model_version'],
+                         scenario_code=config['scenario_code'])
+    standard_data.compress(title=config['model_version'],
+                           scenario_code=config['scenario_code'],
+                           transit_dir=config['transit_directory'])
     standard_data.document(context=config)
 
 

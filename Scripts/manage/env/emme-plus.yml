@@ -5,6 +5,7 @@ channels:
   - conda-forge
 dependencies:
   - jinja2
+  - markdown
   - pyarrow
   - python=3.7.6
   - pyyaml

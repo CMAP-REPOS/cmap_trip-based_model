@@ -20,7 +20,8 @@ out_filenames:
     transit_networks: emmenet_transit
     tod_transit_networks: emmenet_transit_tod
     peak_transit_network: transitshp_pk
-    off-peak_transit_network: transitshp_op
+    offpeak_transit_network: transitshp_op
     skim_matrices: skims
     database: emmebank
     matrices: emmemat
+    trip_roster: trip_roster
