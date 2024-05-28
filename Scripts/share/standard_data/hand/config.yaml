@@ -7,11 +7,10 @@ transit_directory: M:\proj1\nrf\Conformity\c24q2\transit
 # Date of Board approval.
 approval_date: June 2024
 # Names of output files.
-out_filenames:
+out_file_names:
     tg_data: tg_results
-    tg_matrices: prods_attrs
+    pa_tables: prods_attrs
     trip_tables: trips
-    work_trip_tables: worktrips
     hov_trip_tables: hovtrips
     highway_networks: emmenet_highway
     am_peak_highway_network: highwayshp_ampk

@@ -22,8 +22,11 @@ filenames or in headers within the files.
 | 2025 | 200 |
 | 2030 | 300 |
 | 2035 | 400 |
-| 2040 | 600 |
+| 2040 | 500 |
 | 2050 | 700 |
+
+For additional information, see the
+[travel demand model documenation](https://www.cmap.illinois.gov/documents/10180/1439048/ON+TO+2050+Update+Travel+Demand+Model+Documentation+Appendix.pdf/).
 
 <br>
 
@@ -33,13 +36,15 @@ filenames or in headers within the files.
 
 **Trip Generation Data** ({{ tg_data }})  
 This is a CSV table containing the trip generation inputs and outputs by trip
-generation zone, the most disaggregate modeling geography.  The trip generation
-zone ID is subzone17.  The information can be linked to the trip generation
-zone shapefile, described later, via the variable subzone17.  This file
-includes a number of variables related to low and high-income workers.  The
-definition of a low-income worker for our purposes is a worker who earns less
-than the regional median income.  A high-income worker earns more than the
-regional median income.  The variables are defined this way:
+generation zone, the most disaggregate modeling geography. The trip generation
+zone ID is subzone17. The information can be linked to the trip generation zone
+shapefile, described later, via the variable subzone17. This file includes a
+number of variables related to low-income and high-income households. The
+definition of a low-income household for our purposes is a household that earns
+less than the regional median household income. A high-income household earns
+more than the regional median household income.
+
+The variables are defined this way:
 
 | Field name | Value definition |
 | --- | --- |
@@ -59,7 +64,7 @@ regional median income.  The variables are defined this way:
 | avg_adults | Average number of adults per household |
 | avg_workers | Average number of workers per household |
 | avg_children | Average number of children per household |
-| avg_income_index | Ratio of the subzone average income to the regional median income |
+| avg_income_index | Ratio of the subzone average household income to the regional median household income |
 | avg_age_index | Average householder age code:<br> 1 = 16–34<br> 2 = 35–64<br> 3 = 65+ |
 | gq_mil | Persons in military barracks |
 | gq_univ | Persons in college/university dormitories |
@@ -67,7 +72,7 @@ regional median income.  The variables are defined this way:
 | gq_65plus | Persons in other group quarters age 65 or older |
 | retail_emp | Retail employment |
 | tot_emp | Total employment |
-| hi_earn_share | Percent of subzone workers who earn more than the regional median income |
+| hi_earn_share | Percent of subzone households that earn more than the regional median household income |
 | nhp | Non-home-based productions |
 | nha | Non-home-based attractions |
 | hwplo | Home-based work low-income productions |
@@ -78,40 +83,34 @@ regional median income.  The variables are defined this way:
 | hoa | Home-based other attractions |
 | wrkautoms | Ratio of the workers in the subzone who commute by auto divided by the total workers in the subzone |
 | sdwlkidx | Walkability index |
-| zmedinc | Median income of resident TAZ |
+| zmedinc | Median household income of resident TAZ |
 
 <br>
 
-**Trip Generation Matrices** ({{ tg_matrices }})  
-This compressed folder contains eight matrices of person trip productions and
-attractions which were imported and used as origin and destination totals for
-the trip distribution model. The source of this data is the trip generation
-outputs described previously, aggregated up to the traffic analysiszone system,
-zone17. These are structured text files in Emme transaction format. The
-information can be linked to the traffic analysis zone shapefile zone17,
-described later, via the zone number.
+**Production-Attraction Tables** ({{ pa_tables }})  
+This compressed folder contains person trip productions and attractions which
+were read and used by the destination choice-mode choice model. The source of
+this data is the trip generation outputs described previously. These are
+structured text files in fixed-width format. The information can be linked to
+the traffic analysis zone shapefile zone17, described later, via the zone
+number.
 
-| Filename | Contents |
+| Columns | Description |
 | --- | --- |
-| hwphi.in | Home-based work productions, high-income |
-| hwplo.in | Home-based work productions, low-income |
-| hop.in | Home-based other productions |
-| nhp.in | Non-home-based productions |
-| hwahi.in | Home-based work attractions, high-income |
-| hwalo.in | Home-based work attractions, low-income |
-| hoa.in | Home-based other attractions |
-| nha.in | Non-home-based attractions |
-
-The production files have 3 lines of headers followed by “origin zone”  “all:”
-“trips” in each of the remaining records.
-
-The attraction files have 3 lines of headers followed by “all”  “destination
-zone:”  “trips” in each of the remaining records.
+| 1–6 | Trip generation subzone |
+| 7–12 | Modeling zone |
+| 13–14 | Trip purpose code |
+| 15–23 | Household and non-institutionalized group quarters trip productions |
+| 24–32 | Household and non-institutionalized group quarters trip attractions |
 
 <br>
 
 **Distributed Trip Tables** ({{ trip_tables }})  
-This compressed folder includes 16 CSV matrices.
+This compressed folder includes CSV matrices. The low-income and
+high-income trip tables represent travel made by workers living in households
+that earn below and above the regional median household income. The individual
+trip tables sum to the totals for home-based work auto and home-based work
+transit trips.
 
 The CMAP network assignment process requires the truck vehicle trips (actual
 matrix contents) to be converted to vehicle equivalents. The factors used are
@@ -121,42 +120,48 @@ equivalents, and heavy trucks=3 vehicle equivalents.
 Because of the unique way the transit network is coded, the transit trip tables
 cannot be assigned directly to the transit network.
 
-| Filename | Format | Contents |
-| --- | --- | --- |
-| hbw_auto.csv | P/A | Home-based work auto person trips |
-| hbo_auto.csv | P/A | Home-based other auto person trips |
-| hbs_auto.csv | P/A | Home-based shopping auto person trips |
-| nhb_auto.csv | O/D | Non-home-based auto person trips |
-| mf4.csv | O/D | B-plate truck vehicle trips |
-| mf5.csv | O/D | Light truck vehicle trips |
-| mf6.csv | O/D | Medium truck vehicle trips |
-| mf7.csv | O/D | Heavy truck vehicle trips |
-| mf8.csv | O/D | Auto point-of-entry vehicle trips |
-| mf9.csv | O/D | Truck point-of-entry vehicle trips |
-| mf10.csv | O/D | Airport trip vehicle trips |
-| mf99.csv | P/A | Home-based work transit person trips |
-| mf42.csv | P/A | Home-based other transit person trips |
-| mf43.csv | O/D | Non-home-based transit person trips |
-| visit_auto.csv | O/D | Visitor auto person trips |
-| dead_auto.csv | O/D | Deadhead auto person trips (TNCs) |
+| Filename | Contents |
+| --- | --- |
+| hbwL_auto.csv | Home-based work auto person trips, low-income |
+| hbwH_auto.csv | Home-based work auto person trips, high-income |
+| hbo_auto.csv | Database | Home-based other auto person trips |
+| hbs_auto.csv | Home-based shopping auto person trips |
+| nhb_auto.csv | Non-home-based auto person trips |
+| mf4.csv | B-plate truck vehicle trips |
+| mf5.csv | Light truck vehicle trips |
+| mf6.csv | Medium truck vehicle trips |
+| mf7.csv | Heavy truck vehicle trips |
+| mf8.csv | Auto point-of-entry vehicle trips |
+| mf9.csv | Truck point-of-entry vehicle trips |
+| mf10.csv | Airport trip vehicle trips |
+| mf38.csv | Visitor transit person trips |
+| mf39.csv | Home-based shopping transit person trips |
+| mf40.csv | Home-based work transit person trips, low-income |
+| mf41.csv | Home-based work transit person trips, high-income |
+| mf42.csv | Home-based other transit person trips |
+| mf43.csv | Non-home-based transit person trips |
+| visit_auto.csv | Visitor auto person trips |
+| dead_auto.csv | Deadhead trips for TNCs and taxis |
 
-<br>
+Daily truck and external trip time-of-day conversion:
 
-**Distributed Work Trip Tables** ({{ work_trip_tables }})  
-This compressed folder contains the work trip detail tables. The low and
-high-income trip tables represent travel made by workers who earn below and
-above the regional median income. The individual trip tables sum to the totals
-for home-based work auto and home-based work transit trips shown in the
-previous section.
+| Conversion factors | TOD1 | TOD2 | TOD3 | TOD4 | TOD5 | TOD6 | TOD7 | TOD8 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Auto point-of-entry | 0.163 | 0.052 | 0.127 | 0.051 | 0.211 | 0.133 | 0.155 | 0.109 |
+| Airport auto point-of-entry | 0.163 | 0.052 | 0.127 | 0.051 | 0.211 | 0.133 | 0.155 | 0.109 |
+| B-plate truck | 0.23 | 0.007 | 0.016 | 0.016 | 0.238 | 0.165| 0.176 | 0.152 |
+| Light truck | 0.23 | 0.007 | 0.016 | 0.016 | 0.238 | 0.165| 0.176 | 0.152 |
+| Medium truck | 0.23 | 0.007 | 0.016 | 0.016 | 0.238 | 0.165| 0.176 | 0.152 |
+| Heavy truck | 0.213 | 0.044 | 0.121 | 0.067 | 0.266 | 0.121 | 0.103 | 0.065 |
+| Truck point-of-entry | 0.213 | 0.044 | 0.121 | 0.067 | 0.266 | 0.121 | 0.103 | 0.065 |
 
-| Filename | Format | Contents |
-| --- | --- | --- |
-| hbwL_all.csv | P/A | Home-based work total person trips, low income |
-| hbwH_all.csv | P/A | Home-based work total person trips, high income |
-| mf40.csv | P/A | Home-based work transit person trips, low income |
-| mf41.csv | P/A | Home-based work transit person trips, high income |
-| hbwL_auto.csv | P/A | Home-based work auto person trips, low income |
-| hbwH_auto.csv | P/A | Home-based work auto person trips, high income |
+Auto point-of-entry trip SOV value-of-time conversion:
+
+| Value-of-time | Conversion factor |
+| --- | --- |
+| VOT1 | 0.10 |
+| VOT2 | 0.45 |
+| VOT3 | 0.45 |
 
 <br>
 
@@ -278,7 +283,7 @@ about some of the additional network attributes.
 - Volume Delay Function Codes
     - 1 = Arterial street
     - 2 = Freeway
-    - 3 = Freeway/expressway to arterial street
+    - 3 = Freeway/expressway to arterial street ramp
     - 4 = Expressway
     - 5 = Freeway/expressway to freeway/expressway ramp
     - 6 = Auto access to network
@@ -328,9 +333,9 @@ Vehicle class volumes are:
 - @avmqv – Medium trucks vehicle equivalents
 - @avhqv – Heavy trucks vehicle equivalents
 
-@vadt contains the sum of vehicle class vehicle equivalents, converted to
-vehicles – (@avauv + @avh2v + @avh3v + @avbqv + @avlqv + (@avmqv/2) +
-(@avhqv/3)).
+@vadt contains the sum of vehicle class vehicle equivalents and bus vehicle
+equivalents, converted to vehicles – (@avauv + @avh2v + @avh3v + @avbqv
++ @avlqv + (@avmqv/2) + (@avhqv/3) + (@busveq/3)).
 
 Toll rates are:
 
@@ -363,7 +368,8 @@ Transit Network Codes
     - Q = Pace express
     - L = Pace local
     - C = CTA rail
-    - M = Metra rail Access Modes
+    - M = Metra rail
+- Access Modes
     - w = From origin to Metra
     - v = From origin to CTA rail
     - u = From origin to bus
@@ -391,6 +397,13 @@ variables for the transit network. Within the node variable files, @pspace is
 the number of parking spaces and @pcost is the cost of parking in cents.
 Access.network_<period> contains transit network access links.
 
+| Period | Description | Hours |
+| --- | --- | --- |
+| 1 | Overnight/Early AM | 6pm–6am |
+| 2 | AM peak | 6–9am |
+| 3 | Midday | 9am–4pm |
+| 4 | PM peak | 4–6pm |
+
 <br>
 
 **Peak Transit Network Shapefiles** ({{ peak_transit_network }})  
@@ -413,13 +426,11 @@ zonal interchanges not connected by transit in the transit matrices:
 - mf922.csv = Indexed transit in-vehicle minutes (off-peak)
 - mf923.csv = Indexed transit walk transfer minutes (off-peak)
 - mf938.csv = Indexed transit total wait time x2 (off-peak)
-- mf939.csv = Indexed transit peak headway x1.25 (off-peak)
 - mf930.csv = Indexed transit priority mode (off-peak)
 - mf928.csv = Indexed final average transit fare (off-peak)
 - mf822.csv = Indexed transit in-vehicle minutes (peak)
 - mf823.csv = Indexed transit walk transfer minutes (peak)
 - mf838.csv = Indexed transit total wait time x2 (peak)
-- mf839.csv = Indexed transit peak headway x1.25 (peak)
 - mf830.csv = Indexed transit priority mode (peak)
 - mf828.csv = Indexed final average transit fare (peak)
 - mf44.csv = AM peak (7–9am) skimmed highway time
@@ -466,6 +477,42 @@ This CSV contains all person trips generated by the mode-destination-tod model.
 | trips | Number of person trips |
 | hh_autos | Number of autos owned by household |
 | hh_inc5 | Household income category |
+
+HOV3+ vehicle occupancy rates:
+
+| Trip purpose | Rate |
+| --- | --- |
+| Home-based work | 3.36 |
+| Home-based non-work | 3.31 |
+| Non-home-based | 3.39 |
+| Vistor | 3.39 |
+
+SOV vehicle trip value-of-time conversion:
+
+| Purpose | Income Group | Low VOT | Mid VOT | High VOT |
+| --- | --- | --- | --- | --- |
+| HBWL | 1 | 0.648 | 0.333 | 0.018 |
+| HBWL | 2 | 0.383 | 0.537 | 0.08 |
+| HBWH | 3 | 0.197 | 0.605 | 0.198 |
+| HBWH | 4 | 0.197 | 0.605 | 0.198 |
+| HBWH | 5 | 0.036 | 0.425|  0.53 |
+| HBO | 1 | 0.648 | 0.333 | 0.018 |
+| HBO | 2 | 0.383 | 0.537 | 0.08 |
+| HBO | 3 | 0.197 | 0.605 | 0.198 |
+| HBO | 4 | 0.197 | 0.605 | 0.198 |
+| HBO | 5 | 0.036 | 0.425 | 0.53 |
+| HBS | 1 | 0.648 | 0.333 | 0.018 |
+| HBS | 2 | 0.383 | 0.537 | 0.08 |
+| HBS | 3 | 0.197 | 0.605 | 0.198 |
+| HBS | 4 | 0.197 | 0.605 | 0.198 |
+| HBS | 5 | 0.036 | 0.425 | 0.53 |
+| NHB | 1 | 0.648 | 0.333 | 0.018 |
+| NHB | 2 | 0.383 | 0.537 | 0.08 |
+| NHB | 3 | 0.197 | 0.605 | 0.198 |
+| NHB | 4 | 0.197 | 0.605 | 0.198 |
+| NHB | 5 | 0.036 | 0.425 | 0.53 |
+| VISIT | -1 | 0.3 | 0.55 | 0.15 |
+| DEAD | -1 | 0.7 | 0.25 | 0.051 |
 
 <br>
 

@@ -5,7 +5,7 @@ channels:
   - conda-forge
 dependencies:
   - jinja2
-  - markdown
+  - markdown=3.4  # markdown v3.5 dropped support for python v3.7
   - pyarrow
   - python=3.7.6
   - pyyaml

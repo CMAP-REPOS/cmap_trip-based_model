@@ -1,7 +1,7 @@
 from pathlib import Path
 import pandas as pd
 
-def export(projdir, outdir):
+def export(projdir, outdir, out_filename):
     """
     Assemble the trip roster from parquet job files and export it to a
     CSV.
@@ -28,6 +28,6 @@ def export(projdir, outdir):
         hh_type_trip_rosters.update({t: pd.concat(dfs)})
     complete_trip_roster = pd.concat(hh_type_trip_rosters, names=['hh_type'], sort=False)
     outdir.mkdir(parents=True, exist_ok=True)
-    trip_roster_path = outdir.joinpath('trip_roster.csv')
+    trip_roster_path = outdir.joinpath(out_filename + '.csv')
     complete_trip_roster.to_csv(trip_roster_path)
     return trip_roster_path
