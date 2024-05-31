@@ -41,15 +41,15 @@ for /f "eol=# skip=9 tokens=2 delims=:" %%e in (batch_file.yaml) do (set selLink
 :break5
 for /f "eol=# skip=11 tokens=2 delims=:" %%f in (batch_file.yaml) do (set transitAsmt=%%f & goto break6)
 :break6
-for /f "eol=# skip=14 tokens=2 delims=:" %%g in (batch_file.yaml) do (set transitFilePath=%%g & goto break7)
+for /f "eol=# skip=14 tokens=2* delims=:" %%g in (batch_file.yaml) do (set transitFilePath1=%%g & set transitFilePath2=%%h & goto break7)
 :break7
-for /f "eol=# skip=16 tokens=2 delims=:" %%h in (batch_file.yaml) do (set selLineFile=%%h & goto break8)
+for /f "eol=# skip=16 tokens=2 delims=:" %%i in (batch_file.yaml) do (set selLineFile=%%i & goto break8)
 :break8
-for /f "eol=# skip=18 tokens=2 delims=:" %%i in (batch_file.yaml) do (set utilFile=%%i & goto break9)
+for /f "eol=# skip=18 tokens=2 delims=:" %%j in (batch_file.yaml) do (set utilFile=%%j & goto break9)
 :break9
-for /f "eol=# skip=20 tokens=2 delims=:" %%j in (batch_file.yaml) do (set UrbansimFile=%%j & goto break10)
+for /f "eol=# skip=20 tokens=2 delims=:" %%k in (batch_file.yaml) do (set UrbansimFile=%%k & goto break10)
 :break10
-for /f "eol=# skip=22 tokens=2 delims=:" %%k in (batch_file.yaml) do (set RSPrun=%%k & goto break11)
+for /f "eol=# skip=22 tokens=2 delims=:" %%l in (batch_file.yaml) do (set RSPrun=%%l & goto break11)
 :break11
 
 set val=%val:~1,3%
@@ -58,7 +58,11 @@ set wfh=%wfh:~1%
 set tc14=%tc14:~1%
 set selLinkFile=%selLinkFile:~1%
 set transitAsmt=%transitAsmt:~1,1%
-set transitFilePath=%transitFilePath:~1%
+rem Construct complete transit file path
+set transitFilePath1=%transitFilePath1:~1,-1%
+set transitFilePath2=%transitFilePath2:~1,-1%
+set sep=:\
+set transitFilePath=%transitFilePath1%%sep%%transitFilePath2%
 set selLineFile=%selLineFile:~1%
 set utilFile=%utilFile:~1,1%
 set UrbansimFile=%UrbansimFile:~1,1%
@@ -115,9 +119,14 @@ call %~dp0..\Scripts\manage\env\activate_env.cmd emme
 call python macros\verify_select_link.py %file1% %selLinkFile% %RSPrun% %trnAsmt%
 if %ERRORLEVEL% GTR 0 (goto end)
 
+SETLOCAL EnableDelayedExpansion
+set str1=%transitFilePath%\transit\tranmodes.txt
+REM Following line strips all quotes from str1
+set str2=!str1:^"=!
 if %trnAsmt% EQU 1 (
-    if not exist %transitFilePath%\transit\tranmodes.txt (goto transit_files_missing)
+    if not exist "%str2%" (goto transit_files_missing)
 )
+ENDLOCAL
 
 REM Clean up prior to run
 if exist cache\choice_simulator_trips_out (rmdir /S /Q cache\choice_simulator_trips_out)
@@ -141,7 +150,7 @@ if not "%choice%"=="" (
     set choice=%choice:~0,1%
     if "%choice%"=="1" (goto proceed)
     if "%choice%"=="2" (
-		set /a jobs=12
+		set /a jobs=11
 		set /a zones=7
 		set /a sola_threads=31
 		goto proceed
