@@ -282,21 +282,21 @@ if %counter% GTR 2 (goto loopend)
 REM AM Peak Skim
 call python macros/skim_transit.py %file1% %val% %counter% AM
 if %ERRORLEVEL% neq 0 (goto issue)
-rem --  call python macros/transit_triple_indexing.py %file1% AM
-rem --  if %ERRORLEVEL% neq 0 (goto issue)
-rem --  call python macros/transit_skim_final_matrices1.py
-rem --  if %ERRORLEVEL% neq 0 (goto issue)
-rem --  call python macros/transit_skim_wrapup.py %file1% AM
-rem --  if %ERRORLEVEL% neq 0 (goto issue)
+call python macros/transit_triple_indexing.py %file1% AM
+if %ERRORLEVEL% neq 0 (goto issue)
+call python macros/transit_skim_final_matrices1.py
+if %ERRORLEVEL% neq 0 (goto issue)
+call python macros/transit_skim_wrapup.py %file1% AM
+if %ERRORLEVEL% neq 0 (goto issue)
 REM Midday Skim
 call python macros/skim_transit.py %file1% %val% %counter% MD
 if %ERRORLEVEL% neq 0 (goto issue)
-rem --  call python macros/transit_triple_indexing.py %file1% MD
-rem --  if %ERRORLEVEL% neq 0 (goto issue)
-rem --  call python macros/transit_skim_final_matrices2.py
-rem --  if %ERRORLEVEL% neq 0 (goto issue)
-rem --  call python macros/transit_skim_wrapup.py %file1% MD
-rem --  if %ERRORLEVEL% neq 0 (goto issue)
+call python macros/transit_triple_indexing.py %file1% MD
+if %ERRORLEVEL% neq 0 (goto issue)
+call python macros/transit_skim_final_matrices2.py
+if %ERRORLEVEL% neq 0 (goto issue)
+call python macros/transit_skim_wrapup.py %file1% MD
+if %ERRORLEVEL% neq 0 (goto issue)
 @ECHO    -- End of Transit Skim Procedures: %date% %time% >> model_run_timestamp.txt
 
 @ECHO Begin Global Iteration %counter%: %date% %time% >> model_run_timestamp.txt
@@ -317,8 +317,6 @@ call cmap_modedest . --njobs %jobs% --max_zone_chunk %zones%
 if %ERRORLEVEL% NEQ 0 (goto issue)
 @ECHO    -- End Mode-Destination Choice Procedures: %date% %time% >> model_run_timestamp.txt
 @ECHO.
-
-call python macros\transit_tod_vot.py
 
 rem Activate Emme Python env
 call %~dp0..\Scripts\manage\env\activate_env.cmd emme
