@@ -41,6 +41,7 @@ def export_by_tod(outdir, scenario, format, modeller, emmebank, period=[1, 2, 3,
     change_scen = modeller.tool('inro.emme.data.scenario.change_primary_scenario')
     delete_scen = modeller.tool('inro.emme.data.scenario.delete_scenario')
     
+    hwyshpdirs = list()
     for p in period:
         # Copy scenario.
         copy_scen(from_scenario=emmebank.scenario(p),
@@ -98,9 +99,15 @@ def export_by_tod(outdir, scenario, format, modeller, emmebank, period=[1, 2, 3,
             else:
                 f_tag = 'p' + str(p)
             # Write shapefile.
-            net_to_shp(export_path=hwydir.joinpath(f'highway_{f_tag}-{scenario}'))
+            hwyshpdir = hwydir.joinpath(f'highway_{f_tag}-{scenario}')
+            net_to_shp(export_path=hwyshpdir)
+            hwyshpdirs.append(hwyshpdir)
         change_scen(p)
         delete_scen(emmebank.scenario(99))
+    if format == 'transaction':
+        return hwydir
+    elif format == 'shape':
+        return tuple(hwyshpdirs)
 
 def export_daily(outdir, scenario, format, modeller, emmebank):
     """
@@ -150,4 +157,9 @@ def export_daily(outdir, scenario, format, modeller, emmebank):
             txtwriter.writerows(report['table'])
     elif format == 'shape':
         # Write shapefile.
-        net_to_shp(export_path=hwydir.joinpath(f'highway-{scenario}'))
+        hwyshpdir = hwydir.joinpath(f'highway-{scenario}')
+        net_to_shp(export_path=hwyshpdir)
+    if format == 'transaction':
+        return hwydir
+    elif format == 'shape':
+        return hwyshpdir

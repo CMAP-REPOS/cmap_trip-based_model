@@ -67,3 +67,4 @@ def export_matrices(outdir, modeller):
     # Export md highway skims.
     export_matrix_data(matrices=[i for i in list(SKIM_MATRIX_IDS['highway']['md'].values())],
                        export_path=skimdir)
+    return skimdir

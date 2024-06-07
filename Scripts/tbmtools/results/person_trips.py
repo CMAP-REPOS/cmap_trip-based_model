@@ -155,6 +155,7 @@ def export_auto_matrices(projdir, outdir, trip_roster_path):
                       'hbo_sov', 'hbo_hov2', 'hbo_hov3',
                       'nhb_sov', 'nhb_hov2', 'nhb_hov3']:
             p.replace(hovtripdir.joinpath(p.name))
+    return (tripdir, hovtripdir)
 
 def export_transit_matrices(outdir, modeller):
     """
@@ -174,3 +175,4 @@ def export_transit_matrices(outdir, modeller):
     # Export transit trips.
     export_matrix_data(matrices=[i for i in list(matrix_names.keys())],
                        export_path=tripdir)
+    return tripdir

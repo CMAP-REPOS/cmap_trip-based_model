@@ -1,3 +1,21 @@
+"""Share standard model data.
+
+This script prepares standard datasets from a trip-based model run for
+sharing. Arguments are read from ../hand/config.yaml.
+
+This script requires the `emme-plus` Python environment and the
+`tbmtools` local Python package.
+
+This file can also be imported as a module and contains the following
+functions:
+
+    * load_config - loads values from configuration files
+    * export - exports standard data files from the trip-based model
+    * compress - compresses standard data files into ZIP archives
+    * document - renders a HTML data user guide
+    * main - the main function of this script
+"""
+
 from pathlib import Path
 import sys
 import os
@@ -20,19 +38,24 @@ from tbmtools.results import transit_network
 from tbmtools.results import highway_network
 from tbmtools.results import sharing
 
+# Path anchors.
 src_dir = Path(__file__).resolve().parent
 proj_dir = src_dir.parents[3]
 out_dir = src_dir.parent.joinpath('output')
 
-def add_tag(out_file_names, title, scenario_code):
-    # Add tag and suffix to file names.
-    tag = f'_{title}_{scenario_code}'
-    tagged_file_names = {}
-    for placeholder_variable, file_name in out_file_names.items():
-        tagged_file_names[placeholder_variable] = file_name + tag
-    return tagged_file_names
 
 def load_config():
+    """Load values from configuration files.
+
+    Reads configuration settings from Database/batch_file.yaml and
+    ../hand/config.yaml.
+
+    Returns
+    -------
+    dict of str: any
+        Configuration properties as keys and configuration property
+        values as values.
+    """
     with open(proj_dir.joinpath('Database/batch_file.yaml')) as f:
         batch_file_config = yaml.safe_load(f)
     with open(src_dir.parent.joinpath('hand/config.yaml')) as f:
@@ -41,11 +64,32 @@ def load_config():
     config['model_version'] = batch_file_config['model_version']
     return config
 
-def export(project_file_name, out_file_names, scenario_code):
+def export(project_file_name, trip_roster_file_name, tg_data_file_name, scenario_code):
+    """Export standard data files from the trip-based model.
+
+    Outputs text log file export.log.
+
+    Parameters
+    ----------
+    project_file_name : str
+        Name of source Emme project file (.emp).
+    trip_roster_file_name : str
+        Name of output trip roster file.
+    tg_data_file_name : str
+        Name of output trip generation data file.
+    scenario_code : int
+        Project scenario code.
+
+    Returns
+    -------
+    dict of str: Path
+        Output file name configuration properties as keys and paths to
+        locations of exported data files as values.
+    """
     # Make output directory.
     out_dir.mkdir(exist_ok=True)
     # Set up log file.
-    logging.basicConfig(filename=out_dir.joinpath('export_data.log'),
+    logging.basicConfig(filename=out_dir.joinpath('export.log'),
                         filemode='w',
                         format='%(asctime)s - %(levelname)s - %(message)s',
                         level=logging.INFO)
@@ -56,25 +100,29 @@ def export(project_file_name, out_file_names, scenario_code):
     modeller = tbm.connect(proj_dir.joinpath(project_file_name))
     logging.info(f'Connected to {modeller.desktop.project_file_name()}')
     # Display a progress bar while exporting data.
+    export_paths = dict()
     with tqdm(desc='Exporting data', total=11) as pbar:
         # Export vehicle trips from emmebank.
         logging.info('Exporting vehicle trips')
-        vehicle_trips.export_matrices(out_dir, modeller)
+        trip_tables_path = vehicle_trips.export_matrices(out_dir, modeller)
+        export_paths['trip_tables'] = trip_tables_path
         pbar.update()
         # Export skims from emmebank.
         logging.info('Exporting skims')
         skims.flag_transit_disconnects(modeller)
-        skims.export_matrices(out_dir, modeller)
+        skim_matrices_path = skims.export_matrices(out_dir, modeller)
+        export_paths['skim_matrices'] = skim_matrices_path
         pbar.update()
         # Export trip roster from parquet files.
         logging.info('Exporting trip roster')
-        trip_roster_path = trip_roster.export(proj_dir, out_dir, out_file_names['trip_roster'])
-        out_file_names['trip_roster'] = trip_roster_path.name
+        trip_roster_path = trip_roster.export(proj_dir, out_dir, trip_roster_file_name)
+        export_paths['trip_roster'] = trip_roster_path
         pbar.update()
         # Export auto person trips from trip roster and transit person trips
         # from emmebank.
         logging.info('Exporting person trips')
-        person_trips.export_auto_matrices(proj_dir, out_dir, trip_roster_path)
+        trip_tables_path, hov_trip_tables_path = person_trips.export_auto_matrices(proj_dir, out_dir, trip_roster_path)
+        export_paths['hov_trip_tables'] = hov_trip_tables_path
         pbar.update()
         person_trips.export_transit_matrices(out_dir, modeller)
         pbar.update()
@@ -82,34 +130,40 @@ def export(project_file_name, out_file_names, scenario_code):
         # itineraries, and attributes as Emme transaction files and
         # shapefiles.
         logging.info('Exporting transit network')
-        transit_network.export(out_dir,
-                               scenario=int(scenario_code),
-                               format='transaction',
-                               modeller=modeller,
-                               emmebank=modeller.emmebank)
+        transit_networks_path = transit_network.export(out_dir,
+                                                       scenario=int(scenario_code),
+                                                       format='transaction',
+                                                       modeller=modeller,
+                                                       emmebank=modeller.emmebank)
+        export_paths['transit_networks'] = transit_networks_path
         pbar.update()
-        transit_network.export(out_dir,
-                               scenario=int(scenario_code),
-                               format='shape',
-                               modeller=modeller,
-                               emmebank=modeller.emmebank)
-        pbar.update()
+        peak_transit_network_path, offpeak_transit_network_path = transit_network.export(out_dir,
+                                                                                         scenario=int(scenario_code),
+                                                                                         format='shape',
+                                                                                         modeller=modeller,
+                                                                                         emmebank=modeller.emmebank)
+        export_paths['peak_transit_network'] = peak_transit_network_path
+        export_paths['offpeak_transit_network'] = offpeak_transit_network_path
+        pbar.update() 
         # Export each time of day highway network and attributes as Emme
         # transaction files.
         logging.info('Exporting highway network')
-        highway_network.export_by_tod(out_dir,
-                                      scenario=int(scenario_code),
-                                      format='transaction',
-                                      modeller=modeller,
-                                      emmebank=modeller.emmebank)
+        highway_networks_path = highway_network.export_by_tod(out_dir,
+                                                              scenario=int(scenario_code),
+                                                              format='transaction',
+                                                              modeller=modeller,
+                                                              emmebank=modeller.emmebank)
+        export_paths['highway_networks'] = highway_networks_path
         pbar.update()
         # Export peak highway networks and attributes as shapefiles.
-        highway_network.export_by_tod(out_dir,
-                                    scenario=int(scenario_code),
-                                    format='shape',
-                                    modeller=modeller,
-                                    emmebank=modeller.emmebank,
-                                    period=[3, 7])
+        am_peak_highway_network_path, pm_peak_highway_network_path = highway_network.export_by_tod(out_dir,
+                                                                                                   scenario=int(scenario_code),
+                                                                                                   format='shape',
+                                                                                                   modeller=modeller,
+                                                                                                   emmebank=modeller.emmebank,
+                                                                                                   period=[3, 7])
+        export_paths['am_peak_highway_network'] = am_peak_highway_network_path
+        export_paths['pm_peak_highway_network'] = pm_peak_highway_network_path
         pbar.update()
         # Export daily highway network and attributes as Emme transaction
         # files and shapefiles.
@@ -119,11 +173,12 @@ def export(project_file_name, out_file_names, scenario_code):
                                      modeller=modeller,
                                      emmebank=modeller.emmebank)
         pbar.update()
-        highway_network.export_daily(out_dir,
-                                     scenario=int(scenario_code),
-                                     format='shape',
-                                     modeller=modeller,
-                                     emmebank=modeller.emmebank)
+        daily_highway_network_path = highway_network.export_daily(out_dir,
+                                                                  scenario=int(scenario_code),
+                                                                  format='shape',
+                                                                  modeller=modeller,
+                                                                  emmebank=modeller.emmebank)
+        export_paths['daily_highway_network'] = daily_highway_network_path
         pbar.update()
     # Copy TG results to output directory.
     logging.info('Copying TG results')
@@ -131,49 +186,47 @@ def export(project_file_name, out_file_names, scenario_code):
     file = sorted(tg_dir.joinpath('data').glob('tg_results*.csv'))[0]
     shutil.copy(file, out_dir)
     file_copy = out_dir.joinpath(file.name)
-    out_file_names['tg_data'] += '.csv'
-    renamed_copy = file_copy.with_name(out_file_names['tg_data'])
+    renamed_copy = file_copy.with_name(tg_data_file_name)
     if renamed_copy.exists(): 
         os.remove(renamed_copy)
     file_copy.rename(renamed_copy)
+    export_paths['tg_data'] = renamed_copy
     # Copy productions and attractions to output subdirectory.
     logging.info('Copying productions and attractions')
     files = [tg_dir.joinpath('fortran/TRIP49_PA_OUT.TXT'),
              tg_dir.joinpath('fortran/TRIP49_PA_WFH_OUT.TXT')]
-    out_dir.joinpath('prods_attrs').mkdir(exist_ok=True)
+    pa_tables_path = out_dir.joinpath('prods_attrs')
+    pa_tables_path.mkdir(exist_ok=True)
     for file in files:
-        shutil.copy(file, out_dir.joinpath('prods_attrs'))
+        shutil.copy(file, pa_tables_path)
+    export_paths['pa_tables'] = pa_tables_path
     logging.info('Finished.')
-    return out_file_names
+    return export_paths
 
-def compress(out_file_names, scenario_code, transit_dir):
+def compress(zip_file_names, source_paths):
+    """ Compress standard data files into ZIP archives.
+
+    Outputs text log file compress.log.
+
+    Parameters
+    ----------
+    zip_file_names : dict
+        Names of compressed data files.
+    source_paths : dict of str: Path
+        Output file name configuration properties as keys and paths to
+        locations of data files to compress as values.
+    """
     # Set up log file.
-    logging.basicConfig(filename=out_dir.joinpath('compress_data.log'),
+    logging.basicConfig(filename=out_dir.joinpath('compress.log'),
                         filemode='w',
                         format='%(asctime)s - %(levelname)s - %(message)s',
                         level=logging.INFO)
     
     print(f'Writing compressed output to {out_dir}')
 
-    # Relate destination paths to source paths.
-    zip_sources = {'pa_tables': out_dir.joinpath('prods_attrs'),
-                   'hov_trip_tables': out_dir.joinpath('trips/hov_trips'),
-                   'trip_tables': out_dir.joinpath('trips'),
-                   'highway_networks': out_dir.joinpath('networks/highway'),
-                   'am_peak_highway_network': out_dir.joinpath(f'networks/highway/highway_ampk-{scenario_code}'),
-                   'pm_peak_highway_network': out_dir.joinpath(f'networks/highway/highway_pmpk-{scenario_code}'),
-                   'daily_highway_network': out_dir.joinpath(f'networks/highway/highway-{scenario_code}'),
-                   'transit_networks': out_dir.joinpath('networks/transit'),
-                   'tod_transit_networks': Path(transit_dir, str(scenario_code)),
-                   'peak_transit_network': out_dir.joinpath(f'networks/transit/transit_pk-{scenario_code}'),
-                   'offpeak_transit_network': out_dir.joinpath(f'networks/transit/transit_op-{scenario_code}'),
-                   'skim_matrices': out_dir.joinpath('skims'),
-                   'database': proj_dir.joinpath('Database/emmebank'),
-                   'matrices': proj_dir.joinpath('Database/emmemat')}
     mp_compress_args = list()
-    for placeholder_variable, source_path in zip_sources.items():
-        out_file_names[placeholder_variable] += '.zip'
-        mp_compress_args.append((out_file_names[placeholder_variable], source_path, out_dir))
+    for placeholder, file_name in zip_file_names.items():
+        mp_compress_args.append((file_name, source_paths[placeholder], out_dir))
     # Compress model data for sharing.
     logging.info('Compressing outputs')
     with multiprocessing.Pool() as pool:
@@ -184,16 +237,25 @@ def compress(out_file_names, scenario_code, transit_dir):
                       desc='Compressing outputs'):
             pass
     logging.info('Finished.')
-    return out_file_names
 
 def document(context):
+    """ Render a HTML data user guide.
+
+    Reads Markdown template with placeholder variables from
+    ../hand/data_user_guide_md.txt and HTML template from
+    ../hand/data_user_guide_html.txt.
+
+    Parameters
+    ----------
+    context : dict of str: str
+        Configuration properties as keys with text to render as values.
+    """
     # Load the Markdown template for data user guide.
     environment = Environment(loader=FileSystemLoader(src_dir.parent.joinpath('hand')))
     md_template = environment.get_template('data_user_guide_md.txt')
     # Render the Markdown template.
     md_file = out_dir.joinpath('data_user_guide.md')
     with open(md_file, mode='w', encoding='utf-8') as file:
-        context.update(context.pop('out_file_names'))
         file.write(md_template.render(context))
     # Read Markdown from file.
     with open(md_file, encoding='utf-8') as file:
@@ -207,3 +269,33 @@ def document(context):
     # Render the HTML template.
     with open(md_file.with_suffix('.html'), mode='w', encoding='utf-8') as file:
         file.write(html_template.replace('{{content}}', html))
+
+def main():
+    # Load configuration settings.
+    config = load_config()
+    # Tag for file names.
+    tag = f'_{config["title"]}_{config["scenario_code"]}'
+    # Export data files.
+    tagged_trip_roster_file_name = config['trip_roster'] + tag
+    tagged_tg_data_file_name = config['tg_data'] + tag
+    export_paths = export(config['project_file_name'],
+                          tagged_trip_roster_file_name + '.csv',
+                          tagged_tg_data_file_name + '.csv',
+                          config['scenario_code'])
+    export_paths['tod_transit_networks'] = Path(config['transit_directory'],
+                                                str(config['scenario_code']))
+    export_paths['database'] = proj_dir.joinpath('Database/emmebank')
+    export_paths['matrices'] = proj_dir.joinpath('Database/emmemat')
+    # Compress data files.
+    zip_file_names = {}
+    for placeholder, file_name in config['compressed'].items():
+        tagged_file_name = file_name + tag
+        zip_file_names[placeholder] = tagged_file_name + '.zip'
+    compress(zip_file_names, source_paths=export_paths)
+    # Render the data user guide.
+    config.update(config.pop('compressed'))
+    document(context=config)
+
+
+if __name__ == '__main__':
+    sys.exit(main())

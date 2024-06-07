@@ -1,4 +1,4 @@
-Dear Data User:
+# CMAP Travel Demand Model Data User Guide ({{ model_version }})
 
 This dataset includes the analysis year inputs and outputs from the Air Quality
 Conformity Analysis approved in {{ approval_date }}. The horizon year is 2050
@@ -28,11 +28,7 @@ filenames or in headers within the files.
 For additional information, see the
 [travel demand model documenation](https://www.cmap.illinois.gov/documents/10180/1439048/ON+TO+2050+Update+Travel+Demand+Model+Documentation+Appendix.pdf/).
 
-<br>
-
-### Resources
-
-<br>
+## Resources
 
 **Trip Generation Data** ({{ tg_data }})  
 This is a CSV table containing the trip generation inputs and outputs by trip

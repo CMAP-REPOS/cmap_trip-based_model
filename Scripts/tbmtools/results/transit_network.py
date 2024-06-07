@@ -38,6 +38,7 @@ def export(outdir, scenario, format, modeller, emmebank, period=[0, 5]):
     net_calc = modeller.tool('inro.emme.network_calculation.network_calculator')
     net_to_shp = modeller.tool('inro.emme.data.network.export_network_as_shapefile')
     
+    transitshpdirs = list()
     for p in period:
         # Set scenario.
         s = emmebank.scenario(scenario + p)
@@ -68,5 +69,11 @@ def export(outdir, scenario, format, modeller, emmebank, period=[0, 5]):
                 txtwriter.writerows(report['table'])
         elif format == 'shape':
             # Write shapefiles.
-            net_to_shp(export_path=transitdir.joinpath(f'transit_{f_tag}-{scenario}'),
+            transitshpdir = transitdir.joinpath(f'transit_{f_tag}-{scenario}')
+            net_to_shp(export_path=transitshpdir,
                        scenario=s)
+            transitshpdirs.append(transitshpdir)
+    if format == 'transaction':
+        return transitdir
+    elif format == 'shape':
+        return tuple(transitshpdirs)

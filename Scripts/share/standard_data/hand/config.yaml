@@ -1,14 +1,13 @@
 # Name of EMME project file.
-project_filename: c24q2_100.emp
-# Analysis year.
-year: 2019
+project_file_name: c24q2_100.emp
 # Path to transit transaction file directory.
-transit_directory: M:\proj1\nrf\Conformity\c24q2\transit
+transit_directory: D:\nrf\Testing\c24q2\transit
 # Date of Board approval.
 approval_date: June 2024
 # Names of output files.
-out_file_names:
-    tg_data: tg_results
+trip_roster: trip_roster
+tg_data: tg_results
+compressed:
     pa_tables: prods_attrs
     trip_tables: trips
     hov_trip_tables: hovtrips
@@ -23,4 +22,4 @@ out_file_names:
     skim_matrices: skims
     database: emmebank
     matrices: emmemat
-    trip_roster: trip_roster
+    

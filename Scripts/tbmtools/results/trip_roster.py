@@ -28,6 +28,6 @@ def export(projdir, outdir, out_filename):
         hh_type_trip_rosters.update({t: pd.concat(dfs)})
     complete_trip_roster = pd.concat(hh_type_trip_rosters, names=['hh_type'], sort=False)
     outdir.mkdir(parents=True, exist_ok=True)
-    trip_roster_path = outdir.joinpath(out_filename + '.csv')
+    trip_roster_path = outdir.joinpath(out_filename)
     complete_trip_roster.to_csv(trip_roster_path)
     return trip_roster_path
