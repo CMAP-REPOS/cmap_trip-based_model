@@ -6,7 +6,10 @@ channels:
 dependencies:
   - jinja2
   - markdown=3.4  # markdown v3.5 dropped support for python v3.7
+  - myst-parser
   - pyarrow
   - python=3.7.6
   - pyyaml
+  - sphinx=5.3
+  - sphinx_rtd_theme
   - tqdm
