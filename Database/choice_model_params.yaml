@@ -29,6 +29,7 @@ HBWH:
   "distance[3]: over 10"  : -0.1017375
   intrazonal              : 0.39465324741439617
   log_attraction          : 1.0
+  metra_longtrip          : 9.375
   ovtt_dist               : -0.15984982535729966
   samp_af                 : 1.0
   totaltime               : -0.017030758987881523
@@ -36,9 +37,6 @@ HBWH:
   transit_areatype3       : -3.139865229
   transit_areatype4       : -2.539714312284354
   transit_intrazonal      : 1.625433444479245
-  "trlong_distance[1]: up to 5"  : -0.01200000
-  "trlong_distance[2]: 5 to 10"  : -0.010000000
-  "trlong_distance[3]: over 10"  : 0.015773475
   unavail                 : -999.0
   walk_areatype2          : 0.14897576853778294
   walk_areatype3          : -0.2521336910917878
@@ -78,6 +76,8 @@ HBWL:
   "distance[3]: over 10"  : -0.09134804260339749
   intrazonal              : 0.02173059479852062
   log_attraction          : 1.0
+  metra_longtrip          : 5.625
+  ovtt_dist               : -0.076
   ovtt_dist               : -0.07639147912439262
   samp_af                 : 1.0
   totaltime               : -0.014712168298471244
@@ -85,9 +85,6 @@ HBWL:
   transit_areatype3       : -3.850235124
   transit_areatype4       : -1.7423132266984915
   transit_intrazonal      : 1.283608900037017
-  "trlong_distance[1]: up to 5"  : -0.01200000
-  "trlong_distance[2]: 5 to 10"  : -0.010000000
-  "trlong_distance[3]: over 10"  : 0.015773475
   unavail                 : -999.0
   walk_areatype2          : 0.6464997024100183
   walk_areatype3          : 0.08905949310792599
@@ -151,7 +148,7 @@ HBO:
   Const_TAXI              : -2.942656711989843
   Const_TNC1              : -2.149564398484044
   Const_TNC2              : -2.98711612846131
-  Const_Transit           : -0.111763564
+  Const_Transit           : 0.111763564
   Const_WALK              : 4.670849451686818
   "HOV2_distance[1]: up to 5": 0.017890861068567836
   "HOV2_distance[2]: 5 to 10": -0.00016112775220540623
@@ -196,7 +193,7 @@ NHB:
   Const_TAXI              : 4.042014046218436
   Const_TNC1              : 4.50598343908186
   Const_TNC2              : 3.142784557691248
-  Const_Transit           : 5.953848062
+  Const_Transit           : 6.209863529
   Const_WALK              : 9.2577501
   "HOV2_distance[1]: up to 5": -0.010314696930721757
   "HOV2_distance[2]: 5 to 10": -0.07671732289392817

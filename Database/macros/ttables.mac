@@ -64,6 +64,21 @@ batchin=data\vdf_tod.in
 ~#        Bozic, 4-14-2017- add separate matrix mf848 milwaukee trips to mf8
 ~#        Ferguson, 9/18/2018 - updated r250 to number of zone17 zones
 ~#        JLemp, 07-07-2021 - implement new vehicle class framework (3 SOV classes, combined b-plate + light trucks)
+~#
+~#
+~#       
+~#        Heither, 03-14-2024 
+~#        - External trips: remove MF848 from calculations (lines 410,418,432,440,454,463) - this was part of special trip 
+~#                          handling to address work trips from the modeling area to Milwaukee but is not compatible
+~#                          with the destination choice-mode choice model and now just adds duplicate trips to the
+~#                          traffic assignment.
+~#
+~#        - Report TOD trip shares in report\iter_%ms98%\tod_veh_trips_and_VOT.txt
+~#
+~#        - Remove code to read in data\directional.splits & store values in registers (lines 138-48) - no longer used
+~#
+~#        - Remove code to read in data\tod_occ.p%y% & store values in registers (lines 127-37) - no longer used
+
 ~/**********************************************************************
 ~/**********************************************************************
 ~r248=%3%                       /* store matrix value for HOV2 trips
@@ -109,30 +124,6 @@ q
 ~:eof1
 ~/end of reading factors
 ~/
-~/ -- Get TOD Occupancy Rates
-~<<data\tod_occ.p%y%
-~z=31
-~:loop2
-~+;~t0=~@;~?e;~$>eof2
-~rz=%t0%
-~/r%z%=%rz%
-~z+1
-~+;~?z<40;~$loop2
-~:eof2
-~/end of reading occ
-~/
-~# ~/ -- Get Directional Splits
-~# ~<<data\directional.splits
-~# ~z=41
-~# ~:loop3
-~# ~+;~t0=~@;~?e;~$>eof3
-~# ~rz=%t0%
-~# ~/r%z%=%rz%
-~# ~z+1
-~# ~+;~?z<57;~$loop3
-~# ~:eof3
-~# ~/end of reading splits
-~# ~/
 ~/ Set Matrix labels
 ~t1=p1. 8pm-6am
 ~+;~?y=2;~t1=p2. 6am-7am
@@ -398,7 +389,7 @@ mf94
 no
 mf94+
 ~/  External
-((mf08+mf848)*%r19%*%r61%)
+(mf08*%r19%*%r61%)
 
 
 no
@@ -406,7 +397,7 @@ no
 ~/
 ~# ## 
 ~# ## 
-~+;1;y;ms21;y;tmp21;store External VOT1;~?q=1;y;0;((mf08+mf848)*%r19%*%r61%); ; ;n;+;+;1;q
+~+;1;y;ms21;y;tmp21;store External VOT1;~?q=1;y;0;(mf08*%r19%*%r61%); ; ;n;+;+;1;q
 ~t2=External SOV VOT1 trips
 ~>>%t3%
 ~"Period %y% %t2% : %ms21.2%
@@ -420,7 +411,7 @@ mf95
 no
 mf95+
 ~/  External
-((mf08+mf848)*%r19%*%r62%)
+(mf08*%r19%*%r62%)
 
 
 no
@@ -428,7 +419,7 @@ no
 ~/
 ~# ## 
 ~# ## 
-~+;1;y;ms22;y;tmp22;store External VOT2;~?q=1;y;0;((mf08+mf848)*%r19%*%r62%); ; ;n;+;+;1;q
+~+;1;y;ms22;y;tmp22;store External VOT2;~?q=1;y;0;(mf08*%r19%*%r62%); ; ;n;+;+;1;q
 ~t2=External SOV VOT2 trips
 ~>>%t3%
 ~"Period %y% %t2% : %ms22.2%
@@ -442,7 +433,7 @@ mf96
 no
 mf96+
 ~/  External
-((mf08+mf848)*%r19%*%r63%)
+(mf08*%r19%*%r63%)
 
 
 no
@@ -450,7 +441,7 @@ no
 ~/
 ~# ## 
 ~# ## 
-~+;1;y;ms23;y;tmp23;store External VOT3;~?q=1;y;0;((mf08+mf848)*%r19%*%r63%); ; ;n;+;+;1;q
+~+;1;y;ms23;y;tmp23;store External VOT3;~?q=1;y;0;(mf08*%r19%*%r63%); ; ;n;+;+;1;q
 ~t2=External SOV VOT3 trips
 ~>>%t3%
 ~"Period %y% %t2% : %ms23.2%
@@ -737,6 +728,11 @@ no
 ~#
 ~>>%t3%
 ~"Period %y% VOT Report:
+~"
+~"Trip Shares:
+~"  External Auto=%r19%, External Air Passenger To Airports=%r20%, External Air Passenger From Airports=%r21%
+~"  B-plate Truck=%r22%, Light Truck=%r23%, Medium Truck=%r24%, Heavy Truck=%r25%, External Heavy Truck=%r26%
+~"
 ~"
 ~"                                           Perceived VOT
 ~"                                         Relative to Tolls     Toll Multiplier

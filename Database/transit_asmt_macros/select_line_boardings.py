@@ -2,13 +2,14 @@
 ## 
 ## Calculate boardings for a select line analysis and write the results to file.
 ##
-## Heither 08-21-2023
+## Heither rev. 01-21-2024
 ## ==========================================================================================
 
 import os, sys
 import pandas as pd
 import inro.modeller as _m
 import inro.emme.desktop.app as _app
+from pathlib import Path
 
 empFl = sys.argv[1]
 currentScen = int(sys.argv[2])
@@ -18,6 +19,7 @@ outfilePart = sys.argv[4]
 ## -- Output file -- ##
 if RspFlag == "T":
     output = "\\rsp_evaluation\\results\\"
+    Path(os.getcwd() + output).mkdir(parents=True, exist_ok=True)
 else:
     output = "\\transit_asmt_macros\\report\\"
 outFile = os.getcwd() + output + "{0}_select_line_boardings.csv".format(outfilePart.partition("_")[0])

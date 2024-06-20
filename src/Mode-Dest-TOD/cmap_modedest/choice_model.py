@@ -256,7 +256,7 @@ def model_utility_for_dest(
 			+ P("transit_areatype2") * X(f"fmin(ozone_areatype, {dest_label}_areatype)==2")
 			+ P("transit_areatype3") * X(f"fmin(ozone_areatype, {dest_label}_areatype)==3")
 			+ P("transit_areatype4") * X(f"fmin(ozone_areatype, {dest_label}_areatype)==4")
-			+ piecewise_linear(f"{dest_label}_auto_dist_PEAK", "trlong_distance", breaks=[5, 10])
+			+ P("metra_longtrip") * X(f"{dest_label}_Metra_drive_{peaky}")
 		)
 
 	if purpose.upper() in {'NH', 'NHB'}:
