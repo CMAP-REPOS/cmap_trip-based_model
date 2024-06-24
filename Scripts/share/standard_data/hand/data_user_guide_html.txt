@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta charset="utf-8">
 <title>CMAP Travel Demand Model Data User Guide</title>
 <style>
 html, body {

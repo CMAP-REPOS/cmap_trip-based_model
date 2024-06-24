@@ -26,7 +26,7 @@ filenames or in headers within the files.
 | 2050 | 700 |
 
 For additional information, see the
-[travel demand model documenation](https://www.cmap.illinois.gov/documents/10180/1439048/ON+TO+2050+Update+Travel+Demand+Model+Documentation+Appendix.pdf/).
+[travel demand model documentation](https://www.cmap.illinois.gov/documents/10180/1439048/ON+TO+2050+Update+Travel+Demand+Model+Documentation+Appendix.pdf/).
 
 ## Resources
 
@@ -177,7 +177,7 @@ assigned highway networks Emme exported from the database for period 1 through
 period 8, denoted by the file labels p1–p8. Each Emme transaction format text
 file, consists of two parts. The first part is the node section, the second
 part is the link section. The period link capacity is calculated during the
-modeling process using @emcap*lanes*hours in the period for each link.
+modeling process using @emcap\*lanes\*hours in the period for each link.
 
 Also included is a “daily” network that has all links (including both
 directions of reversible lanes) and an associated attribute table that has the
