@@ -19,3 +19,4 @@ def export_matrices(outdir, modeller):
                     'mf10': 'airport'}
     export_matrix_data(matrices=list(matrix_names.keys()),
                        export_path=tripdir)
+    return tripdir

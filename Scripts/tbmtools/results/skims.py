@@ -4,14 +4,12 @@ from pathlib import Path
 SKIM_MATRIX_IDS = {'transit': {'peak': {'in-vehicle minutes': 'mf822',
                                         'walk transfer minutes': 'mf823',
                                         'wait time': 'mf838',
-                                        'headway': 'mf839',
                                         'priority mode': 'mf830',
                                         'average fare': 'mf828',
                                         'station zone': 'mf837'},
                                'off-peak': {'in-vehicle minutes': 'mf922',
                                             'walk transfer minutes': 'mf923',
                                             'wait time': 'mf938',
-                                            'headway': 'mf939',
                                             'priority mode': 'mf930',
                                             'average fare': 'mf928',
                                             'station zone': 'mf937'}},
@@ -69,3 +67,4 @@ def export_matrices(outdir, modeller):
     # Export md highway skims.
     export_matrix_data(matrices=[i for i in list(SKIM_MATRIX_IDS['highway']['md'].values())],
                        export_path=skimdir)
+    return skimdir

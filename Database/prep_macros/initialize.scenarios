@@ -27,7 +27,7 @@
 ~/
 ~# ################################
 ~# -- SET PATH TO BATCHIN FILES --
-~t2=M:\proj1\nrf\Conformity\c23q4\
+~t2=M:\proj1\nrf\Conformity\c24q2\
 ~t3=highway
 ~# ################################
 ~/ ## - batchin source = %t2%%t3% - ##
@@ -150,6 +150,12 @@ batchin=%t2%%t3%/%1%/%r1%.l2
 ~+;3;@sigic;n;all;1,2,8;n;y
 ~/+;3;@rrx;n;all;1,2,9;n;y
 ~+;3;@tipid;n;all;1,2,10;n;y;q
+~# ~+;3;@tipid;n;all;1,2,10;n;y
+~# ~+;3;@busveq;n;all;1,2,11;n;y;q
+
+~# set extra link function parameter
+~# el2=@busveq
+
 ~# -- set vehicle class & TOD toll values
 2.41
 ~# -- ISTHA rates

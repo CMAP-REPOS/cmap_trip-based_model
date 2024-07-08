@@ -12,6 +12,7 @@ import re
 from .addict import Dict
 import pyarrow as pa
 import pyarrow.feather as pf
+import pyarrow.compute as pc
 import sharrow as sh
 from scipy.stats import binom
 from pathlib import Path
@@ -133,12 +134,31 @@ def _data_for_application_1(dh, otaz=1, replication=None):
     t2['transit_approach_waittime_PEAK'] = trapp_HW['waittime'].T.reshape(-1)
     t2['transit_approach_walktime_PEAK'] = trapp_HW['walktime'].T.reshape(-1)
     t2['transit_approach_cost_PEAK'] = trapp_HW['cost'].T.reshape(-1)
-
+    ##-- Heither, flag KnR-PnR approaches for HBW trips -- ##
+    t2['M_drive_PEAK'] = np.where((trapp_HW['drivetime']>0) & (trapp_HW['drivetime']<trapp_HW['waittime']) & (trapp_HW['drivetime']<trapp_HW['walktime']), 1, 0).T.reshape(-1)
+    t2['PEAK_a'] = np.where(pc.greater_equal(t2['auto_dist_PEAK'],15), 1, 0)    ## -- minimum distance flag
+    t2['PEAK_b'] = np.where(pc.less(t2['auto_dist_PEAK'],35), 1, 0)             ## -- maximum distance flag
+    t2['PEAK_c'] = pc.multiply(t2['PEAK_a'],t2['PEAK_b']) 
+    t2['btn1_3'] = pc.add(t2['fmin(ozone_areatype, areatype)==1'],t2['fmax(ozone_areatype, areatype)==3'])  ## -- trips b/n area 1-3
+    t2['OD3'] = np.where(pc.equal(t2['btn1_3'],2), 1, 0)
+    t2['Metra_drive_P1'] = pc.multiply(t2['PEAK_c'],t2['M_drive_PEAK']) 
+    t2['Metra_drive_PEAK'] = pc.multiply(t2['OD3'],t2['Metra_drive_P1'])  ## -- final Metra long distance flag
+    ## -- end -- #
     log.debug("run add offpeak transit approach columns on t2")
     t2['transit_approach_drivetime_OFFPEAK'] = trapp_HO['drivetime'].T.reshape(-1)
     t2['transit_approach_waittime_OFFPEAK'] = trapp_HO['waittime'].T.reshape(-1)
     t2['transit_approach_walktime_OFFPEAK'] = trapp_HO['walktime'].T.reshape(-1)
     t2['transit_approach_cost_OFFPEAK'] = trapp_HO['cost'].T.reshape(-1)
+
+    #---------------------------------------------------------------------------------
+    ##-- Heither, QC review
+    Metra_drive = pc.sum(t2['Metra_drive_PEAK'])
+    log.info("t2 first look")
+    log.info("Metra drive sum: {}".format(Metra_drive))
+    ##log.info(t2[:80])
+    ##chdf = t2.to_pandas()   ## convert pyarrow.lib.Table to Pandas dataframe
+    ##chdf.to_csv("t2_out.csv", header=True, index=False)
+    #---------------------------------------------------------------------------------
 
     try:
         fast_application_data_2 = dh.fast_application_data_2
@@ -1331,7 +1351,7 @@ def aggregate_to_vehicle_matrixes(
     log.info(f" hov2")
     vehicle_trips[3, ...] = xr.DataArray.from_series(
         trips
-        .query(f"mode == {mode9codes.HOV2}")
+        .query(f"mode in ({mode9codes.HOV2},{mode9codes.TAXI},{mode9codes.TNC1})")    ##-- Heither .query(f"mode == {mode9codes.HOV2}")
         .groupby(["timeperiod", "o_zone", "d_zone"])['trips']
         .sum()
     ).reindex(
@@ -1342,7 +1362,7 @@ def aggregate_to_vehicle_matrixes(
     # count up all HOV3 person trips, divide by occupancy
     vehicle_trips[4, ...] += xr.DataArray.from_series(
         trips
-        .query(f"purpose in ('HBWH', 'HBWL') and mode == {mode9codes.HOV3}")
+        .query(f"purpose in ('HBWH', 'HBWL') and mode in ({mode9codes.HOV3},{mode9codes.TNC2})")    ##-- Heither .query(f"purpose in ('HBWH', 'HBWL') and mode == {mode9codes.HOV3}")
         .groupby(["timeperiod", "o_zone", "d_zone"])['trips']
         .sum()
     ).reindex(
@@ -1350,7 +1370,7 @@ def aggregate_to_vehicle_matrixes(
     ).fillna(0).values / dh.cfg.hov3_occupancy['HBW']
     vehicle_trips[4, ...] += xr.DataArray.from_series(
         trips
-        .query(f"purpose in ('HBO', 'HBS') and mode == {mode9codes.HOV3}")
+        .query(f"purpose in ('HBO', 'HBS') and mode in ({mode9codes.HOV3},{mode9codes.TNC2})")      ##-- Heither .query(f"purpose in ('HBO', 'HBS') and mode == {mode9codes.HOV3}")
         .groupby(["timeperiod", "o_zone", "d_zone"])['trips']
         .sum()
     ).reindex(
@@ -1358,7 +1378,7 @@ def aggregate_to_vehicle_matrixes(
     ).fillna(0).values / dh.cfg.hov3_occupancy['HBO']
     vehicle_trips[4, ...] += xr.DataArray.from_series(
         trips
-        .query(f"purpose in ('NHB', 'VISIT') and mode == {mode9codes.HOV3}")
+        .query(f"purpose in ('NHB', 'VISIT') and mode in ({mode9codes.HOV3},{mode9codes.TNC2})")      ##-- Heither .query(f"purpose in ('NHB', 'VISIT') and mode == {mode9codes.HOV3}")
         .groupby(["timeperiod", "o_zone", "d_zone"])['trips']
         .sum()
     ).reindex(

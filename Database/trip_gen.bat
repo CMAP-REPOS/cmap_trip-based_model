@@ -40,15 +40,18 @@ rem In case CMD.exe is doing stuff in the wrong directory, this command
 rem changes the directory to where the batch file was called from.
 cd %~dp0
 rem -- Read model run settings from batch_file.yaml --
-for /f "tokens=2 delims==" %%a in (batch_file.yaml) do (set sc=%%a & goto break1)
+for /f "eol=# skip=2 tokens=2 delims=:" %%a in (batch_file.yaml) do (set sc=%%a & goto break1)
 :break1
-for /f "eol=# skip=2 tokens=2 delims==" %%b in (batch_file.yaml) do (set wfhFile=%%b & goto break2)
+for /f "eol=# skip=4 tokens=2 delims=:" %%b in (batch_file.yaml) do (set wfhFile=%%b & goto break2)
 :break2
-for /f "eol=# skip=3 tokens=2 delims==" %%c in (batch_file.yaml) do (set wfh=%%c & goto break3)
+for /f "eol=# skip=5 tokens=2 delims=:" %%c in (batch_file.yaml) do (set wfh=%%c & goto break3)
 :break3
-for /f "eol=# skip=4 tokens=2 delims==" %%d in (batch_file.yaml) do (set tc14=%%d & goto break4)
+for /f "eol=# skip=6 tokens=2 delims=:" %%d in (batch_file.yaml) do (set tc14=%%d & goto break4)
 :break4
-set sc=%sc:~0,3%
+set sc=%sc:~1,3%
+set wfhFile=%wfhFile:~1%
+set wfh=%wfh:~1%
+set tc14=%tc14:~1%
 @echo.
 @echo ========================================
 @echo     --- Model Run Settings ---
@@ -81,8 +84,6 @@ if not "%choice%"=="" (
 
 echo !!! "%choice%" IS NOT A VALID SELECTION !!!
 echo Please resubmit the program and select a number from the module list.
-echo.
-pause
 goto end
 
 :notes
@@ -127,78 +128,21 @@ set run=%run: =%
 if "%project%" == "" (
     echo !!! NO PROJECT TITLE !!!
     echo Please resubmit the program and enter a project title.
-    echo.
-    pause
     goto end
 )
 if "%run%" == "" (
     echo !!! NO RUN TITLE !!!
     echo Please resubmit the program and enter a run title.
-    echo.
-    pause
     goto end
 )
 
 echo ===================================================================
 echo.
 
-rem The `CONDAPATH` environment variable should be set before running this .bat
-rem It points to the place where conda is installed
-rem Alternatively if running in a conda prompt itself then CONDA_PREFIX will be set
-if defined CONDAPATH (
-	goto condafound
-)
-if defined CONDA_PREFIX (
-	set CONDAPATH=%CONDA_PREFIX%
-	echo CONDA_PREFIX is %CONDAPATH%
-	goto condafound
-)
-rem define here all the places where we might find the conda installation
-rem If you try to run the model, you know that conda is installed, and the
-rem model fails with "cannot find conda", then visit a conda prompt,
-rem run `where conda`, and add the resulting path to this list.
-for %%x in (
-    %CONDAPATH%
-    %CONDA_PREFIX%
-    %LOCALAPPDATA%\mambaforge
-    %LOCALAPPDATA%\miniforge
-    %LOCALAPPDATA%\miniconda
-    %LOCALAPPDATA%\miniconda3
-    %LOCALAPPDATA%\Anaconda3
-    %USERPROFILE%\Anaconda3
-    %USERPROFILE%\Anaconda
-    %USERPROFILE%\Anaconda2
-    %USERPROFILE%\miniconda3
-    %USERPROFILE%\miniconda
-    %USERPROFILE%\miniconda2
-) do (
-    if exist %%x\Scripts\activate.bat (
-      set CONDAPATH=%%x
-      goto condafound
-    )
-)
-@echo Cannot find conda in any of the usual places.
-@echo CONDAPATH is not defined, first run set CONDAPATH=C:\... to point to the conda installation.
-goto end
+rem Activate Python env
+call %~dp0..\Scripts\manage\env\activate_env.cmd
+if %ERRORLEVEL% NEQ 0 (goto end)
 
-:condafound
-@echo CONDAPATH IS %CONDAPATH%
-@echo.
-
-rem Define here the name of the environment to be used
-set ENVNAME=CMAP-TRIP2
-
-rem The following command prepares to activate the base environment if it is used.
-if %ENVNAME%==base (set ENVPATH=%CONDAPATH%) else (set ENVPATH=%CONDAPATH%\envs\%ENVNAME%)
-
-rem Activate the conda environment
-rem Using call is required here, see: https://stackoverflow.com/questions/24678144/conda-environments-and-bat-files
-call %CONDAPATH%\Scripts\activate.bat %ENVPATH%
-if %errorlevel% neq 0 (
-  @echo Error in activating conda
-  goto end
-)
-@echo.
 cd tg\scripts
 echo Updating Trip Generation inputs with UrbanSim data ...
 python urbansim_update_tg_input_files.py
@@ -296,18 +240,6 @@ copy tg\fortran\MCHW_HH.TXT MCHW_HH.TXT /y
 copy tg\fortran\TG_HHENUM_OUTPUT.TXT TG_HHENUM_OUTPUT.TXT /y
 echo.
 
-REM -- Get path to INRO Python installation, redirect errors to nul in case file not found, read first path from file --
-set infile=path.txt
-if exist %infile% (del %infile% /Q)
-dir "C:\Program Files\INRO\*python.exe" /s /b >> %infile% 2>nul
-set /p empypath=<%infile%
-set paren="
-set empypath=%paren%%empypath%%paren%
-echo Emme pypath = %empypath%
-call :CheckEmpty1 %infile%
-:pythonpass
-if exist %infile% (del %infile% /Q)
-
 REM -- Get name of .emp file --
 set infile=empfile.txt
 cd ..
@@ -320,8 +252,12 @@ call :CheckEmpty %infile%
 if exist %infile% (del %infile% /Q)
 cd Database
 
+rem Activate Emme Python env
+call %~dp0..\Scripts\manage\env\activate_env.cmd emme
+if %ERRORLEVEL% NEQ 0 (goto end)
+
 echo Preparing emmebank for model run...
-call %empypath% useful_macros\cleanup_for_rerun.py %file1% %val%>> tg.rpt
+call python useful_macros\cleanup_for_rerun.py %file1% %val%>> tg.rpt
 echo.
 
 echo Importing production and attraction matrices (used only for b/l/m truck distribution)...
@@ -329,7 +265,7 @@ call emme -ng 000 -m prep_macros\import.tg.results 1 >> tg.rpt
 echo.
 
 echo Skimming highway network...
-call emme -ng 000 -m prep_macros\free.skim.mac %val% 1 >> tg.rpt
+call python prep_macros\free.skim.mac.py %file1% %val%
 echo.
 
 echo Distributing trucks...
@@ -351,61 +287,43 @@ rem ------------------------------------------------------------
 :socec_data_error
 echo !!! MISSING SOCEC FILES !!!
 echo Socioeconomic input files are missing from tg\fortran.
-echo
-pause
 goto end
 
 :m01_data_error
 echo !!! MISSING DATA FILES !!!
 echo M01 data files (m01auto.csv, m01type.csv) are missing from tg\data.
-echo
-pause
 goto end
 
 :python_error
 echo !!! MISSING IOM FILES !!!
 echo Review tg\scripts\prepare_iom_inputs.log for errors.
-echo.
-pause
 goto end
 
 :badscen
 echo !!! NO 3-DIGIT SCENARIO !!!
 echo Please resubmit the program and supply a scenario number.
-echo.
-pause
 goto end
 
 :urbansim_issue
 echo !!! THE URBANSIM FILES DID NOT PROCESS PROPERLY !!!
-echo.
-pause
 goto end
 
 :hcv_issue
 echo !!! THE HEAVY COMMERCIAL VEHICLE ALLOCATION DID NOT PROCESS PROPERLY !!!
-echo.
-pause
 goto end
 
 :wfh_issue
 echo !!! THE WORK FROM HOME ALLOCATION MODEL DID NOT RUN PROPERLY !!!
-echo.
-pause
 goto end
 
 :filemiss1
 echo !!! tg\fortran\MCHW_HH.TXT DOES NOT EXIST !!!
-echo.
-pause
 goto end
 
 :truck_balance_err
 echo !!! TRUCK BALANCING PROCEDURES PRODUCED NaN ERRORS !!!
 echo Please review report\truck.access.rpt, modify distribute.trucks and
 echo resubmit trip_gen.bat
-echo.
-pause
 goto end
 
 :CheckEmpty
@@ -416,33 +334,14 @@ goto filepass
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @ECHO    COULD NOT FIND .EMP FILE.
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO.
-pause
 goto end
-
-:CheckEmpty1
-if %~z1 == 0 (goto badpython)
-goto pythonpass
-
-:badpython
-@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO    COULD NOT FIND EMME PYTHON INSTALLATION.
-@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO.
-pause
-goto end
-
 
 :last
-if "%choice%"=="2" (goto skip_env)
-rem Deactivate the environment
-call conda deactivate
-:skip_env
 echo End of batch file.
 @ECHO Trip Generation Model Start Time: %dt% %tm%
 @ECHO Trip Generation Model End Time  : %date% %time%
-echo.
-pause
 
 :end
+echo.
+pause
 exit

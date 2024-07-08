@@ -1,0 +1,523 @@
+# CMAP Travel Demand Model Data User Guide ({{ model_version }})
+
+This dataset includes the analysis year inputs and outputs from the Air Quality
+Conformity Analysis approved in {{ approval_date }}. The horizon year is 2050
+and reflects the policies and projects adopted in the ON TO 2050 Regional
+Comprehensive Plan.
+
+The air quality analysis is completed twice annually, in the second quarter and
+the fourth quarter.  The data associated with the analysis is named based on
+the year the analysis was completed and the quarter it was completed.
+Therefore, the files in this dataset are referred to as {{ model_version }}
+data.
+
+The analysis years for this conformity cycle include 2019, 2025, 2030, 2035,
+2040, and 2050.  We associate scenario numbers with the analysis years as shown
+below.  You will notice the scenario numbers 100–700 referenced in many of the
+filenames or in headers within the files.
+
+| Analysis year | Scenario number |
+| --- | ---|
+| 2019 | 100 |
+| 2025 | 200 |
+| 2030 | 300 |
+| 2035 | 400 |
+| 2040 | 500 |
+| 2050 | 700 |
+
+For additional information, see the
+<a href="https://cmap.illinois.gov/wp-content/uploads/dlm_uploads/ON-TO-2050-Update-Travel-Demand-Model-Documentation-Appendix.pdf" target="_blank">travel demand model documentation</a>.
+
+## Resources
+
+**Trip Generation Data** ({{ tg_data }})  
+This is a CSV table containing the trip generation inputs and outputs by trip
+generation zone, the most disaggregate modeling geography. The trip generation
+zone ID is subzone17. The information can be linked to the trip generation zone
+shapefile, described later, via the variable subzone17. This file includes a
+number of variables related to low-income and high-income households. The
+definition of a low-income household for our purposes is a household that earns
+less than the regional median household income. A high-income household earns
+more than the regional median household income.
+
+The variables are defined this way:
+
+| Field name | Value definition |
+| --- | --- |
+| subzone17 | Trip generation zone |
+| fips | Census county code |
+| cnty_name | County name |
+| state | Illinois, Wisconsin, or Indiana, because the modeled region covers multiple states |
+| puma5 | 5% PUMA ID |
+| zone17 | Traffic analysis zone that the subzone is aggregated up to |
+| chicago | Flag for “in Chicago”:<br> 1 = Yes<br> 0 = No |
+| cbd | Flag for “in Chicago CBD”:<br> 1 = Yes<br> 0 = No |
+| row_column | Area of the region:<br> 1 = Inner Chicago<br> 2 = Outer and inner suburbs<br> 3 = Mid-suburban<br> 4 = Fringe and external area |
+| area | Area of the subzone in square miles |
+| cmap | Flag for “in CMAP region”:<br> 1 = Yes<br> 0 = No |
+| households | Number of households |
+| avg_vehicles | Average number of available vehicles per household |
+| avg_adults | Average number of adults per household |
+| avg_workers | Average number of workers per household |
+| avg_children | Average number of children per household |
+| avg_income_index | Ratio of the subzone average household income to the regional median household income |
+| avg_age_index | Average householder age code:<br> 1 = 16–34<br> 2 = 35–64<br> 3 = 65+ |
+| gq_mil | Persons in military barracks |
+| gq_univ | Persons in college/university dormitories |
+| gq_16to64 | Persons in other groups quarters age 16-64 |
+| gq_65plus | Persons in other group quarters age 65 or older |
+| retail_emp | Retail employment |
+| tot_emp | Total employment |
+| hi_earn_share | Percent of subzone households that earn more than the regional median household income |
+| nhp | Non-home-based productions |
+| nha | Non-home-based attractions |
+| hwplo | Home-based work low-income productions |
+| hwphi | Home-based work high-income productions |
+| hwalo | Home-based work low-income attractions |
+| hwahi | Home-based work high-income attractions |
+| hop | Home-based other productions |
+| hoa | Home-based other attractions |
+| wrkautoms | Ratio of the workers in the subzone who commute by auto divided by the total workers in the subzone |
+| sdwlkidx | Walkability index |
+| zmedinc | Median household income of resident TAZ |
+
+<br>
+
+**Production-Attraction Tables** ({{ pa_tables }})  
+This compressed folder contains person trip productions and attractions which
+were read and used by the destination choice-mode choice model. The source of
+this data is the trip generation outputs described previously. These are
+structured text files in fixed-width format. The information can be linked to
+the traffic analysis zone shapefile zone17, described later, via the zone
+number.
+
+| Columns | Description |
+| --- | --- |
+| 1–6 | Trip generation subzone |
+| 7–12 | Modeling zone |
+| 13–14 | Trip purpose code |
+| 15–23 | Household and non-institutionalized group quarters trip productions |
+| 24–32 | Household and non-institutionalized group quarters trip attractions |
+
+<br>
+
+**Distributed Trip Tables** ({{ trip_tables }})  
+This compressed folder includes CSV matrices. The low-income and
+high-income trip tables represent travel made by workers living in households
+that earn below and above the regional median household income. The individual
+trip tables sum to the totals for home-based work auto and home-based work
+transit trips.
+
+The CMAP network assignment process requires the truck vehicle trips (actual
+matrix contents) to be converted to vehicle equivalents. The factors used are
+b-plate and light trucks=1 vehicle equivalent, medium trucks=2 vehicle
+equivalents, and heavy trucks=3 vehicle equivalents.
+
+Because of the unique way the transit network is coded, the transit trip tables
+cannot be assigned directly to the transit network.
+
+| Filename | Contents |
+| --- | --- |
+| hbwL_auto.csv | Home-based work auto person trips, low-income |
+| hbwH_auto.csv | Home-based work auto person trips, high-income |
+| hbo_auto.csv | Database | Home-based other auto person trips |
+| hbs_auto.csv | Home-based shopping auto person trips |
+| nhb_auto.csv | Non-home-based auto person trips |
+| mf4.csv | B-plate truck vehicle trips |
+| mf5.csv | Light truck vehicle trips |
+| mf6.csv | Medium truck vehicle trips |
+| mf7.csv | Heavy truck vehicle trips |
+| mf8.csv | Auto point-of-entry vehicle trips |
+| mf9.csv | Truck point-of-entry vehicle trips |
+| mf10.csv | Airport trip vehicle trips |
+| mf38.csv | Visitor transit person trips |
+| mf39.csv | Home-based shopping transit person trips |
+| mf40.csv | Home-based work transit person trips, low-income |
+| mf41.csv | Home-based work transit person trips, high-income |
+| mf42.csv | Home-based other transit person trips |
+| mf43.csv | Non-home-based transit person trips |
+| visit_auto.csv | Visitor auto person trips |
+| dead_auto.csv | Deadhead trips for TNCs and taxis |
+
+Daily truck and external trip time-of-day conversion:
+
+| Conversion factors | TOD1 | TOD2 | TOD3 | TOD4 | TOD5 | TOD6 | TOD7 | TOD8 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Auto point-of-entry | 0.163 | 0.052 | 0.127 | 0.051 | 0.211 | 0.133 | 0.155 | 0.109 |
+| Airport auto point-of-entry | 0.163 | 0.052 | 0.127 | 0.051 | 0.211 | 0.133 | 0.155 | 0.109 |
+| B-plate truck | 0.23 | 0.007 | 0.016 | 0.016 | 0.238 | 0.165| 0.176 | 0.152 |
+| Light truck | 0.23 | 0.007 | 0.016 | 0.016 | 0.238 | 0.165| 0.176 | 0.152 |
+| Medium truck | 0.23 | 0.007 | 0.016 | 0.016 | 0.238 | 0.165| 0.176 | 0.152 |
+| Heavy truck | 0.213 | 0.044 | 0.121 | 0.067 | 0.266 | 0.121 | 0.103 | 0.065 |
+| Truck point-of-entry | 0.213 | 0.044 | 0.121 | 0.067 | 0.266 | 0.121 | 0.103 | 0.065 |
+
+Auto point-of-entry trip SOV value-of-time conversion:
+
+| Value-of-time | Conversion factor |
+| --- | --- |
+| VOT1 | 0.10 |
+| VOT2 | 0.45 |
+| VOT3 | 0.45 |
+
+<br>
+
+**HOV Trip Tables** ({{ hov_trip_tables }})  
+This compressed folder contains individual SOV and HOV trip detail tables by
+purpose. hbw_sov.csv, hbw_hov2.csv, and hbw_hov3.csv contain home based work
+trips for SOV, HOV2 and HOV3+, respectively. hbo_sov.csv, hbo_hov2.csv, and
+hbo_hov3.csv hold home based other trips, hbs_sov.csv, hbs_hov2.csv, and
+hbs_hov3.csv hold home based shopping trips and nhb_sov.csv, nhb_hov2.csv, and
+nhb_hov3.csv hold non-home based trips.
+
+<br>
+
+**Emme Highway Networks** ({{ highway_networks }})  
+This compressed folder includes files named network_p1–network_p8. These are
+assigned highway networks Emme exported from the database for period 1 through
+period 8, denoted by the file labels p1–p8. Each Emme transaction format text
+file, consists of two parts. The first part is the node section, the second
+part is the link section. The period link capacity is calculated during the
+modeling process using @emcap\*lanes\*hours in the period for each link.
+
+Also included is a “daily” network that has all links (including both
+directions of reversible lanes) and an associated attribute table that has the
+daily assigned volume in vehicles.
+
+The files titled attribs_p1–attribs_p8 are TXT format Emme extra attribute
+files for period 1 through period 8, denoted by the file labels p1–p8. The file
+format and contents of the networks and network extra attributes are presented
+below.
+
+| Period | Hours |
+| --- | --- |
+| 1 | 8pm–6am |
+| 2 | 6–7am |
+| 3 | 7–9am |
+| 4 | 9–10am |
+| 5 | 10am–2pm |
+| 6 | 2–4pm |
+| 7 | 4–6pm |
+| 8 | 6–8pm |
+
+Many people are interested in using the congested link travel times. The
+congested link travel times in minutes are included as “timau” in the extra
+attribute file. Use caution, however, as these times are raw model results.
+CMAP adjusts the arterial speeds before using them in the air quality analysis
+software. Also, you will notice that links with an i-node or j-node less than
+5000 have the same congested times in all periods. These are centroid
+connectors and the travel time is based on distance, not on congestion.
+
+Network and extra attribute file layout:  
+A network file contains two sections, nodes and links, whose starts are marked
+by “t nodes init” and “t links init”.
+
+t nodes init
+
+| Field | Contents | Description |
+| --- | --- | --- |
+| 1 | a | Update code (add) |
+| 2 | * or blank | Centroid indicator (*=centroid, blank=regular node) |
+| 3 || Node number |
+| 4 || X-coordinate of node (horizontal axis) |
+| 5 || Y-coordinate of node (vertical axis) |
+| 6 || User defined node data 1 (default is 0) |
+| 7 || User defined node data 2 (default is 0) |
+| 8 || User defined node data 3 (default is 0) |
+| 9 || Node label (default is '0000') |
+
+t links init
+
+| Field | Contents | Description |
+| --- | --- | --- |
+| 1 | a | Update code (add) |
+| 2 || Node number of starting node (I-node) of link |
+| 3 || Node number of ending node (J-node) of link |
+| 4 || Link length in miles |
+| 5 || List of modes allowed on the link |
+| 6 || Link type (user defined classification) |
+| 7 || Number of lanes (default is 0) |
+| 8 || Volume-delay function number (default is 0) |
+| 9 || User defined link data 1 (default is 0) |
+| 10 || User defined link data 2 (default is 0) |
+| 11 || User defined link data 3 (default is 0) |
+
+Extra Attribute File Contents
+
+| Field | Label | Contents | Description |
+| --- | --- | --- | --- |
+| 1 | inode || Node number of starting node (I-node) of link |
+| 2 | jnode || Node number of ending node (J-node) of link |
+| 3 | @speed || Posted speed (MPH)|
+| 4 | @width || Lane width (feet) |
+| 5 | @parkl | 0=no, 1=yes | Parking allowed |
+| 6 | @toll || Toll (dollars) |
+| 7 | @sigic | 0=no, 1=yes | Signal interconnect |
+| 8 | @tipid || Non-zero values indicate links with TIP projects |
+| 9 | @ftime || Free-flow travel time |
+| 10 | @emcap || Capacity per lane per hour |
+| 11 | @avelw || Average lane width |
+| 12 | @vadt || Period-assigned modeled volumes (vehicles) |
+| 13 | timau || Congested auto travel time (minutes) |
+
+Disregard the field titled “result", which is meaningless and only results from
+the method of exporting the data.
+
+Additional Description of Highway Link Variables  
+The following list provides information on how the network volume delay
+functions and modes are defined, as well as a little descriptive information
+about some of the additional network attributes.
+
+- Modes
+    - A = Generalized auto
+    - S = Single-occupant auto
+    - H = High-occupancy auto
+    - T = General truck
+    - b = B-plate truck
+    - l = Light truck
+    - m = Medium truck
+    - h = Heavy truck
+- Volume Delay Function Codes
+    - 1 = Arterial street
+    - 2 = Freeway
+    - 3 = Freeway/expressway to arterial street ramp
+    - 4 = Expressway
+    - 5 = Freeway/expressway to freeway/expressway ramp
+    - 6 = Auto access to network
+    - 7 = Link where toll is paid
+    - 8 = Metered expressway entrance ramp
+- lanes = Number of driving lanes
+- parkl = Number of parking lanes on link 
+- avelw, width = Average width of link's driving lanes ftime = Uncongested travel time on link
+- emcap = Lane capacity at level of service E
+
+<br>
+
+**AM Peak Highway Network Shapefiles** ({{ am_peak_highway_network }})  
+This is a series of shapefiles exported from the travel demand model software
+and contains the highway assignment results for the am peak (7–9am) traffic
+volumes in vehicles. These links are directional and the volumes in vehicles
+are contained in “data1”.
+
+<br>
+
+**PM Peak Highway Network Shapefiles** ({{ pm_peak_highway_network }})  
+This is a series of shapefiles exported from the travel demand model software
+and contains the highway assignment results for the pm peak (4–6pm) traffic
+volumes in vehicles. These links are directional and the volumes in vehicles
+are contained in “data1”.
+
+<br>
+
+**Daily Highway Network Shapefiles** ({{daily_highway_network}})  
+This is a series of shapefiles exported from the travel demand model software
+and represents the daily assigned volumes. It includes all the links available
+throughout the day by direction. For example, both directions of the reversible
+lanes are included. Using node numbers as unique identifiers, the data
+attribute files from the loaded highway networks can be linked to these files.
+This series also includes daily link volumes by class, in vehicle equivalents.
+
+Vehicle class volumes are:
+
+- @avauv – All auto SOV vehicles
+- @avs1v – Auto SOV value of time 1 vehicles
+- @avs2v – Auto SOV value of time 2 vehicles
+- @avs3v – Auto SOV value of time 3 vehicles
+- @avh2v – Auto HOV 2 vehicles
+- @avh3v – Auto HOV 3+ vehicles
+- @avbqv – B-plate trucks
+- @avlqv – Light trucks
+- @avmqv – Medium trucks vehicle equivalents
+- @avhqv – Heavy trucks vehicle equivalents
+
+@vadt contains the sum of vehicle class vehicle equivalents and bus vehicle
+equivalents, converted to vehicles – (@avauv + @avh2v + @avh3v + @avbqv
++ @avlqv + (@avmqv/2) + (@avhqv/3) + (@busveq/3)).
+
+Toll rates are:
+
+- @toll – Auto toll (dollars)
+- @toll2 – Light truck toll (dollars)
+- @toll3 – Medium truck toll (dollars)
+- @toll4 – Heavy truck toll (dollars)
+
+These are daytime tolls for trucks.
+
+<br>
+
+**Emme Transit Networks** ({{ transit_networks }})
+This compressed folder contains the modeled peak and off-peak transit networks
+for the analysis year in Emme transaction format. Network_pk and network_op
+contain nodes and links for peak and off-peak. Itins_pk and itins_op are the
+transit route itineraries for peak and off-peak. Attribs_pk and attribs_op are
+segment variables for the transit itineraries for peak and off-peak. Within
+attribs_pk and attribs_op, @ltime is the current scheduled time on the link,
+@hwytm is the modeled period auto travel time on the same link, and @zfare is
+an attribute describing points where extra fares are charged.
+
+Transit Network Codes
+
+- Transit Route Modes
+    - A = Generalized auto
+    - B = CTA regular bus
+    - E = CTA express bus
+    - P = Pace regular
+    - Q = Pace express
+    - L = Pace local
+    - C = CTA rail
+    - M = Metra rail
+- Access Modes
+    - w = From origin to Metra
+    - v = From origin to CTA rail
+    - u = From origin to bus
+- Egress Modes
+    - y = CTA rail to destination
+    - z = Metra to destination
+    - x = Bus to destination
+- Transfer Modes
+    - m = Between bus/Metra
+    - c = Between Bus/CTA rail
+    - b = Between bus/bus (except on-the-node transfers)
+    - r = Between CTA rail/CTA rail
+    - t = Between CTA rail/Metra
+    - d = Between Metra/Metra
+
+<br>
+
+**Emme TOD Period Transit Networks** ({{ tod_transit_networks }})  
+This compressed folder contains the modeled transit network Emme transaction
+files for each of the four transit time of day periods for the analysis year.
+Rail.network_<period> and bus.network_<period> contain nodes and links.
+Rail.itinerary_<period> and bus.itinerary_<period> are the transit route
+itineraries. Railnode.extatt_<period> and busnode.extatt_<period> are node
+variables for the transit network. Within the node variable files, @pspace is
+the number of parking spaces and @pcost is the cost of parking in cents.
+Access.network_<period> contains transit network access links.
+
+| Period | Description | Hours |
+| --- | --- | --- |
+| 1 | Overnight/Early AM | 6pm–6am |
+| 2 | AM peak | 6–9am |
+| 3 | Midday | 9am–4pm |
+| 4 | PM peak | 4–6pm |
+
+<br>
+
+**Peak Transit Network Shapefiles** ({{ peak_transit_network }})  
+This folder contains a series of shapefiles representing the AM peak period
+transit network exported from Emme.
+
+<br>
+
+**Off-Peak Transit Network Shapefiles** ({{ offpeak_transit_network }})  
+This folder contains a series of shapefiles representing the mid-day period
+transit network exported from Emme.
+
+<br>
+
+**Transit and Highway Skims** ({{ skim_matrices }})  
+This directory contains the zipped “level of service” matrices used in the
+model run as. The CSV file contents are as follows, with 9999’s indicating
+zonal interchanges not connected by transit in the transit matrices:
+
+- mf922.csv = Indexed transit in-vehicle minutes (off-peak)
+- mf923.csv = Indexed transit walk transfer minutes (off-peak)
+- mf938.csv = Indexed transit total wait time x2 (off-peak)
+- mf930.csv = Indexed transit priority mode (off-peak)
+- mf928.csv = Indexed final average transit fare (off-peak)
+- mf822.csv = Indexed transit in-vehicle minutes (peak)
+- mf823.csv = Indexed transit walk transfer minutes (peak)
+- mf838.csv = Indexed transit total wait time x2 (peak)
+- mf830.csv = Indexed transit priority mode (peak)
+- mf828.csv = Indexed final average transit fare (peak)
+- mf44.csv = AM peak (7–9am) skimmed highway time
+- mf45.csv = AM peak (7–9am) skimmed highway distance
+- mf46.csv = Mid-day (10am–2pm) skimmed highway time
+- mf47.csv = Mid-day (10am–2pm) skimmed highway distance
+- mf837.csv = Indexing file (peak), see following
+- mf937.csv = Indexing file (off-peak), see following
+
+mf837, mf937: this is a zone indexing file needed to move transit trips to an
+“assignment” origin if a transit assignment is being undertaken.
+
+<br>
+
+**Emme Databank** ({{ database }})  
+This is the final databank for the analysis year and was created with Emme
+version 23.00.01.23. Most of the files described in this document are exported
+from the databank. If you have the software, you can either use the exported
+files or use the Emme databank directly.
+
+<br>
+
+**Emme Databank Matrix Directory** ({{ matrices }})  
+The current version of Emme stores matrices externally from the Emme databank.
+This file contains the entire directory of matrices referenced by the Emme
+databank described previously. If the user is interested in using the Emme
+databank with its matrices, this ffolder should be downloaded and uncompressed
+in the same directory as the databank.
+
+<br>
+
+**Trip Roster** ({{ trip_roster }})  
+This CSV contains all person trips generated by the mode-destination-tod model.
+
+| Field name | Value definition |
+| --- | --- |
+| hh_type | Household type |
+| purpose | Trip purpose |
+| mode | Trip mode |
+| o_zone | Origin TAZ |
+| d_zone | Destination TAZ |
+| a_zone | Attraction TAZ |
+| timeperiod | Time period |
+| trips | Number of person trips |
+| hh_autos | Number of autos owned by household |
+| hh_inc5 | Household income category |
+
+HOV3+ vehicle occupancy rates:
+
+| Trip purpose | Rate |
+| --- | --- |
+| Home-based work | 3.36 |
+| Home-based non-work | 3.31 |
+| Non-home-based | 3.39 |
+| Vistor | 3.39 |
+
+SOV vehicle trip value-of-time conversion:
+
+| Purpose | Income Group | Low VOT | Mid VOT | High VOT |
+| --- | --- | --- | --- | --- |
+| HBWL | 1 | 0.648 | 0.333 | 0.018 |
+| HBWL | 2 | 0.383 | 0.537 | 0.08 |
+| HBWH | 3 | 0.197 | 0.605 | 0.198 |
+| HBWH | 4 | 0.197 | 0.605 | 0.198 |
+| HBWH | 5 | 0.036 | 0.425|  0.53 |
+| HBO | 1 | 0.648 | 0.333 | 0.018 |
+| HBO | 2 | 0.383 | 0.537 | 0.08 |
+| HBO | 3 | 0.197 | 0.605 | 0.198 |
+| HBO | 4 | 0.197 | 0.605 | 0.198 |
+| HBO | 5 | 0.036 | 0.425 | 0.53 |
+| HBS | 1 | 0.648 | 0.333 | 0.018 |
+| HBS | 2 | 0.383 | 0.537 | 0.08 |
+| HBS | 3 | 0.197 | 0.605 | 0.198 |
+| HBS | 4 | 0.197 | 0.605 | 0.198 |
+| HBS | 5 | 0.036 | 0.425 | 0.53 |
+| NHB | 1 | 0.648 | 0.333 | 0.018 |
+| NHB | 2 | 0.383 | 0.537 | 0.08 |
+| NHB | 3 | 0.197 | 0.605 | 0.198 |
+| NHB | 4 | 0.197 | 0.605 | 0.198 |
+| NHB | 5 | 0.036 | 0.425 | 0.53 |
+| VISIT | -1 | 0.3 | 0.55 | 0.15 |
+| DEAD | -1 | 0.7 | 0.25 | 0.051 |
+
+<br>
+
+[**Subzone 2017 Geography**](https://datahub.cmap.illinois.gov/datasets/CMAPGIS::trip-generation-zone-subzone-geography-2017/about)  
+Trip generation information can be joined to subzones for visualization and
+spatial analysis.
+
+<br>
+
+[**Traffic Analysis Zone 2017 Geography**](https://datahub.cmap.illinois.gov/datasets/CMAPGIS::traffic-analysis-zone-geography-2017/about)  
+Trip productions and attractions and distributed trip table information can be
+joined to TAZs for visualization and spatial analysis.

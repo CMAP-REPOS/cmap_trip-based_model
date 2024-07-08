@@ -37,7 +37,7 @@ def export_matrix_from_roster(name, spec, outdir, roster, report):
                                  .pivot(index=mtx_header, columns=q, values='trips')\
                                  .to_csv(outdir.joinpath(f'{name}.csv'))
 
-def export_auto_matrices(projdir, outdir):
+def export_auto_matrices(projdir, outdir, trip_roster_path):
     """
     Generate daily auto person trip matrices from trip roster and export to CSV.
 
@@ -58,41 +58,27 @@ def export_auto_matrices(projdir, outdir):
     # Make output subdirectories.
     tripdir = outdir.joinpath('trips')
     tripdir.mkdir(exist_ok=True)
-    worktripdir = tripdir.joinpath('work_trips')
-    worktripdir.mkdir(exist_ok=True)
     hovtripdir  = tripdir.joinpath('hov_trips')
     hovtripdir.mkdir(exist_ok=True)
     # Read trip roster.
-    roster = pd.read_csv(outdir.joinpath('trip_roster.csv'))
+    roster = pd.read_csv(trip_roster_path)
     # Specify matrices.
-    mtx_specs = {'hbwL_all': {'description': 'total daily low-income hbw person trips',
-                              'purpose': ['HBWL'],
-                              'mode': range(1, 10),
-                              'format': 'PA'},
-                 'hbwH_all': {'description': 'total daily high-income hbw person trips',
-                              'purpose': ['HBWH'],
-                              'mode': range(1, 10),
-                              'format': 'PA'},
-                 'hbw_auto': {'description': 'total daily hbw auto person trips',
-                              'purpose': ['HBWH', 'HBWL'],
-                              'mode': range(1, 7),
-                              'format': 'PA'},
-                 'hbwL_auto': {'description': 'total daily low-income hbw auto person trips',
+    mtx_specs = {'hbwL_auto': {'description': 'total daily low-income hbw auto person trips',
                               'purpose': ['HBWL'],
                               'mode': range(1, 7),
-                              'format': 'PA'},
+                              'format': 'OD'},
                  'hbwH_auto': {'description': 'total daily high-income hbw auto person trips',
                               'purpose': ['HBWH'],
                               'mode': range(1, 7),
-                              'format': 'PA'},
+                              'format': 'OD'},
                  'hbs_auto': {'description': 'total daily hbs auto person trips',
                               'purpose': ['HBS'],
                               'mode': range(1, 7),
-                              'format': 'PA'},
+                              'format': 'OD'},
                  'hbo_auto': {'description': 'total daily hbo auto person trips',
                               'purpose': ['HBO'],
                               'mode': range(1, 7),
-                              'format': 'PA'},
+                              'format': 'OD'},
                  'nhb_auto': {'description': 'total daily nhb auto person trips',
                               'purpose': ['NHB'],
                               'mode': range(1, 7),
@@ -108,39 +94,39 @@ def export_auto_matrices(projdir, outdir):
                  'hbw_sov': {'description': 'total daily hbw sov person trips',
                              'purpose': ['HBWH', 'HBWL'],
                              'mode': [1],
-                             'format': 'PA'},
+                             'format': 'OD'},
                  'hbw_hov2': {'description': 'total daily hbw hov2 person trips',
                              'purpose': ['HBWH', 'HBWL'],
                              'mode': [2],
-                             'format': 'PA'},
+                             'format': 'OD'},
                  'hbw_hov3': {'description': 'total daily hbw hov3+ person trips',
                              'purpose': ['HBWH', 'HBWL'],
                              'mode': [3],
-                             'format': 'PA'},
+                             'format': 'OD'},
                  'hbs_sov': {'description': 'total daily hbs sov person trips',
                              'purpose': ['HBS'],
                              'mode': [1],
-                             'format': 'PA'},
+                             'format': 'OD'},
                  'hbs_hov2': {'description': 'total daily hbs hov2 person trips',
                              'purpose': ['HBS'],
                              'mode': [2],
-                             'format': 'PA'},
+                             'format': 'OD'},
                  'hbs_hov3': {'description': 'total daily hbs hov3+ person trips',
                              'purpose': ['HBS'],
                              'mode': [3],
-                             'format': 'PA'},
+                             'format': 'OD'},
                  'hbo_sov': {'description': 'total daily hbo sov person trips',
                              'purpose': ['HBO'],
                              'mode': [1],
-                             'format': 'PA'},
+                             'format': 'OD'},
                  'hbo_hov2': {'description': 'total daily hbo hov2 person trips',
                              'purpose': ['HBO'],
                              'mode': [2],
-                             'format': 'PA'},
+                             'format': 'OD'},
                  'hbo_hov3': {'description': 'total daily hbo hov3+ person trips',
                              'purpose': ['HBO'],
                              'mode': [3],
-                             'format': 'PA'},
+                             'format': 'OD'},
                  'nhb_sov': {'description': 'total daily nhb sov person trips',
                              'purpose': ['NHB'],
                              'mode': [1],
@@ -162,16 +148,14 @@ def export_auto_matrices(projdir, outdir):
         args.append((name, spec, tripdir, roster, report))
     with multiprocessing.Pool() as pool:
         pool.starmap(export_matrix_from_roster, args)
-    # Move matrices to output directories.
+    # Move HOV matrices to output directory.
     for p in sorted(tripdir.glob('*.csv')):
-        if p.stem in ['hbwL_all', 'hbwH_all',
-                      'hbwL_auto', 'hbwH_auto']:
-            p.replace(worktripdir.joinpath(p.name))
-        elif p.stem in ['hbw_sov', 'hbw_hov2', 'hbw_hov3',
-                        'hbs_sov', 'hbs_hov2', 'hbs_hov3',
-                        'hbo_sov', 'hbo_hov2', 'hbo_hov3',
-                        'nhb_sov', 'nhb_hov2', 'nhb_hov3']:
+        if p.stem in ['hbw_sov', 'hbw_hov2', 'hbw_hov3',
+                      'hbs_sov', 'hbs_hov2', 'hbs_hov3',
+                      'hbo_sov', 'hbo_hov2', 'hbo_hov3',
+                      'nhb_sov', 'nhb_hov2', 'nhb_hov3']:
             p.replace(hovtripdir.joinpath(p.name))
+    return (tripdir, hovtripdir)
 
 def export_transit_matrices(outdir, modeller):
     """
@@ -180,30 +164,15 @@ def export_transit_matrices(outdir, modeller):
     # Make output subdirectories.
     tripdir = outdir.joinpath('trips')
     tripdir.mkdir(exist_ok=True)
-    worktripdir = tripdir.joinpath('work_trips')
-    worktripdir.mkdir(exist_ok=True)
     # Construct Modeller tools.
-    create_matrix = modeller.tool('inro.emme.data.matrix.create_matrix')
-    compute_matrix = modeller.tool('inro.emme.matrix_calculation.matrix_calculator')
     export_matrix_data = modeller.tool('inro.emme.data.matrix.export_matrix_to_csv')
-    delete_matrix = modeller.tool('inro.emme.data.matrix.delete_matrix')
-    matrix_names = {'mf40': 'hbwL_transit',
+    matrix_names = {'mf38': 'visit_transit',
+                    'mf39': 'hbs_transit',
+                    'mf40': 'hbwL_transit',
                     'mf41': 'hbwH_transit',
                     'mf42': 'hbo_transit',
-                    'mf43': 'nhb_transit',
-                    'mf99': 'hbw_transit'}
-    # Sum low and high income home-work transit trips.
-    create_matrix(matrix_id='mf99',
-                  matrix_name=matrix_names['mf99'],
-                  matrix_description='home-based work transit person trips')
-    spec = {'type': 'MATRIX_CALCULATION',
-            'expression': 'mf40 + mf41',
-            'result': 'mf99'}
-    compute_matrix(spec)
+                    'mf43': 'nhb_transit'}
     # Export transit trips.
-    export_matrix_data(matrices=[i for i in list(matrix_names.keys()) if i not in ['mf40', 'mf41']],
+    export_matrix_data(matrices=[i for i in list(matrix_names.keys())],
                        export_path=tripdir)
-    # Export home-work transit trips by income level.
-    export_matrix_data(matrices=['mf40', 'mf41'],
-                       export_path=worktripdir)
-    delete_matrix('mf99')
+    return tripdir
