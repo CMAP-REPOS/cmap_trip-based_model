@@ -1,7 +1,6 @@
 @echo off
 REM Run transit assignment.
-REM  Heither, rev. 01-19-2024
-
+REM  Heither, rev. 04-25-2024 (improved logic for correctly reading transitFilePath)
 @echo -------------------------------------------------------------------------------------------------
 @echo To run a transit assignment, use the following settings in batch_file.yaml:
 @echo    - scenario: set to appropriate value
@@ -24,7 +23,7 @@ for /f "eol=# skip=2 tokens=2 delims=:" %%a in (batch_file.yaml) do (set val=%%a
 :break1
 for /f "eol=# skip=11 tokens=2 delims=:" %%f in (batch_file.yaml) do (set transitAsmt=%%f & goto break2)
 :break2
-for /f "eol=# skip=14 tokens=2 delims=:" %%b in (batch_file.yaml) do (set transitFilePath=%%b & goto break3)
+for /f "eol=# skip=14 tokens=2* delims=:" %%b in (batch_file.yaml) do (set transitFilePath1=%%b & set transitFilePath2=%%c & goto break3)
 :break3
 for /f "eol=# skip=16 tokens=2 delims=:" %%h in (batch_file.yaml) do (set selLineFile=%%h & goto break4)
 :break4
@@ -33,7 +32,11 @@ for /f "eol=# skip=22 tokens=2 delims=:" %%k in (batch_file.yaml) do (set RSPrun
 
 set val=%val:~1,3%
 set transitAsmt=%transitAsmt:~1,1%
-set transitFilePath=%transitFilePath:~1%
+rem Construct complete transit file path
+set transitFilePath1=%transitFilePath1:~1,-1%
+set transitFilePath2=%transitFilePath2:~1,-1%
+set sep=:\
+set transitFilePath=%transitFilePath1%%sep%%transitFilePath2%
 set selLineFile=%selLineFile:~1%
 set RSPrun=%RSPrun:~1,1%
 @echo.
@@ -55,7 +58,6 @@ set transitFilePath=%transitFilePath:~0,-1%
 if "%check2%" NEQ "None" (
     if not exist Select_Line\%selLineFile% (goto no_select_line_file)
 )
-pause
 
 REM -- Get name of .emp file --
 set infile=empfile.txt
