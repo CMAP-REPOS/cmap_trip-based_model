@@ -44,6 +44,11 @@ def main():
         feed_dir = _in_dir.joinpath(feed_zip.stem)
         with ZipFile(feed_zip, 'r') as zip:
             zip.extractall(path=feed_dir)
+        for item in feed_dir.iterdir():
+            if item.is_dir():
+                for file in item.iterdir():
+                    file.replace(feed_dir.joinpath(file.name))
+                item.rmdir()
         transit_feed.clean_feed(feed_dir, Path(args.out_dir))
     # Start Modeller in the Emme project.
     modeller = tbm.connect(_proj_dir)
