@@ -1,9 +1,10 @@
-import sys
-from pathlib import Path
 import argparse
-from zipfile import ZipFile
 import subprocess
+import sys
 import time
+from pathlib import Path
+from zipfile import ZipFile
+
 sys.path.append(str(Path(__file__).resolve().parents[3]))
 from tbmtools import project as tbm
 from tbmtools import transit_feed
