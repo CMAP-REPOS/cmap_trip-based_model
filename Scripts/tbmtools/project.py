@@ -31,12 +31,10 @@ def connect(path):
                      
     Returns:     Modeller object
     """
-    if isinstance(path, str):
-        path = Path(path)
-    if path.is_file():
-        empfile = path
-    elif path.is_dir():
-        empfile = sorted(path.glob('**/*.emp'))[0]
+    if Path(path).is_file():
+        empfile = str(path)
+    elif Path(path).is_dir():
+        empfile = sorted(Path(path).rglob('*.emp'))[0]
     app = _app.start_dedicated(visible=False,
                                user_initials='CMAP',
                                project=empfile)
