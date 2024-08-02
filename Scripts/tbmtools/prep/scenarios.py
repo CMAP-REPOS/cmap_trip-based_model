@@ -1,3 +1,86 @@
+def build_gtfs_base_network(highway_modes, highway_nodes, highway_links, turns,
+                            transit_modes, rail_network, link_shape, vehicles,
+                            scenario, modeller):
+    """ Build a base network for loading GTFS information.
+
+    Adds modes, nodes, links, turns, link shape, and transit vehicles to
+    a scenario from mode transaction files, base network transaction
+    files, a turn transaction file, a link shape transaction file, and a
+    transit vehicle transaction file.
+
+    Parameters
+    ----------
+        highway_modes : str or Path object
+            Path to highway mode transaction file.
+        highway_nodes : str or Path object
+            Path to highway node base network transaction file.
+        highway_links : str or Path object
+            Path to highway link base network transaction file.
+        turns : str or Path object
+            Path to turn transaction file.
+        transit_modes : str or Path object
+            Path to transit mode transaction file.
+        rail_network : str or Path object
+            Path to rail base network transaction file.
+        link_shape : str or Path object
+            Path to link shape transaction file.
+        transit_vehicles : str or Path object
+            Path to transit vehicle transaction file.
+        scenario : inro.emme.database.scenario.Scenario
+            Scenario to contain the built network.
+        modeller : inro.modeller.Modeller
+            Modeller instance of active Emme project.
+    """
+    # Construct Modeller tools.
+    process_mode_file = modeller.tool('inro.emme.data.network.mode.mode_transaction')
+    process_network_file = modeller.tool('inro.emme.data.network.base.base_network_transaction')
+    process_link_shape_file = modeller.tool('inro.emme.data.network.base.link_shape_transaction')
+    process_turn_file = modeller.tool('inro.emme.data.network.turn.turn_transaction')
+    process_vehicle_file = modeller.tool('inro.emme.data.network.transit.vehicle_transaction')
+    # Build highway.
+    process_mode_file(str(highway_modes),
+                      scenario=scenario)
+    process_network_file(str(highway_nodes),
+                         scenario=scenario)
+    process_network_file(str(highway_links),
+                         scenario=scenario)
+    process_turn_file(str(turns),
+                      revert_on_error = False,
+                      scenario=scenario)
+    # Remove truck modes - they unnecessary in this network and conflict with
+    # auxiliary transit modes.
+    truck_modes = ['T', 'h', 'm', 'l', 'b']
+    network = scenario.get_network()
+    for m in truck_modes:
+        network.delete_mode(m, cascade=True)
+    scenario.publish_network(network)
+    # Build rail.
+    process_mode_file(str(transit_modes),
+                      scenario=scenario)
+    process_network_file(str(rail_network),
+                         scenario=scenario)
+    # Add bus modes to highway links.
+    network = scenario.get_network()
+    for link in network.links():
+        if network.mode('A') in link.modes:
+            if link.volume_delay_func in [1]:
+                bus_modes = ['B', 'E', 'P', 'Q', 'L']
+            elif link.volume_delay_func in [2, 3, 4, 5, 7, 8]:
+                bus_modes = ['E', 'Q']
+            else:
+                bus_modes = []
+        for m in bus_modes:
+            link.modes |= set([network.mode(m)])  # Adds the mode to the link.
+    scenario.publish_network(network)
+    # Add link shape.
+    process_link_shape_file(str(link_shape),
+                            revert_on_error=False,
+                            scenario=scenario)
+    # Add transit vehicles.
+    process_vehicle_file(str(vehicles),
+                         scenario=scenario)
+
+
 def create_transit_scenario(network_file, mode_file, link_shape_file, scenario_id,
                             scenario_title, modeller, turn_file=None):
     """
@@ -53,9 +136,18 @@ def create_transit_scenario(network_file, mode_file, link_shape_file, scenario_i
     # Add link shape.
     process_link_shape_file(transaction_file=str(link_shape_file), revert_on_error=False)
 
-def configure_gtfs_scenario(scenario_id, modeller):
-    """
-    Add GTFS network fields and extra attributes to a transit scenario.
+def configure_gtfs_schema(scenario, modeller):
+    """ Configure a scenario's schema to store GTFS information.
+
+    Creates network fields and extra attributes in transit line and
+    transit segment domains for storing imported GTFS data.
+
+    Parameters
+    ----------
+    scenario : inro.emme.database.scenario.Scenario
+        Scenario to contain the GTFS data.
+    modeller : inro.modeller.Modeller
+        Modeller instance of active Emme project.
     """
     # Define GTFS network fields and extra attributes.
     transit_line_fields = [('#route_name', 'route name'),
@@ -87,7 +179,7 @@ def configure_gtfs_scenario(scenario_id, modeller):
                          network_field_name=fld_name,
                          network_field_description=fld_desc,
                          overwrite=True,
-                         scenario=modeller.emmebank.scenario(scenario_id))
+                         scenario=scenario)
     # Add GTFS network fields to transit segments.
     for fld in transit_segment_fields:
         fld_name = fld[0]
@@ -97,7 +189,7 @@ def configure_gtfs_scenario(scenario_id, modeller):
                          network_field_name=fld_name,
                          network_field_description=fld_desc,
                          overwrite=True,
-                         scenario=modeller.emmebank.scenario(scenario_id))
+                         scenario=scenario)
     # Add GTFS extra attributes to transit lines.
     for attr in transit_line_attributes:
         attr_name = attr[0]
@@ -106,7 +198,7 @@ def configure_gtfs_scenario(scenario_id, modeller):
                          extra_attribute_name=attr_name,
                          extra_attribute_description=attr_desc,
                          overwrite=True,
-                         scenario=modeller.emmebank.scenario(scenario_id))
+                         scenario=scenario)
     # Add GTFS extra attributes to transit segments.
     for attr in transit_segment_attributes:
         attr_name = attr[0]
@@ -115,4 +207,11 @@ def configure_gtfs_scenario(scenario_id, modeller):
                          extra_attribute_name=attr_name,
                          extra_attribute_description=attr_desc,
                          overwrite=True,
-                         scenario=modeller.emmebank.scenario(scenario_id))
+                         scenario=scenario)
+        
+def load_gtfs_feed(feed, scenario, modeller):
+    """
+    """
+    
+
+    
