@@ -52,27 +52,26 @@ def main():
         transit_feed.clean_feed(feed_dir, Path(args.out_dir))
     # Start Modeller in the Emme project.
     modeller = tbm.connect(_proj_dir)
-    # Build base networks.
-    # Create a rail scenario.
-    scenarios.create_transit_scenario(network_file=Path(args.rail_network),
-                                      mode_file=_in_dir.joinpath('tranmodes.txt'),
-                                      link_shape_file=Path(args.link_shape),
-                                      scenario_id=998,
-                                      scenario_title='Rail',
+    # Construct Modeller tools.
+    create_scenario = modeller.tool('inro.emme.data.scenario.create_scenario')
+    # Create a GTFS scenario.
+    gtfs_scenario = create_scenario('900',
+                                    scenario_title='GTFS',
+                                    overwrite=True)
+    # Build base network.
+    scenarios.build_gtfs_base_network(highway_modes=_in_dir.joinpath('modes.in'),
+                                      highway_nodes=Path(args.highway_network_nodes),
+                                      highway_links=Path(args.highway_network_links),
+                                      turns=_in_dir.joinpath('turnp07202016.txt'),
+                                      transit_modes=_in_dir.joinpath('tranmodes.txt'),
+                                      rail_network=Path(args.rail_network),
+                                      link_shape=Path(args.link_shape),
+                                      vehicles=_in_dir.joinpath('transveh.txt'),
+                                      scenario=gtfs_scenario,
                                       modeller=modeller)
-    # Create a bus scenario.
-    scenarios.create_transit_scenario(network_file=[Path(args.highway_network_nodes), Path(args.highway_network_links)],
-                                      mode_file=[_in_dir.joinpath('modes.in'), _in_dir.joinpath('tranmodes.txt')],
-                                      link_shape_file=Path(args.link_shape),
-                                      scenario_id=999,
-                                      scenario_title='Bus',
-                                      modeller=modeller,
-                                      turn_file=_in_dir.joinpath('turnp07202016.txt'))
-    # Load transit feeds.
     # Configure the rail network scenario for GTFS.
-    scenarios.configure_gtfs_scenario(scenario_id=998, modeller=modeller)
-    # Configure the bus network scenario for GTFS.
-    scenarios.configure_gtfs_scenario(scenario_id=999, modeller=modeller)
+    scenarios.configure_gtfs_schema(scenario=gtfs_scenario,
+                                    modeller=modeller)
 
 
 if __name__ == '__main__':
