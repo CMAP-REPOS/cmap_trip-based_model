@@ -54,12 +54,9 @@ def build_gtfs_base_network(highway_modes, highway_nodes, highway_links, turns,
     for m in truck_modes:
         network.delete_mode(m, cascade=True)
     scenario.publish_network(network)
-    # Build rail.
+    # Add bus modes to highway links.
     process_mode_file(str(transit_modes),
                       scenario=scenario)
-    process_network_file(str(rail_network),
-                         scenario=scenario)
-    # Add bus modes to highway links.
     network = scenario.get_network()
     for link in network.links():
         if network.mode('A') in link.modes:
@@ -72,6 +69,9 @@ def build_gtfs_base_network(highway_modes, highway_nodes, highway_links, turns,
         for m in bus_modes:
             link.modes |= set([network.mode(m)])  # Adds the mode to the link.
     scenario.publish_network(network)
+    # Build rail.
+    process_network_file(str(rail_network),
+                         scenario=scenario)
     # Add link shape.
     process_link_shape_file(str(link_shape),
                             revert_on_error=False,
