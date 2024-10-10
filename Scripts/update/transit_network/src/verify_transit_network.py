@@ -1,9 +1,9 @@
-import sys
-from pathlib import Path
 import argparse
 import multiprocessing
-import time
 import os
+import sys
+import time
+from pathlib import Path
 
 import arcpy
 import yaml
