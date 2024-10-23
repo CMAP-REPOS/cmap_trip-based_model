@@ -119,13 +119,13 @@ indxloc = np.arange(mcent*mcent)							## -- array of consecutive numbers repres
 leg1pt1 = np.divide(indxloc,mcent)
 leg1pt1 = np.multiply(leg1pt1.astype('i4'),mcent,dtype='i4')	## -- portion of element index defining origin zone 
 leg1indx = np.add(leg1pt1,kzone.astype('i4')-1,dtype='i4')	## -- add portion of element index defining destination zone
-print("Kzone 1-1: {0}, Index 1-1: {1}, Kzone 121-2: {2}, Index 121-2: {3} \n".format(kzone[0], leg1indx[0], kzone[437882], leg1indx[437882]))
+#print("Kzone 1-1: {0}, Index 1-1: {1}, Kzone 121-2: {2}, Index 121-2: {3} \n".format(kzone[0], leg1indx[0], kzone[437882], leg1indx[437882]))
 
 ## -- create leg2 (k-q) indices
 leg2pt1 = np.multiply(kzone.astype('i4')-1,mcent)
 leg2pt2 = np.mod(indxloc,mcent)
 leg2indx = np.add(leg2pt1,leg2pt2,dtype='i4')
-print("Kzone 1-1: {0}, Index 1-1: {1}, Kzone 121-2: {2}, Index 121-2: {3} \n".format(kzone[0], leg2indx[0], kzone[437882], leg2indx[437882]))
+#print("Kzone 1-1: {0}, Index 1-1: {1}, Kzone 121-2: {2}, Index 121-2: {3} \n".format(kzone[0], leg2indx[0], kzone[437882], leg2indx[437882]))
 
 # ---------------------------------------------------------------
 # Create indexed matrices.

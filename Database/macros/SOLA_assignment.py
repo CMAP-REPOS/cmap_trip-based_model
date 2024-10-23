@@ -121,7 +121,7 @@ if numSelLinkFiles > 0:
     s = selLinkFiles.split(',')
     sl = [e for e in s if e != 'None']
 
-if trnAsmtFlag==1:
+if trnAsmtFlag==1 and rspFlag=="T":
     numSelLinkFiles = 0
 elif rspFlag=="T":
     numSelLinkFiles = 1

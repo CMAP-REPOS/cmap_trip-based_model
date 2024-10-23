@@ -89,13 +89,13 @@ def main():
                 counter1 = int(counter1)
                 counter1 = counter1+1
 
-    #delete transit assignment scenarios if exist
-    for c in counters2:
-        scen = currentScen + c
-        scenDel = _m.Modeller().emmebank.scenario(scen)
-        if scenDel: delete_scenario(scenDel)
-        counter2 = int(counter2)
-        counter2 = counter2+1
+    # #delete transit assignment scenarios if exist
+    # for c in counters2:
+    #     scen = currentScen + c
+    #     scenDel = _m.Modeller().emmebank.scenario(scen)
+    #     if scenDel: delete_scenario(scenDel)
+    #     counter2 = int(counter2)
+    #     counter2 = counter2+1
 
     #delete matrices
     matpairs = {}

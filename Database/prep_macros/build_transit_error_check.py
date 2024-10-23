@@ -13,7 +13,7 @@ import sys, os
 
 scen = sys.argv[1]
 rpt_name = 'build_' + str(scen) + 'transit.rpt'
-rpt = os.path.dirname(os.getcwd()) + '\\report\\' + rpt_name
+rpt = os.path.dirname(os.getcwd()) + '\\Database\\report\\' + rpt_name
 
 with open(rpt) as r:
     for line in r:
@@ -23,6 +23,6 @@ with open(rpt) as r:
             if count > 0:
                 f = open(
                         os.path.dirname(os.getcwd())
-                        + '\\report\\build_transit.error', 'w')
+                        + '\\Database\\report\\build_transit.error', 'w')
                 f.close()
                 sys.exit()
