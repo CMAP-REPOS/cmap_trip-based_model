@@ -1,8 +1,7 @@
 # To use this file:
-# conda env create -f environment.yml
+# conda env create -f CMAP-TRIP2.yml
 name: CMAP-TRIP2
 channels:
-  - tmip
   - conda-forge
 dependencies:
   - altair=4.1
@@ -11,7 +10,6 @@ dependencies:
   - dask=2021.12
   - datashader=0.13
   - distributed=2021.12
-  - tmip::emat=0.5
   - fiona=1.8
   - geopandas=0.10
   - gh=2.4
@@ -53,6 +51,7 @@ dependencies:
   - xarray=0.20
   - zarr=2.10
   - pip:
+    - emat  
     # Uses relative paths to local packages
     - -e ../../../src/Mode-Dest-TOD
     - -e ../../../src/Mode-Dest-TOD/sharrow
