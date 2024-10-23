@@ -1,6 +1,6 @@
 @echo off
 REM Run transit assignment.
-REM  Heither, rev. 04-25-2024 (improved logic for correctly reading transitFilePath)
+REM  Heither, rev. 10-21-2024 (updated for c24q4)
 @echo -------------------------------------------------------------------------------------------------
 @echo To run a transit assignment, use the following settings in batch_file.yaml:
 @echo    - scenario: set to appropriate value
@@ -21,10 +21,8 @@ echo.
 rem -- Read model run settings from batch_file.yaml --
 for /f "eol=# skip=2 tokens=2 delims=:" %%a in (batch_file.yaml) do (set val=%%a & goto break1)
 :break1
-for /f "eol=# skip=11 tokens=2 delims=:" %%f in (batch_file.yaml) do (set transitAsmt=%%f & goto break2)
+for /f "eol=# skip=14 tokens=2 delims=:" %%f in (batch_file.yaml) do (set transitAsmt=%%f & goto break2)
 :break2
-for /f "eol=# skip=14 tokens=2* delims=:" %%b in (batch_file.yaml) do (set transitFilePath1=%%b & set transitFilePath2=%%c & goto break3)
-:break3
 for /f "eol=# skip=16 tokens=2 delims=:" %%h in (batch_file.yaml) do (set selLineFile=%%h & goto break4)
 :break4
 for /f "eol=# skip=22 tokens=2 delims=:" %%k in (batch_file.yaml) do (set RSPrun=%%k & goto break5)
@@ -32,11 +30,6 @@ for /f "eol=# skip=22 tokens=2 delims=:" %%k in (batch_file.yaml) do (set RSPrun
 
 set val=%val:~1,3%
 set transitAsmt=%transitAsmt:~1,1%
-rem Construct complete transit file path
-set transitFilePath1=%transitFilePath1:~1,-1%
-set transitFilePath2=%transitFilePath2:~1,-1%
-set sep=:\
-set transitFilePath=%transitFilePath1%%sep%%transitFilePath2%
 set selLineFile=%selLineFile:~1%
 set RSPrun=%RSPrun:~1,1%
 @echo.
@@ -44,7 +37,6 @@ set RSPrun=%RSPrun:~1,1%
 @echo     --- Model Run Settings ---
 @echo  Scenario = %val%
 @echo  Run transit assignment = %transitAsmt%
-if "%transitAsmt%" EQU "T" (@echo  Location of transit network files = %transitFilePath%)
 if "%transitAsmt%" EQU "T" (@echo  Transit assignment select line file = %selLineFile%)
 @echo  RSP evaluation run = %RSPrun%
 @echo ==============================================================
@@ -52,8 +44,6 @@ if "%transitAsmt%" EQU "T" (@echo  Transit assignment select line file = %selLin
 set /a trnAsmt=0
 if "%transitAsmt%" EQU "T" (set /a trnAsmt+=1)
 set check2=%selLineFile:~0,4%
-REM Remove trailing spaces from transitFilePath
-set transitFilePath=%transitFilePath:~0,-1%
 
 if "%check2%" NEQ "None" (
     if not exist Select_Line\%selLineFile% (goto no_select_line_file)
