@@ -276,7 +276,7 @@ exasmtSpec = {
             "boarding_time": {"global": {"penalty": 0, "perception_factor": 1},},
             "boarding_cost": {"on_lines": {"penalty": "ut1", "perception_factor": perceptionVOT}},
             "in_vehicle_time": {"perception_factor": 1},
-            "in_vehicle_cost":{"penalty": "@zfare","perception_factor": perceptionVOT},
+            "in_vehicle_cost":{"penalty": "@zfare_link","perception_factor": perceptionVOT},
             "aux_transit_time": {"perception_factor": 2},
             "aux_transit_cost": None,
             "flow_distribution_at_origins": {"choices_at_origins": {"choice_points": "ALL_ORIGINS", "choice_set": "ALL_CONNECTORS",
