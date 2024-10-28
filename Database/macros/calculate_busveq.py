@@ -1,10 +1,11 @@
-
+#import libraries
+import os
+import csv
+import pandas as pd
+import inro.modeller as _m
+    
+    
 def busveq(tod, empFile, scen, scen_txt, tod_mult):
-    #import libraries
-    import os
-    import csv
-    import pandas as pd
-    import inro.modeller as _m
     modeller = _m.Modeller()
     emmebank = modeller.emmebank
     

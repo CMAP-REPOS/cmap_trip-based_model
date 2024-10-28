@@ -62,9 +62,10 @@
  Craig Heither, 06-19-2024
  ==========================================================================================
 '''
+import inro.modeller as _m
+
 
 def arterial_delay():
-    import inro.modeller as _m
     create_extra = _m.Modeller().tool("inro.emme.data.extra_attribute.create_extra_attribute")
     netcalc = _m.Modeller().tool("inro.emme.network_calculation.network_calculator")
     del_att = _m.Modeller().tool("inro.emme.data.extra_attribute.delete_extra_attribute")

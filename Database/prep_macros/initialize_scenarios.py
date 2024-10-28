@@ -97,11 +97,6 @@ create_function = modeller.tool("inro.emme.data.function.create_function")
 #for running import.turn
 run_macro = modeller.tool("inro.emme.prompt.run_macro")
 
-#find and import Ftime_capacity.py and Arterial_delay.py -- need attributes for highway skim
-sys.path.append(db)
-from macros import Ftime_capacity as fc
-from macros import Arterial_delay as ad
-
 ##
 ## INITIALIZE HIGHWAY SCENARIOS
 ##
