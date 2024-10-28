@@ -13,11 +13,11 @@
 
 import os
 import sys
-import inro.modeller as _m
-import inro.emme.desktop.app as _app
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parents[2].joinpath('Scripts')))
+from tbmtools import project as tbm
 
-empFl = sys.argv[1]
-timePeriod = sys.argv[2]
+timePeriod = sys.argv[1]
 
 maxInternal=3632                                    ## -- highest non-POE zone number
 
@@ -30,10 +30,8 @@ parkCostCoeff=-20.00                                ## -- generalized parking co
 parkOffset= 75                                      ## -- daily parking fee offset in cents (i.e. the cost at which parking may as well be free) 
 
 
-directory = os.getcwd().replace('\\Database','')
-empFile = os.path.join(directory,empFl)
-my_app = _app.start_dedicated(project=empFile, visible=False, user_initials="CMAP")
-my_modeller = _m.Modeller(my_app)
+proj_dir = Path(__file__).resolve().parents[2]
+my_modeller = tbm.connect(proj_dir)
 my_emmebank = my_modeller.emmebank
 
 matrix_init = my_modeller.tool("inro.emme.data.matrix.create_matrix")

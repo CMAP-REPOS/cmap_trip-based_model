@@ -50,10 +50,10 @@
 ##################
 print('--TOD_network_prep.py')
 #import libraries
-import inro.emme.desktop.app as _app
-import inro.modeller as _m
-import os 
+from pathlib import Path
 import sys
+sys.path.append(str(Path(__file__).resolve().parents[2].joinpath('Scripts')))
+from tbmtools import project as tbm
 import Ftime_capacity as fc
 import Arterial_delay as ad
 import calculate_busveq as bus
@@ -61,21 +61,11 @@ import calculate_busveq as bus
 #import variables
 yr = str(sys.argv[1])  #emme scenario number -- %val% in batch
 tod = int(sys.argv[2])   #time of day -- %tod_cntr% in batch
-empNam = sys.argv[3] #.emp filename -- %file1% in batch
-glob_iter = int(sys.argv[4]) #global iteration -- %counter% in batch
-empFile = os.path.join(os.path.dirname(os.getcwd()), empNam)
-
-db = os.path.join(os.path.dirname(empFile), 'Database')
-
-#open app
-desktop = _app.start_dedicated(
-    visible=False,
-    user_initials='TKO',
-    project= empFile
-)
+glob_iter = int(sys.argv[3]) #global iteration -- %counter% in batch
 
 # Connect to modeller
-modeller = _m.Modeller(desktop=desktop)
+proj_dir = Path(__file__).resolve().parents[2]
+modeller = tbm.connect(proj_dir)
 emmebank = modeller.emmebank
 
 #define necessary emme modeller tools
@@ -179,7 +169,7 @@ if int(glob_iter) == 0:
     # print('  --calculating ftime_capacity and arterial_delay')
     fc.link_capacity()              ## -- Calculate link capacity
     ad.arterial_delay()             ## -- Calculate arterial delay
-    bus.busveq(tod, empFile, scen, scen_txt, tod_mult)  ## -- Calculate busveq
+    bus.busveq(tod, Path(modeller.desktop.project_file_name()).name, scen, scen_txt, tod_mult)  ## -- Calculate busveq
     
 
 # INHERITED FROM MACRO

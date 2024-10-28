@@ -24,18 +24,6 @@ set transactFilePath=%transactFilePath1%%sep%%transactFilePath2%
 REM Remove trailing spaces from transactFilePath
 set transactFilePath=%transactFilePath:~0,-1%
 
-REM -- Get name of .emp file --
-set infile=empfile.txt
-cd ..
-if exist %infile% (del %infile% /Q)
-dir "*.emp" /b >> %infile% 2>nul
-set /p file1=<%infile%
-echo file1 = %file1%
-call :CheckEmpty %infile%
-:filepass
-if exist %infile% (del %infile% /Q)
-cd Database
-
 @echo.
 @echo ==================================================================================
 @echo     --- Model Run Settings ---
@@ -56,7 +44,7 @@ call %~dp0..\Scripts\manage\env\activate_env.cmd emme
 
 @ECHO --- Cleaning up databank ---
 if exist cleanup.rpt (del cleanup.rpt)
-call python useful_macros\cleanup_for_rerun.py %file1% %val%>> cleanup.rpt
+call python useful_macros\cleanup_for_rerun.py %val%>> cleanup.rpt
 if exist reports (del reports)
 @ECHO  Cleanup complete.
 
@@ -83,16 +71,6 @@ goto while
 goto last
 
 rem ####################################################################################
-:CheckEmpty
-if %~z1 == 0 (goto badfile)
-goto filepass
-
-:badfile
-@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO    COULD NOT FIND .EMP FILE.
-@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO.
-goto end
 
 :badnet
 @ECHO.

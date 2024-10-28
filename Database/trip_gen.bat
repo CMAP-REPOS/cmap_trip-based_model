@@ -257,7 +257,7 @@ call %~dp0..\Scripts\manage\env\activate_env.cmd emme
 if %ERRORLEVEL% NEQ 0 (goto end)
 
 echo Preparing emmebank for model run...
-call python useful_macros\cleanup_for_rerun.py %file1% %val%>> tg.rpt
+call python useful_macros\cleanup_for_rerun.py %val%>> tg.rpt
 echo.
 
 echo Importing production and attraction matrices (used only for b/l/m truck distribution)...

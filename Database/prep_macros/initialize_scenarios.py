@@ -31,48 +31,41 @@
 ##
 
 #import libraries
-import inro.emme.desktop.app as _app
-import inro.modeller as _m
 import os 
 import sys
 import yaml
 from datetime import date
-
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parents[2].joinpath('Scripts')))
+from tbmtools import project as tbm
+sys.path.append(str(Path(__file__).resolve().parents[1].joinpath('macros')))
+import Ftime_capacity as fc
+import Arterial_delay as ad
 
 #import variables
 
 #find cmap_trip-based_model folder
-prep_macros_dir = os.path.dirname(os.path.abspath(__file__)) #prep_macros folder
-db = os.path.dirname(prep_macros_dir) #database folder
-e = os.path.dirname(db) #cmap_trip-based_model folder
-empFile = [os.path.join(e, empFile) for empFile in os.listdir(e) if empFile.endswith('.emp')][0]
+db = Path(__file__).resolve().parents[1]  # database folder
+proj_dir = db.parent  # cmap_trip-based_model folder
 
 #set path to batchin files
 with open(os.path.join(db, 'batch_file.yaml')) as f:
     lines_without_backslashes = ''.join([line.replace('\\','/') for line in f])
     config = yaml.safe_load(lines_without_backslashes)
-scen_yr = config['scenario_code'] #e.g., '200'
-batchin_path = config['transactionFilePath'] #e.g., M:/catslib/modelprod/c24q2
+scen_yr = config['scenario_code']  # e.g., '200'
+batchin_path = config['transactionFilePath']  # e.g., M:/catslib/modelprod/c24q2
 
 hwy_batchin_dir = os.path.join(batchin_path, 'highway')
 trn_batchin_dir = os.path.join(batchin_path, 'transit')
 print('highway transaction file location: ', hwy_batchin_dir)
 print('transit transaction file location: ', trn_batchin_dir)
 
-
 ##
 ## EMME SETUP #####
 ##
 
-#open app
-app = _app.start_dedicated(
-    visible=False,
-    user_initials='TKO',
-    project= empFile
-)
-
 # Connect to modeller
-modeller = _m.Modeller(desktop=app)
+modeller = tbm.connect(proj_dir)
 emmebank = modeller.emmebank
 
 #define necessary emme modeller tools
@@ -431,7 +424,7 @@ for asmt_scen in network_batchin_list:
     report = os.path.join(db, f'report/build_{asmt_scen[0]}transit.rpt')
     if os.path.exists(report):
         os.remove(report)
-    app.modeller_tool_report_path = report
+    modeller.desktop.modeller_tool_report_path = report
     
     #build transit network
     transit_modes = os.path.join(trn_batchin_dir, 'tranmodes.txt')

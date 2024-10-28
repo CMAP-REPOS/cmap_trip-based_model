@@ -267,7 +267,7 @@ call %~dp0..\Scripts\manage\env\activate_env.cmd emme
 
 @ECHO   ***  Cleaning up databank.  ***
 if exist cleanup.rpt (del cleanup.rpt)
-call python useful_macros\cleanup_for_rerun.py %file1% %val%>> cleanup.rpt
+call python useful_macros\cleanup_for_rerun.py %val%>> cleanup.rpt
 if exist reports (del reports)
 
 REM RUN FREESKIM TO CREATE TIME, DISTANCE AND TOLL MATRICES
@@ -291,18 +291,18 @@ if %counter% GTR 2 (goto loopend)
 @ECHO BEGINNING TRANSIT SKIM - FULL MODEL ITERATION %counter%
 @ECHO - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 REM AM Peak Skim
-call python macros/skim_transit.py %file1% %val% %counter% AM
+call python macros/skim_transit.py %val% %counter% AM
 if %ERRORLEVEL% neq 0 (goto issue)
-call python macros/transit_triple_indexing.py %file1% AM
+call python macros/transit_triple_indexing.py AM
 if %ERRORLEVEL% neq 0 (goto issue)
 call python macros/transit_skim_final_matrices1.py
 if %ERRORLEVEL% neq 0 (goto issue)
 call python macros/transit_skim_wrapup.py %file1% AM
 if %ERRORLEVEL% neq 0 (goto issue)
 REM Midday Skim
-call python macros/skim_transit.py %file1% %val% %counter% MD
+call python macros/skim_transit.py %val% %counter% MD
 if %ERRORLEVEL% neq 0 (goto issue)
-call python macros/transit_triple_indexing.py %file1% MD
+call python macros/transit_triple_indexing.py MD
 if %ERRORLEVEL% neq 0 (goto issue)
 call python macros/transit_skim_final_matrices2.py
 if %ERRORLEVEL% neq 0 (goto issue)
@@ -344,12 +344,12 @@ REM
 call emme -ng 000 -m macros\ttables.mac %val% %tod_cntr% 92 93 >> blog.txt
 @ECHO   --- End ttables.mac Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO   --- Begin TOD_network_prep.py Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
-call python macros\TOD_network_prep.py %val% %tod_cntr% %file1% %counter% >> blog.txt
+call python macros\TOD_network_prep.py %val% %tod_cntr% %counter% >> blog.txt
 @ECHO   --- End TOD_network_prep.py Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO   --- Begin assignment Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO --- Begin assignment Period %tod_cntr%: %date% %time% ---
 @ECHO  -- Run TOD assignment --
-call python macros/SOLA_assignment.py %file1% %tod_cntr% %sola_threads% %counter% %RSPrun% %tempCnt% %selLinkFile% %trnAsmt%
+call python macros/SOLA_assignment.py %tod_cntr% %sola_threads% %counter% %RSPrun% %tempCnt% %selLinkFile% %trnAsmt%
 if %ERRORLEVEL% NEQ 0 (goto issue)
 @ECHO   --- End assignment Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO --- End assignment Period %tod_cntr%: %date% %time% ---

@@ -6,15 +6,16 @@ import os
 import os.path
 import shutil
 import sys
-import inro.emme.desktop.app as _app
-import inro.modeller as _m
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parents[2].joinpath('Scripts')))
+from tbmtools import project as tbm
 import pandas as pd
 import glob
    
 def main():
 
     #set variables
-    currentScen = int(sys.argv[2])
+    currentScen = int(sys.argv[1])
     scenario = str(currentScen)
     cScenMD = currentScen + 5
     moveF11 = "build_" + str(currentScen) + "transit.rpt"
@@ -29,18 +30,9 @@ def main():
     counters1 = [0, 10, 20]
     counters2 = [21, 23, 25, 27]
 
-    # Define the path to the Emme project (.emp file)
-    empFl = sys.argv[1]
-    directory = os.getcwd().replace('\\Database','')
-    empFile = os.path.join(directory,empFl)
-    desktop = _app.start_dedicated(
-        visible=True,
-        user_initials='KCC',
-        project= empFile
-    )
-    
     # Connect to the Modeller
-    modeller = _m.Modeller(desktop=desktop)
+    proj_dir = Path(__file__).resolve().parents[2]
+    modeller = tbm.connect(proj_dir)
     emmebank = modeller.emmebank
     delete_scenario = modeller.tool("inro.emme.data.scenario.delete_scenario")
     delete_matrix = modeller.tool("inro.emme.data.matrix.delete_matrix")
@@ -78,13 +70,13 @@ def main():
     for c in counters1:
         if c == 0:
             while counter1 <= c +9:
-                scenDel = _m.Modeller().emmebank.scenario(counter1)
+                scenDel = emmebank.scenario(counter1)
                 if scenDel: delete_scenario(scenDel)    
                 counter1 = counter1+1
         else:
             while counter1 <= c +9:
                 scen = str(scenario) + str(counter1)
-                scenDel = _m.Modeller().emmebank.scenario(scen)
+                scenDel = emmebank.scenario(scen)
                 if scenDel: delete_scenario(scenDel)
                 counter1 = int(counter1)
                 counter1 = counter1+1
