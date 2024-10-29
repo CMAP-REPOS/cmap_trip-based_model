@@ -84,23 +84,21 @@
 import os
 import sys
 import json             ##-- improved readability for printing assignment specification
-import inro.modeller as _m
-import inro.emme.desktop.app as _app
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parents[2].joinpath('Scripts')))
+from tbmtools import project as tbm
 
-empFl = sys.argv[1]
-tmPeriod = int(sys.argv[2])
-sThreads = int(sys.argv[3])
-globalIter = int(sys.argv[4])
-rspFlag = sys.argv[5]
-numSelLinkFiles = int(sys.argv[6])
-selLinkFiles = sys.argv[7]
-trnAsmtFlag = int(sys.argv[8])
+tmPeriod = int(sys.argv[1])
+sThreads = int(sys.argv[2])
+globalIter = int(sys.argv[3])
+rspFlag = sys.argv[4]
+numSelLinkFiles = int(sys.argv[5])
+selLinkFiles = sys.argv[6]
+trnAsmtFlag = int(sys.argv[7])
 
 
-directory = os.getcwd().replace('\\Database','')
-empFile = os.path.join(directory,empFl)
-my_app = _app.start_dedicated(project=empFile, visible=True, user_initials="CMAP")
-my_modeller = _m.Modeller(my_app)
+proj_dir = Path(__file__).resolve().parents[2]
+my_modeller = tbm.connect(proj_dir)
 
 SOLA_spec_report = os.getcwd() + "\\report\\SOLA_spec_GlobalIteration{0}_TOD{1}.txt".format(globalIter, tmPeriod)
 matrix_file =  os.getcwd() + "\\rsp_evaluation\\inputs\\exc_pop_shr_mo50.txt"       ##-- EDA share origin matrix 
@@ -121,7 +119,7 @@ if numSelLinkFiles > 0:
     s = selLinkFiles.split(',')
     sl = [e for e in s if e != 'None']
 
-if trnAsmtFlag==1:
+if trnAsmtFlag==1 and rspFlag=="T":
     numSelLinkFiles = 0
 elif rspFlag=="T":
     numSelLinkFiles = 1
@@ -158,7 +156,7 @@ storeMtx = ("mtx11[j-1]", "mtx12[j-1]", "mtx13[j-1]", "mtx14[j-1]", "mtx15[j-1]"
 
 if globalIter == 2:
     if numSelLinkFiles > 0: 
-        with _m.logbook_trace("Select Link Setup for Time Period %s" % tmPeriod):
+        with my_modeller.logbook_trace("Select Link Setup for Time Period %s" % tmPeriod):
             for i in range(1,numSelLinkFiles+1):
                 ## -- Create select link flag variable -- ##
                 new_att = create_extra(extra_attribute_type="LINK", extra_attribute_name="@sellk%s" %(i),
@@ -498,7 +496,7 @@ with open(SOLA_spec_report,'w') as f:
  
 
 ## -- Perform the traffic assignment -- ##
-with _m.logbook_trace("SOLA Traffic Assignment for Time Period %s" % tmPeriod):
+with my_modeller.logbook_trace("SOLA Traffic Assignment for Time Period %s" % tmPeriod):
     if globalIter == 2:
         #- Create variables for MOVES inputs -#
         create_extra(extra_attribute_type="LINK", extra_attribute_name="@m200", extra_attribute_description="medium truck long distance volau (MOVES)", overwrite=True)

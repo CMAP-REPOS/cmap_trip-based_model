@@ -1,6 +1,6 @@
 BE1EDF10-2EAD-462F-8D9D-01D816FE2C10 07B0F5AD-A2A7-4B4E-B4A9-06EB441586D6 2 0 0
-# Emme View file generated on Mon Oct 30 13:26:04 2023
-# File: D:/nrf/TBM/c23q4/cmap_trip-based_model/Views/Initial.emv
+# Emme View file generated on Mon Oct 28 17:46:21 2024
+# File: E:/nrf/TBM/c24q4_100/cmap_trip-based_model/Views/Initial.emv
 #
 # String Name: user definable name of configurable object (tr)
 Name = Initial View
@@ -17,13 +17,13 @@ FileType : (0x80)
 # Click SetAsInitial: Set this view as the initial view
 SetAsInitial : (0x1)
 # Float XMin: X-coordinate of lower left corner of the view
-XMin = -10264329
+XMin = -10191974
 # Float YMin: Y-coordinate of lower left corner of the view
-YMin = 4988911.5
+YMin = 4969325
 # Float XMax: X-coordinate of upper right corner of the view
-XMax = -9136935
+XMax = -9085440
 # Float YMax: Y-coordinate of upper right corner of the view
-YMax = 5147335
+YMax = 5128205.5
 # Box ViewBox: box defining the view (nosave)
 ViewBox : (0x80)
 
