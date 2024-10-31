@@ -8,6 +8,13 @@ CMAP Trip-Based Travel Demand Model documentation
 
 .. toctree::
    :maxdepth: 2
+   :caption: Getting started
+   :hidden:
+
+   install
+
+.. toctree::
+   :maxdepth: 2
    :caption: Common tasks
    :hidden:
 
