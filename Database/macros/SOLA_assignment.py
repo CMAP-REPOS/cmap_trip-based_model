@@ -85,6 +85,7 @@ import os
 import sys
 import json             ##-- improved readability for printing assignment specification
 from pathlib import Path
+import inro.modeller as _m
 sys.path.append(str(Path(__file__).resolve().parents[2].joinpath('Scripts')))
 from tbmtools import project as tbm
 
@@ -156,7 +157,7 @@ storeMtx = ("mtx11[j-1]", "mtx12[j-1]", "mtx13[j-1]", "mtx14[j-1]", "mtx15[j-1]"
 
 if globalIter == 2:
     if numSelLinkFiles > 0: 
-        with my_modeller.logbook_trace("Select Link Setup for Time Period %s" % tmPeriod):
+        with _m.logbook_trace("Select Link Setup for Time Period %s" % tmPeriod):
             for i in range(1,numSelLinkFiles+1):
                 ## -- Create select link flag variable -- ##
                 new_att = create_extra(extra_attribute_type="LINK", extra_attribute_name="@sellk%s" %(i),
@@ -496,7 +497,7 @@ with open(SOLA_spec_report,'w') as f:
  
 
 ## -- Perform the traffic assignment -- ##
-with my_modeller.logbook_trace("SOLA Traffic Assignment for Time Period %s" % tmPeriod):
+with _m.logbook_trace("SOLA Traffic Assignment for Time Period %s" % tmPeriod):
     if globalIter == 2:
         #- Create variables for MOVES inputs -#
         create_extra(extra_attribute_type="LINK", extra_attribute_name="@m200", extra_attribute_description="medium truck long distance volau (MOVES)", overwrite=True)

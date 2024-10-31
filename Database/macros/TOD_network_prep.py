@@ -169,7 +169,7 @@ if int(glob_iter) == 0:
     # print('  --calculating ftime_capacity and arterial_delay')
     fc.link_capacity()              ## -- Calculate link capacity
     ad.arterial_delay()             ## -- Calculate arterial delay
-    bus.busveq(tod, Path(modeller.desktop.project_file_name()).name, scen, scen_txt, tod_mult)  ## -- Calculate busveq
+    bus.busveq(tod, modeller.desktop.project_file_name(), scen, scen_txt, tod_mult)  ## -- Calculate busveq
     
 
 # INHERITED FROM MACRO
