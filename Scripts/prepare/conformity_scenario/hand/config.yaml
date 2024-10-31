@@ -1,0 +1,58 @@
+# model_version: c24q4
+# scenario_code: 100
+similar_model_version: c24q2  # For copying model data
+scenario_years:
+    100: 2019
+    200: 2025
+    300: 2030
+    400: 2035
+    500: 2040
+    600: 2045
+    700: 2050
+wfh_rates:
+    2019:
+        fully_remote: 0.0510
+        hybrid: 0.1031
+    2025:
+        fully_remote: 0.0869
+        hybrid: .1257
+    2030:
+        fully_remote: 0.0875
+        hybrid: 0.1263
+    2035:
+        fully_remote: 0.0880
+        hybrid: 0.1270
+    2040:
+        fully_remote: 0.0884
+        hybrid: .1273
+    2045:
+        fully_remote: 0.0884
+        hybrid: 0.1272
+    2050:
+        fully_remote: 0.0882
+        hybrid: 0.1269
+trip_growth_factors:
+    2019:
+        truck/poe: 1.19
+        visit: 1.00
+    2025:
+        truck/poe: 1.25
+        visit: 1.05
+    2030:
+        truck/poe: 1.30
+        visit: 1.18
+    2035:
+        truck/poe: 1.35
+        visit: 1.34
+    2040:
+        truck/poe: 1.40
+        visit: 1.51
+    2045:
+        truck/poe: 1.45
+        visit: 1.70
+    2050:
+        truck/poe: 1.50
+        visit: 1.92
+tnc_surcharges:
+    2019: 0
+    2020: 175

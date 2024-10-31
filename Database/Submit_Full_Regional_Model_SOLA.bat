@@ -29,6 +29,8 @@ rem 10/05/2023 Heither: Updated batch_file.yaml parameters, transit assignment
 rem =========================================================================================
 cd %~dp0
 rem -- Read model run settings from batch_file.yaml --
+for /f "eol=# skip=1 tokens=2 delims=:" %%z in (batch_file.yaml) do (set ver=%%z & goto break0)
+:break0
 for /f "eol=# skip=2 tokens=2 delims=:" %%a in (batch_file.yaml) do (set val=%%a & goto break1)
 :break1
 for /f "eol=# skip=4 tokens=2 delims=:" %%b in (batch_file.yaml) do (set wfhFile=%%b & goto break2)
@@ -39,9 +41,9 @@ for /f "eol=# skip=6 tokens=2 delims=:" %%d in (batch_file.yaml) do (set tc14=%%
 :break4
 for /f "eol=# skip=9 tokens=2 delims=:" %%e in (batch_file.yaml) do (set selLinkFile=%%e & goto break5)
 :break5
-for /f "eol=# skip=11 tokens=2 delims=:" %%f in (batch_file.yaml) do (set transitAsmt=%%f & goto break6)
+for /f "eol=# skip=12 tokens=2* delims=:" %%g in (batch_file.yaml) do (set transactFilePath1=%%g & set transactFilePath2=%%h & goto break6)
 :break6
-for /f "eol=# skip=14 tokens=2* delims=:" %%g in (batch_file.yaml) do (set transitFilePath1=%%g & set transitFilePath2=%%h & goto break7)
+for /f "eol=# skip=14 tokens=2 delims=:" %%f in (batch_file.yaml) do (set transitAsmt=%%f & goto break7)
 :break7
 for /f "eol=# skip=16 tokens=2 delims=:" %%i in (batch_file.yaml) do (set selLineFile=%%i & goto break8)
 :break8
@@ -51,7 +53,10 @@ for /f "eol=# skip=20 tokens=2 delims=:" %%k in (batch_file.yaml) do (set Urbans
 :break10
 for /f "eol=# skip=22 tokens=2 delims=:" %%l in (batch_file.yaml) do (set RSPrun=%%l & goto break11)
 :break11
+for /f "eol=# skip=25 tokens=2 delims=:" %%m in (batch_file.yaml) do (set srcCode=%%m & goto break12)
+:break12
 
+set ver=%ver:~1,5%
 set val=%val:~1,3%
 set wfhFile=%wfhFile:~1%
 set wfh=%wfh:~1%
@@ -59,14 +64,15 @@ set tc14=%tc14:~1%
 set selLinkFile=%selLinkFile:~1%
 set transitAsmt=%transitAsmt:~1,1%
 rem Construct complete transit file path
-set transitFilePath1=%transitFilePath1:~1,-1%
-set transitFilePath2=%transitFilePath2:~1,-1%
+set transactFilePath1=%transactFilePath1:~1,-1%
+set transactFilePath2=%transactFilePath2:~1,-1%
 set sep=:\
-set transitFilePath=%transitFilePath1%%sep%%transitFilePath2%
+set transactFilePath=%transactFilePath1%%sep%%transactFilePath2%
 set selLineFile=%selLineFile:~1%
 set utilFile=%utilFile:~1,1%
 set UrbansimFile=%UrbansimFile:~1,1%
 set RSPrun=%RSPrun:~1,1%
+set srcCode=%srcCode:~1,1%
 REM -- Count number of select link files --
 set tempCnt=0
 for %%a in (%selLinkFile:None=%) do set /a tempCnt+=1
@@ -88,25 +94,27 @@ cd Database
 @echo.
 @echo ==================================================================================
 @echo     --- Model Run Settings ---
+@echo  Conformity version = %ver%
 @echo  Scenario = %val%
 @echo  Create WFH validation file = %wfhFile%
 @echo  Usual WFH share = %wfh%
 @echo  WFH 1-4 days share = %tc14%
 @echo  Highway assignment select link files = %selLinkFile%
+@echo  Location of network transaction files = %transactFilePath%
 @echo  Run transit assignment = %transitAsmt%
-if "%transitAsmt%" EQU "T" (@echo  Location of transit network files = %transitFilePath%)
 if "%transitAsmt%" EQU "T" (@echo  Transit assignment select line file = %selLineFile%)
 @echo  Save utility files = %utilFile%
 @echo  Create UrbanSim travel time file = %UrbansimFile%
 @echo  RSP evaluation run = %RSPrun%
+@echo  Have CMAP-TRIP2 use destination-mode choice code in this model setup = %srcCode%
 @echo ==================================================================================
 @echo.
 
 set /a trnAsmt=0
 if "%transitAsmt%" EQU "T" (set /a trnAsmt+=1)
 set check2=%selLineFile:~0,4%
-REM Remove trailing spaces from transitFilePath
-set transitFilePath=%transitFilePath:~0,-1%
+REM Remove trailing spaces from transactFilePath
+set transactFilePath=%transactFilePath:~0,-1%
 
 if "%check2%" NEQ "None" (
     if not exist Select_Line\%selLineFile% (goto no_select_line_file)
@@ -118,15 +126,6 @@ call %~dp0..\Scripts\manage\env\activate_env.cmd emme
 @echo -- Verifying select link files --
 call python macros\verify_select_link.py %file1% %selLinkFile% %RSPrun% %trnAsmt%
 if %ERRORLEVEL% GTR 0 (goto end)
-
-SETLOCAL EnableDelayedExpansion
-set str1=%transitFilePath%\transit\tranmodes.txt
-REM Following line strips all quotes from str1
-set str2=!str1:^"=!
-if %trnAsmt% EQU 1 (
-    if not exist "%str2%" (goto transit_files_missing)
-)
-ENDLOCAL
 
 REM Clean up prior to run
 if exist cache\choice_simulator_trips_out (rmdir /S /Q cache\choice_simulator_trips_out)
@@ -140,6 +139,7 @@ echo.
 echo Select Destination Choice-Mode Choice model run mode:
 echo   1) Minimize run time (default) - resources allocated to support a single model run.
 echo   2) Balanced - resources allocated to support two simultaneous model runs.
+echo      [If this is the second of two simultaneous runs: only proceed if srcCode is False (currently set to %srcCode%)]
 echo.
 set /a jobs=38
 set /a zones=10
@@ -254,9 +254,20 @@ if exist temp\nul (rmdir temp /S /Q)
 if exist report.txt (del report.txt /Q)
 CD ..
 
+rem Activate Python env to build it if necessary
+call %~dp0..\Scripts\manage\env\activate_env.cmd
+if "%srcCode%" EQU "T" (
+    @ECHO -- Ensure CMAP-TRIP2 uses the destination choice-mode choice source code in this model setup --
+python -m pip install -e %~dp0..\src\Mode-Dest-TOD
+python -m pip install -e %~dp0..\src\Mode-Dest-TOD\sharrow
+)
+
+rem Activate Emme Python env
+call %~dp0..\Scripts\manage\env\activate_env.cmd emme
+
 @ECHO   ***  Cleaning up databank.  ***
 if exist cleanup.rpt (del cleanup.rpt)
-call python useful_macros\cleanup_for_rerun.py %file1% %val%>> cleanup.rpt
+call python useful_macros\cleanup_for_rerun.py %val%>> cleanup.rpt
 if exist reports (del reports)
 
 REM RUN FREESKIM TO CREATE TIME, DISTANCE AND TOLL MATRICES
@@ -280,18 +291,18 @@ if %counter% GTR 2 (goto loopend)
 @ECHO BEGINNING TRANSIT SKIM - FULL MODEL ITERATION %counter%
 @ECHO - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 REM AM Peak Skim
-call python macros/skim_transit.py %file1% %val% %counter% AM
+call python macros/skim_transit.py %val% %counter% AM
 if %ERRORLEVEL% neq 0 (goto issue)
-call python macros/transit_triple_indexing.py %file1% AM
+call python macros/transit_triple_indexing.py AM
 if %ERRORLEVEL% neq 0 (goto issue)
 call python macros/transit_skim_final_matrices1.py
 if %ERRORLEVEL% neq 0 (goto issue)
 call python macros/transit_skim_wrapup.py %file1% AM
 if %ERRORLEVEL% neq 0 (goto issue)
 REM Midday Skim
-call python macros/skim_transit.py %file1% %val% %counter% MD
+call python macros/skim_transit.py %val% %counter% MD
 if %ERRORLEVEL% neq 0 (goto issue)
-call python macros/transit_triple_indexing.py %file1% MD
+call python macros/transit_triple_indexing.py MD
 if %ERRORLEVEL% neq 0 (goto issue)
 call python macros/transit_skim_final_matrices2.py
 if %ERRORLEVEL% neq 0 (goto issue)
@@ -332,13 +343,13 @@ REM
 @ECHO   --- Begin ttables.mac Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 call emme -ng 000 -m macros\ttables.mac %val% %tod_cntr% 92 93 >> blog.txt
 @ECHO   --- End ttables.mac Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
-@ECHO   --- Begin net5I_7c.mac Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
-call emme -ng 000 -m macros\net5I_7c.mac %tod_cntr% >> blog.txt
-@ECHO   --- End net5I_7c.mac Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
+@ECHO   --- Begin TOD_network_prep.py Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
+call python macros\TOD_network_prep.py %val% %tod_cntr% %counter% >> blog.txt
+@ECHO   --- End TOD_network_prep.py Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO   --- Begin assignment Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO --- Begin assignment Period %tod_cntr%: %date% %time% ---
 @ECHO  -- Run TOD assignment --
-call python macros/SOLA_assignment.py %file1% %tod_cntr% %sola_threads% %counter% %RSPrun% %tempCnt% %selLinkFile% %trnAsmt%
+call python macros/SOLA_assignment.py %tod_cntr% %sola_threads% %counter% %RSPrun% %tempCnt% %selLinkFile% %trnAsmt%
 if %ERRORLEVEL% NEQ 0 (goto issue)
 @ECHO   --- End assignment Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO --- End assignment Period %tod_cntr%: %date% %time% ---
@@ -409,9 +420,6 @@ call python tg\scripts\urbansim_skims.py
 REM The following lines run transit assignment.
 if "%transitAsmt%" EQU "T" (
     @ECHO Begin Transit Assignment setup: %date% %time% >> model_run_timestamp.txt
-    REM -- Build TOD transit networks
-    call emme -ng 000 -m transit_asmt_macros\setup_transit_asmt_1_build_transit_asmt_networks.mac %val% %transitFilePath%
-    if %ERRORLEVEL% NEQ 0 (goto issue)
     REM -- Create matrices to hold TOD transit demand
     if "%RSPrun%" EQU "T" (@ECHO -- Creating HBW transit demand matrices >> model_run_timestamp.txt)
     call python transit_asmt_macros/setup_transit_asmt_2_initialize_matrices.py %file1% %RSPrun%
@@ -470,7 +478,7 @@ pause
 goto end
 
 :CheckEmpty2
-if %~z1 == 0 (goto badsas)
+if %~z1 == 0 (goto badR)
 goto Rpass
 
 :badR
@@ -512,14 +520,6 @@ goto filepass
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @ECHO    COULD NOT FIND .EMP FILE.
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO.
-pause
-goto end
-
-:transit_files_missing
-@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO    TRANSIT TRANSACTION FILES ARE MISSING IN %transitFilePath%\transit.
-@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @ECHO.
 pause
 goto end

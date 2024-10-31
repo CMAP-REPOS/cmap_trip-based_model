@@ -1,3 +1,4 @@
+# %%
 ## ------ CREATE MOVES INPUT FILE ------ ##
 #   Tim O'Leary 2023/10/3
 #   Script borrows from original SAS script 'create.moves.input.file.imversion.sas',
@@ -45,22 +46,23 @@ import pandas as pd, numpy as np
 import datetime as dt
 import openpyxl
 from itertools import product
+import yaml
 
 
 ## ------ PARAMETERS ------ ##
 workspace = os.path.dirname(os.path.dirname(os.getcwd()))
 #get model version and scenario year - for output filenames
-#looks for a string of the form 'c??q?_?00' where '?' is any numerical digit
-model_year = re.findall(r'c\d{2}q\d{1}_\d{1}00',workspace)  #e.g., 'c23q4_400'
-model = model_year[0][0:5]                                  # e.g., 'c23q4'
-scenyear = model_year[0][-3:]                               # e.g., '400'
+with open(workspace + r'\batch_file.yaml') as f:
+    config = yaml.safe_load(f)
+model = config['model_version']  # e.g., 'c23q4'
+scenyear = config['scenario_code']  # e.g., '400'
 
 #bring in punch moves link data
 linkdata = pd.read_csv(workspace + '\\Database\\data\\punchlink.csv')
 
 #output excel worksheets
 excel_file_IM = workspace + f'\\Database\\data\\MOVES_{model}_scen{scenyear}_IM.xlsx'
-excel_file_noIM = workspace + f'\\Database\\data\\MOVES_{model}_scen{scenyear}_noIM.xlsx'
+excel_file_noIM = workspace + f'\\Database\\data\\MOVES_{model}_scen{scenyear}_nonIM.xlsx'
 
 ##create excel workbook to write worksheets to
 xlsx_IM = pd.ExcelWriter(excel_file_IM)
@@ -108,7 +110,7 @@ links['h200'] = np.minimum(links['h200'], links['avhqv'])      # h200 cannot exc
 links['avhqv'] = np.maximum(links['avhqv']-links['h200'], 0)   # now only short haul
 
 #total volume in vehicle equivalents
-links.eval('volau = avauv + avh2v + avh3v + avbqv + avlqv + avmqv + m200 + avhqv + h200', inplace=True)
+links.eval('volau = avauv + avh2v + avh3v + avbqv + avlqv + avmqv + m200 + avhqv + h200 + busveq', inplace=True)
 
 # volume in # vehicles (for VMT/VHT)
 links['sov'] = np.maximum(links['avauv'],0)
@@ -670,6 +672,7 @@ vmtshare = pd.concat([vmtshare, vmtshare_b], ignore_index=True).sort_values(['im
 
 vmtshare = pd.merge(template2, vmtshare, how='left', on=['imarea','sourceTypeID','roadTypeID','hourID'])
 
+vmtshare.drop_duplicates(['sourceTypeID','roadTypeID','dayID','hourID','imarea'], inplace=True)
 
 #final vmt fraction to excel
 outIM_hourvmtfraction = vmtshare.loc[vmtshare['imarea']==1, ['sourceTypeID','roadTypeID','dayID','hourID','hourVMTFraction']]
@@ -718,3 +721,5 @@ xlsx_noIM.close()
 print('Done!')
 
 ## ---------------- END CREATE MOVES INPUT FILE (SAS) ------------------
+
+

@@ -1,0 +1,25 @@
+# Name of EMME project file.
+project_file_name: c24q2_100.emp
+# Path to transit transaction file directory.
+transit_directory: C:\Testing\c24q2\transit
+# Date of Board approval.
+approval_date: June 2024
+# Names of output files.
+trip_roster: trip_roster
+tg_data: tg_results
+compressed:
+    pa_tables: prods_attrs
+    trip_tables: trips
+    hov_trip_tables: hovtrips
+    highway_networks: emmenet_highway
+    am_peak_highway_network: highwayshp_ampk
+    pm_peak_highway_network: highwayshp_pmpk
+    daily_highway_network: highwayshp
+    transit_networks: emmenet_transit
+    tod_transit_networks: emmenet_transit_tod
+    peak_transit_network: transitshp_pk
+    offpeak_transit_network: transitshp_op
+    skim_matrices: skims
+    database: emmebank
+    matrices: emmemat
+    

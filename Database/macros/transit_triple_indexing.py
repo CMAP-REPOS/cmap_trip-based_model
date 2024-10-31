@@ -13,11 +13,11 @@
 
 import os
 import sys
-import inro.modeller as _m
-import inro.emme.desktop.app as _app
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parents[2].joinpath('Scripts')))
+from tbmtools import project as tbm
 
-empFl = sys.argv[1]
-timePeriod = sys.argv[2]
+timePeriod = sys.argv[1]
 
 maxInternal=3632                                    ## -- highest non-POE zone number
 
@@ -30,10 +30,8 @@ parkCostCoeff=-20.00                                ## -- generalized parking co
 parkOffset= 75                                      ## -- daily parking fee offset in cents (i.e. the cost at which parking may as well be free) 
 
 
-directory = os.getcwd().replace('\\Database','')
-empFile = os.path.join(directory,empFl)
-my_app = _app.start_dedicated(project=empFile, visible=False, user_initials="CMAP")
-my_modeller = _m.Modeller(my_app)
+proj_dir = Path(__file__).resolve().parents[2]
+my_modeller = tbm.connect(proj_dir)
 my_emmebank = my_modeller.emmebank
 
 matrix_init = my_modeller.tool("inro.emme.data.matrix.create_matrix")
@@ -109,10 +107,10 @@ autoGC = {
         }
 report = compute_matrix(autoGC) 
 ## -- Calculate Park and Ride generalized cost -- ##
-### --- Off-street availability: move node parking spaces attribute back to zone value on origin matrix --- ###
+### --- Off-street availability: move RAIL node parking spaces attribute back to zone value on origin matrix --- ###
 calcUl3 = {"type": "NETWORK_CALCULATION", "result": "ul3", "expression": "0", "aggregation": None, "selections": {"link": "all"}}
 calcUi1 = {"type": "NETWORK_CALCULATION", "result": "ui1", "expression": "0", "aggregation": None, "selections": {"node": "all"}}
-calcUl3_2 = {"type": "NETWORK_CALCULATION", "result": "ul3", "expression": "@pspacj", "aggregation": None, "selections": {"link": "mod=uvw"}}
+calcUl3_2 = {"type": "NETWORK_CALCULATION", "result": "ul3", "expression": "@pspacj*(j.ge.30000 .and. j.le.49999)", "aggregation": None, "selections": {"link": "mod=uvw"}}
 calcUi1_2 = {"type": "NETWORK_CALCULATION", "result": "ui1", "expression": "ul3", "aggregation": "+", "selections": {"link": "i=1,%s" %(maxInternal)}}
 ### --- For the matrix convolution this needs to flag all rail stations - not just those with parking [05-06-2022] --- ###
 calcUi1_3 = {"type": "NETWORK_CALCULATION", "result": "ui1", "expression": "ui1 + (i.ge.30000 .and. i.le.49999)", 

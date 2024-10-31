@@ -26,13 +26,13 @@
 
 import os
 import sys
-import inro.modeller as _m
-import inro.emme.desktop.app as _app
+from pathlib import Path
+sys.path.append(str(Path(__file__).resolve().parents[2].joinpath('Scripts')))
+from tbmtools import project as tbm
 
-empFl = sys.argv[1]
-currentScen = int(sys.argv[2])
-globalIter = int(sys.argv[3])
-timePeriod = sys.argv[4]
+currentScen = int(sys.argv[1])
+globalIter = int(sys.argv[2])
+timePeriod = sys.argv[3]
 donorScen = currentScen*100 + (globalIter-1)*10 + 3                 ## -- used for Global Iterations 1 & 2
 
 ## -- Trasit base fares in cents (updated Oct. 2020) -- ## 
@@ -47,10 +47,8 @@ premiumTransfer=30
 perceptionVOT = 1 / 27	   ## -- medium VOT*perception factor [$7.20/hr*2.25*100/60=27.00 cents/min], used to convert cost to generalized minutes i.e., minutes/cent
 
 
-directory = os.getcwd().replace('\\Database','')
-empFile = os.path.join(directory,empFl)
-my_app = _app.start_dedicated(project=empFile, visible=False, user_initials="CMAP")
-my_modeller = _m.Modeller(my_app)
+proj_dir = Path(__file__).resolve().parents[2]
+my_modeller = tbm.connect(proj_dir)
 my_emmebank = my_modeller.emmebank
 
 change_scenario = my_modeller.tool("inro.emme.data.scenario.change_primary_scenario")
@@ -276,7 +274,7 @@ exasmtSpec = {
             "boarding_time": {"global": {"penalty": 0, "perception_factor": 1},},
             "boarding_cost": {"on_lines": {"penalty": "ut1", "perception_factor": perceptionVOT}},
             "in_vehicle_time": {"perception_factor": 1},
-            "in_vehicle_cost":{"penalty": "@zfare","perception_factor": perceptionVOT},
+            "in_vehicle_cost":{"penalty": "@zfare_link","perception_factor": perceptionVOT},
             "aux_transit_time": {"perception_factor": 2},
             "aux_transit_cost": None,
             "flow_distribution_at_origins": {"choices_at_origins": {"choice_points": "ALL_ORIGINS", "choice_set": "ALL_CONNECTORS",
