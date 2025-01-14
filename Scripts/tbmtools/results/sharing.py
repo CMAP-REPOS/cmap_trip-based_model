@@ -1,5 +1,5 @@
 from pathlib import Path
-from zipfile import ZipFile, ZIP_LZMA
+from zipfile import ZipFile, ZIP_DEFLATED
 
 
 def mp_compress(args):
@@ -33,7 +33,7 @@ def compress(out_file_name, source_path, out_dir):
     if isinstance(source_path, str):
         source_path = Path(source_path).resolve()
     # Compress content.
-    with ZipFile(out_dir.joinpath(out_file_name), mode='w', compression=ZIP_LZMA) as zip:
+    with ZipFile(out_dir.joinpath(out_file_name), mode='w', compression=ZIP_DEFLATED, compresslevel=9) as zip:
         if source_path.is_file():
             zip.write(source_path, arcname=source_path.name)
         elif source_path.is_dir():
