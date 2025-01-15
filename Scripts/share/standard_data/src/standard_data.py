@@ -228,7 +228,7 @@ def compress(zip_file_names, source_paths):
         mp_compress_args.append((file_name, source_paths[placeholder], _out_dir))
     # Compress model data for sharing.
     logging.info('Compressing outputs')
-    with multiprocessing.Pool() as pool:
+    with multiprocessing.Pool(processes=min(os.cpu_count(), 61)) as pool:
         # Display a progress bar while processing the tasks.
         for i in tqdm(iterable=pool.imap_unordered(func=sharing.mp_compress,
                                                    iterable=mp_compress_args),

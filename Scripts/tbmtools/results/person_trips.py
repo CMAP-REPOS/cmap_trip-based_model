@@ -1,5 +1,6 @@
 from pathlib import Path
 import multiprocessing
+import os
 import pandas as pd
 
 def export_matrix_from_roster(name, spec, outdir, roster, report):
@@ -146,7 +147,7 @@ def export_auto_matrices(projdir, outdir, trip_roster_path):
     args = []
     for name, spec in mtx_specs.items():
         args.append((name, spec, tripdir, roster, report))
-    with multiprocessing.Pool() as pool:
+    with multiprocessing.Pool(processes=min(os.cpu_count(), 61)) as pool:
         pool.starmap(export_matrix_from_roster, args)
     # Move HOV matrices to output directory.
     for p in sorted(tripdir.glob('*.csv')):

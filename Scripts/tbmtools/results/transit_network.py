@@ -58,7 +58,7 @@ def export(outdir, scenario, format, modeller, emmebank, period=[0, 5]):
                          scenario=s)
             # Write attribute transaction file.
             spec = {'type': 'NETWORK_CALCULATION',
-                    'expression': '@ltime + @hwytm + @zfare',
+                    'expression': '@ltime + @hwytm + @zfare_link',
                     'selections': {'link': 'all',
                                    'transit_line': 'all'}}
             report = net_calc(specification=spec,

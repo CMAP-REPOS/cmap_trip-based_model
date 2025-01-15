@@ -2,4 +2,4 @@
 #  Copyright: (c) Bentley Systems, Incorporated. All rights reserved.
 #
 
-import os, site; site.addsitedir(os.path.join(os.environ["EMMEPATH"], "Python37/Lib/site-packages"))
+import os, site; site.addsitedir(os.path.join(os.environ["EMMEPATH"], "Python311/Lib/site-packages"))
