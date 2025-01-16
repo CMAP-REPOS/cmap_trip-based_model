@@ -25,6 +25,15 @@ filenames or in headers within the files.
 | 2040 | 500 |
 | 2050 | 700 |
 
+Links to download data files:
+
+- <a href="https://stargishub01.blob.core.windows.net/cmap-arcgis-hub01-blob/Data/Conformity%20Analysis/TBM%20Inputs%20and%20Outputs/{{ model_version }}/{{ model_version }}_100.zip" target="_blank">Travel Demand Model Data ({{ model_version }}) - 2019 Base</a>
+- <a href="https://stargishub01.blob.core.windows.net/cmap-arcgis-hub01-blob/Data/Conformity%20Analysis/TBM%20Inputs%20and%20Outputs/{{ model_version }}/{{ model_version }}_200.zip" target="_blank">Travel Demand Model Data ({{ model_version }}) - 2025 Forecast</a>
+- <a href="https://stargishub01.blob.core.windows.net/cmap-arcgis-hub01-blob/Data/Conformity%20Analysis/TBM%20Inputs%20and%20Outputs/{{ model_version }}/{{ model_version }}_300.zip" target="_blank">Travel Demand Model Data ({{ model_version }}) - 2030 Forecast</a>
+- <a href="https://stargishub01.blob.core.windows.net/cmap-arcgis-hub01-blob/Data/Conformity%20Analysis/TBM%20Inputs%20and%20Outputs/{{ model_version }}/{{ model_version }}_400.zip" target="_blank">Travel Demand Model Data ({{ model_version }}) - 2035 Forecast</a>
+- <a href="https://stargishub01.blob.core.windows.net/cmap-arcgis-hub01-blob/Data/Conformity%20Analysis/TBM%20Inputs%20and%20Outputs/{{ model_version }}/{{ model_version }}_500.zip" target="_blank">Travel Demand Model Data ({{ model_version }}) - 2040 Forecast</a>
+- <a href="https://stargishub01.blob.core.windows.net/cmap-arcgis-hub01-blob/Data/Conformity%20Analysis/TBM%20Inputs%20and%20Outputs/{{ model_version }}/{{ model_version }}_700.zip" target="_blank">Travel Demand Model Data ({{ model_version }}) - 2050 Forecast</a>
+
 For additional information, see the
 <a href="https://cmap.illinois.gov/wp-content/uploads/dlm_uploads/ON-TO-2050-Update-Travel-Demand-Model-Documentation-Appendix.pdf" target="_blank">travel demand model documentation</a>.
 
