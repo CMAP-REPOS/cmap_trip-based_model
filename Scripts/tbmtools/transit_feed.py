@@ -176,6 +176,18 @@ def get_local_routes(feed_dir):
         local_routes = df.loc[(df['route_long_name'].str.contains('local|shuttle|circulator|trolley', case=False))]
     return [i for i in local_routes['route_id'].tolist() if i not in seasonal_routes]
 
+def get_local_routes(feed_dir):
+    agency_id = get_agency_id(feed_dir)
+    df = pd.read_csv(Path(feed_dir).joinpath('routes.txt'), skipinitialspace=True)
+    if agency_id == 'PACE':
+        local_routes = df.loc[(df['route_long_name'].str.contains('circulator', case=False))
+                              #| (df['route_long_name'].str.contains('exp.', case=False))
+                              #| (df['route_short_name'] == '10')
+                              #| (df['route_short_name'] == '28')
+                              #| (df['route_short_name'] == 'J14')
+                             ]
+    return local_routes['route_id'].tolist()
+
 def get_express_routes(feed_dir):
     agency_id = get_agency_id(feed_dir)
     df = pd.read_csv(Path(feed_dir).joinpath('routes.txt'), skipinitialspace=True)

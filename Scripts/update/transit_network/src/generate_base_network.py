@@ -1,9 +1,9 @@
-from pathlib import Path
-import sys
 import argparse
+import sys
+from pathlib import Path
 
-import pandas as pd
 import arcpy
+import pandas as pd
 
 _src_dir = Path(__file__).resolve().parent
 _in_dir = _src_dir.parent.joinpath('input')
