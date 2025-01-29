@@ -1,8 +1,12 @@
 from pathlib import Path
 import pandas as pd
 
-agency_modes = dict(CTA=['rail', 'express_bus', 'regular_bus'])
-# agency_modes = dict(CTA=['regular_bus'])
+agency_modes = dict(CTA=['rail', 'express_bus', 'regular_bus'],
+                    METRA=['rail'],
+                    PACE=['local_bus',
+                          'express_bus',
+                          'regular_bus'
+                         ])
 
 def get_agency_name(feed_dir):
     df = pd.read_csv(Path(feed_dir).joinpath('agency.txt'), skipinitialspace=True)
@@ -78,6 +82,10 @@ def pace_cleaner(file, df):
             # Move agency_id to first column.
             cols = df.columns.tolist()
             df = df[cols[-1:] + cols[:-1]]
+        if len(df['route_short_name'].isna()) > 0:
+            # Fill missing route_short_name values with route_id values.
+            df.loc[df['route_short_name'].isna(), 'route_short_name'] = df['route_id'].apply(lambda x: x.split('-')[0])
+            print(file.name, '- filled missing route_short_name values')
     elif file.name == 'shapes.txt':
         if 'shape_dist_traveled' not in df.columns:
             # Add shape_dist_traveled.
@@ -116,6 +124,18 @@ def get_route_short_names(feed_dir):
     route_short_names = df['route_short_name'].tolist()
     return route_short_names
 
+def get_local_routes(feed_dir):
+    agency_id = get_agency_id(feed_dir)
+    df = pd.read_csv(Path(feed_dir).joinpath('routes.txt'), skipinitialspace=True)
+    if agency_id == 'PACE':
+        local_routes = df.loc[(df['route_long_name'].str.contains('circulator', case=False))
+                              #| (df['route_long_name'].str.contains('exp.', case=False))
+                              #| (df['route_short_name'] == '10')
+                              #| (df['route_short_name'] == '28')
+                              #| (df['route_short_name'] == 'J14')
+                             ]
+    return local_routes['route_id'].tolist()
+
 def get_express_routes(feed_dir):
     agency_id = get_agency_id(feed_dir)
     df = pd.read_csv(Path(feed_dir).joinpath('routes.txt'), skipinitialspace=True)
@@ -125,12 +145,23 @@ def get_express_routes(feed_dir):
                                 | (df['route_short_name'] == '10')
                                 | (df['route_short_name'] == '28')
                                 | (df['route_short_name'] == 'J14')]
+    elif agency_id == 'PACE':
+        express_routes = df.loc[(df['route_long_name'].str.contains('express', case=False))
+                                | (df['route_long_name'].str.contains('pulse', case=False))
+                                #| (df['route_short_name'] == '100')
+                                #| (df['route_short_name'] == '28')
+                                #| (df['route_short_name'] == 'J14')
+                               ]
     return express_routes['route_id'].tolist()
 
 def get_regular_routes(feed_dir):
     df = pd.read_csv(Path(feed_dir).joinpath('routes.txt'), skipinitialspace=True)
     s = df['route_id']
-    regular_routes = [i for i in s.tolist() if i not in get_express_routes(feed_dir)]
+    local_routes = get_local_routes(feed_dir)
+    print(f'local routes: {local_routes}')
+    express_routes = get_express_routes(feed_dir)
+    print(f'express routes: {express_routes}')
+    regular_routes = [i for i in s.tolist() if i not in local_routes + express_routes]
     return regular_routes
 
 def get_bus_routes(agency, feeddir):
@@ -244,10 +275,23 @@ def load_feed(feed_dir, date, scenario, modeller):
                 raise ValueError(f'Unknown {agency_id} mode -- review transit_feed.agency_modes')
         elif agency_id.upper() == 'METRA':
             route_types = ['2']
+            route_ids = 'ALL'
             route_rep =  {'2': '11'}
         elif agency_id.upper() == 'PACE':
-            route_types = ['3']
-            route_rep = {'3': '28'}
+            if mode == 'local_bus':
+                route_types = ['3']
+                route_ids = get_local_routes(feed_dir)
+                route_rep = {'3': '30'}
+            elif mode == 'express_bus':
+                route_types = ['3']
+                route_ids = get_express_routes(feed_dir)
+                route_rep = {'3': '29'}
+            elif mode == 'regular_bus':
+                route_types = ['3']
+                route_ids = get_regular_routes(feed_dir)
+                route_rep = {'3': '28'}
+            else:
+                raise ValueError(f'Unknown {agency_id} mode -- review transit_feed.agency_modes')
         elif agency_id.upper() == 'NICTD':
             route_types = ['2']
             route_rep = {'2': '21'}
