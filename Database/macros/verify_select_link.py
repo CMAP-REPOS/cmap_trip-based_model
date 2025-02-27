@@ -5,7 +5,7 @@
  Script updates Emmebank to support additional extra attribute values if needed.
  Script updates Emmebank to support additional full matrices for transit assignment if needed.  
  
- Craig Heither, 10-19-2023
+ Craig Heither, 02-05-2025
 ## ==========================================================================================
 '''
 import os
@@ -40,21 +40,13 @@ if files>0:
             fileIssues += 1
             sys.exit(1)
 
-if files>0 and trnAsmtFlag==1 and rspFlag=="T":
-    files = 0
-    print("---> WARNING: Submitting a run with the RSP flag set to True and a transit assignment overrides the select link analysis!")
-    print("---> WARNING: No select link analysis will be performed!")
-elif files>1 and rspFlag=="T":
-    files = 1
-    print("---> WARNING: The RSP flag overrides multiple select link files - only {0} will be processed!".format(sl[0]))
-
-if files==0 and trnAsmtFlag==0 and rspFlag=="T":
+if files==0 and rspFlag=="T" and trnAsmtFlag==0:
     print("---> ERROR: No select link file has been specified for the RSP evaluation!")
     sys.exit(1)
 elif files>0 and fileIssues==0:
     print("---> Select Link File(s) verified!")
 elif files==0:
-    print("---> No Select Link File(s) submitted!")
+    print("---> Verified: No Select Link File(s) submitted.")
 
 
 ## -- Ensure emmebank has enough space for extra attributes and full matrices -- ##
