@@ -4,10 +4,10 @@
  Performs the matrix triple-indexing necessary to identify the least cost transit station used to support drive to transit trips.
 
 
- Arguments:  1= name of Emme project file
-             2= time period indicator: AM or MD 
+ Arguments:  1= 3-digit scenario number
+             2= time period indicator: AM, MD, PM, EA 
 
- Craig Heither, 03-25-2024
+ Craig Heither, 01-14-2025
  ==========================================================================================         
 '''
 
@@ -17,7 +17,8 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[2].joinpath('Scripts')))
 from tbmtools import project as tbm
 
-timePeriod = sys.argv[1]
+currentScen = int(sys.argv[1])
+timePeriod = sys.argv[2]
 
 maxInternal=3632                                    ## -- highest non-POE zone number
 
@@ -34,6 +35,7 @@ proj_dir = Path(__file__).resolve().parents[2]
 my_modeller = tbm.connect(proj_dir)
 my_emmebank = my_modeller.emmebank
 
+change_scenario = my_modeller.tool("inro.emme.data.scenario.change_primary_scenario")
 matrix_init = my_modeller.tool("inro.emme.data.matrix.create_matrix")
 compute_matrix = my_modeller.tool("inro.emme.matrix_calculation.matrix_calculator")
 init_partition = my_modeller.tool("inro.emme.data.zone_partition.init_partition")
@@ -42,13 +44,24 @@ netcalc = my_modeller.tool("inro.emme.network_calculation.network_calculator")
 triple_index = my_modeller.tool("inro.emme.matrix_calculation.matrix_triple_index_operation")
 ###########################################################################################################################
 
-## -- Initialize matrices -- ##
-mtx = ("mf819","mf820","mf821","mf834","mo801","mo802","mo803","mo804","mo805","mo602","mf822","mf823","mf824","mf825","mf828","mf829",
-       "mf830","mf831","mf832","mf833","mf44","mf45","mf807","mf808")
-if timePeriod == 'MD':
+if timePeriod == 'AM':
+    mtx = ("mf819","mf820","mf821","mf834","mo801","mo802","mo803","mo804","mo805","mo602","mf822","mf823","mf824","mf825","mf828","mf829",
+           "mf830","mf831","mf832","mf833","mf44","mf45","mf807","mf808")
+    currentScen = currentScen + 3
+elif timePeriod == 'MD':
     mtx = ("mf919","mf920","mf921","mf934","mo901","mo902","mo903","mo904","mo905","mo602","mf922","mf923","mf924","mf925","mf928","mf929",
            "mf930","mf931","mf932","mf933","mf46","mf47","mf907","mf908")
-    
+    currentScen = currentScen + 5
+elif timePeriod == 'PM':
+    mtx = ("mf869","mf870","mf871","mf884","mo851","mo852","mo853","mo854","mo855","mo652","mf872","mf873","mf874","mf875","mf878","mf879",
+           "mf880","mf881","mf882","mf883","mf467","mf477","mf857","mf858")               ## need TOD time/dist skim not mf44-45
+    currentScen = currentScen + 7
+elif timePeriod == 'EA':
+    mtx = ("mf969","mf970","mf971","mf984","mo951","mo952","mo953","mo954","mo955","mo652","mf972","mf973","mf974","mf975","mf978","mf979",
+           "mf980","mf981","mf982","mf983","mf461","mf471","mf957","mf958")               ## need TOD time/dist skim not mf46-47
+    currentScen = currentScen + 1
+
+## -- Initialize matrices -- ##    
 new_mf1 = matrix_init(matrix_id="%s" %(mtx[0]), matrix_name="hwygc_%s" %(timePeriod),
                         matrix_description="congested hwy generalized cost - %s" %(timePeriod), overwrite=True, default_value=0)
 new_mf2 = matrix_init(matrix_id="%s" %(mtx[1]), matrix_name="trngc_%s" %(timePeriod),
@@ -90,6 +103,7 @@ new_mf13 = matrix_init(matrix_id="%s" %(mtx[18]), matrix_name="min$_%s" %(timePe
 new_mf14 = matrix_init(matrix_id="%s" %(mtx[19]), matrix_name="minut_%s" %(timePeriod),
                         matrix_description="indexed auto minutes to transit - %s" %(timePeriod), overwrite=True, default_value=0)
 
+change_scenario(scenario=currentScen)
 
 #==============================================================================
 ## -- INDEX AUTO ACCESS AND PARKING
@@ -181,8 +195,8 @@ tripleSpec = {
         }
 report = triple_index(tripleSpec)
 
-## -- Adjust kzone matrix - Keep the original zone if: the trip is intrazonal or if there is skimmed transit service available (mf8) and service -- ##
-## -- originates within the City of Chicago. Otherwise, apply the indexed station zone. (mf8 is unindexed transit in-vehicle time)  [07-16-2022] -- ##
+## -- Adjust kzone matrix - Keep the original zone if: the trip is intrazonal or if there is skimmed transit service available (mtx[23]) and service -- ##
+## -- originates within the City of Chicago. Otherwise, apply the indexed station zone. (mtx[23] is unindexed transit in-vehicle time)  [07-16-2022] -- ##
 finIndexSpec = {
         "type": "MATRIX_CALCULATION", "result": "%s" %(mtx[2]), 
         "expression": "((%s.lt.1000 .and. ga(p).eq.1).or.(p.eq.q))*p + ((%s.ge.1000 .or. ga(p).ne.1).and.(p.ne.q))*%s" %(mtx[23], mtx[23], mtx[2]),
