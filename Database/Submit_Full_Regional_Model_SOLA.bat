@@ -55,6 +55,8 @@ for /f "eol=# skip=22 tokens=2 delims=:" %%l in (batch_file.yaml) do (set RSPrun
 :break11
 for /f "eol=# skip=25 tokens=2 delims=:" %%m in (batch_file.yaml) do (set srcCode=%%m & goto break12)
 :break12
+for /f "eol=# skip=28 tokens=2 delims=:" %%n in (batch_file.yaml) do (set ejFile=%%n & goto break13)
+:break13
 
 set ver=%ver:~1,5%
 set val=%val:~1,3%
@@ -73,6 +75,7 @@ set utilFile=%utilFile:~1,1%
 set UrbansimFile=%UrbansimFile:~1,1%
 set RSPrun=%RSPrun:~1,1%
 set srcCode=%srcCode:~1,1%
+set ejFile=%ejFile:~1%
 REM -- Count number of select link files --
 set tempCnt=0
 for %%a in (%selLinkFile:None=%) do set /a tempCnt+=1
@@ -107,6 +110,7 @@ if "%transitAsmt%" EQU "T" (@echo  Transit assignment select line file = %selLin
 @echo  Create UrbanSim travel time file = %UrbansimFile%
 @echo  RSP evaluation run = %RSPrun%
 @echo  Have CMAP-TRIP2 use destination-mode choice code in this model setup = %srcCode%
+@echo  File of environmental justice impact by zone = %ejFile%
 @echo ==================================================================================
 @echo.
 
@@ -236,7 +240,7 @@ if not exist tg\data\m01tg.txt (goto filemiss2)
 if not exist tg\data\m01type.csv (goto filemiss2)
 @ECHO.
 @ECHO -- OBTAINING TRANSIT NETWORK DATA FROM EMME --
-call python prep_macros/distr_m01_data.py %file1%  %val% >> prep_macros\report.txt
+call python prep_macros/distr_m01_data.py %file1% %val% >> prep_macros\report.txt
 if %ERRORLEVEL% GTR 0 (goto issue)
 cd prep_macros
 @ECHO.
@@ -293,20 +297,20 @@ if %counter% GTR 2 (goto loopend)
 REM AM Peak Skim
 call python macros/skim_transit.py %val% %counter% AM
 if %ERRORLEVEL% neq 0 (goto issue)
-call python macros/transit_triple_indexing.py AM
+call python macros/transit_triple_indexing.py %val% AM
 if %ERRORLEVEL% neq 0 (goto issue)
-call python macros/transit_skim_final_matrices1.py
+call python macros/transit_skim_final_matrices.py AM
 if %ERRORLEVEL% neq 0 (goto issue)
-call python macros/transit_skim_wrapup.py %file1% AM
+call python macros/transit_skim_wrapup.py AM
 if %ERRORLEVEL% neq 0 (goto issue)
 REM Midday Skim
 call python macros/skim_transit.py %val% %counter% MD
 if %ERRORLEVEL% neq 0 (goto issue)
-call python macros/transit_triple_indexing.py MD
+call python macros/transit_triple_indexing.py %val% MD
 if %ERRORLEVEL% neq 0 (goto issue)
-call python macros/transit_skim_final_matrices2.py
+call python macros/transit_skim_final_matrices.py MD
 if %ERRORLEVEL% neq 0 (goto issue)
-call python macros/transit_skim_wrapup.py %file1% MD
+call python macros/transit_skim_wrapup.py MD
 if %ERRORLEVEL% neq 0 (goto issue)
 @ECHO    -- End of Transit Skim Procedures: %date% %time% >> model_run_timestamp.txt
 
@@ -342,6 +346,14 @@ set /A tod_cntr=1
 REM
 @ECHO   --- Begin ttables.mac Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 call emme -ng 000 -m macros\ttables.mac %val% %tod_cntr% 92 93 >> blog.txt
+if %tod_cntr% EQU 3 if %counter% EQU 2 if "%RSPrun%" EQU "T" (
+    call python macros\RSP_AMPM_truck_demand.py %val% %tod_cntr% %counter%
+    @ECHO   --- Period %tod_cntr% final iteration truck demand stored for RSP analysis
+)
+if %tod_cntr% EQU 7 if %counter% EQU 2 if "%RSPrun%" EQU "T" (
+    call python macros\RSP_AMPM_truck_demand.py %val% %tod_cntr% %counter%
+    @ECHO   --- Period %tod_cntr% final iteration truck demand stored for RSP analysis
+)
 @ECHO   --- End ttables.mac Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO   --- Begin TOD_network_prep.py Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 call python macros\TOD_network_prep.py %val% %tod_cntr% %counter% >> blog.txt
@@ -349,7 +361,7 @@ call python macros\TOD_network_prep.py %val% %tod_cntr% %counter% >> blog.txt
 @ECHO   --- Begin assignment Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO --- Begin assignment Period %tod_cntr%: %date% %time% ---
 @ECHO  -- Run TOD assignment --
-call python macros/SOLA_assignment.py %tod_cntr% %sola_threads% %counter% %RSPrun% %tempCnt% %selLinkFile% %trnAsmt%
+call python macros/SOLA_assignment.py %tod_cntr% %sola_threads% %counter% %RSPrun% %tempCnt% %selLinkFile% %trnAsmt% %ejFile%
 if %ERRORLEVEL% NEQ 0 (goto issue)
 @ECHO   --- End assignment Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO --- End assignment Period %tod_cntr%: %date% %time% ---
@@ -359,8 +371,7 @@ call emme -ng 000 -m macros\balance5I_7c.mac %val% >> blog.txt
 @ECHO   --- End balance5I_7c.mac Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO   --- Begin time-of-day skim Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO --- Complete time of day skims ---
-call emme -ng 000 -m macros\TOD_skim_setup.mac %val% %tod_cntr% >> blog.txt
-call python macros/TOD_skim.py %file1% %tod_cntr% %val%%counter%%tod_cntr% %sola_threads%
+call python macros/TOD_skim.py %tod_cntr% %val%%counter%%tod_cntr% %sola_threads%
 if %ERRORLEVEL% NEQ 0 (goto issue)
 @ECHO    -- End Time-of-Day Procedures Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO -- End Time-of-Day Procedures for Period %tod_cntr%: %date% %time% --
@@ -391,14 +402,25 @@ goto while
 @ECHO END OF FULL MODEL ITERATIONS - PREPARING DAILY ACCUMULATION SCENARIO
 @ECHO - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 call emme -ng 000 -m macros\Daily.Total.Asmt5I_7c.mac %val% >> blog.txt
-REM Run script to complete select link analysis, if necessary
+REM Run script to complete select link analysis and/or accumulate daily EJ volumes
 set /A counter=counter-1
-if %tempCnt% EQU 0 (goto skip_sel_link)
-if %trnAsmt% EQU 1 (goto skip_sel_link)
-call python macros/complete_select_link.py %file1% %val%%counter%9 %val%%counter%0 %tempCnt% %RSPrun% 
+call python macros/complete_select_link.py %val%%counter%9 %val%%counter%0 %tempCnt% %RSPrun% 
 if %ERRORLEVEL% NEQ 0 (goto issue)
-:skip_sel_link
 @ECHO End Daily Accumulation Procedures: %date% %time% >> model_run_timestamp.txt
+
+REM Run PM peak transit skim for RSP evaluation
+if "%RSPrun%" EQU "T" (
+    call python macros/skim_transit.py %val% %counter% PM
+    if %ERRORLEVEL% neq 0 (goto issue)
+    call python macros/transit_triple_indexing.py %val% PM
+    if %ERRORLEVEL% neq 0 (goto issue)
+    call python macros/transit_skim_final_matrices.py PM
+    if %ERRORLEVEL% neq 0 (goto issue)
+    call python macros/transit_skim_wrapup.py PM
+    if %ERRORLEVEL% neq 0 (goto issue)
+    @echo PM peak transit skim completed: %date% %time% >> model_run_timestamp.txt
+    @echo PM peak transit skim completed
+)
 
 REM Run script to write link data for MOVES emissions analysis. 
 call python post_macros\punchmovesdata.py
@@ -418,7 +440,12 @@ call python tg\scripts\urbansim_skims.py
 :skip_UrbanSim
 
 REM The following lines run transit assignment.
-if "%transitAsmt%" EQU "T" (
+REM For a highway RSP, transit assignment setup is needed but not transit assignment itself
+set /A transitSetup=0
+if "%transitAsmt%" EQU "T" (set /A transitSetup=transitSetup+1)
+if "%RSPrun%" EQU "T" (set /A transitSetup=transitSetup+1)
+
+if %transitSetup% GTR 0 (
     @ECHO Begin Transit Assignment setup: %date% %time% >> model_run_timestamp.txt
     REM -- Create matrices to hold TOD transit demand
     if "%RSPrun%" EQU "T" (@ECHO -- Creating HBW transit demand matrices >> model_run_timestamp.txt)
@@ -430,6 +457,8 @@ if "%transitAsmt%" EQU "T" (
     call python transit_asmt_macros\setup_transit_asmt_3_TOD_transit_demand.py %RSPrun%
     if %ERRORLEVEL% NEQ 0 (goto issue)
     @ECHO End Transit Assignment setup >> model_run_timestamp.txt
+)
+if "%transitAsmt%" EQU "T" (
     rem Activate Emme Python env
     call %~dp0..\Scripts\manage\env\activate_env.cmd emme
     @ECHO Submit Transit Assignment >> model_run_timestamp.txt 
@@ -452,17 +481,19 @@ if "%transitAsmt%" EQU "T" (
     )
     @ECHO End Transit Assignment: %date% %time% >> model_run_timestamp.txt
 )
+
+REM RSP EVALUATION SCRIPT-- 
+if "%RSPrun%" EQU "T" (
+    rem Activate Emme Python env
+    call %~dp0..\Scripts\manage\env\activate_env.cmd emme
+    @ECHO RSP Evaluation >> model_run_timestamp.txt
+    call python post_macros/rsp_evaluation.py 
+    if %ERRORLEVEL% NEQ 0 (goto issue)
+)
+
 goto last
 
 REM ======================================================================
-:filemiss
-@ECHO
-@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-REM       Missing Files
-REM       Open tod_factors.xls and create files
-@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-goto end
-
 :filemiss1
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @ECHO tg\fortran\MCHW_HH.TXT DOES NOT EXIST!!!
