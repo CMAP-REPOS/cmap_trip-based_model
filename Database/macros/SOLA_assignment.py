@@ -1,7 +1,7 @@
 '''
  SOLA_assignment.py
 
- Script peforms the time-of-day SOLA traffic assignments.
+ Script performs the time-of-day SOLA traffic assignments.
   - During the AM peak and midday periods (3 and 5 respectively) tolled path information is saved for use in the destination choice-mode
     choice utility calculations.
   - During the model final global iteration the time-of-day assignments capture the link volumes for medium and heavy truck trips
@@ -76,9 +76,12 @@
     class1 - 51  
     class2 - 52
     class3 - 53
-    class4 - 54        
+    class4 - 54
+    class5 - 55
+    class6 - 56
+    class7 - 57        
 
- Craig Heither, 10-05-2023
+ Craig Heither, rev. 01-29-2025
 ## ==========================================================================================
 '''
 import os
@@ -96,13 +99,13 @@ rspFlag = sys.argv[4]
 numSelLinkFiles = int(sys.argv[5])
 selLinkFiles = sys.argv[6]
 trnAsmtFlag = int(sys.argv[7])
-
+ejFile = sys.argv[8]
 
 proj_dir = Path(__file__).resolve().parents[2]
 my_modeller = tbm.connect(proj_dir)
 
 SOLA_spec_report = os.getcwd() + "\\report\\SOLA_spec_GlobalIteration{0}_TOD{1}.txt".format(globalIter, tmPeriod)
-matrix_file =  os.getcwd() + "\\rsp_evaluation\\inputs\\exc_pop_shr_mo50.txt"       ##-- EDA share origin matrix 
+matrix_file =  os.getcwd() + "\\rsp_evaluation\\inputs\\" + ejFile      ##-- EDA share origin matrix 
 
 assign_SOLA = my_modeller.tool("inro.emme.traffic_assignment.sola_traffic_assignment")
 create_extra = my_modeller.tool("inro.emme.data.extra_attribute.create_extra_attribute")
@@ -119,12 +122,6 @@ my_emmebank = my_modeller.emmebank
 if numSelLinkFiles > 0:
     s = selLinkFiles.split(',')
     sl = [e for e in s if e != 'None']
-
-if trnAsmtFlag==1 and rspFlag=="T":
-    numSelLinkFiles = 0
-elif rspFlag=="T":
-    numSelLinkFiles = 1
-
 
 ## -- Set up calculation definitions -- ##
 ## -- Calculate the select link attribute values to flag tolled paths -- ##
@@ -213,45 +210,61 @@ if globalIter == 2:
                 new_mf17 = matrix_init(matrix_id="%s" %(mtx17[i-1]), matrix_name="sel_link_class7_demand_proj%s" %(i),
                                     matrix_description="temporary sel link user class 7 time period demand proj%s" %(i), overwrite=True, default_value=0)
             
-            ## -- This only sets up traffic assignment to save EDA demand if a highway RSP is being run -- ##
-            if rspFlag == "T" and trnAsmtFlag==0:
-                ## -- Import EDA zone share transaction file -- ##
-                mo_transact(transaction_file=matrix_file, throw_on_error=True, scenario=my_modeller.scenario)
+    ## -- This saves EDA demand if an RSP is being run -- ##
+    if rspFlag == "T":
+        with _m.logbook_trace("EDA Path Analysis Setup for Time Period %s" % tmPeriod):
+            ## -- Import EDA zone share transaction file -- ##
+            mo_transact(transaction_file=matrix_file, throw_on_error=True, scenario=my_modeller.scenario)
 
-                ## -- Initialize matrices to hold path analysis EDA demand for RSP -- ## 
-                rspMtx  = ("mf51", "mf52", "mf53", "mf54")          ##-- matrices to hold EDA vehicle class demand
-                new_mf51 = matrix_init(matrix_id="%s" %(rspMtx[0]), matrix_name="EDA_sov_vot1", matrix_description="EDA TOD mode S VOT1 vehicle demand",
-                            overwrite=True, default_value=0) 
-                new_mf52 = matrix_init(matrix_id="%s" %(rspMtx[1]), matrix_name="EDA_sov_vot2", matrix_description="EDA TOD mode S VOT2 vehicle demand",
-                            overwrite=True, default_value=0)
-                new_mf53 = matrix_init(matrix_id="%s" %(rspMtx[2]), matrix_name="EDA_sov_vot3", matrix_description="EDA TOD mode S VOT3 vehicle demand",
-                            overwrite=True, default_value=0)
-                new_mf54 = matrix_init(matrix_id="%s" %(rspMtx[3]), matrix_name="EDA_link_hov", matrix_description="EDA TOD mode H vehicle demand",
-                            overwrite=True, default_value=0) 
+            ## -- Initialize matrices to hold path analysis EDA demand for RSP -- ## 
+            rspMtx  = ("mf51", "mf52", "mf53", "mf54", "mf55", "mf56", "mf57")          ##-- matrices to hold EDA vehicle class demand
+            edaMode = ("S VOT1", "S VOT2", "S VOT3", "H", "b+l truck", "m truck", "h truck")
+            new_mf51 = matrix_init(matrix_id="%s" %(rspMtx[0]), matrix_name="EDA_sov_vot1",
+                        matrix_description="EDA TOD mode %s vehicle demand" %(edaMode[0]), overwrite=True, default_value=0) 
+            new_mf52 = matrix_init(matrix_id="%s" %(rspMtx[1]), matrix_name="EDA_sov_vot2",
+                        matrix_description="EDA TOD mode %s vehicle demand" %(edaMode[1]), overwrite=True, default_value=0)
+            new_mf53 = matrix_init(matrix_id="%s" %(rspMtx[2]), matrix_name="EDA_sov_vot3",
+                        matrix_description="EDA TOD mode %s vehicle demand" %(edaMode[2]), overwrite=True, default_value=0)
+            new_mf54 = matrix_init(matrix_id="%s" %(rspMtx[3]), matrix_name="EDA_hov",
+                        matrix_description="EDA TOD mode %s vehicle demand" %(edaMode[3]), overwrite=True, default_value=0) 
+            new_mf55 = matrix_init(matrix_id="%s" %(rspMtx[4]), matrix_name="EDA_bltruck",
+                        matrix_description="EDA TOD mode %s vehicle demand" %(edaMode[4]), overwrite=True, default_value=0)
+            new_mf56 = matrix_init(matrix_id="%s" %(rspMtx[5]), matrix_name="EDA_mtruck",
+                        matrix_description="EDA TOD mode %s VEQ demand" %(edaMode[5]), overwrite=True, default_value=0)
+            new_mf57 = matrix_init(matrix_id="%s" %(rspMtx[6]), matrix_name="EDA_htruck",
+                        matrix_description="EDA TOD mode %s VEQ demand" %(edaMode[6]), overwrite=True, default_value=0)    
 
-                ## -- Calculate TOD Demand Matrices for EDA share calculations -- ##
-                rsp1  = ("mf411", "mf412", "mf413", "mf414", "mf415", "mf416", "mf417", "mf418")   ##-- SOV VOT1 TOD vehicle demand
-                rsp2  = ("mf421", "mf422", "mf423", "mf424", "mf425", "mf426", "mf427", "mf428")   ##-- SOV VOT2 TOD vehicle demand
-                rsp3  = ("mf431", "mf432", "mf433", "mf434", "mf435", "mf436", "mf437", "mf438")   ##-- SOV VOT3 TOD vehicle demand
-                rsp4  = ("mf441+mf451", "mf442+mf452", "mf443+mf453", "mf444+mf454", "mf445+mf455", "mf446+mf456", "mf447+mf457",
-                         "mf448+mf458")                                                            ##-- HOV2+3 TOD vehicle demand
-                x = tmPeriod - 1
-                specMf51 = {"type": "MATRIX_CALCULATION", "result": "%s" %(rspMtx[0]),
-                            "expression": "mo50 * %s" %(rsp1[x]), "constraint": {"by_zone": None, "by_value": None}}
-                specMf52 = {"type": "MATRIX_CALCULATION", "result": "%s" %(rspMtx[1]),
-                            "expression": "mo50 * %s" %(rsp2[x]), "constraint": {"by_zone": None, "by_value": None}}
-                specMf53 = {"type": "MATRIX_CALCULATION", "result": "%s" %(rspMtx[2]),
-                            "expression": "mo50 * %s" %(rsp3[x]), "constraint": {"by_zone": None, "by_value": None}}	
-                specMf54 = {"type": "MATRIX_CALCULATION", "result": "%s" %(rspMtx[3]),
-                            "expression": "mo50 * (%s)" %(rsp4[x]), "constraint": {"by_zone": None, "by_value": None}}	
-                report = compute_matrix([specMf51,specMf52,specMf53,specMf54])	
+            ## -- Calculate TOD Demand Matrices for EDA share calculations -- ##
+            rsp1  = ("mf411", "mf412", "mf413", "mf414", "mf415", "mf416", "mf417", "mf418")   ##-- SOV VOT1 TOD vehicle demand
+            rsp2  = ("mf421", "mf422", "mf423", "mf424", "mf425", "mf426", "mf427", "mf428")   ##-- SOV VOT2 TOD vehicle demand
+            rsp3  = ("mf431", "mf432", "mf433", "mf434", "mf435", "mf436", "mf437", "mf438")   ##-- SOV VOT3 TOD vehicle demand
+            rsp4  = ("mf441+mf451", "mf442+mf452", "mf443+mf453", "mf444+mf454", "mf445+mf455", "mf446+mf456", "mf447+mf457",
+                    "mf448+mf458")                                                            ##-- HOV2+3 TOD vehicle demand
+            x = tmPeriod - 1
+            specMf51 = {"type": "MATRIX_CALCULATION", "result": "%s" %(rspMtx[0]),
+                        "expression": "mo50 * %s" %(rsp1[x]), "constraint": {"by_zone": None, "by_value": None}}
+            specMf52 = {"type": "MATRIX_CALCULATION", "result": "%s" %(rspMtx[1]),
+                        "expression": "mo50 * %s" %(rsp2[x]), "constraint": {"by_zone": None, "by_value": None}}
+            specMf53 = {"type": "MATRIX_CALCULATION", "result": "%s" %(rspMtx[2]),
+                        "expression": "mo50 * %s" %(rsp3[x]), "constraint": {"by_zone": None, "by_value": None}}	
+            specMf54 = {"type": "MATRIX_CALCULATION", "result": "%s" %(rspMtx[3]),
+                        "expression": "mo50 * (%s)" %(rsp4[x]), "constraint": {"by_zone": None, "by_value": None}}
+            specMf55 = {"type": "MATRIX_CALCULATION", "result": "%s" %(rspMtx[4]),
+                        "expression": "mo50 * (mf14 + mf15)", "constraint": {"by_zone": None, "by_value": None}}
+            specMf56 = {"type": "MATRIX_CALCULATION", "result": "%s" %(rspMtx[5]),
+                        "expression": "mo50 * mf16", "constraint": {"by_zone": None, "by_value": None}}
+            specMf57 = {"type": "MATRIX_CALCULATION", "result": "%s" %(rspMtx[6]),
+                        "expression": "mo50 * mf17", "constraint": {"by_zone": None, "by_value": None}}
+            report = compute_matrix([specMf51,specMf52,specMf53,specMf54,specMf55,specMf56,specMf57])	
 
-                ## -- Create variables to hold EDA path analysis volumes -- ##
-                for i in range(1,5):
-                    ejv1 = create_extra(extra_attribute_type="LINK", extra_attribute_name="@ejcl%s" %(i),
-                                        extra_attribute_description="EDA class %s TOD volumes (VEQ)" %(i), overwrite=True)
-                    ejvol = create_extra(extra_attribute_type="LINK", extra_attribute_name="@ejvol",
-                                        extra_attribute_description="EDA period %s total volumes (VEH)" %(tmPeriod), overwrite=True)
+            ## -- Create variables to hold EDA path analysis volumes -- ##
+            ejaut = create_extra(extra_attribute_type="LINK", extra_attribute_name="@ejauto",
+                                extra_attribute_description="EDA period %s total auto volumes (VEH)" %(tmPeriod), overwrite=True)
+            ejtrk = create_extra(extra_attribute_type="LINK", extra_attribute_name="@ejtruck",
+                                extra_attribute_description="EDA period %s total truck volumes (VEH)" %(tmPeriod), overwrite=True)
+            for i in range(1,8):
+                ejv1 = create_extra(extra_attribute_type="LINK", extra_attribute_name="@ejcl%s" %(i),
+                                    extra_attribute_description="EDA class %s TOD volumes (VEQ)" %(edaMode[i-1]), overwrite=True)
 
 
 ## -- get scalar values -- ##
@@ -386,21 +399,24 @@ if globalIter == 2:
             ]
     class7_path = class7_path + final7
 
-    ### --> 4. Save select link volumes and demand for select link analyses, and EDA volumes for RSPs
-    if numSelLinkFiles > 0:
-        if rspFlag == "T":
-            rspEDA = []
-            for i in range(1,5):
-                rspEDA.append([
-                    {## -- EDA user class volumes -- ##
-                        "analyzed_demand": "%s" %(rspMtx[i-1]), "results": {"selected_link_volumes": "@ejcl%s" %(i)}}
-                ])
-            class1_path = class1_path + rspEDA[0]
-            class2_path = class2_path + rspEDA[1]
-            class3_path = class3_path + rspEDA[2]
-            class4_path = class4_path + rspEDA[3]
+    ### --> 4. Save EDA volumes for RSPs
+    if rspFlag == "T":
+        rspEDA = []
+        for i in range(1,8):
+            rspEDA.append([
+                {## -- EDA user class volumes -- ##
+                    "analyzed_demand": "%s" %(rspMtx[i-1]), "results": {"selected_link_volumes": "@ejcl%s" %(i)}}
+            ])
+        class1_path = class1_path + rspEDA[0]
+        class2_path = class2_path + rspEDA[1]
+        class3_path = class3_path + rspEDA[2]
+        class4_path = class4_path + rspEDA[3]
+        class5_path = class5_path + rspEDA[4]
+        class6_path = class6_path + rspEDA[5]
+        class7_path = class7_path + rspEDA[6]
 
-            
+    ### --> 5. Save select link volumes and demand for select link analyses
+    if numSelLinkFiles > 0:
         selLink = []
         for j in range(1,numSelLinkFiles+1):    ## -- loop through select link projects
             for i in range(1,8):                ## -- loop through user classes
@@ -495,7 +511,6 @@ solaSpec = {
 with open(SOLA_spec_report,'w') as f:
     f.write(json.dumps(solaSpec, indent=4))
  
-
 ## -- Perform the traffic assignment -- ##
 with _m.logbook_trace("SOLA Traffic Assignment for Time Period %s" % tmPeriod):
     if globalIter == 2:
@@ -593,13 +608,7 @@ with _m.logbook_trace("SOLA Traffic Assignment for Time Period %s" % tmPeriod):
                 specMf69 = {"type": "MATRIX_CALCULATION", "result": "%s" %(mtx10[j]),
                             "expression": "%s + %s + (%s/2) + (%s/3)" %(mtx10[j], mtx15[j], mtx16[j], mtx17[j]), 
                             "constraint": {"by_zone": None, "by_value": None}}
-                report = compute_matrix([specMf68,specMf69]) 
-
-        if rspFlag == "T" and trnAsmtFlag==0:
-            ## -- Sum the EDA class volumes -- ##
-            calcSpecEjvol = {"type": "NETWORK_CALCULATION", "result": "@ejvol", "expression": "@ejcl1 + @ejcl2 + @ejcl3 + @ejcl4",
-                             "aggregation": None, "selections": {"link": "all"}}
-            report=netcalc(calcSpecEjvol, full_report=False)    
+                report = compute_matrix([specMf68,specMf69])  
 
         if tmPeriod == 8:
             ## -- Delete temporary matrices -- ##
@@ -608,7 +617,17 @@ with _m.logbook_trace("SOLA Traffic Assignment for Time Period %s" % tmPeriod):
                 delMtx = delMtx + [mtx11[j]] + [mtx12[j]] + [mtx13[j]] + [mtx14[j]] + [mtx15[j]] + [mtx16[j]] + [mtx17[j]]
             for m in delMtx:
                 delete_matrix(matrix=my_emmebank.matrix(m))
+        print("          -- Select Link Analysis Completed for Time Period {0}".format(tmPeriod))     
 
-        print("          -- Select Link Analysis Completed for Time Period {0}".format(tmPeriod))     	
+    ## -- Complete EDA demand analysis -- ##
+    if rspFlag == "T" and globalIter == 2:	
+        ## -- Sum the EDA class volumes -- ##
+        calcSpecEjaut = {"type": "NETWORK_CALCULATION", "result": "@ejauto", "expression": "@ejcl1 + @ejcl2 + @ejcl3 + @ejcl4",
+                        "aggregation": None, "selections": {"link": "all"}}
+        calcSpecEjtrk = {"type": "NETWORK_CALCULATION", "result": "@ejtruck", "expression": "@ejcl5 + (@ejcl6/2) + (@ejcl7/3)",
+                        "aggregation": None, "selections": {"link": "all"}}
+
+        report=netcalc([calcSpecEjaut,calcSpecEjtrk], full_report=False)
+        print("          -- EDA Demand Analysis Completed for Time Period {0}".format(tmPeriod)) 
 
 print("         SOLA Assignment Completed for Global Iteration {0} Time Period {1}".format(globalIter, tmPeriod))
