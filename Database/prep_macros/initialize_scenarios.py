@@ -57,8 +57,11 @@ batchin_path = config['transactionFilePath']  # e.g., M:/catslib/modelprod/c24q2
 
 hwy_batchin_dir = os.path.join(batchin_path, 'highway')
 trn_batchin_dir = os.path.join(batchin_path, 'transit')
+link_shape_dir = os.path.join(batchin_path, 'linkshape')
+link_shape_file = os.path.join(link_shape_dir, "linkshape_%s.in" %(str(scen_yr)))
 print('highway transaction file location: ', hwy_batchin_dir)
 print('transit transaction file location: ', trn_batchin_dir)
+print('link shape transaction file: ', link_shape_file)
 
 ##
 ## EMME SETUP #####
@@ -85,6 +88,7 @@ process_mode_transaction = modeller.tool("inro.emme.data.network.mode.mode_trans
 process_vehicle_transaction = modeller.tool("inro.emme.data.network.transit.vehicle_transaction")
 process_network_transaction = modeller.tool("inro.emme.data.network.base.base_network_transaction")
 process_transit_line_transaction = modeller.tool("inro.emme.data.network.transit.transit_line_transaction")
+process_link_shape_transaction = modeller.tool("inro.emme.data.network.base.link_shape_transaction")
 create_extra = modeller.tool("inro.emme.data.extra_attribute.create_extra_attribute")
 import_attribute_values = modeller.tool("inro.emme.data.network.import_attribute_values")
 net_calc = modeller.tool("inro.emme.network_calculation.network_calculator")
@@ -185,10 +189,12 @@ for bscen in batchin_scens:
             from_scenario = emmebank.scenario(base_scen),
             scenario_id = scen,
             scenario_title = bscen[1],
-            overwrite=True
+            overwrite=True,
+            set_as_primary=True
         )
-    
-    change_primary_scenario(emmebank.scenario(scen))
+        print("    from: {0}, to: {1}".format(base_scen, scen))
+    else:
+        change_primary_scenario(emmebank.scenario(base_scen))
     
     print('      -- l1, n1...')
     #n1, l1 batchin
@@ -226,6 +232,8 @@ for bscen in batchin_scens:
         column_labels=l2_columns,
         # scenario = emmebank.scenario(scen)
     )
+
+    process_link_shape_transaction(transaction_file = link_shape_file, revert_on_error = False)
     
     print('      -- other link calculations...')
     
@@ -439,6 +447,8 @@ for asmt_scen in network_batchin_list:
     #import lines
     process_transit_line_transaction(os.path.join(transit_transaction, f'rail.itinerary_{asmt_scen[1]}'))
     process_transit_line_transaction(os.path.join(transit_transaction, f'bus.itinerary_{asmt_scen[1]}'))
+
+    process_link_shape_transaction(transaction_file = link_shape_file, revert_on_error = False)
     
     print('  - create and calculate extra attributes')
     #create extra attributes
@@ -780,7 +790,7 @@ for asmt_scen in network_batchin_list:
 today = str(date.today().strftime('%Y%m%d'))
 copy_scenario(
             from_scenario = emmebank.scenario(int(scen_yr)+23),
-            scenario_id = int(scen_yr)+0,
+            scenario_id = int(scen_yr)+3,
             scenario_title = f'{scen3_yr4[scen_yr]} am (6am-9am) transit skim network - {today}',
 			copy_linkshapes=True,
             overwrite=True
