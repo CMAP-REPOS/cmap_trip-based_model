@@ -16,32 +16,29 @@
 print('Starting Emme... ')
 
 #libraries
-import os
-import numpy as np, pandas as pd
+import os, sys, yaml, textwrap
+import pandas as pd
+from pathlib import Path
 
-#output locations
-workspace = os.getcwd()            # <<-- 'Database' folder
-output_location = workspace + '\\data'              # <<-- 'data' folder, where punchmoves has been written previously
-punchlink_out = output_location + '\\punchlink.csv' # <<-- output csv name
 
-#import emme desktop and initialize emme
-import inro.emme.desktop.app as _app
-
-#find emp file - may have unexpected results if more than one .emp file exists
-e = os.listdir(os.path.dirname(workspace))
-empfile = [os.path.join(os.path.dirname(workspace), file) for file in e if file.endswith('.emp')][0]
-
-#start desktop
-desktop = _app.start_dedicated(
-    visible=False,
-    user_initials="cmap",
-    project=empfile
-)
-
-#import modeller
-import inro.modeller as _m
-modeller = _m.Modeller(desktop=desktop)
+#initialize emme
+cmap_tbm_dir =  next(tbmdir for tbmdir in Path(__file__).parents if tbmdir.name.endswith('cmap_trip-based_model')).resolve()
+sys.path.append(os.path.join(cmap_tbm_dir, 'Scripts'))
+from tbmtools import project as tbm
+modeller = tbm.connect(cmap_tbm_dir)
 emmebank = modeller.emmebank
+
+#setup output locations
+db = next(dbdir for dbdir in Path(__file__).parents if dbdir.name == "Database").resolve()
+punchlink_out = os.path.join(db, 'data/punchlink.csv')
+
+
+#grab info from batch_file.yaml
+with open(os.path.join(db, 'batch_file.yaml')) as f:
+    lines_without_backslashes = ''.join([line.replace('\\','/') for line in f])
+    config = yaml.safe_load(lines_without_backslashes)
+
+rsp_flag = config['RSP'] #True or False
 
 #emme tools
 net_calc = modeller.tool('inro.emme.network_calculation.network_calculator')
@@ -50,7 +47,6 @@ copy_scenario = modeller.tool('inro.emme.data.scenario.copy_scenario')
 delete_scenario = modeller.tool('inro.emme.data.scenario.delete_scenario')
 
 # --
-
 
 ###############################
 ## -- EXECUTE PUNCH MOVES -- ##
@@ -114,9 +110,23 @@ desired_links = '''\
     @ftime+@avauv+@avh2v+\
     @avh3v+@avbqv+@avlqv+\
     @avmqv+@avhqv+@busveq+\
-    @atype+@imarea+@tmpl2\
+    @atype+@imarea+@tmpl2+\
     @speed+@m200+@h200"\
 '''
+
+if rsp_flag:
+    desired_links = '''\
+    "length+lanes+vdf+\
+    @zone+@emcap+timau+\
+    @ftime+@avauv+@avh2v+\
+    @avh3v+@avbqv+@avlqv+\
+    @avmqv+@avhqv+@busveq+\
+    @atype+@imarea+@tmpl2+\
+    @speed+@m200+@h200+\
+    @ejauto+@ejtruck"\
+'''
+
+desired_links = ''.join(textwrap.dedent(desired_links).split()) #put in single line for formatting into emme tool
 
 ## --
 ## -- GRAB LINK DATA FOR EACH TIME PERIOD
@@ -124,7 +134,6 @@ desired_links = '''\
 
 #container to hold dataframe for each timeperiod
 df_list = []
-
 
 #iterate through each time period (1-8)
 for tp in range(1,9):
@@ -154,9 +163,6 @@ for tp in range(1,9):
     #flag toll links on ramps
     net_calc(specification=tmpl2spec, scenario=emmebank.scenario(99998))
 
-    #list of attributes to extract from links
-    desired_links = '''"length+lanes+vdf+@zone+@emcap+timau+@ftime+@avauv+@avh2v+@avh3v+@avbqv+@avlqv+@avmqv+@avhqv+@busveq+@atype+@imarea+@tmpl2+@speed+@m200+@h200"'''
-    
     #specification for extracting link data
     spec_linkdata = f'''
     {{
@@ -185,6 +191,7 @@ for tp in range(1,9):
 ## --
 ## -- COMBINE TABLES, CLEAN UP, AND EXPORT
 ## --
+
 print('Final touches...')
 
 delete_scenario(scenario=emmebank.scenario(99998))
@@ -196,8 +203,7 @@ linkdata = pd.concat(df_list, ignore_index=True)
 columns=linkdata.columns.tolist()
 rename={}
 for c in columns:
-    if c.startswith('@'):
-        rename[c] = c[1:]
+    rename[c] = c.replace('@','')
 linkdata.rename(columns=rename, inplace=True)
 
 #export to csv
