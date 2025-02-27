@@ -14,7 +14,7 @@ def main():
 
     #set variables
     currentScen = int(sys.argv[2])
-    scenario = str(currentScen)
+    cScenAM = currentScen + 3
     cScenMD = currentScen + 5
     directory1 = os.getcwd()
     directory = os.getcwd().replace('\\Database','')
@@ -60,7 +60,7 @@ def main():
         "type": "NETWORK_CALCULATION"
     }
     #set scenario to transit AM _00, batchin and store per3_timau.txt
-    change_scenario(scenario = str(scenario))
+    change_scenario(scenario = str(cScenAM))
     batchin = directory1 + "\\defaults_base_year\\per3_timau.txt" 
     batchin_data(batchin,
                      column_labels = {
@@ -90,8 +90,8 @@ def main():
     #add net calc to make all ul2 back to 0
     net_calc(ul2_spec)
 
-    #change to scenario 100000
-    scen_00 = scenario + str(0) + str(0)
+    #change to scenario 10000
+    scen_00 = str(currentScen) + str(0) + str(0)
 
     change_scenario(scenario = str(scen_00))
 
