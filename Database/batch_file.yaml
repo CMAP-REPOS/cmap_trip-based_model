@@ -1,26 +1,29 @@
 # Project details
 model_version: c24q4
-scenario_code: 100
+scenario_code: 700
 # ---------------- Work from home module inputs (trip generation)
 validationfiles: N
-usualwfhpct: 0.0510
-tc14pct: 0.1031
+usualwfhpct: 0.0882
+tc14pct: 0.1269
 # ---------------- Select link analysis files: provide file name (ex: RSP32_links.txt [stored in Database\Select_Link\]) or use None
 # ---------------- Can submit up to 5, comma-separated, any order, no spaces, (ex: None,test4.txt,test1.txt,None,None)
-selectLinkFile: None,None,None,None,None
+selectLinkFile: RSP0_links.txt,None,None,None,None
 # ---------------- Transaction file path: include the path to the transaction files that will build the scenario networks in double quotes (spaces OK), 
 # ---------------- point to directory above highway\ and transit\, no ending backslash (ex: "M:\catslib\modelprod\c24q2" or "M:/catslib/modelprod/24q2")
-transactionFilePath: "M:/proj1/nrf/Conformity/c24q4"
+transactionFilePath: "M:/rsp_evaluation/ON_TO_2050_Plan_Update/Networks/NO_BUILD"
 # ---------------- Run Transit Assignment at the end of the model run? Default is False.
-runTransitAsmt: False
+runTransitAsmt: True
 # ---------------- Transit select line analysis file: provide file name (ex: rsp57_line.txt [stored in Database\Select_Line\]) or use None
-transitSelectFile: None
+transitSelectFile: rsp0_line.txt
 # ---------------- Save Destination-Mode Choice model utility files in cache folder? Default is False.
 util_files: False
 # ---------------- Create travel time file for UrbanSim? Default is False.
 UrbanSim_file: False
 # ---------------- Is this an RSP evaluation run? Default is False.
-RSP: False
+RSP: True
 # ---------------- sourceCode will force CMAP-TRIP2 to use the source code in this model setup if set to True. Default is True.
 # ---------------- Set to False if this is the second of two simultaneous runs being submitted.
 sourceCode: True
+# ---------------- Name of environmental justice file stored in Database\rsp_evaluation\inputs - can be EDA or other geography.
+# ---------------- This will only be used if RSP is True. Default is None.
+ejFile: exc_pop_shr_mo50.txt
