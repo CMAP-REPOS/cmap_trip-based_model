@@ -57,6 +57,8 @@ for /f "eol=# skip=25 tokens=2 delims=:" %%m in (batch_file.yaml) do (set srcCod
 :break12
 for /f "eol=# skip=28 tokens=2 delims=:" %%n in (batch_file.yaml) do (set ejFile=%%n & goto break13)
 :break13
+for /f "eol=# skip=31 tokens=2 delims=:" %%o in (batch_file.yaml) do (set ccrFile=%%o & goto break14)
+:break14
 
 set ver=%ver:~1,5%
 set val=%val:~1,3%
@@ -76,6 +78,8 @@ set UrbansimFile=%UrbansimFile:~1,1%
 set RSPrun=%RSPrun:~1,1%
 set srcCode=%srcCode:~1,1%
 set ejFile=%ejFile:~1%
+set ccrFile=%ccrFile:~1%
+
 REM -- Count number of select link files --
 set tempCnt=0
 for %%a in (%selLinkFile:None=%) do set /a tempCnt+=1
@@ -111,6 +115,7 @@ if "%transitAsmt%" EQU "T" (@echo  Transit assignment select line file = %selLin
 @echo  RSP evaluation run = %RSPrun%
 @echo  Have CMAP-TRIP2 use destination-mode choice code in this model setup = %srcCode%
 @echo  File of environmental justice impact by zone = %ejFile%
+@echo  File of community characteristics impact by zone = %ccrFile%
 @echo ==================================================================================
 @echo.
 
@@ -361,7 +366,7 @@ call python macros\TOD_network_prep.py %val% %tod_cntr% %counter% >> blog.txt
 @ECHO   --- Begin assignment Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO --- Begin assignment Period %tod_cntr%: %date% %time% ---
 @ECHO  -- Run TOD assignment --
-call python macros/SOLA_assignment.py %tod_cntr% %sola_threads% %counter% %RSPrun% %tempCnt% %selLinkFile% %trnAsmt% %ejFile%
+call python macros/SOLA_assignment.py %tod_cntr% %sola_threads% %counter% %RSPrun% %tempCnt% %selLinkFile% %trnAsmt% %ejFile% %ccrFile%
 if %ERRORLEVEL% NEQ 0 (goto issue)
 @ECHO   --- End assignment Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO --- End assignment Period %tod_cntr%: %date% %time% ---

@@ -79,7 +79,16 @@
     class4 - 54
     class5 - 55
     class6 - 56
-    class7 - 57        
+    class7 - 57    
+    
+  CCR demand used in assignment (mf):
+    class1 - 81
+    class2 - 82
+    class3 - 83
+    class4 - 84
+    class5 - 85
+    class6 - 86
+    class7 - 87    
 
  Craig Heither, rev. 01-29-2025
 ## ==========================================================================================
@@ -100,12 +109,14 @@ numSelLinkFiles = int(sys.argv[5])
 selLinkFiles = sys.argv[6]
 trnAsmtFlag = int(sys.argv[7])
 ejFile = sys.argv[8]
+ccrFile = sys.argv[9]
 
 proj_dir = Path(__file__).resolve().parents[2]
 my_modeller = tbm.connect(proj_dir)
 
 SOLA_spec_report = os.getcwd() + "\\report\\SOLA_spec_GlobalIteration{0}_TOD{1}.txt".format(globalIter, tmPeriod)
 matrix_file =  os.getcwd() + "\\rsp_evaluation\\inputs\\" + ejFile      ##-- EDA share origin matrix 
+matrix_file_ccr = os.getcwd() + '\\rsp_evaluation\\inputs\\' + ccrFile  ##-- CCR share origin matrix
 
 assign_SOLA = my_modeller.tool("inro.emme.traffic_assignment.sola_traffic_assignment")
 create_extra = my_modeller.tool("inro.emme.data.extra_attribute.create_extra_attribute")
@@ -267,6 +278,61 @@ if globalIter == 2:
                                     extra_attribute_description="EDA class %s TOD volumes (VEQ)" %(edaMode[i-1]), overwrite=True)
 
 
+    ## -- This saves CCR demand if an RSP is being run -- ##
+        with _m.logbook_trace("CCR Path Analysis Setup for Time Period %s" % tmPeriod):
+            ## -- Import EDA zone share transaction file -- ##
+            mo_transact(transaction_file=matrix_file_ccr, throw_on_error=True, scenario=my_modeller.scenario)
+
+            ## -- Initialize matrices to hold path analysis EDA demand for RSP -- ## 
+            rspMtx_ccr  = ("mf81", "mf82", "mf83", "mf84", "mf85", "mf86", "mf87")          ##-- matrices to hold EDA vehicle class demand
+            ccrMode = ("S VOT1", "S VOT2", "S VOT3", "H", "b+l truck", "m truck", "h truck")
+            new_mf81 = matrix_init(matrix_id="%s" %(rspMtx_ccr[0]), matrix_name="CCR_sov_vot1",
+                        matrix_description="CCR TOD mode %s vehicle demand" %(ccrMode[0]), overwrite=True, default_value=0) 
+            new_mf82 = matrix_init(matrix_id="%s" %(rspMtx_ccr[1]), matrix_name="CCR_sov_vot2",
+                        matrix_description="CCR TOD mode %s vehicle demand" %(ccrMode[1]), overwrite=True, default_value=0)
+            new_mf83 = matrix_init(matrix_id="%s" %(rspMtx_ccr[2]), matrix_name="CCR_sov_vot3",
+                        matrix_description="CCR TOD mode %s vehicle demand" %(ccrMode[2]), overwrite=True, default_value=0)
+            new_mf84 = matrix_init(matrix_id="%s" %(rspMtx_ccr[3]), matrix_name="CCR_hov",
+                        matrix_description="CCR TOD mode %s vehicle demand" %(ccrMode[3]), overwrite=True, default_value=0) 
+            new_mf85 = matrix_init(matrix_id="%s" %(rspMtx_ccr[4]), matrix_name="CCR_bltruck",
+                        matrix_description="CCR TOD mode %s vehicle demand" %(ccrMode[4]), overwrite=True, default_value=0)
+            new_mf86 = matrix_init(matrix_id="%s" %(rspMtx_ccr[5]), matrix_name="CCR_mtruck",
+                        matrix_description="CCR TOD mode %s VEQ demand" %(ccrMode[5]), overwrite=True, default_value=0)
+            new_mf87 = matrix_init(matrix_id="%s" %(rspMtx_ccr[6]), matrix_name="CCR_htruck",
+                        matrix_description="CCR TOD mode %s VEQ demand" %(ccrMode[6]), overwrite=True, default_value=0)    
+
+            ## -- Calculate TOD Demand Matrices for CCR share calculations -- ##
+            rsp1  = ("mf411", "mf412", "mf413", "mf414", "mf415", "mf416", "mf417", "mf418")   ##-- SOV VOT1 TOD vehicle demand
+            rsp2  = ("mf421", "mf422", "mf423", "mf424", "mf425", "mf426", "mf427", "mf428")   ##-- SOV VOT2 TOD vehicle demand
+            rsp3  = ("mf431", "mf432", "mf433", "mf434", "mf435", "mf436", "mf437", "mf438")   ##-- SOV VOT3 TOD vehicle demand
+            rsp4  = ("mf441+mf451", "mf442+mf452", "mf443+mf453", "mf444+mf454", "mf445+mf455", "mf446+mf456", "mf447+mf457",
+                    "mf448+mf458")                                                            ##-- HOV2+3 TOD vehicle demand
+            x = tmPeriod - 1
+            specMf81 = {"type": "MATRIX_CALCULATION", "result": "%s" %(rspMtx_ccr[0]),
+                        "expression": "mo51 * %s" %(rsp1[x]), "constraint": {"by_zone": None, "by_value": None}}
+            specMf82 = {"type": "MATRIX_CALCULATION", "result": "%s" %(rspMtx_ccr[1]),
+                        "expression": "mo51 * %s" %(rsp2[x]), "constraint": {"by_zone": None, "by_value": None}}
+            specMf83 = {"type": "MATRIX_CALCULATION", "result": "%s" %(rspMtx_ccr[2]),
+                        "expression": "mo51 * %s" %(rsp3[x]), "constraint": {"by_zone": None, "by_value": None}}	
+            specMf84 = {"type": "MATRIX_CALCULATION", "result": "%s" %(rspMtx_ccr[3]),
+                        "expression": "mo51 * (%s)" %(rsp4[x]), "constraint": {"by_zone": None, "by_value": None}}
+            specMf85 = {"type": "MATRIX_CALCULATION", "result": "%s" %(rspMtx_ccr[4]),
+                        "expression": "mo51 * (mf14 + mf15)", "constraint": {"by_zone": None, "by_value": None}}
+            specMf86 = {"type": "MATRIX_CALCULATION", "result": "%s" %(rspMtx_ccr[5]),
+                        "expression": "mo51 * mf16", "constraint": {"by_zone": None, "by_value": None}}
+            specMf87 = {"type": "MATRIX_CALCULATION", "result": "%s" %(rspMtx_ccr[6]),
+                        "expression": "mo51 * mf17", "constraint": {"by_zone": None, "by_value": None}}
+            report = compute_matrix([specMf81,specMf82,specMf83,specMf84,specMf85,specMf86,specMf87])	
+
+            ## -- Create variables to hold EDA path analysis volumes -- ##
+            ccraut = create_extra(extra_attribute_type="LINK", extra_attribute_name="@ccrauto",
+                                extra_attribute_description="CCR period %s total auto volumes (VEH)" %(tmPeriod), overwrite=True)
+            ccrtrk = create_extra(extra_attribute_type="LINK", extra_attribute_name="@ccrtruck",
+                                extra_attribute_description="CCR period %s total truck volumes (VEH)" %(tmPeriod), overwrite=True)
+            for i in range(1,8):
+                ccrv1 = create_extra(extra_attribute_type="LINK", extra_attribute_name="@ccrcl%s" %(i),
+                                    extra_attribute_description="CCR class %s TOD volumes (VEQ)" %(ccrMode[i-1]), overwrite=True)
+
 ## -- get scalar values -- ##
 ms84_val = my_emmebank.matrix("ms84").data
 print("  - SOV low VOT minutes per dollar: {0:.3f}".format(ms84_val))
@@ -414,6 +480,21 @@ if globalIter == 2:
         class5_path = class5_path + rspEDA[4]
         class6_path = class6_path + rspEDA[5]
         class7_path = class7_path + rspEDA[6]
+
+        ### -- > 4(b). Save CCR volumes for RSPs
+        rspCCR = []
+        for i in range(1,8):
+            rspCCR.append([
+                {## -- CCR user class volumes -- ##
+                    "analyzed_demand": "%s" %(rspMtx_ccr[i-1]), "results": {"selected_link_volumes": "@ccrcl%s" %(i)}}
+            ])
+        class1_path = class1_path + rspCCR[0]
+        class2_path = class2_path + rspCCR[1]
+        class3_path = class3_path + rspCCR[2]
+        class4_path = class4_path + rspCCR[3]
+        class5_path = class5_path + rspCCR[4]
+        class6_path = class6_path + rspCCR[5]
+        class7_path = class7_path + rspCCR[6]
 
     ### --> 5. Save select link volumes and demand for select link analyses
     if numSelLinkFiles > 0:
@@ -625,9 +706,18 @@ with _m.logbook_trace("SOLA Traffic Assignment for Time Period %s" % tmPeriod):
         calcSpecEjaut = {"type": "NETWORK_CALCULATION", "result": "@ejauto", "expression": "@ejcl1 + @ejcl2 + @ejcl3 + @ejcl4",
                         "aggregation": None, "selections": {"link": "all"}}
         calcSpecEjtrk = {"type": "NETWORK_CALCULATION", "result": "@ejtruck", "expression": "@ejcl5 + (@ejcl6/2) + (@ejcl7/3)",
-                        "aggregation": None, "selections": {"link": "all"}}
+                         "aggregation": None, "selections": {"link": "all"}}
 
         report=netcalc([calcSpecEjaut,calcSpecEjtrk], full_report=False)
         print("          -- EDA Demand Analysis Completed for Time Period {0}".format(tmPeriod)) 
+        
+        ## -- Complete CCR demand analysis -- ##
+        calcSpecCCRaut = {"type": "NETWORK_CALCULATION", "result": "@ccrauto", "expression": "@ccrcl1 + @ccrcl2 + @ccrcl3 + @ccrcl4",
+                          "aggregation": None, "selections": {"link": "all"}}
+        calcSpecCCRtrk = {"type": "NETWORK_CALCULATION", "result": "@ccrtruck", "expression": "@ccrcl5 + (@ccrcl6/2) + (@ccrcl7/3)",
+                          "aggregation": None, "selections": {"link": "all"}}
+
+        report=netcalc([calcSpecCCRaut,calcSpecCCRtrk], full_report=False)
+        print("          -- CCR Demand Analysis Completed for Time Period {0}".format(tmPeriod)) 
 
 print("         SOLA Assignment Completed for Global Iteration {0} Time Period {1}".format(globalIter, tmPeriod))

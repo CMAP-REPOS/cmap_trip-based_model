@@ -123,7 +123,8 @@ if rsp_flag:
     @avmqv+@avhqv+@busveq+\
     @atype+@imarea+@tmpl2+\
     @speed+@m200+@h200+\
-    @ejauto+@ejtruck"\
+    @ejauto+@ejtruck+\
+    @ccrauto+@ccrtruck"\
 '''
 
 desired_links = ''.join(textwrap.dedent(desired_links).split()) #put in single line for formatting into emme tool

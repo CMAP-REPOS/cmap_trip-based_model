@@ -27,3 +27,6 @@ sourceCode: True
 # ---------------- Name of environmental justice file stored in Database\rsp_evaluation\inputs - can be EDA or other geography.
 # ---------------- This will only be used if RSP is True. Default is None.
 ejFile: exc_pop_shr_mo50.txt
+# ---------------- Name of community characteristics file stored in Database\rsp_evaluation\inputs - can be CCER or other geography.
+# ---------------- This will only be used if RSP is True. Default is None.
+ccrFile: ccr_pop_shr_mo51.txt
