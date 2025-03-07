@@ -40,7 +40,6 @@ from pathlib import Path
 ## ---------------------- ##
 
 db = next(dbdir for dbdir in Path(__file__).parents if dbdir.name == "Database").resolve()
-
 rsp_out_dir = os.path.join(db, 'rsp_evaluation/outputs')
 if not os.path.exists(rsp_out_dir):
     os.makedirs(rsp_out_dir)
@@ -63,30 +62,36 @@ ccrfile = config['ccrFile'] #ccr partial demand file name
 ccr_share_dir = os.path.join(db, f'rsp_evaluation/inputs/{ccrfile}') ## ccr share of demand input file 
 
 #get select link file information, if exists
-slk_file = config['selectLinkFile'] #select link text file
-slink_dir = os.path.join(db, f'select_link/{slk_file}')
-slinks = None
-if os.path.exists(slink_dir):
-    print(f'\t - select link file: {config['selectLinkFile']}\n')
-    slinks = [] #list of links (format: "i-j") for select link
-    with open(slink_dir, 'r') as file:
+slk_file_list = config['selectLinkFile'] #list of select link text files
+slk_file_names = []
+for slk in slk_file_list.split(','):
+    slk = slk.strip()
+    if slk.lower() != 'none':
+        slk_file_names.append(slk)
+print(f'\t - select link files: {", ".join(slk_file_names)}') #files that aren't 'None'
+slk_files_dir = dict([[slk_name, os.path.join(db, f'select_link/{slk_name}')] for slk_name in slk_file_names])
+slinks={} #create dict with SL name as key and list of links as value 
+for slk_name in slk_files_dir.keys():
+    sldir = slk_files_dir[slk_name]
+    slk_links=[]
+    with open(sldir, 'r') as file:
         for line in file.readlines():
             if line.strip().startswith('l='):
                 ij = line.replace('l=','').strip().replace(',','-')
-                slinks.append(ij)
+                slk_links.append(ij)
+    slinks[slk_name] = slk_links
 
 #get select line file information, if exists
-sln_file = config['selectLineFile'] #select line text file       
+sln_file = config['transitSelectFile'] #select line text file       
 sline_dir = os.path.join(db, f'select_line/{sln_file}')
 slines = None
 if os.path.exists(sline_dir):
-    print(f'\t - select line file: {config['selectLineFile']}\n')
+    print(f"\t - select line file: {config['transitSelectFile']}")
     slines = [] #list of queries for select line
     with open(sline_dir, 'r') as file:
         for line in file.readlines():
             if line.strip()[0].isalpha():
                 slines.append(line.strip())
-    
 
 congested_threshold = 0.9 #v/c ratio defining a "congested" roadway
 hov_veh_occ = 2.3 #avg hov vehicle occupancy
@@ -871,32 +876,8 @@ for c in vehicle_cols:
     punch.eval(f'delay_{c} = delay * {c}', inplace=True) # delay -- ((timau - ftime)/ 60) * vol for each category
 
 #EDA/CCR VMT share on project links
-if slinks != None:
-    proj_ij = []
-    punch['ij'] = punch['i_node'].astype(str) + '-' + punch['j_node'].astype(str)
-    for link in slinks:
-        ij = str(link[0]) + '-' + str(link[1])
-        proj_ij.append(ij)
-    
-    proj_links = punch.loc[punch['ij'].isin(proj_ij)].copy()
-    
-    proj_vmt = proj_links.agg({'vmt_auto':'sum', 'vmt_ejauto':'sum', 'vmt_ccrauto':'sum'})
-    proj_links.eval('vmt_eda_share = vmt_ejauto / vmt_auto', inplace=True)
-    proj_links.eval('vmt_ccr_share = vmt_ccrauto / vmt_auto', inplace=True)
-    
-    rsp_dict['VMT on Project Links (Roadway RSPs Only)'] = {
-        'Total VMT': [
-            ['Total VMT', proj_links['vmt_auto']],
-            ['EDA VMT', proj_links['vmt_ejauto']],
-            ['CCR_VMT', proj_links['vmt_ccrauto']]
-        ],
-        'Pct of Total': [
-            ['EDA Share', proj_links['vmt_eda_share']],
-            ['CCR Share', proj_links['vmt_ccr_share']]
-        ]
-    }
 
-else:
+if len(slinks) == 0:
     rsp_dict['VMT on Project Links (Roadway RSPs Only)'] = {
         'Total VMT': [
             ['Total VMT', 0],
@@ -908,6 +889,30 @@ else:
             ['CCR Share', 0]
         ]
     }
+
+else:
+    punch['ij'] = punch['i_node'].astype(str) + '-' + punch['j_node'].astype(str) 
+    
+    for slk in slinks.keys():
+        print('links for selection: ' ,slinks[slk])
+        proj_links = punch.loc[punch['ij'].isin(slinks[slk])].copy()
+        print(slk, ' proj link table: ', proj_links)
+        proj_vmt = proj_links.agg({'vmt_auto':'sum', 'vmt_ejauto':'sum', 'vmt_ccrauto':'sum'})
+        proj_vmt['vmt_eda_share'] = proj_vmt['vmt_ejauto'] / proj_vmt['vmt_auto']
+        proj_vmt['vmt_ccr_share'] = proj_vmt['vmt_ccrauto'] / proj_vmt['vmt_auto']
+        print('vmt stats on proj link table -- ', proj_vmt)
+        
+        rsp_dict[f'VMT on Project Links ({slk})'] = {
+            'Total VMT': [
+                ['Total VMT', proj_vmt['vmt_auto']],
+                ['EDA VMT', proj_vmt['vmt_ejauto']],
+                ['CCR_VMT', proj_vmt['vmt_ccrauto']]
+            ],
+            'Pct of Total': [
+                ['EDA Share', proj_vmt['vmt_eda_share']],
+                ['CCR Share', proj_vmt['vmt_ccr_share']]
+            ]
+        }
 
 #create aggregator dictionary for agg() function
 #   for each vehicle type in `vehicle_cols`, calculate each of the measures (vmt, cvmt, vht, cvht, delay)
@@ -1103,7 +1108,7 @@ if transit_asmt:
 # ----------------------------------------------------------------------------
 #  Infill supportiveness
 # ----------------------------------------------------------------------------
-
+print('\t - calculate infill supportiveness')
 sl_vols = [
     ['sov1_trips', 'mf61'],
     ['sov2_trips', 'mf62'],
@@ -1155,7 +1160,6 @@ acres_summary = sl_sum.agg(
      'infill3_acres': 'sum'}
 ).round(3)
 
-
 # output infill supportiveness measure
 rsp_dict['Infill Supportiveness'] = [
     ['Infill 1 Acres', acres_summary['infill1_acres']],
@@ -1182,8 +1186,7 @@ with open(rsp_out_csv, 'w') as file:
                 for data in rsp_dict[category][subcategory]:
                     writer.writerow([subcategory] + data)
         else:
-            row = rsp_dict[category]
-            row.insert(1, '')
-            writer.writerows(row)
+            rows = rsp_dict[category]
+            writer.writerows(rows)
 
 print(f'RSP Evaluation complete, stored at {rsp_out_csv}')
