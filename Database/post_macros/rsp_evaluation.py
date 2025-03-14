@@ -1109,63 +1109,147 @@ if transit_asmt:
 #  Infill supportiveness
 # ----------------------------------------------------------------------------
 print('\t - calculate infill supportiveness')
-sl_vols = [
-    ['sov1_trips', 'mf61'],
-    ['sov2_trips', 'mf62'],
-    ['sov3_trips', 'mf63'],
-    ['hov_trips', 'mf64']
-]
+rsp_dict['Infill Supportiveness'] = {} #fill with values later
 
-sl_auto = get_matrices(sl_vols)
-sl_auto_npoe = sl_auto.loc[
-    (sl_auto['o_zone'].isin(zones_notpoe)) & 
-    (sl_auto['d_zone'].isin(zones_notpoe))
-].copy()
-sl_auto_npoe.eval('sl_trips = sov1_trips + sov2_trips + sov3_trips + hov_trips', inplace=True)
-sl_auto_npoe.eval(f'sl_person_trips = sov1_trips + sov2_trips + sov3_trips + (hov_trips * {hov_veh_occ})', inplace=True)
-
-#for select link trips
-sl_sum = []
-for trips in ['sl_trips','sl_person_trips']:
-    o_sum = sl_auto_npoe.groupby('o_zone')[trips].sum()
-    d_sum = sl_auto_npoe.groupby('d_zone')[trips].sum()
-    sl_sum.append((o_sum + d_sum).to_frame())
-sl_sum = pd.concat(sl_sum, axis=1).reset_index(names='o_zone')
-
-#for all trips
+#calculate all auto trips
 trips_notpoe = trips_all.loc[
     (trips_all['o_zone'].isin(zones_notpoe)) &
     (trips_all['d_zone'].isin(zones_notpoe)) &
     (trips_all['gen_mode']=='Auto')
 ].copy()
 
+#calculate all transit trips
+trntrips_notpoe = trips_all.loc[
+    (trips_all['o_zone'].isin(zones_notpoe)) &
+    (trips_all['d_zone'].isin(zones_notpoe)) &
+    (trips_all['gen_mode']=='Transit')
+].copy()
+
 o_all_sum = trips_notpoe.groupby('o_zone')['trips'].sum()
 d_all_sum = trips_notpoe.groupby('d_zone')['trips'].sum()
 all_sum = (o_all_sum + d_all_sum).to_frame().reset_index(names='o_zone')
 
-sl_sum = pd.merge(sl_sum, all_sum, on='o_zone', how='outer')
-infill_share_df = pd.read_csv(infill_share).rename(columns={'zone':'o_zone'})
-sl_sum = pd.merge(sl_sum, infill_share_df, on='o_zone', how='left')
-sl_sum['ratio'] = np.where(
-    sl_sum['trips']>0,
-    sl_sum['sl_person_trips']/sl_sum['trips'],
-    0
-)
-for infl in ['infill1','infill2','infill3']:
-    sl_sum.eval(f'{infl}_acres = ratio * {infl}', inplace=True)
+trnt_o_all_sum = trntrips_notpoe.groupby('o_zone')['trips'].sum()
+trnt_d_all_sum = trntrips_notpoe.groupby('d_zone')['trips'].sum()
+trnt_all_sum = (trnt_o_all_sum + trnt_d_all_sum).to_frame().reset_index(names='o_zone')
 
-acres_summary = sl_sum.agg(
-    {'infill1_acres': 'sum',
-     'infill2_acres': 'sum',
-     'infill3_acres': 'sum'}
-).round(3)
+#for select link trips (if any)
+if len(slinks) > 0:
 
-# output infill supportiveness measure
-rsp_dict['Infill Supportiveness'] = [
-    ['Infill 1 Acres', acres_summary['infill1_acres']],
-    ['Infill 2 Acres', acres_summary['infill2_acres']],
-    ['Infill 3 Acres', acres_summary['infill3_acres']]
-]
+    sl_vols = {
+        0 : [
+            ['sov1_trips', 'mf61'],
+            ['sov2_trips', 'mf62'],
+            ['sov3_trips', 'mf63'],
+            ['hov_trips', 'mf64']
+        ],
+        1 : [
+            ['sov1_trips', 'mf601'],
+            ['sov2_trips', 'mf602'],
+            ['sov3_trips', 'mf603'],
+            ['hov_trips', 'mf604']
+        ],
+        2 : [
+            ['sov1_trips', 'mf611'],
+            ['sov2_trips', 'mf612'],
+            ['sov3_trips', 'mf613'],
+            ['hov_trips', 'mf614']
+        ],
+        3 : [
+            ['sov1_trips', 'mf621'],
+            ['sov2_trips', 'mf622'],
+            ['sov3_trips', 'mf623'],
+            ['hov_trips', 'mf624']
+        ],
+        4 : [
+            ['sov1_trips', 'mf631'],
+            ['sov2_trips', 'mf632'],
+            ['sov3_trips', 'mf633'],
+            ['hov_trips', 'mf634']
+        ]
+    }
+
+    for slink_name in slinks.keys():
+        #match select link file to appropriate matrices
+        slinks_name_list = list(slinks.keys())
+        slink_name_index = slinks_name_list.index(slink_name)
+        sl_vol = sl_vols[slink_name_index]
+        #get select link demand matrices
+        sl_auto = get_matrices(sl_vol)
+        sl_auto_npoe = sl_auto.loc[
+            (sl_auto['o_zone'].isin(zones_notpoe)) & 
+            (sl_auto['d_zone'].isin(zones_notpoe))
+        ].copy()
+        sl_auto_npoe.eval('sl_trips = sov1_trips + sov2_trips + sov3_trips + hov_trips', inplace=True)
+        sl_auto_npoe.eval(f'sl_person_trips = sov1_trips + sov2_trips + sov3_trips + (hov_trips * {hov_veh_occ})', inplace=True)
+
+        sl_sum = []
+        for trips in ['sl_trips','sl_person_trips']:
+            o_sum = sl_auto_npoe.groupby('o_zone')[trips].sum()
+            d_sum = sl_auto_npoe.groupby('d_zone')[trips].sum()
+            sl_sum.append((o_sum + d_sum).to_frame())
+        sl_sum = pd.concat(sl_sum, axis=1).reset_index(names='o_zone')
+
+        sl_sum = pd.merge(sl_sum, all_sum, on='o_zone', how='outer')
+        infill_share_df = pd.read_csv(infill_share).rename(columns={'zone':'o_zone'})
+        sl_sum = pd.merge(sl_sum, infill_share_df, on='o_zone', how='left')
+        sl_sum['ratio'] = np.where(
+            sl_sum['trips']>0,
+            sl_sum['sl_person_trips']/sl_sum['trips'],
+            0
+        )
+        for infl in ['infill1','infill2','infill3']:
+            sl_sum.eval(f'{infl}_acres = ratio * {infl}', inplace=True)
+
+        acres_summary = sl_sum.agg(
+            {'infill1_acres': 'sum',
+            'infill2_acres': 'sum',
+            'infill3_acres': 'sum'}
+        ).round(3)
+
+        # output infill supportiveness measure
+        rsp_dict['Infill Supportiveness'][f'Infill - {slink_name}'] = [
+            ['Infill 1 Acres', acres_summary['infill1_acres']],
+            ['Infill 2 Acres', acres_summary['infill2_acres']],
+            ['Infill 3 Acres', acres_summary['infill3_acres']]        
+        ]               
+        
+if slines != None:
+    sline_vols = [['trnt_trips', 'mf21']]
+
+    sl_trnt = get_matrices(sline_vols)
+    sl_trnt_npoe = sl_trnt.loc[
+        (sl_trnt['o_zone'].isin(zones_notpoe)) & 
+        (sl_trnt['d_zone'].isin(zones_notpoe))
+    ].copy()
+    o_sum = sl_trnt_npoe.groupby('o_zone')['trnt_trips'].sum()
+    d_sum = sl_trnt_npoe.groupby('d_zone')['trnt_trips'].sum()
+    sline_sum = (o_sum + d_sum).to_frame().reset_index(names='o_zone')
+
+    sline_sum = pd.merge(sline_sum, trnt_all_sum, on='o_zone', how='outer')
+    infill_share_df = pd.read_csv(infill_share).rename(columns={'zone':'o_zone'})
+    sline_sum = pd.merge(sline_sum, infill_share_df, on='o_zone', how='left')
+    sline_sum['ratio'] = np.where(
+        sline_sum['trips']>0,
+        sline_sum['trnt_trips']/sline_sum['trips'],
+        0
+    )
+    
+    for infl in ['infill1','infill2','infill3']:
+        sl_sum.eval(f'{infl}_acres = ratio * {infl}', inplace=True)
+
+    acres_summary = sl_sum.agg(
+        {'infill1_acres': 'sum',
+        'infill2_acres': 'sum',
+        'infill3_acres': 'sum'}
+    ).round(3)
+
+        # output infill supportiveness measure
+    rsp_dict['Infill Supportiveness'][f'Infill - {slink_name}'] = [
+        ['Infill 1 Acres', acres_summary['infill1_acres']],
+        ['Infill 2 Acres', acres_summary['infill2_acres']],
+        ['Infill 3 Acres', acres_summary['infill3_acres']]        
+    ]
 
 
 ## --
