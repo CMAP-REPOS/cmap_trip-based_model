@@ -52,6 +52,7 @@ with open(os.path.join(db, 'batch_file.yaml')) as f:
     lines_without_backslashes = ''.join([line.replace('\\','/') for line in f])
     config = yaml.safe_load(lines_without_backslashes)
 
+year = 2050
 model = config['model_version']  # e.g., 'c23q4'
 scenyear = config['scenario_code'] # e.g., '400'
 run_name = str(model) + '_' + str(scenyear)
@@ -60,6 +61,7 @@ ejfile = config['ejFile'] #eda partial demand file name
 eda_share_dir = os.path.join(db, f'rsp_evaluation/inputs/{ejfile}') ## eda share of demand input file
 ccrfile = config['ccrFile'] #ccr partial demand file name
 ccr_share_dir = os.path.join(db, f'rsp_evaluation/inputs/{ccrfile}') ## ccr share of demand input file 
+emission_rates_file = os.path.join(db, 'rsp_evaluation/inputs/Emission_rate_tables_2024.xlsx')
 
 #get select link file information, if exists
 slk_file_list = config['selectLinkFile'] #list of select link text files
@@ -131,6 +133,20 @@ eda_share_df = pd.concat([eda_share_df, ccr_share_df], axis=1).reset_index()
 
 #define infill csv/excel files
 infill_share = os.path.join(db, 'rsp_evaluation/inputs/infill_support.csv')
+
+#get pollutants through subprocess (rsp_evaluation_get_pollutants.py)
+#needs cmap-trip2 environment
+print(f'\t - getting emission rates...')
+subprocess_pollutants = os.path.join(db, 'post_macros/rsp_evaluation_get_pollutants.py')
+out_pkl = os.path.join(db, 'rsp_evaluation/temp_out.pkl')
+if os.path.exists(out_pkl):
+    os.remove(out_pkl)
+
+subprocess.run(f"conda run -n CMAP-TRIP2 python {subprocess_pollutants} {emission_rates_file} {out_pkl}", shell=True, check=True, text=True)
+
+pollutants = pd.read_pickle(out_pkl)
+
+os.remove(out_pkl)
 
 ## ---------- ##
 ## START EMME ##
@@ -283,6 +299,7 @@ def wgt_avg(df, spec_list, group_by):
 ## --
 
 #get parquet through subprocess (final_run_statistics_read_pq.py)
+#needs cmap-trip2 environment to read parquet
 print(f'\t - reading parquet files...')
 subprocess_py = os.path.join(db, 'post_macros/final_run_statistics_read_pq.py')
 
@@ -846,6 +863,10 @@ punch['fmph'] = np.where((punch['ftime'] > 0), (punch['len']/(punch['ftime']/60)
 punch['mph'] = np.where(punch['vdf']==1, punch['fmph'] * (1/((np.log(punch['fmph'])*0.249)+0.153*(punch['volau']/(punch['capacity']*0.75))**3.98)), punch['len']/(punch['timau']/60))
 punch['time'] = np.where(punch['vdf']==1, (punch['len']/punch['mph'])*60, punch['timau']) #recalculate travel time for vdf==1 (in minutes)
 
+#added round speed and apply emission rete for different link speed
+punch['mph_r'] = np.where((punch['mph'] < 35), (round(punch['mph'],1)), (round(punch['mph'],0)))
+punch = pd.merge(punch, pollutants, left_on=['mph_r'], right_on=['Speed'], how='left')
+
 #define "congested" -- v/c ratio above threshold
 punch['vc_ratio'] = np.where(punch['capacity']>0, punch['volau']/punch['capacity'], np.nan)
 punch['congested'] = np.where(punch['vc_ratio'] >= congested_threshold, 1, 0)
@@ -864,6 +885,12 @@ for c in vehicle_cols:
     #   - cvmt = vmt * congestion flag
     punch.eval(f'vmt_{c} = {c} * len', inplace=True)
     punch.eval(f'cvmt_{c} = vmt_{c} * congested', inplace=True)
+
+    #   - emission = vmt * emission rate(speed)
+    punch.eval(f'ghg_{c} = vmt_{c} * GHG_ER', inplace=True)
+    punch.eval(f'nox_{c} = vmt_{c} * NOx_ER', inplace=True)
+    punch.eval(f'pm_{c} = vmt_{c} * PM_ER', inplace=True)
+    punch.eval(f'voc_{c} = vmt_{c} * VOC_ER', inplace=True)
     
     #vht and congested vht:
     #   - vht = vol * (time / 60)
@@ -894,13 +921,13 @@ else:
     punch['ij'] = punch['i_node'].astype(str) + '-' + punch['j_node'].astype(str) 
     
     for slk in slinks.keys():
-        print('links for selection: ' ,slinks[slk])
+        # print('links for selection: ' ,slinks[slk])
         proj_links = punch.loc[punch['ij'].isin(slinks[slk])].copy()
-        print(slk, ' proj link table: ', proj_links)
+        # print(slk, ' proj link table: ', proj_links)
         proj_vmt = proj_links.agg({'vmt_auto':'sum', 'vmt_ejauto':'sum', 'vmt_ccrauto':'sum'})
         proj_vmt['vmt_eda_share'] = proj_vmt['vmt_ejauto'] / proj_vmt['vmt_auto']
         proj_vmt['vmt_ccr_share'] = proj_vmt['vmt_ccrauto'] / proj_vmt['vmt_auto']
-        print('vmt stats on proj link table -- ', proj_vmt)
+        # print('vmt stats on proj link table -- ', proj_vmt)
         
         rsp_dict[f'VMT on Project Links ({slk})'] = {
             'Total VMT': [
@@ -916,7 +943,7 @@ else:
 
 #create aggregator dictionary for agg() function
 #   for each vehicle type in `vehicle_cols`, calculate each of the measures (vmt, cvmt, vht, cvht, delay)
-aggs_prefixes = ['vmt', 'cvmt', 'vht', 'cvht', 'delay']
+aggs_prefixes = ['vmt', 'cvmt', 'vht', 'cvht', 'delay', 'ghg', 'nox', 'pm','voc']
 fried_aggs = dict([[f'{p}_{v}', 'sum'] for p in aggs_prefixes for v in vehicle_cols])
 
 vmt_vht_summary = punch.groupby('road_class').agg(fried_aggs)
@@ -940,6 +967,26 @@ rsp_dict['Total Daily Vehicle Miles Traveled'] = {
         # ['Highway', vmt_vht_summary.at['Highway','vmt_vehicles']],
         # ['Other', vmt_vht_summary.at['Other','vmt_vehicles']]
         ['Expressway', vmt_vht_summary.at['Expressway','vmt_vehicles']]
+    ]
+}
+
+# vehicle running emission  
+rsp_dict['Total Daily Vehicle Running Emission'] = {
+    'By Pollutant Types': [
+        ['GHG', vmt_vht_summary['ghg_vehicles'].sum()],
+        ['NOx', vmt_vht_summary['nox_vehicles'].sum()],
+        ['PM', vmt_vht_summary['pm_vehicles'].sum()],
+        ['VOC', vmt_vht_summary['voc_vehicles'].sum()]
+    ],
+    'By Facility and Pollutant Type': [
+        ['Arterial GHG', vmt_vht_summary.at['Arterial', 'ghg_vehicles']],
+        ['Expressway GHG', vmt_vht_summary.at['Expressway','ghg_vehicles']],
+        ['Arterial NOx', vmt_vht_summary.at['Arterial', 'nox_vehicles']],
+        ['Expressway NOx', vmt_vht_summary.at['Expressway','nox_vehicles']],
+        ['Arterial PM', vmt_vht_summary.at['Arterial', 'pm_vehicles']],
+        ['Expressway PM', vmt_vht_summary.at['Expressway','pm_vehicles']],
+        ['Arterial VOC', vmt_vht_summary.at['Arterial', 'voc_vehicles']],
+        ['Expressway VOC', vmt_vht_summary.at['Expressway','voc_vehicles']],
     ]
 }
 
@@ -1109,147 +1156,63 @@ if transit_asmt:
 #  Infill supportiveness
 # ----------------------------------------------------------------------------
 print('\t - calculate infill supportiveness')
-rsp_dict['Infill Supportiveness'] = {} #fill with values later
+sl_vols = [
+    ['sov1_trips', 'mf61'],
+    ['sov2_trips', 'mf62'],
+    ['sov3_trips', 'mf63'],
+    ['hov_trips', 'mf64']
+]
 
-#calculate all auto trips
+sl_auto = get_matrices(sl_vols)
+sl_auto_npoe = sl_auto.loc[
+    (sl_auto['o_zone'].isin(zones_notpoe)) & 
+    (sl_auto['d_zone'].isin(zones_notpoe))
+].copy()
+sl_auto_npoe.eval('sl_trips = sov1_trips + sov2_trips + sov3_trips + hov_trips', inplace=True)
+sl_auto_npoe.eval(f'sl_person_trips = sov1_trips + sov2_trips + sov3_trips + (hov_trips * {hov_veh_occ})', inplace=True)
+
+#for select link trips
+sl_sum = []
+for trips in ['sl_trips','sl_person_trips']:
+    o_sum = sl_auto_npoe.groupby('o_zone')[trips].sum()
+    d_sum = sl_auto_npoe.groupby('d_zone')[trips].sum()
+    sl_sum.append((o_sum + d_sum).to_frame())
+sl_sum = pd.concat(sl_sum, axis=1).reset_index(names='o_zone')
+
+#for all trips
 trips_notpoe = trips_all.loc[
     (trips_all['o_zone'].isin(zones_notpoe)) &
     (trips_all['d_zone'].isin(zones_notpoe)) &
     (trips_all['gen_mode']=='Auto')
 ].copy()
 
-#calculate all transit trips
-trntrips_notpoe = trips_all.loc[
-    (trips_all['o_zone'].isin(zones_notpoe)) &
-    (trips_all['d_zone'].isin(zones_notpoe)) &
-    (trips_all['gen_mode']=='Transit')
-].copy()
-
 o_all_sum = trips_notpoe.groupby('o_zone')['trips'].sum()
 d_all_sum = trips_notpoe.groupby('d_zone')['trips'].sum()
 all_sum = (o_all_sum + d_all_sum).to_frame().reset_index(names='o_zone')
 
-trnt_o_all_sum = trntrips_notpoe.groupby('o_zone')['trips'].sum()
-trnt_d_all_sum = trntrips_notpoe.groupby('d_zone')['trips'].sum()
-trnt_all_sum = (trnt_o_all_sum + trnt_d_all_sum).to_frame().reset_index(names='o_zone')
+sl_sum = pd.merge(sl_sum, all_sum, on='o_zone', how='outer')
+infill_share_df = pd.read_csv(infill_share).rename(columns={'zone':'o_zone'})
+sl_sum = pd.merge(sl_sum, infill_share_df, on='o_zone', how='left')
+sl_sum['ratio'] = np.where(
+    sl_sum['trips']>0,
+    sl_sum['sl_person_trips']/sl_sum['trips'],
+    0
+)
+for infl in ['infill1','infill2','infill3']:
+    sl_sum.eval(f'{infl}_acres = ratio * {infl}', inplace=True)
 
-#for select link trips (if any)
-if len(slinks) > 0:
+acres_summary = sl_sum.agg(
+    {'infill1_acres': 'sum',
+     'infill2_acres': 'sum',
+     'infill3_acres': 'sum'}
+).round(3)
 
-    sl_vols = {
-        0 : [
-            ['sov1_trips', 'mf61'],
-            ['sov2_trips', 'mf62'],
-            ['sov3_trips', 'mf63'],
-            ['hov_trips', 'mf64']
-        ],
-        1 : [
-            ['sov1_trips', 'mf601'],
-            ['sov2_trips', 'mf602'],
-            ['sov3_trips', 'mf603'],
-            ['hov_trips', 'mf604']
-        ],
-        2 : [
-            ['sov1_trips', 'mf611'],
-            ['sov2_trips', 'mf612'],
-            ['sov3_trips', 'mf613'],
-            ['hov_trips', 'mf614']
-        ],
-        3 : [
-            ['sov1_trips', 'mf621'],
-            ['sov2_trips', 'mf622'],
-            ['sov3_trips', 'mf623'],
-            ['hov_trips', 'mf624']
-        ],
-        4 : [
-            ['sov1_trips', 'mf631'],
-            ['sov2_trips', 'mf632'],
-            ['sov3_trips', 'mf633'],
-            ['hov_trips', 'mf634']
-        ]
-    }
-
-    for slink_name in slinks.keys():
-        #match select link file to appropriate matrices
-        slinks_name_list = list(slinks.keys())
-        slink_name_index = slinks_name_list.index(slink_name)
-        sl_vol = sl_vols[slink_name_index]
-        #get select link demand matrices
-        sl_auto = get_matrices(sl_vol)
-        sl_auto_npoe = sl_auto.loc[
-            (sl_auto['o_zone'].isin(zones_notpoe)) & 
-            (sl_auto['d_zone'].isin(zones_notpoe))
-        ].copy()
-        sl_auto_npoe.eval('sl_trips = sov1_trips + sov2_trips + sov3_trips + hov_trips', inplace=True)
-        sl_auto_npoe.eval(f'sl_person_trips = sov1_trips + sov2_trips + sov3_trips + (hov_trips * {hov_veh_occ})', inplace=True)
-
-        sl_sum = []
-        for trips in ['sl_trips','sl_person_trips']:
-            o_sum = sl_auto_npoe.groupby('o_zone')[trips].sum()
-            d_sum = sl_auto_npoe.groupby('d_zone')[trips].sum()
-            sl_sum.append((o_sum + d_sum).to_frame())
-        sl_sum = pd.concat(sl_sum, axis=1).reset_index(names='o_zone')
-
-        sl_sum = pd.merge(sl_sum, all_sum, on='o_zone', how='outer')
-        infill_share_df = pd.read_csv(infill_share).rename(columns={'zone':'o_zone'})
-        sl_sum = pd.merge(sl_sum, infill_share_df, on='o_zone', how='left')
-        sl_sum['ratio'] = np.where(
-            sl_sum['trips']>0,
-            sl_sum['sl_person_trips']/sl_sum['trips'],
-            0
-        )
-        for infl in ['infill1','infill2','infill3']:
-            sl_sum.eval(f'{infl}_acres = ratio * {infl}', inplace=True)
-
-        acres_summary = sl_sum.agg(
-            {'infill1_acres': 'sum',
-            'infill2_acres': 'sum',
-            'infill3_acres': 'sum'}
-        ).round(3)
-
-        # output infill supportiveness measure
-        rsp_dict['Infill Supportiveness'][f'Infill - {slink_name}'] = [
-            ['Infill 1 Acres', acres_summary['infill1_acres']],
-            ['Infill 2 Acres', acres_summary['infill2_acres']],
-            ['Infill 3 Acres', acres_summary['infill3_acres']]        
-        ]               
-        
-if slines != None:
-    sline_vols = [['trnt_trips', 'mf21']]
-
-    sl_trnt = get_matrices(sline_vols)
-    sl_trnt_npoe = sl_trnt.loc[
-        (sl_trnt['o_zone'].isin(zones_notpoe)) & 
-        (sl_trnt['d_zone'].isin(zones_notpoe))
-    ].copy()
-    o_sum = sl_trnt_npoe.groupby('o_zone')['trnt_trips'].sum()
-    d_sum = sl_trnt_npoe.groupby('d_zone')['trnt_trips'].sum()
-    sline_sum = (o_sum + d_sum).to_frame().reset_index(names='o_zone')
-
-    sline_sum = pd.merge(sline_sum, trnt_all_sum, on='o_zone', how='outer')
-    infill_share_df = pd.read_csv(infill_share).rename(columns={'zone':'o_zone'})
-    sline_sum = pd.merge(sline_sum, infill_share_df, on='o_zone', how='left')
-    sline_sum['ratio'] = np.where(
-        sline_sum['trips']>0,
-        sline_sum['trnt_trips']/sline_sum['trips'],
-        0
-    )
-    
-    for infl in ['infill1','infill2','infill3']:
-        sl_sum.eval(f'{infl}_acres = ratio * {infl}', inplace=True)
-
-    acres_summary = sl_sum.agg(
-        {'infill1_acres': 'sum',
-        'infill2_acres': 'sum',
-        'infill3_acres': 'sum'}
-    ).round(3)
-
-        # output infill supportiveness measure
-    rsp_dict['Infill Supportiveness'][f'Infill - {slink_name}'] = [
-        ['Infill 1 Acres', acres_summary['infill1_acres']],
-        ['Infill 2 Acres', acres_summary['infill2_acres']],
-        ['Infill 3 Acres', acres_summary['infill3_acres']]        
-    ]
+# output infill supportiveness measure
+rsp_dict['Infill Supportiveness'] = [
+    ['Infill 1 Acres', acres_summary['infill1_acres']],
+    ['Infill 2 Acres', acres_summary['infill2_acres']],
+    ['Infill 3 Acres', acres_summary['infill3_acres']]
+]
 
 
 ## --
