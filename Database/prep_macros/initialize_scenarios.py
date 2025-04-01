@@ -657,11 +657,11 @@ for asmt_scen in network_batchin_list:
         'svc_mi_by_type':
             # [result, expression, link selection, transit line selection]
             [
-                ['us2', f'{hrs_per_tod}/hdw*length', 'mode=BE', 'mode=BE'],
+                ['us2', f'({hrs_per_tod}*60)/hdw*length', 'mode=BE', 'mode=BE'],
                 ['us2', '0', 'all', 'all'],
-                ['us2', f'{hrs_per_tod}/hdw*length', 'mode=LPQ', 'mode=LPQ'],
+                ['us2', f'({hrs_per_tod}*60)/hdw*length', 'mode=LPQ', 'mode=LPQ'],
                 ['us2', '0', 'all', 'all'],
-                ['us2', f'{hrs_per_tod}/hdw*length', 'mode=C', 'mode=C'],
+                ['us2', f'({hrs_per_tod}*60)/hdw*length', 'mode=C', 'mode=C'],
                 ['us2', '0', 'all', 'all'],
                 ['us2', 'length', 'mode=M', 'mode=M'],
                 ['us2', '0', 'all', 'all']      
@@ -669,11 +669,11 @@ for asmt_scen in network_batchin_list:
         'svc_hrs_by_type':
             # [result, expression, link selection, transit line selection]
             [
-                ['us2', f'({hrs_per_tod}/hdw*@ltime)/60', 'mode=BE', 'mode=BE'],
+                ['us2', f'(({hrs_per_tod}*60)/hdw*@ltime)/60', 'mode=BE', 'mode=BE'],
                 ['us2', '0', 'all', 'all'],
-                ['us2', f'({hrs_per_tod}/hdw*@ltime)/60', 'mode=LPQ', 'mode=LPQ'],
+                ['us2', f'(({hrs_per_tod}*60)/hdw*@ltime)/60', 'mode=LPQ', 'mode=LPQ'],
                 ['us2', '0', 'all', 'all'],
-                ['us2', f'({hrs_per_tod}/hdw*@ltime)/60', 'mode=C', 'mode=C'],
+                ['us2', f'(({hrs_per_tod}*60)/hdw*@ltime)/60', 'mode=C', 'mode=C'],
                 ['us2', '0', 'all', 'all'],
                 ['us2', '@ltime/60', 'mode=M', 'mode=M'],
                 ['us2', '0', 'all', 'all'],
@@ -784,7 +784,15 @@ for asmt_scen in network_batchin_list:
     
 
     with open(report, 'a') as file:
-        file.write('-- REPORT NETWORK SUMMARY --')
+        file.write('-- REPORT NETWORK SUMMARY --\n')
+        scenario = emmebank.scenario(asmt_scen[0])
+        partial_network = scenario.get_partial_network(element_types=['LINK'],
+                                                       include_attributes=True)
+        total_link_length = 0
+        for link in partial_network.links():
+            total_link_length += link.length
+        file.write(f"Number of links: {partial_network.element_totals['links']}\n")
+        file.write(f'Total link length: {total_link_length}\n')
 
 ## Create transit skim scenarios ##
 today = str(date.today().strftime('%Y%m%d'))
