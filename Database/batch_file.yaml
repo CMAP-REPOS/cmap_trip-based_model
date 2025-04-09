@@ -1,5 +1,5 @@
 # Project details
-model_version: c24q4
+model_version: c25q2
 scenario_code: 100
 # ---------------- Work from home module inputs (trip generation)
 validationfiles: N
@@ -10,7 +10,7 @@ tc14pct: 0.1031
 selectLinkFile: None,None,None,None,None
 # ---------------- Transaction file path: include the path to the transaction files that will build the scenario networks in double quotes (spaces OK), 
 # ---------------- point to directory above highway\ and transit\, no ending backslash (ex: "M:\catslib\modelprod\c24q2" or "M:/catslib/modelprod/24q2")
-transactionFilePath: "M:/proj1/nrf/Conformity/c24q4"
+transactionFilePath: "M:/proj1/nrf/Conformity/c25q2"
 # ---------------- Run Transit Assignment at the end of the model run? Default is False.
 runTransitAsmt: False
 # ---------------- Transit select line analysis file: provide file name (ex: rsp57_line.txt [stored in Database\Select_Line\]) or use None

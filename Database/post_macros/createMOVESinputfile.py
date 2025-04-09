@@ -47,22 +47,22 @@ import datetime as dt
 import openpyxl
 from itertools import product
 import yaml
+from pathlib import Path
 
-
+db_dir = Path(__file__).resolve().parents[1]
 ## ------ PARAMETERS ------ ##
-workspace = os.path.dirname(os.path.dirname(os.getcwd()))
 #get model version and scenario year - for output filenames
-with open(workspace + r'\batch_file.yaml') as f:
+with open(db_dir.joinpath('batch_file.yaml')) as f:
     config = yaml.safe_load(f)
 model = config['model_version']  # e.g., 'c23q4'
 scenyear = config['scenario_code']  # e.g., '400'
 
 #bring in punch moves link data
-linkdata = pd.read_csv(workspace + '\\Database\\data\\punchlink.csv')
+linkdata = pd.read_csv(db_dir.joinpath('data', 'punchlink.csv'))
 
 #output excel worksheets
-excel_file_IM = workspace + f'\\Database\\data\\MOVES_{model}_scen{scenyear}_IM.xlsx'
-excel_file_noIM = workspace + f'\\Database\\data\\MOVES_{model}_scen{scenyear}_nonIM.xlsx'
+excel_file_IM = db_dir.joinpath('data', f'MOVES_{model}_scen{scenyear}_IM.xlsx')
+excel_file_noIM = db_dir.joinpath('data', f'MOVES_{model}_scen{scenyear}_nonIM.xlsx')
 
 ##create excel workbook to write worksheets to
 xlsx_IM = pd.ExcelWriter(excel_file_IM)

@@ -53,7 +53,7 @@ for s in scens:
 
     spec1 = {
         "result": "us1",
-        "expression": "(us1*(ttf.eq.2))+(us1.max.ul2)*(ttf.eq.1)", #ttf1=normal, ttf2=BRT
+        "expression": "(@ltime*(ttf.eq.2))+(@ltime.max.ul2)*(ttf.eq.1)", #ttf1=normal, ttf2=BRT
         "selections": {
             "link": "all",
             "transit_line": "all"
