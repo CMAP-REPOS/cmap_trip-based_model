@@ -136,7 +136,7 @@ def create_transit_scenario(network_file, mode_file, link_shape_file, scenario_i
     # Add link shape.
     process_link_shape_file(transaction_file=str(link_shape_file), revert_on_error=False)
 
-def configure_gtfs_schema(scenario, modeller):
+def configure_gtfs_schema(scenario, trip_aggregation, modeller):
     """ Configure a scenario's schema to store GTFS information.
 
     Creates network fields and extra attributes in transit line and
@@ -159,6 +159,12 @@ def configure_gtfs_schema(scenario, modeller):
                                ('@direction', 'trip direction 0=outbound 1=inbound'),
                                ('@first_departure', 'first departure in mins from midnight'),
                                ('@wheelchair_access', 'wheelchair access 0=unknown 1=yes 2=no')]
+    if trip_aggregation:
+        transit_line_attributes.extend([('@hdw_nt1', 'headway 12am-6am'),
+                                        ('@hdw_am', 'headway 6am-9am'),
+                                        ('@hdw_md', 'headway 9am-4pm'),
+                                        ('@hdw_pm', 'headway 4pm-6pm'),
+                                        ('@hdw_nt2', 'headway 6pm-12am')])
     transit_segment_fields = [('#stop_name', 'stop name'),
                               ('#emme_line_name', 'default line id'),
                               ('#i_fare_zone', 'fare zone at inode'),
@@ -208,10 +214,3 @@ def configure_gtfs_schema(scenario, modeller):
                          extra_attribute_description=attr_desc,
                          overwrite=True,
                          scenario=scenario)
-        
-def load_gtfs_feed(feed, scenario, modeller):
-    """
-    """
-    
-
-    
