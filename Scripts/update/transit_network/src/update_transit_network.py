@@ -42,9 +42,9 @@ def main():
     args = parser.parse_args()
     feed_zips = {
                  'cta': _in_dir.joinpath(args.cta_feed),
-                #  'metra': _in_dir.joinpath(args.metra_feed),
-                #  'pace': _in_dir.joinpath(args.pace_feed),
-                #  'nictd': _in_dir.joinpath(args.nictd_feed)
+                 'metra': _in_dir.joinpath(args.metra_feed),
+                 'pace': _in_dir.joinpath(args.pace_feed),
+                 'nictd': _in_dir.joinpath(args.nictd_feed)
                 }
     # Extract and clean feed files.
     clean_feeds = []

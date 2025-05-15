@@ -1,37 +1,29 @@
 from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
 
+def compress(args):
+    """
+    Compress file(s) into a ZIP file.
 
-def mp_compress(args):
-    """Wrap compress for multiprocessing.
+    Parameters:  args : tuple
+                     Packed arguments.
 
-    Unpack arguments, then call compress using the unpacked arguments.
+                     (zipfile, contentpath)
 
-    Parameters
-    ----------
-    args : iterable object
-           Element of the iterable (iterable of iterables) passed to the
-           process pool using a method that does not unpack iterables.
+                     zipfile : str or path object
+                         Path to destination ZIP file.
+
+                     contentpath : str or path object
+                         Path to a file or a directory with files to be
+                         compressed.
+
+    Returns:     None
     """
     # Unpack arguments.
-    out_file_name, source_path, out_dir = args
-    # Compress.
-    compress(out_file_name, source_path, out_dir)
-
-def compress(out_file_name, source_path, out_dir):
-    """Compress file(s) into a ZIP file.
-
-    Parameters
-    ----------
-    out_file_name : str or path object
-               Path to destination ZIP file.
-    source_path : str or path object
-               Path to a file or a directory with files to be
-               compressed.
-    """
+    zipfile, contentpath = args
     # Handle arguments.
-    if isinstance(source_path, str):
-        source_path = Path(source_path).resolve()
+    if isinstance(contentpath, str):
+        contentpath = Path(contentpath).resolve()
     # Compress content.
     with ZipFile(out_dir.joinpath(out_file_name), mode='w', compression=ZIP_DEFLATED, compresslevel=9) as zip:
         if source_path.is_file():

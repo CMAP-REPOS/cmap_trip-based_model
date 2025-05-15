@@ -35,6 +35,10 @@ def connect(path):
         empfile = str(path)
     elif Path(path).is_dir():
         empfile = sorted(Path(path).rglob('*.emp'))[0]
+    if Path(path).is_file():
+        empfile = str(path)
+    elif Path(path).is_dir():
+        empfile = sorted(Path(path).rglob('*.emp'))[0]
     app = _app.start_dedicated(visible=False,
                                user_initials='CMAP',
                                project=empfile)
