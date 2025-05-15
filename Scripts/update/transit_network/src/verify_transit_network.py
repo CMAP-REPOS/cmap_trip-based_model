@@ -11,6 +11,9 @@ import yaml
 sys.path.append(str(Path(__file__).resolve().parents[3]))
 from tbmtools import transit_feed
 
+_src_dir = Path(__file__).resolve().parent
+_out_dir = _src_dir.parent.joinpath('output')
+
 
 def list_of_str(arg):
     return arg.split(',')
@@ -30,17 +33,16 @@ def feed_shps_to_gdb(feed_dir, gdb, prj):
     for shp, fcs in shp_fcs.items():
         arcpy.management.Merge(inputs=fcs, output=f'{gdb}/{agency_id}_{shp}')
 
-def select_network_lines(tlines, agency_name, route_short_name):
-    lyr = f"{tlines}_{agency_name}_{route_short_name}"
+def select_network_lines(tlines, agency_name, agency_id, route_short_name):
+    lyr = f"{tlines}_{agency_id}_{route_short_name}"
     sel_exp = (f"F_agency_na = '{agency_name}'"
-               + f" And F_route_nam LIKE '{route_short_name} %'")
-    print(f'select_network_lines in={tlines} out={lyr} overwrite={arcpy.env.overwriteOutput}', flush=True)
+               + f" And F_route_nam LIKE '{route_short_name} -%'")
     arcpy.management.MakeFeatureLayer(in_features=tlines,
                                       out_layer=lyr,
                                       where_clause=sel_exp)
     tline_sel_count = int(arcpy.management.GetCount(lyr)[0])
     if tline_sel_count <= 0:
-        raise ValueError(f'{agency_name} route {route_short_name} not found in network.')
+        raise ValueError(f'{agency_name} route {route_short_name} not found in network. Check EMME Logbook for errors during GTFS import.')
     return lyr
 
 def select_network_segments(tsegs, tline_sel):
@@ -50,30 +52,32 @@ def select_network_segments(tsegs, tline_sel):
         for row in cursor:
             line_ids.append(f"'{row[0]}'")
     sel_exp = f"LINE_ID IN ({', '.join(line_ids)})"
-    print(f'select_network_segments in={tsegs} out={lyr} overwrite={arcpy.env.overwriteOutput}', flush=True)
     arcpy.management.MakeFeatureLayer(in_features=tsegs,
                                       out_layer=lyr,
                                       where_clause=sel_exp)
     return lyr
 
-def select_feed_route(routes, route_short_name):
+def select_feed_route(routes, route_short_name, trip_aggregation):
     lyr = f'{routes}_{route_short_name}'
-    sel_exp = f"SHORT_NAME = '{route_short_name}'"
-    print(f'select_feed_route in={routes} out={lyr} overwrite={arcpy.env.overwriteOutput}', flush=True)
+    if trip_aggregation:
+        sel_exp = f"SHORT_NAME = '{route_short_name}'"
+    else:
+        sel_exp = f"ROUTE_ID = '{route_short_name}'"  # inro.emme.data.network.transit.import_from_gtfs uses route_id instead of route_short_name in imported route name
     arcpy.management.MakeFeatureLayer(in_features=routes,
                                       out_layer=lyr,
                                       where_clause=sel_exp)
     return lyr
 
-def select_outlier_segments(agency_name, route_short_name, tlines, tsegs,
+def select_outlier_segments(agency_name, agency_id, route_short_name, trip_aggregation, tlines, tsegs,
                             feed_routes, dist_thresh):
     # Select network segments.
     tline_sel = select_network_lines(tlines,
                                      agency_name,
+                                     agency_id,
                                      route_short_name)
     tseg_sel = select_network_segments(tsegs, tline_sel)
     # Select feed route.
-    route_sel = select_feed_route(feed_routes, route_short_name)
+    route_sel = select_feed_route(feed_routes, route_short_name, trip_aggregation)
     # Select only outlier segments.
     tseg_sel = arcpy.management.SelectLayerByAttribute(in_layer_or_view=tseg_sel, selection_type='CLEAR_SELECTION')
     tseg_sel_count = arcpy.management.GetCount(tseg_sel)[0]
@@ -92,12 +96,11 @@ def select_outlier_segments(agency_name, route_short_name, tlines, tsegs,
     outlier_srvcmi = tseg_outlier_len['SHAPE@LENGTH'].sum() / 5280
     return tseg_match_pct, outlier_srvcmi
 
-def mp_select_outlier_segments(agency_name, route_short_name, tlines, tsegs,
+def mp_select_outlier_segments(agency_name, agency_id, route_short_name, trip_aggregation, tlines, tsegs,
                                feed_routes, dist_tholds, gdb):
     main_workspace = gdb
     process = multiprocessing.current_process()
-    pid = process.pid
-    process_workspace = rf'memory\{pid}'
+    process_workspace = rf'memory\{process.pid}'
     if arcpy.env.workspace is None:
         arcpy.env.workspace = main_workspace
         arcpy.env.overwriteOutput = True
@@ -107,10 +110,12 @@ def mp_select_outlier_segments(agency_name, route_short_name, tlines, tsegs,
                 arcpy.management.MakeFeatureLayer(in_features=fc,
                                                   out_layer=rf'{process_workspace}\{fc}')
             except Exception as e:
-                raise Exception(f'Process {pid} failed to load {fc} from {gdb} to memory') from e
+                raise Exception(f'Process {process.pid} failed to load {fc} from {gdb} to memory') from e
     for dist_thresh in dist_tholds:
         tseg_match_pct, outlier_srvcmi = select_outlier_segments(agency_name,
+                                                                 agency_id,
                                                                  route_short_name,
+                                                                 trip_aggregation,
                                                                  rf'{process_workspace}\{tlines}',
                                                                  rf'{process_workspace}\{tsegs}',
                                                                  rf'{process_workspace}\{feed_routes}',
@@ -119,13 +124,18 @@ def mp_select_outlier_segments(agency_name, route_short_name, tlines, tsegs,
                       dist_thresh=dist_thresh,
                       tseg_match_pct=tseg_match_pct,
                       outlier_srvcmi=outlier_srvcmi)
-        if tseg_match_pct is not None:
-            if tseg_match_pct == 100:
-                return result
-            elif dist_thresh == dist_tholds[-1]:
-                return result
-        else:
-            return result
+        if tseg_match_pct == 100:
+            break
+    global complete_jobs, total_jobs
+    with complete_jobs.get_lock():
+        complete_jobs.value += 1
+        print(f'{process.name} with {agency_id} {route_short_name} - {complete_jobs.value} of {total_jobs.value} jobs completed')
+    return result
+
+def init_worker(shared_job_counter, shared_job_count):
+    global complete_jobs, total_jobs
+    complete_jobs = shared_job_counter
+    total_jobs = shared_job_count
 
 def main():
     start = time.perf_counter()
@@ -138,16 +148,26 @@ def main():
     parser.add_argument('--feeds',
                         type=list_of_str,
                         help='comma-separated paths to feed directories')
+    parser.add_argument('--trip_aggregation',
+                        help='Boolean value controlling number of trips represented by a transit line')
     parser.add_argument('--notes',
                         help='path to YML file containing route verification notes')
     parser.add_argument('--out_dir',
                         help='path to output directory')
     args = parser.parse_args()
     # Add network shapefiles to project geodatabase.
-    aprx = arcpy.mp.ArcGISProject(args.arcgis_project)
+    aprx_path = _out_dir.joinpath('VerifyTransitNetwork.aprx')
+    if not aprx_path.exists():
+        aprx = arcpy.mp.ArcGISProject(_src_dir.joinpath('Template.aprx'))
+        aprx.saveACopy(aprx_path)
+    aprx = arcpy.mp.ArcGISProject(aprx_path)
+    gdb_name = 'VerifyTransitNetwork.gdb'
+    gdb_path = _out_dir.joinpath(gdb_name)
+    if arcpy.Exists(str(gdb_path)):
+        arcpy.management.Delete(str(gdb_path))
+    aprx.defaultGeodatabase = arcpy.management.CreateFileGDB(out_folder_path=str(_out_dir),
+                                                             out_name=gdb_name)
     arcpy.env.workspace = aprx.defaultGeodatabase
-    for dataset in arcpy.ListDatasets():
-        arcpy.management.Delete(dataset)
     network_prj = sorted(Path(args.network_shp_dir).glob('*.prj'))[0]
     network_dataset = arcpy.management.CreateFeatureDataset(out_dataset_path=aprx.defaultGeodatabase,
                                                             out_name='Network',
@@ -177,6 +197,7 @@ def main():
     for map in aprx.listMaps():
         aprx.deleteItem(map)
     map = aprx.createMap('Network Vs. Feed')
+    map.addBasemap('Streets')
     for fd in arcpy.ListDatasets():
         group_layer = map.createGroupLayer(fd)
         for fc in arcpy.ListFeatureClasses(feature_dataset=fd):
@@ -194,17 +215,21 @@ def main():
     for feed in args.feeds:
         agency_name = transit_feed.get_agency_name(feed)
         agency_id = transit_feed.get_agency_id(feed)
-        route_short_names = transit_feed.get_route_short_names(feed)
+        if eval(args.trip_aggregation):
+            route_short_names = transit_feed.get_route_short_names(feed)  
+        else:
+            route_short_names = transit_feed.get_route_ids(feed)  # inro.emme.data.network.transit.import_from_gtfs uses route_id instead of route_short_name in imported route name
         jobs = list()
-        for route_name in route_short_names:
-        # for route_name in ['1', '5', '92']:
-            jobs.append((agency_name, route_name, 'emme_tlines', 'emme_tsegs', f'{agency_id}_routes', dist_tholds, aprx.defaultGeodatabase))
-        with multiprocessing.Pool(processes=os.cpu_count() - 2) as pool:
+        for route_short_name in route_short_names:
+        # for route_short_name in ['Org']:
+            jobs.append((agency_name, agency_id, route_short_name, eval(args.trip_aggregation), 'emme_tlines', 'emme_tsegs', f'{agency_id}_routes', dist_tholds, aprx.defaultGeodatabase))
+        shared_job_counter = multiprocessing.Value('i', 0)
+        shared_job_count = multiprocessing.Value('i', len(jobs))
+        with multiprocessing.Pool(processes=min(os.cpu_count(), 61), initializer=init_worker, initargs=(shared_job_counter, shared_job_count)) as pool:
             results = pool.starmap(mp_select_outlier_segments, jobs)
-        print(results)
         with open(args.notes, 'r') as f:
             route_notes = yaml.safe_load(f)
-        out_file = Path(args.out_dir, 'verification_report.csv')
+        out_file = Path(args.out_dir, f'verification_report_{agency_id}.csv')
         with open(out_file, 'w') as f:
             f.write('agency_id,route_short_name,dist_thresh,match_pct,outlier_srvcmi,note\n')
             for result in results:
@@ -218,10 +243,10 @@ def main():
                     print(txt)
                     f.write(row)
                 else:
-                    print(f'No transit segments for {agency_id} route {route_name}.')
+                    print(f'No transit segments for {agency_id} route {route_short_name}.')
     end = time.perf_counter()
     elapsed = end - start
-    print(f'Finished - {elapsed / 60:.6f} minutes')
+    print(f'Finished verify - {elapsed / 60:.6f} minutes')
 
 if __name__ == '__main__':
     sys.exit(main())

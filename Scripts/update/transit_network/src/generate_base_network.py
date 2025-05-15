@@ -9,6 +9,17 @@ _src_dir = Path(__file__).resolve().parent
 _in_dir = _src_dir.parent.joinpath('input')
 _out_dir = _src_dir.parent.joinpath('output')
 
+# Future MRN links.
+add_links = [
+             # Through 2035
+             (42291, 42528),
+             (42292, 42528),
+             (42254, 42527),
+             (49005, 42527),
+             (42469, 42470),
+             (42470, 42293)
+            ]
+
 # Current MRN links that are replaced by future MRN links.
 rmv_links = [
              # Through 2024
@@ -19,12 +30,18 @@ rmv_links = [
              (42203, 42204),
              (32115, 39011),
              # Through 2025
-             #(42336, 42337),
-             #(42335, 42336)
+             (42336, 42337),
+             (42335, 42336),
+             (42434, 42525),
+             # Through 2035
+             (42246, 42247),
+             (42293, 42469),
+             (42291, 42292),
+             (49005, 42254)
             ]
 
 
-def filter_mrn(gdb, year, obsolete_links):
+def filter_mrn(gdb, year, future_links, past_links):
     """
     Select rail links and nodes to represent a base network in the
     specified year.
@@ -51,8 +68,13 @@ def filter_mrn(gdb, year, obsolete_links):
                                            'SHARE_A_LINE_SEGMENT_WITH',
                                            'future_lyr',
                                            selection_type='ADD_TO_SELECTION')
+    # Add links from future.
+    for ab in future_links:
+        arcpy.management.SelectLayerByAttribute('arc_lyr',
+                                                'ADD_TO_SELECTION',
+                                                f'ANODE = {ab[0]} And BNODE = {ab[1]}')
     # Remove links replaced by future.
-    for ab in obsolete_links:
+    for ab in past_links:
         arcpy.management.SelectLayerByAttribute('arc_lyr',
                                                 'REMOVE_FROM_SELECTION',
                                                 f'ANODE = {ab[0]} And BNODE = {ab[1]}')
@@ -119,7 +141,7 @@ def main():
                         help='year of base network to generate')
     args = parser.parse_args()
     # Rail base network transaction file.
-    node_df, link_df = filter_mrn(_in_dir.joinpath(args.mrn_gdb_name), args.year, rmv_links)
+    node_df, link_df = filter_mrn(_in_dir.joinpath(args.mrn_gdb_name), args.year, add_links, rmv_links)
     # print(node_df.head())
     # print(link_df.head())
     generate_railnet_file(node_df, link_df, _out_dir.joinpath(f'mrn_{args.year}.txt'))
