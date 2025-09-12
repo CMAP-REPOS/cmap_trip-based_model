@@ -521,12 +521,12 @@ SOV vehicle trip value-of-time conversion:
 
 <br>
 
-[**Subzone 2017 Geography**](https://datahub.cmap.illinois.gov/datasets/CMAPGIS::trip-generation-zone-subzone-geography-2017/about)  
+[**Subzone 2017 Geography**](https://datahub.cmap.illinois.gov/datasets/CMAPGIS::trip-generation-zones-subzones-2017/about)  
 Trip generation information can be joined to subzones for visualization and
 spatial analysis.
 
 <br>
 
-[**Traffic Analysis Zone 2017 Geography**](https://datahub.cmap.illinois.gov/datasets/CMAPGIS::traffic-analysis-zone-geography-2017/about)  
+[**Traffic Analysis Zone 2017 Geography**](https://datahub.cmap.illinois.gov/datasets/CMAPGIS::trip-generation-zones-zones-2017/about)  
 Trip productions and attractions and distributed trip table information can be
 joined to TAZs for visualization and spatial analysis.
