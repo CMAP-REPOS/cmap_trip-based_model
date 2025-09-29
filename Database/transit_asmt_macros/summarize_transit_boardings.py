@@ -52,13 +52,6 @@ trnt_scens = {
 
 tr_dfs = []
 
-trnt_scens = {
-    f'Night (6pm-6am)': f'{yr}21',
-    f'AM (6am-9am)': f'{yr}23',
-    f'Midday (9am-4pm)': f'{yr}25',
-    f'PM (4pm-6pm)': f'{yr}27',
-}
-
 for period_name, scen_num in trnt_scens.items():
 
     scen = emmebank.scenario(scen_num)
@@ -98,9 +91,23 @@ for period_name, scen_num in trnt_scens.items():
 
     #use transit line info to determine mode
     def line_mode(x):
-        # b - cta local; e - cta express
-        # p - pace regular; q - pace express; l - pace feeder;
-        # m__ and c__ - 3 letter code for CTA rail and metra lines
+        '''
+        function for .map() method used directly below this function 
+        to determine mode name from segment_id
+        
+        segment_id format: [alpha-code][5-digit number], e.g., 'b12535', 'cbl10011'
+        
+        b -> CTA local bus
+        e -> CTA express
+        p -> Pace regular bus
+        l -> Pace feeder bus
+        q -> Pace express bus
+        c** -> CTA rail lines (3-letter code)
+        m** -> Metra lines (3-letter code)
+        
+        returns: the english name representation of the mode code
+        
+        '''
         
         line = x.split('-')[0]
         name = ''.join([char for char in line if char.isalpha()])
