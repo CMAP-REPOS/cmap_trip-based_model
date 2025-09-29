@@ -41,7 +41,7 @@ db = proj_dir.joinpath('Database')
 with open(os.path.join(db, 'batch_file.yaml')) as f:
     lines_without_backslashes = ''.join([line.replace('\\','/') for line in f])
     config = yaml.safe_load(lines_without_backslashes)
-yr = config['scenario_code'][0]  # e.g., '2' from '200'
+yr = str(config['scenario_code'])[0]  # e.g., '2' from '200'
 
 trnt_scens = {
     f'Night (6pm-6am)': f'{yr}21',
@@ -150,6 +150,7 @@ for period_name, scen_num in trnt_scens.items():
         raise ValueError('Some transit segments were not mapped to a mode (must be c, m, p, q, l, b, or e). Look at printed output of errors above.')
 
     trpunch['tod'] = scen_num
+    trpunch['tod_name'] = period_name
 
     tr_dfs.append(trpunch)
 
@@ -159,7 +160,7 @@ tr_all = pd.concat(tr_dfs, ignore_index=True)
 tr_all.to_csv(out_transit_punch, index=False)
 
 #summary by time-of-day
-summary_tod = tr_all.groupby(['tod', 'mode']).agg({
+summary_tod = tr_all.groupby(['tod_name', 'tod', 'mode']).agg({
     'transit_boardings':'sum',
     'pmt':'sum'
 }).reset_index()
@@ -168,7 +169,8 @@ summary_daily = summary_tod.groupby('mode').agg({
     'transit_boardings':'sum',
     'pmt':'sum'
 }).reset_index()
-summary_daily['tod'] = 'Daily'
+summary_daily['tod'] = 'All'
+summary_daily['tod_name'] = 'Daily'
 
 summary = pd.concat([summary_tod, summary_daily], ignore_index=True)
 summary.to_csv(out_boarding_csv, index=False)
