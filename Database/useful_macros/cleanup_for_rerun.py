@@ -16,9 +16,10 @@ def main():
 
     #set variables
     currentScen = int(sys.argv[1])
-    scenario = str(currentScen)
+    cScenAM = currentScen + 3
+    scenario = str(cScenAM)
     cScenMD = currentScen + 5
-    moveF11 = "build_" + str(currentScen) + "transit.rpt"
+    moveF11 = "build_" + str(cScenAM) + "transit.rpt"
     moveF12 = "report/" + moveF11
     moveF21 = "build_" + str(cScenMD) + "transit.rpt"        
     moveF22 = "report/" + moveF21
@@ -65,7 +66,7 @@ def main():
     if os.path.isfile("truck.access.rpt"): shutil.move("truck.access.rpt", "report/truck.access.rpt")
    
     #Set primary scenario
-    change_scenario(scenario=currentScen)
+    change_scenario(scenario=cScenAM)
     #delete scenarios and matrices
     for c in counters1:
         if c == 0:
@@ -75,19 +76,17 @@ def main():
                 counter1 = counter1+1
         else:
             while counter1 <= c +9:
-                scen = str(scenario) + str(counter1)
+                scen = str(currentScen) + str(counter1)
                 scenDel = emmebank.scenario(scen)
                 if scenDel: delete_scenario(scenDel)
                 counter1 = int(counter1)
                 counter1 = counter1+1
 
-    # #delete transit assignment scenarios if exist
-    # for c in counters2:
-    #     scen = currentScen + c
-    #     scenDel = _m.Modeller().emmebank.scenario(scen)
-    #     if scenDel: delete_scenario(scenDel)
-    #     counter2 = int(counter2)
-    #     counter2 = counter2+1
+    #delete transit overnight and PM peak skim scenarios if exist
+    trSkims= (currentScen+1, currentScen+7)
+    for t in trSkims:
+        scenDel = emmebank.scenario(t)
+        if scenDel: delete_scenario(scenDel)
 
     #delete matrices
     matpairs = {}
@@ -104,7 +103,7 @@ def main():
             begVal = begVal + 1
             if matrix: delete_matrix(matrix)
 
-    #set ms97, ms98, &ms99 to proper values for rerun (create if necessary)
+    #set ms97, ms98, & ms99 to proper values for rerun (create if necessary)
     new_mat97 = create_matrix(matrix_id="ms97",
                             matrix_name="one",
                             matrix_description="dummy for assignment",
@@ -121,9 +120,11 @@ def main():
                             default_value=0,
                             overwrite ="True") 
     
-    #delete ms1: no using lower bound for impedance matrix balancing in revised distribution
-    matrix = emmebank.matrix("ms1")
-    if matrix: delete_matrix(matrix)
+    #delete set of matrices no longer used in model
+    unneeded = ("ms1","mf835","mf836","mf839","mf935","mf936","mf939")
+    for u in unneeded:
+        matrix = emmebank.matrix(u)
+        if matrix: delete_matrix(matrix)
         
 if __name__ == '__main__':
     main()
