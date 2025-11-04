@@ -293,20 +293,20 @@ if %counter% GTR 2 (goto loopend)
 REM AM Peak Skim
 call python macros/skim_transit.py %val% %counter% AM
 if %ERRORLEVEL% neq 0 (goto issue)
-call python macros/transit_triple_indexing.py AM
+call python macros/transit_triple_indexing.py %val% AM
 if %ERRORLEVEL% neq 0 (goto issue)
-call python macros/transit_skim_final_matrices1.py
+call python macros/transit_skim_final_matrices.py AM
 if %ERRORLEVEL% neq 0 (goto issue)
-call python macros/transit_skim_wrapup.py %file1% AM
+call python macros/transit_skim_wrapup.py AM
 if %ERRORLEVEL% neq 0 (goto issue)
 REM Midday Skim
 call python macros/skim_transit.py %val% %counter% MD
 if %ERRORLEVEL% neq 0 (goto issue)
-call python macros/transit_triple_indexing.py MD
+call python macros/transit_triple_indexing.py %val% MD
 if %ERRORLEVEL% neq 0 (goto issue)
-call python macros/transit_skim_final_matrices2.py
+call python macros/transit_skim_final_matrices.py MD
 if %ERRORLEVEL% neq 0 (goto issue)
-call python macros/transit_skim_wrapup.py %file1% MD
+call python macros/transit_skim_wrapup.py MD
 if %ERRORLEVEL% neq 0 (goto issue)
 @ECHO    -- End of Transit Skim Procedures: %date% %time% >> model_run_timestamp.txt
 
@@ -359,8 +359,7 @@ call emme -ng 000 -m macros\balance5I_7c.mac %val% >> blog.txt
 @ECHO   --- End balance5I_7c.mac Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO   --- Begin time-of-day skim Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO --- Complete time of day skims ---
-call emme -ng 000 -m macros\TOD_skim_setup.mac %val% %tod_cntr% >> blog.txt
-call python macros/TOD_skim.py %file1% %tod_cntr% %val%%counter%%tod_cntr% %sola_threads%
+call python macros/TOD_skim.py %tod_cntr% %val%%counter%%tod_cntr% %sola_threads%
 if %ERRORLEVEL% NEQ 0 (goto issue)
 @ECHO    -- End Time-of-Day Procedures Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO -- End Time-of-Day Procedures for Period %tod_cntr%: %date% %time% --
