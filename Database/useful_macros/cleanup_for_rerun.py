@@ -66,7 +66,7 @@ def main():
     if os.path.isfile("truck.access.rpt"): shutil.move("truck.access.rpt", "report/truck.access.rpt")
    
     #Set primary scenario
-    change_scenario(scenario=cScenAM)
+    change_scenario(scenario=cScenMD)
     #delete scenarios and matrices
     for c in counters1:
         if c == 0:
