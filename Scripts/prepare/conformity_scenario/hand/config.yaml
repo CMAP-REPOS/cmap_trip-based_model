@@ -1,6 +1,6 @@
 # model_version: c24q4
 # scenario_code: 100
-similar_model_version: c24q4  # For copying model data
+similar_model_version: c25q2  # For copying model data
 scenario_years:
     100: 2019
     200: 2025
