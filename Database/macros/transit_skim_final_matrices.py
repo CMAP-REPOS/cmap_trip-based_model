@@ -1,19 +1,22 @@
 #############################################################################
 # TRANSIT_SKIM_FINAL_MATRICES1.PY                                           #
-#  Craig Heither, last revised 04-04-2019                                   #
+#  Craig Heither, last revised 06-09-2025                                   #
 #                                                                           #
 #    This program performs the matrix convolution portion of the transit    #
-#    skim procedures (much more efficiently than Emme) for the AM peak.     #
+#    skim procedures (much more efficiently than Emme).                     #
 #                                                                           #
 #    Written to work with Emme 4 structure.                                 #
 #    Rev Bozic to work with series 800 ampk   matrices 11/2/2017            #
 #              for integration with global iterations                       #
 #    04-04-2019: Heither - implement vectorized calculations using NumPy.   #
-# 07/23/2020 Ferguson: Explicity cast kzone values as integers for          #
+#    07/23/2020 Ferguson: Explicity cast kzone values as integers for       #
 #            compatibility with np.add() in NumPy 1.16.                     #
+#    01/14/2025 Heither: Flexibility to work for any transit time period.   #
+#                                                                           #
+#   Arguments:  1= time period indicator: AM, MD, PM, NT                    #
 #############################################################################
 
-import os, string, array, numpy as np
+import os, sys, string, array, numpy as np
 from array import *
 
 # ----------------------------------------------------------------------------------------
@@ -23,40 +26,51 @@ from array import *
 embank = os.getcwd() + "\\emmebank"
 mtxpath = os.getcwd() + "\\emmemat"                         ### path to Emme matrix storage
 
- #   -- Input Matrix Numbers --
-inputmtx = (44, 803, 804, 805, 808, 809, 810, 811, 818, 819, 820, 821)
- #   -- Output Matrix Numbers --
-outputmtx = (822, 823, 824, 825, 828, 829, 830, 831, 832, 833, 834)
+timePeriod = sys.argv[1]
+
+if timePeriod == 'AM':
+    inputmtx = (44, 803, 804, 805, 808, 809, 810, 811, 818, 819, 820, 821)    ## -- Input Matrix Numbers
+    outputmtx = (822, 823, 824, 825, 828, 829, 830, 831, 832, 833, 834)       ## -- Output Matrix Numbers
+elif timePeriod == 'MD':
+    inputmtx = (46, 903, 904, 905, 908, 909, 910, 911, 918, 919, 920, 921)    ## -- Input Matrix Numbers
+    outputmtx = (922, 923, 924, 925, 928, 929, 930, 931, 932, 933, 934)       ## -- Output Matrix Numbers
+elif timePeriod == 'PM':
+    inputmtx = (467, 853, 854, 855, 858, 859, 860, 861, 868, 869, 870, 871)   ## -- Input Matrix Numbers
+    outputmtx = (872, 873, 874, 875, 878, 879, 880, 881, 882, 883, 884)       ## -- Output Matrix Numbers
+elif timePeriod == 'NT':
+    inputmtx = (461, 953, 954, 955, 958, 959, 960, 961, 968, 969, 970, 971)   ## -- Input Matrix Numbers
+    outputmtx = (972, 973, 974, 975, 978, 979, 980, 981, 982, 983, 984)       ## -- Output Matrix Numbers
+
 
 #   -- Input Matrices --
-mfauto = mtxpath + "\\mf" + str(inputmtx[0]) + ".emx"        ### AM peak hwy time matrix (mf44)
-mffmode = mtxpath + "\\mf" + str(inputmtx[1]) + ".emx"       ### skimmed first mode (mf803)
-mfpmode = mtxpath + "\\mf" + str(inputmtx[2]) + ".emx"       ### skimmed priority mode (mf804)
-mflmode = mtxpath + "\\mf" + str(inputmtx[3]) + ".emx"       ### skimmed last mode (mf805)
-mfinveh = mtxpath + "\\mf" + str(inputmtx[4]) + ".emx"       ### skimmed in-vehicle minutes (mf808)
-mftrnfr = mtxpath + "\\mf" + str(inputmtx[5]) + ".emx"       ### skimmed transfer link minutes (mf809)
-mftwait = mtxpath + "\\mf" + str(inputmtx[6]) + ".emx"       ### skimmed total wait minutes (mf810)
-mffwait = mtxpath + "\\mf" + str(inputmtx[7]) + ".emx"       ### skimmed first wait minutes (mf811)
-mfafare = mtxpath + "\\mf" + str(inputmtx[8]) + ".emx"       ### skimmed final average fare (mf818)
-mfcghwy = mtxpath + "\\mf" + str(inputmtx[9]) + ".emx"       ### congested hwy generalized cost matrix (mf819)
-mftcost = mtxpath + "\\mf" + str(inputmtx[10]) + ".emx"      ### indexed transit generalized cost (mf820)
-mfkzone = mtxpath + "\\mf" + str(inputmtx[11]) + ".emx"      ### intermediate zone matrix (mf821)
+mfauto = mtxpath + "\\mf" + str(inputmtx[0]) + ".emx"        ### time period hwy time matrix 
+mffmode = mtxpath + "\\mf" + str(inputmtx[1]) + ".emx"       ### time period skimmed first mode 
+mfpmode = mtxpath + "\\mf" + str(inputmtx[2]) + ".emx"       ### time period skimmed priority mode 
+mflmode = mtxpath + "\\mf" + str(inputmtx[3]) + ".emx"       ### time period skimmed last mode 
+mfinveh = mtxpath + "\\mf" + str(inputmtx[4]) + ".emx"       ### time period skimmed in-vehicle minutes 
+mftrnfr = mtxpath + "\\mf" + str(inputmtx[5]) + ".emx"       ### time period skimmed transfer link minutes 
+mftwait = mtxpath + "\\mf" + str(inputmtx[6]) + ".emx"       ### time period skimmed total wait minutes 
+mffwait = mtxpath + "\\mf" + str(inputmtx[7]) + ".emx"       ### time period skimmed first wait minutes 
+mfafare = mtxpath + "\\mf" + str(inputmtx[8]) + ".emx"       ### time period skimmed final average fare 
+mfcghwy = mtxpath + "\\mf" + str(inputmtx[9]) + ".emx"       ### time period congested hwy generalized cost matrix 
+mftcost = mtxpath + "\\mf" + str(inputmtx[10]) + ".emx"      ### time period indexed transit generalized cost 
+mfkzone = mtxpath + "\\mf" + str(inputmtx[11]) + ".emx"      ### time period intermediate zone matrix 
 #   -- Output Matrices --
-mfinvehi = mtxpath + "\\mf" + str(outputmtx[0]) + ".emx"     ### indexed in-vehicle minutes (mf822)
-mftrnfri = mtxpath + "\\mf" + str(outputmtx[1]) + ".emx"     ### indexed walk transfer minutes (mf823)
-mftwaiti = mtxpath + "\\mf" + str(outputmtx[2]) + ".emx"     ### indexed total wait minutes (mf824)
-mffwaiti = mtxpath + "\\mf" + str(outputmtx[3]) + ".emx"     ### indexed first wait minutes (mf825)
-mfafarei = mtxpath + "\\mf" + str(outputmtx[4]) + ".emx"     ### indexed final average fare (mf828)
-mffmodei = mtxpath + "\\mf" + str(outputmtx[5]) + ".emx"     ### indexed first mode (mf829)
-mfpmodei = mtxpath + "\\mf" + str(outputmtx[6]) + ".emx"     ### indexed priority mode (mf830)
-mflmodei = mtxpath + "\\mf" + str(outputmtx[7]) + ".emx"     ### indexed last mode (mf831)
-mfacosti = mtxpath + "\\mf" + str(outputmtx[8]) + ".emx"     ### indexed auto generalized cost (mf832)
-mfautrni = mtxpath + "\\mf" + str(outputmtx[9]) + ".emx"     ### indexed auto min. to transit (mf833)
-mfratioi = mtxpath + "\\mf" + str(outputmtx[10]) + ".emx"    ### indexed transit/auto only (mf834)
+mfinvehi = mtxpath + "\\mf" + str(outputmtx[0]) + ".emx"     ### indexed in-vehicle minutes 
+mftrnfri = mtxpath + "\\mf" + str(outputmtx[1]) + ".emx"     ### indexed walk transfer minutes 
+mftwaiti = mtxpath + "\\mf" + str(outputmtx[2]) + ".emx"     ### indexed total wait minutes 
+mffwaiti = mtxpath + "\\mf" + str(outputmtx[3]) + ".emx"     ### indexed first wait minutes 
+mfafarei = mtxpath + "\\mf" + str(outputmtx[4]) + ".emx"     ### indexed final average fare 
+mffmodei = mtxpath + "\\mf" + str(outputmtx[5]) + ".emx"     ### indexed first mode 
+mfpmodei = mtxpath + "\\mf" + str(outputmtx[6]) + ".emx"     ### indexed priority mode 
+mflmodei = mtxpath + "\\mf" + str(outputmtx[7]) + ".emx"     ### indexed last mode 
+mfacosti = mtxpath + "\\mf" + str(outputmtx[8]) + ".emx"     ### indexed auto generalized cost 
+mfautrni = mtxpath + "\\mf" + str(outputmtx[9]) + ".emx"     ### indexed auto min. to transit 
+mfratioi = mtxpath + "\\mf" + str(outputmtx[10]) + ".emx"    ### indexed transit/auto only 
 
 #   -- Others --
 cutoff = 0.4                         ### cutoff value for indexed transit cost/auto only trip cost
-stats = os.getcwd() + "\\report\\transit_skim_stats8.txt"
+stats = os.getcwd() + "\\report\\transit_skim_stats_%s.txt" %(timePeriod)
 
 if os.path.exists(stats):
     os.remove(stats)

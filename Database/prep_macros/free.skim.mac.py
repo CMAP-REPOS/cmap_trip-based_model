@@ -69,6 +69,7 @@ def main():
     #set scenario and define temporary copy of AM and MD scenarios for skimming
     scen = currentScen*100
     scen = scen + 3
+    currentScen = currentScen+3         ## -- set to AM transit skim scenario
     scenarioWorking = emmebank.scenario(scen)
     s93 = copy_scenario(from_scenario=scenarioWorking, scenario_id=93, scenario_title="temp am peak scenario for skimming", overwrite=True)
 
