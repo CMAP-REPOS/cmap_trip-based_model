@@ -453,6 +453,7 @@ if "%transitAsmt%" EQU "T" (
         if %ERRORLEVEL% GTR 0 (goto issue)
         @ECHO -- Completed Select Line Boarding Analysis >> model_run_timestamp.txt
     )
+    call python transit_asmt_macros\summarize_transit_boardings.py
     @ECHO End Transit Assignment: %date% %time% >> model_run_timestamp.txt
 )
 goto last
