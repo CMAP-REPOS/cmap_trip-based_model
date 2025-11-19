@@ -69,7 +69,7 @@ def delete_matrices(mats_to_delete):
     
     #handle range input
     if input_type == 'range':
-        mtx_type = set(mixed_types)[0]
+        mtx_type = mixed_types[0]
         min = int(mats_check[0][2:])
         max = int(mats_check[1][2:])
         mats = [f'{mtx_type}{m}' for m in range(min, max+1)]
