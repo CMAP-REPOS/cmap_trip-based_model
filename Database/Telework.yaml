@@ -1,0 +1,38 @@
+# ---------------- Work from home module inputs (trip generation)
+validationfiles: N
+wfhpctlow: 0.143
+wfhpctmedium: 0.232
+wfhpcthigh: 0.552
+# ---------------- Telework worker attributes by edu, income and children
+# WFHL:             # low wfh percent group
+#   edu:
+#     1: 0.305      # low wfhGroup less than Banchelor
+#     2: 0.695      # low wfhGroup Banchelor Plus
+#   inc:
+#     1: 0.353      # low wfhGroup inc less than 100K
+#     2: 0.647      # low wfhGroup inc 100K Plus
+#   chi:
+#     1: 0.37       # low wfhGroup children under 18
+#     2: 0.63       # low wfhGroup no children under 18
+
+# WFHM:             # medium wfh percent group
+#   edu:
+#     1: 0.268      # medium wfhGroup less than Banchelor
+#     2: 0.732      # medium wfhGroup Banchelor Plus
+#   inc:
+#     1: 0.418      # medium wfhGroup inc less than 100K
+#     2: 0.582      # medium wfhGroup inc 100K Plus
+#   chi:
+#     1: 0.354      # medium wfhGroup children under 18
+#     2: 0.646      # medium wfhGroup no children under 18
+
+# WFHH:             # high wfh percent group
+#   edu:
+#     1: 0.202      # high wfhGroup less than Banchelor
+#     2: 0.798      # high wfhGroup Banchelor Plus
+#   inc:
+#     1: 0.231      # high wfhGroup inc less than 100K   
+#     2: 0.769      # high wfhGroup inc 100K Plus
+#   chi:
+#     1: 0.405      # high wfhGroup children under 18   
+#     2: 0.595      # high wfhGroup no children under 18

@@ -48,10 +48,23 @@ for /f "eol=# skip=5 tokens=2 delims=:" %%c in (batch_file.yaml) do (set wfh=%%c
 :break3
 for /f "eol=# skip=6 tokens=2 delims=:" %%d in (batch_file.yaml) do (set tc14=%%d & goto break4)
 :break4
+
+rem -- Read model run settings from Telework.yaml --
+for /f "eol=# skip=2 tokens=2 delims=:" %%e in (Telework.yaml) do (set wfhLow=%%e & goto break5)
+:break5
+for /f "eol=# skip=3 tokens=2 delims=:" %%f in (Telework.yaml) do (set wfhMedium=%%f & goto break6)
+:break6
+for /f "eol=# skip=4 tokens=2 delims=:" %%g in (Telework.yaml) do (set wfhHigh=%%g & goto break7)
+:break7
+
 set sc=%sc:~1,3%
 set wfhFile=%wfhFile:~1%
 set wfh=%wfh:~1%
 set tc14=%tc14:~1%
+set wfhLow=%wfhLow:~1%
+set wfhMedium=%wfhMedium:~1%
+set wfhHigh=%wfhHigh:~1%
+
 @echo.
 @echo ========================================
 @echo     --- Model Run Settings ---
@@ -59,6 +72,9 @@ set tc14=%tc14:~1%
 @echo  Create WFH validation file = %wfhFile%
 @echo  Usual WFH share = %wfh%
 @echo  WFH 1-4 days share = %tc14%
+@echo  WFH low rate group share= %wfhLow%
+@echo  WFH medium rate group share= %wfhMedium%
+@echo  WFH high rate group share= %wfhHigh%
 @echo ========================================
 @echo.
 rem
@@ -159,8 +175,15 @@ cd wfhmodule
 set filedir="%cd%"
 echo.
 echo Starting the work-from-home allocation model ...
-echo  wfh arguments: %filedir% %savedir% %wfhFile% %wfh% %tc14%
-python wfhflag.py %filedir% %savedir% %wfhFile% %wfh% %tc14%
+
+if %val%==100 (
+    echo Running wfhflag_old.py ...
+    python wfhflag_old.py %filedir% %savedir% %wfhFile% %wfh% %tc14%
+) else (
+    echo Running wfhflag.py ...
+    python wfhflag.py %filedir% %savedir% %wfhFile% %wfhLow% %wfhMedium% %wfhHigh%
+)
+
 if %ERRORLEVEL% NEQ 0 (goto wfh_issue)
 cd ..
 
