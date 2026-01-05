@@ -65,16 +65,26 @@ set wfhLow=%wfhLow:~1%
 set wfhMedium=%wfhMedium:~1%
 set wfhHigh=%wfhHigh:~1%
 
+for /f %%a in ('powershell -NoProfile -Command "(1000 + (200 - %sc%) * 1000 / 5000)/1000"') do set DeclineScaled=%%a
+for /f %%a in ('powershell -NoProfile -Command "%wfhLow% * %DeclineScaled%"') do set wfhLowSc=%%a
+for /f %%a in ('powershell -NoProfile -Command "%wfhMedium% * %DeclineScaled%"') do set wfhMediumSc=%%a
+for /f %%a in ('powershell -NoProfile -Command "%wfhHigh% * %DeclineScaled%"') do set wfhHighSc=%%a
+
+
 @echo.
 @echo ========================================
 @echo     --- Model Run Settings ---
 @echo  Scenario = %sc%
 @echo  Create WFH validation file = %wfhFile%
-@echo  Usual WFH share = %wfh%
-@echo  WFH 1-4 days share = %tc14%
-@echo  WFH low rate group share= %wfhLow%
-@echo  WFH medium rate group share= %wfhMedium%
-@echo  WFH high rate group share= %wfhHigh%
+@echo  2019 Usual WFH share = %wfh%
+@echo  2019 WFH 1-4 days share = %tc14%
+@echo  2025/26 WFH low rate group share= %wfhLow%
+@echo  2025/26 WFH medium rate group share= %wfhMedium%
+@echo  2025/26 WFH high rate group share= %wfhHigh%
+@echo  Decline factor= %DeclineScaled%
+@echo  Scenario WFH low rate group share= %wfhLowSc%
+@echo  Scenario WFH medium rate group share= %wfhMediumSc%
+@echo  Scenario WFH high rate group share= %wfhHighSc%
 @echo ========================================
 @echo.
 rem
@@ -181,7 +191,7 @@ if %val%==100 (
     python wfhflag_old.py %filedir% %savedir% %wfhFile% %wfh% %tc14%
 ) else (
     echo Running wfhflag.py ...
-    python wfhflag.py %filedir% %savedir% %wfhFile% %wfhLow% %wfhMedium% %wfhHigh%
+    python wfhflag.py %filedir% %savedir% %wfhFile% %wfhLowSc% %wfhMediumSc% %wfhHighSc%
 )
 
 if %ERRORLEVEL% NEQ 0 (goto wfh_issue)
