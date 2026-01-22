@@ -20,6 +20,7 @@ synpoppath = "synthetic_persons.zip"
 synhhpath = "synthetic_households.zip"
 popsynhhpath = savedir + "/POPSYN_HH.csv"
 indpxwalkpath = "indp_naics.csv"
+geoinpath = savedir + "/GEOG_IN.TXT"
 
 #telework worker distribution by income, edu level and children
 incdistpath = "incdist.csv"
@@ -140,6 +141,70 @@ final1sort.wfhworkers.fillna(0, inplace=True)
 final1sort['finalflag'] = final1sort.finalflag.astype('int')
 final1sort['wfhworkers'] = final1sort.wfhworkers.astype('int')
 final1sort[['SERIALNO', 'finalflag','wfhworkers']].to_csv(savedir + "/HH_WFH_STATUS.CSV", index=False, header=False)
+
+# Red GEO data get puma to county
+pumacross = pd.read_csv(geoinpath, sep=",", usecols=[1, 2, 3, 4], names=["fips", "cnty_name", "state", "puma5"], header=None )
+pumacross = pumacross.drop_duplicates()
+pumacross["puma5"] = pumacross["puma5"].astype(str)
+
+# Merge to new data prepare the county status
+final2 = pd.merge(popsynhh, final1sort, left_index=True, right_index=True, how='inner')
+final2['State'] = final2['stpuma5'].astype(str).str[0:2]
+final2['PUMA'] = final2['stpuma5'].astype(str).str[2:]
+final2['PUMA'] = final2['PUMA'].str.lstrip('0')
+final2["PUMA"] = final2["PUMA"].astype(str)
+final2_all = pd.merge(final2, pumacross, left_on="PUMA", right_on="puma5")
+
+# Convert children to numeric first
+final2_all["children"] = pd.to_numeric(final2_all["children"], errors="coerce")
+final2_all["wfhworkers"] = pd.to_numeric(final2_all["wfhworkers"], errors="coerce")
+
+# --- COUNTY MERGES & FILTERS --- 
+# Combine Boone + Winnebago → Winnebago-Boone 
+final2_all.loc[ 
+    final2_all["cnty_name"].isin(["BOONE", "WINNEBAGO"]), "cnty_name" 
+    ] = "WINNEBAGO-BOONE" 
+
+# Combine Kane + Kendall → Kane-Kendall 
+final2_all.loc[ 
+    final2_all["cnty_name"].isin(["KANE", "KENDALL"]), "cnty_name" 
+    ] = "KANE-KENDALL" 
+
+# Remove Lee + Ogle 
+final2_all = final2_all[~final2_all["cnty_name"].isin(["LEE", "OGLE"])]
+
+county_worker = final2_all.groupby(['State','cnty_name'])[['workers','wfhworkers']].sum().reset_index()
+
+county_worker.to_csv(savedir + "/PERSON_COUNTY_STATUS.CSV", index=False)
+
+# Now collapse 3+ into "3+"
+final2_all["children"] = final2_all["children"].apply(
+    lambda x: "3+" if x >= 3 else x
+)
+final2_all["wfhworkers"] = final2_all["wfhworkers"].apply(
+    lambda x: "3+" if x >= 3 else x
+)
+
+# Group and compute counts
+hh_child_work = (
+    final2_all
+    .groupby(['cnty_name','State','children','wfhworkers'])
+    .size()
+    .reset_index(name='HH')
+)
+
+# Totals per county/state
+hh_child_work['HH_county'] = (
+    hh_child_work.groupby(['cnty_name','State'])['HH']
+    .transform('sum')
+)
+
+# Shares
+hh_child_work['HH_county_share'] = (
+    hh_child_work['HH'] / hh_child_work['HH_county']
+)
+
+hh_child_work.to_csv(savedir + "/HH_CHILD_WORK.CSV", index=False)
 
 ##########################################
 # save additional files
