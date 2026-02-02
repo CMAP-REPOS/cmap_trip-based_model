@@ -76,15 +76,18 @@ for /f %%a in ('powershell -NoProfile -Command "%wfhHigh% * %DeclineScaled%"') d
 @echo     --- Model Run Settings ---
 @echo  Scenario = %sc%
 @echo  Create WFH validation file = %wfhFile%
-@echo  2019 Usual WFH share = %wfh%
-@echo  2019 WFH 1-4 days share = %tc14%
-@echo  2025/26 WFH low rate group share= %wfhLow%
-@echo  2025/26 WFH medium rate group share= %wfhMedium%
-@echo  2025/26 WFH high rate group share= %wfhHigh%
-@echo  Decline factor= %DeclineScaled%
-@echo  Scenario WFH low rate group share= %wfhLowSc%
-@echo  Scenario WFH medium rate group share= %wfhMediumSc%
-@echo  Scenario WFH high rate group share= %wfhHighSc%
+if %sc%==100 (
+    @echo  2019 Usual WFH share = %wfh%
+    @echo  2019 WFH 1-4 days share = %tc14%
+) else (
+    @echo  2025/26 WFH low rate group share= %wfhLow%
+    @echo  2025/26 WFH medium rate group share= %wfhMedium%
+    @echo  2025/26 WFH high rate group share= %wfhHigh%
+    @echo  Decline factor= %DeclineScaled%
+    @echo  Scenario WFH low rate group share= %wfhLowSc%
+    @echo  Scenario WFH medium rate group share= %wfhMediumSc%
+    @echo  Scenario WFH high rate group share= %wfhHighSc%
+)
 @echo ========================================
 @echo.
 rem
@@ -125,14 +128,6 @@ echo     * prep_macros\distribute.poes
 echo.
 echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 pause
-echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-echo.
-echo   WORK FROM HOME RATES
-echo.
-echo   Do the WFH rates and industry files need to be updated?
-echo.
-echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-pause
 echo.
 
 rem -- Run trip generation model. --
@@ -143,9 +138,9 @@ goto badscen
 
 :runit
 rem Supply project and run titles.
-set /p project="[ENTER PROJECT TITLE (E.G., c20q2)] "
+set /p project="[ENTER PROJECT TITLE (E.G., c26q2)] "
 echo.
-set /p run="[ENTER RUN TITLE (E.G., 100_20200330)] "
+set /p run="[ENTER RUN TITLE (E.G., 100_20260202)] "
 echo.
 
 set project=%project: =%
@@ -170,11 +165,17 @@ call %~dp0..\Scripts\manage\env\activate_env.cmd
 if %ERRORLEVEL% NEQ 0 (goto end)
 
 cd tg\scripts
+echo.
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo Updating Trip Generation inputs with UrbanSim data ...
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 python urbansim_update_tg_input_files.py
 if %ERRORLEVEL% NEQ 0 (goto urbansim_issue)
 @echo.
+echo.
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo Updating Heavy Truck Trip allocation weights with UrbanSim data ...
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 python urbansim_hcv_allocation.py
 if %ERRORLEVEL% NEQ 0 (goto hcv_issue)
 cd ..\fortran
@@ -184,11 +185,13 @@ set savedir="%cd%"
 cd wfhmodule
 set filedir="%cd%"
 echo.
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo Starting the work-from-home allocation model ...
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 if %val%==100 (
-    echo Running wfhflag_old.py ...
-    python wfhflag_old.py %filedir% %savedir% %wfhFile% %wfh% %tc14%
+    echo Running wfhflag_base.py ...
+    python wfhflag_base.py %filedir% %savedir% %wfhFile% %wfh% %tc14%
 ) else (
     echo Running wfhflag.py ...
     python wfhflag.py %filedir% %savedir% %wfhFile% %wfhLowSc% %wfhMediumSc% %wfhHighSc%
@@ -268,8 +271,6 @@ if exist tg.rpt (del tg.rpt)
 if exist report\stop_truck_distribution.txt (
     del report\stop_truck_distribution.txt
 )
-if not exist tg\fortran\MCHW_HH.TXT (goto filemiss1)
-copy tg\fortran\MCHW_HH.TXT MCHW_HH.TXT /y
 copy tg\fortran\TG_HHENUM_OUTPUT.TXT TG_HHENUM_OUTPUT.TXT /y
 echo.
 
@@ -347,10 +348,6 @@ goto end
 
 :wfh_issue
 echo !!! THE WORK FROM HOME ALLOCATION MODEL DID NOT RUN PROPERLY !!!
-goto end
-
-:filemiss1
-echo !!! tg\fortran\MCHW_HH.TXT DOES NOT EXIST !!!
 goto end
 
 :truck_balance_err

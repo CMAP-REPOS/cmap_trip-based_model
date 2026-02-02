@@ -25,7 +25,6 @@ geoinpath = savedir + "/GEOG_IN.TXT"
 #telework worker distribution by income, edu level and children
 incdistpath = "incdist.csv"
 edudistpath = "edudist.csv"
-chidistpath = "chidist.csv"
 
 # save additional output files?
 savefiles = sys.argv[3]
@@ -53,7 +52,6 @@ indpxwalk = pd.read_csv(indpxwalkpath)
 # Need to change if plan to get data from Telework.yaml
 incdist = pd.read_csv(incdistpath)
 edudist = pd.read_csv(edudistpath)
-chidist = pd.read_csv(chidistpath)
 
 # merge income2, edu2, trc get workers
 dfpop = dfpop.merge(indpxwalk, on='INDP', how='left')
