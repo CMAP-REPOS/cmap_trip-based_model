@@ -229,8 +229,6 @@ if exist report.txt (del report.txt /Q)
 if exist temp\nul (rmdir temp /S /Q)
 if not exist temp (mkdir temp)
 cd ..
-if not exist tg\fortran\MCHW_HH.TXT (goto filemiss1)
-copy tg\fortran\MCHW_HH.TXT MCHW_HH.TXT /y
 if not exist tg\data\m01auto.csv (goto filemiss2)
 if not exist tg\data\m01tg.txt (goto filemiss2)
 if not exist tg\data\m01type.csv (goto filemiss2)
@@ -464,13 +462,6 @@ REM ======================================================================
 REM       Missing Files
 REM       Open tod_factors.xls and create files
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-goto end
-
-:filemiss1
-@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO tg\fortran\MCHW_HH.TXT DOES NOT EXIST!!!
-@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-pause
 goto end
 
 :filemiss2

@@ -1,5 +1,5 @@
 # Project details
-model_version: c25q4
+model_version: c26q2
 scenario_code: 100
 # ---------------- Work from home module inputs (trip generation)
 validationfiles: N
@@ -23,4 +23,6 @@ UrbanSim_file: False
 RSP: False
 # ---------------- sourceCode will force CMAP-TRIP2 to use the source code in this model setup if set to True. Default is True.
 # ---------------- Set to False if this is the second of two simultaneous runs being submitted.
-sourceCode: True
+sourceCode: False
+# ---------------- PUMA version used in Trip Generation. 2010 is the current option.
+pumaVersion: 2010
