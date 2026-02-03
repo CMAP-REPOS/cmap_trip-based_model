@@ -1,0 +1,5 @@
+# ---------------- Work from home module inputs (trip generation) starting year 2025
+validationfiles: N
+wfhpctlow: 0.143
+wfhpctmedium: 0.232
+wfhpcthigh: 0.552

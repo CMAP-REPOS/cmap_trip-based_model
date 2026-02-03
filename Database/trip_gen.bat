@@ -48,17 +48,46 @@ for /f "eol=# skip=5 tokens=2 delims=:" %%c in (batch_file.yaml) do (set wfh=%%c
 :break3
 for /f "eol=# skip=6 tokens=2 delims=:" %%d in (batch_file.yaml) do (set tc14=%%d & goto break4)
 :break4
+
+rem -- Read model run settings from Telework.yaml --
+for /f "eol=# skip=2 tokens=2 delims=:" %%e in (Telework.yaml) do (set wfhLow=%%e & goto break5)
+:break5
+for /f "eol=# skip=3 tokens=2 delims=:" %%f in (Telework.yaml) do (set wfhMedium=%%f & goto break6)
+:break6
+for /f "eol=# skip=4 tokens=2 delims=:" %%g in (Telework.yaml) do (set wfhHigh=%%g & goto break7)
+:break7
+
 set sc=%sc:~1,3%
 set wfhFile=%wfhFile:~1%
 set wfh=%wfh:~1%
 set tc14=%tc14:~1%
+set wfhLow=%wfhLow:~1%
+set wfhMedium=%wfhMedium:~1%
+set wfhHigh=%wfhHigh:~1%
+
+for /f %%a in ('powershell -NoProfile -Command "(1000 + (200 - %sc%) * 1000 / 5000)/1000"') do set DeclineScaled=%%a
+for /f %%a in ('powershell -NoProfile -Command "%wfhLow% * %DeclineScaled%"') do set wfhLowSc=%%a
+for /f %%a in ('powershell -NoProfile -Command "%wfhMedium% * %DeclineScaled%"') do set wfhMediumSc=%%a
+for /f %%a in ('powershell -NoProfile -Command "%wfhHigh% * %DeclineScaled%"') do set wfhHighSc=%%a
+
+
 @echo.
 @echo ========================================
 @echo     --- Model Run Settings ---
 @echo  Scenario = %sc%
 @echo  Create WFH validation file = %wfhFile%
-@echo  Usual WFH share = %wfh%
-@echo  WFH 1-4 days share = %tc14%
+if %sc%==100 (
+    @echo  2019 Usual WFH share = %wfh%
+    @echo  2019 WFH 1-4 days share = %tc14%
+) else (
+    @echo  2025/26 WFH low rate group share= %wfhLow%
+    @echo  2025/26 WFH medium rate group share= %wfhMedium%
+    @echo  2025/26 WFH high rate group share= %wfhHigh%
+    @echo  Decline factor= %DeclineScaled%
+    @echo  Scenario WFH low rate group share= %wfhLowSc%
+    @echo  Scenario WFH medium rate group share= %wfhMediumSc%
+    @echo  Scenario WFH high rate group share= %wfhHighSc%
+)
 @echo ========================================
 @echo.
 rem
@@ -99,14 +128,6 @@ echo     * prep_macros\distribute.poes
 echo.
 echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 pause
-echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-echo.
-echo   WORK FROM HOME RATES
-echo.
-echo   Do the WFH rates and industry files need to be updated?
-echo.
-echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-pause
 echo.
 
 rem -- Run trip generation model. --
@@ -117,9 +138,9 @@ goto badscen
 
 :runit
 rem Supply project and run titles.
-set /p project="[ENTER PROJECT TITLE (E.G., c20q2)] "
+set /p project="[ENTER PROJECT TITLE (E.G., c26q2)] "
 echo.
-set /p run="[ENTER RUN TITLE (E.G., 100_20200330)] "
+set /p run="[ENTER RUN TITLE (E.G., 100_20260202)] "
 echo.
 
 set project=%project: =%
@@ -144,11 +165,17 @@ call %~dp0..\Scripts\manage\env\activate_env.cmd
 if %ERRORLEVEL% NEQ 0 (goto end)
 
 cd tg\scripts
+echo.
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo Updating Trip Generation inputs with UrbanSim data ...
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 python urbansim_update_tg_input_files.py
 if %ERRORLEVEL% NEQ 0 (goto urbansim_issue)
 @echo.
+echo.
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo Updating Heavy Truck Trip allocation weights with UrbanSim data ...
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 python urbansim_hcv_allocation.py
 if %ERRORLEVEL% NEQ 0 (goto hcv_issue)
 cd ..\fortran
@@ -158,9 +185,18 @@ set savedir="%cd%"
 cd wfhmodule
 set filedir="%cd%"
 echo.
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo Starting the work-from-home allocation model ...
-echo  wfh arguments: %filedir% %savedir% %wfhFile% %wfh% %tc14%
-python wfhflag.py %filedir% %savedir% %wfhFile% %wfh% %tc14%
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+if %val%==100 (
+    echo Running wfhflag_base.py ...
+    python wfhflag_base.py %filedir% %savedir% %wfhFile% %wfh% %tc14%
+) else (
+    echo Running wfhflag.py ...
+    python wfhflag.py %filedir% %savedir% %wfhFile% %wfhLowSc% %wfhMediumSc% %wfhHighSc%
+)
+
 if %ERRORLEVEL% NEQ 0 (goto wfh_issue)
 cd ..
 
@@ -235,8 +271,6 @@ if exist tg.rpt (del tg.rpt)
 if exist report\stop_truck_distribution.txt (
     del report\stop_truck_distribution.txt
 )
-if not exist tg\fortran\MCHW_HH.TXT (goto filemiss1)
-copy tg\fortran\MCHW_HH.TXT MCHW_HH.TXT /y
 copy tg\fortran\TG_HHENUM_OUTPUT.TXT TG_HHENUM_OUTPUT.TXT /y
 echo.
 
@@ -314,10 +348,6 @@ goto end
 
 :wfh_issue
 echo !!! THE WORK FROM HOME ALLOCATION MODEL DID NOT RUN PROPERLY !!!
-goto end
-
-:filemiss1
-echo !!! tg\fortran\MCHW_HH.TXT DOES NOT EXIST !!!
 goto end
 
 :truck_balance_err
