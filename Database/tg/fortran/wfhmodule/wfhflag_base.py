@@ -15,7 +15,7 @@ os.chdir(sys.argv[1])
 synpoppath = "synthetic_persons.zip"
 synhhpath = "synthetic_households.zip"
 popsynhhpath = savedir + "/POPSYN_HH.csv"
-incdistpath = "incdist.csv"
+incdistpath = "incdist_base.csv"
 indmixpath = "indusmix.csv"
 indpxwalkpath = "indp_naics.csv"
 db = Path(__file__).resolve().parents[3]  # database folder
