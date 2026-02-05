@@ -1,10 +1,3 @@
-<<<<<<< Updated upstream
-# ---------------- Work from home module inputs (trip generation) starting year 2025
-validationfiles: N
-wfhpctlow: 0.143
-wfhpctmedium: 0.232
-wfhpcthigh: 0.552
-=======
 # Project details
 model_version: c25q4
 scenario_code: 200
@@ -45,4 +38,3 @@ inc:
   low:
     1: 0.353
     2: 0.647
->>>>>>> Stashed changes
