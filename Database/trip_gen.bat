@@ -39,23 +39,23 @@ rem --------
 rem In case CMD.exe is doing stuff in the wrong directory, this command
 rem changes the directory to where the batch file was called from.
 cd %~dp0
-rem -- Read model run settings from batch_file.yaml --
-for /f "eol=# skip=2 tokens=2 delims=:" %%a in (batch_file.yaml) do (set sc=%%a & goto break1)
-:break1
-for /f "eol=# skip=4 tokens=2 delims=:" %%b in (batch_file.yaml) do (set wfhFile=%%b & goto break2)
-:break2
-for /f "eol=# skip=5 tokens=2 delims=:" %%c in (batch_file.yaml) do (set wfh=%%c & goto break3)
-:break3
-for /f "eol=# skip=6 tokens=2 delims=:" %%d in (batch_file.yaml) do (set tc14=%%d & goto break4)
-:break4
-
 rem -- Read model run settings from Telework.yaml --
-for /f "eol=# skip=2 tokens=2 delims=:" %%e in (Telework.yaml) do (set wfhLow=%%e & goto break5)
+for /f "eol=# skip=2 tokens=2 delims=:" %%a in (Telework.yaml) do (set sc=%%a & goto break1)
+:break1
+for /f "eol=# skip=4 tokens=2 delims=:" %%b in (Telework.yaml) do (set wfhFile=%%b & goto break2)
+:break2
+for /f "eol=# skip=5 tokens=2 delims=:" %%c in (Telework.yaml) do (set wfh=%%c & goto break3)
+:break3
+for /f "eol=# skip=6 tokens=2 delims=:" %%d in (Telework.yaml) do (set tc14=%%d & goto break4)
+:break4
+for /f "eol=# skip=8 tokens=2 delims=:" %%e in (Telework.yaml) do (set wfhLow=%%e & goto break5)
 :break5
-for /f "eol=# skip=3 tokens=2 delims=:" %%f in (Telework.yaml) do (set wfhMedium=%%f & goto break6)
+for /f "eol=# skip=9 tokens=2 delims=:" %%f in (Telework.yaml) do (set wfhMedium=%%f & goto break6)
 :break6
-for /f "eol=# skip=4 tokens=2 delims=:" %%g in (Telework.yaml) do (set wfhHigh=%%g & goto break7)
+for /f "eol=# skip=10 tokens=2 delims=:" %%g in (Telework.yaml) do (set wfhHigh=%%g & goto break7)
 :break7
+for /f "eol=# skip=11 tokens=2 delims=:" %%g in (Telework.yaml) do (set declineScaled=%%g & goto break8)
+:break8
 
 set sc=%sc:~1,3%
 set wfhFile=%wfhFile:~1%
@@ -64,12 +64,7 @@ set tc14=%tc14:~1%
 set wfhLow=%wfhLow:~1%
 set wfhMedium=%wfhMedium:~1%
 set wfhHigh=%wfhHigh:~1%
-
-for /f %%a in ('powershell -NoProfile -Command "(1000 + (200 - %sc%) * 1000 / 5000)/1000"') do set DeclineScaled=%%a
-for /f %%a in ('powershell -NoProfile -Command "%wfhLow% * %DeclineScaled%"') do set wfhLowSc=%%a
-for /f %%a in ('powershell -NoProfile -Command "%wfhMedium% * %DeclineScaled%"') do set wfhMediumSc=%%a
-for /f %%a in ('powershell -NoProfile -Command "%wfhHigh% * %DeclineScaled%"') do set wfhHighSc=%%a
-
+set declineScaled=%declineScaled:~1%
 
 @echo.
 @echo ========================================
@@ -83,10 +78,7 @@ if %sc%==100 (
     @echo  2025/26 WFH low rate group share= %wfhLow%
     @echo  2025/26 WFH medium rate group share= %wfhMedium%
     @echo  2025/26 WFH high rate group share= %wfhHigh%
-    @echo  Decline factor= %DeclineScaled%
-    @echo  Scenario WFH low rate group share= %wfhLowSc%
-    @echo  Scenario WFH medium rate group share= %wfhMediumSc%
-    @echo  Scenario WFH high rate group share= %wfhHighSc%
+    @echo  Decline factor= %declineScaled%
 )
 @echo ========================================
 @echo.
@@ -191,10 +183,10 @@ echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 if %val%==100 (
     echo Running wfhflag_base.py ...
-    python wfhflag_base.py %filedir% %savedir% %wfhFile% %wfh% %tc14%
+    python wfhflag_base.py %filedir% %savedir% %wfhFile%
 ) else (
     echo Running wfhflag.py ...
-    python wfhflag.py %filedir% %savedir% %wfhFile% %wfhLowSc% %wfhMediumSc% %wfhHighSc%
+    python wfhflag.py %filedir% %savedir% %wfhFile%
 )
 
 if %ERRORLEVEL% NEQ 0 (goto wfh_issue)
