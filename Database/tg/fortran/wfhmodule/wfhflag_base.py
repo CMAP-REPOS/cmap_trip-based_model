@@ -3,6 +3,11 @@
 # this flags tbm people as usualwfh or tc14
 import pandas as pd
 import numpy as np
+<<<<<<< Updated upstream
+=======
+from pathlib import Path
+import yaml
+>>>>>>> Stashed changes
 import sys
 import os
 
@@ -16,14 +21,27 @@ popsynhhpath = savedir + "/POPSYN_HH.csv"
 incdistpath = "incdist.csv"
 indmixpath = "indusmix.csv"
 indpxwalkpath = "indp_naics.csv"
+<<<<<<< Updated upstream
 
+=======
+db = Path(__file__).resolve().parents[3]  # database folder
+with open(os.path.join(db, 'Telework.yaml')) as f:
+    lines_without_backslashes = ''.join([line.replace('\\','/') for line in f])
+    wfh_data = yaml.safe_load(lines_without_backslashes)
+>>>>>>> Stashed changes
 # save additional output files?
 savefiles = sys.argv[3]
 
 # major parameters - source: mdt + nirpc survey (which is higher than PUMS data...)
+<<<<<<< Updated upstream
 # percent of all workers
 usualwfhpct = float(sys.argv[4])
 tc14pct = float(sys.argv[5])
+=======
+# Read WFH data from YAML file
+usualwfhpct = wfh_data['usualwfhpct']
+tc14pct = wfh_data['tc14pct']
+>>>>>>> Stashed changes
 
 # set seedvalue
 seedvalue = 2

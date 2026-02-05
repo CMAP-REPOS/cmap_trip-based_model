@@ -1,5 +1,48 @@
+<<<<<<< Updated upstream
 # ---------------- Work from home module inputs (trip generation) starting year 2025
 validationfiles: N
 wfhpctlow: 0.143
 wfhpctmedium: 0.232
 wfhpcthigh: 0.552
+=======
+# Project details
+model_version: c25q4
+scenario_code: 200
+# ---------------- Work from home module inputs (trip generation)
+validationfiles: N
+usualwfhpct: 0.0510
+tc14pct: 0.1031
+# ---------------- New Work from home module inputs (trip generation)
+wfhpctlow: 0.143
+wfhpctmedium: 0.232
+wfhpcthigh: 0.552
+declinerate: 0.1
+# ---------------- Education portion of WFH workers
+# ---------------- Group by high/medium/low WFH rates
+# ---------------- 1 for Lower edu level
+# ---------------- 2 for Higher edu level
+edu:
+  high:
+    1: 0.202
+    2: 0.798
+  medium:
+    1: 0.268
+    2: 0.732
+  low:
+    1: 0.305
+    2: 0.695
+# ---------------- Income portion of WFH workers
+# ---------------- Group by high/medium/low WFH rates
+# ---------------- 1 for Lower income level
+# ---------------- 2 for Higher income level
+inc:
+  high:
+    1: 0.231
+    2: 0.769
+  medium:
+    1: 0.418
+    2: 0.582
+  low:
+    1: 0.353
+    2: 0.647
+>>>>>>> Stashed changes

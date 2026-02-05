@@ -3,6 +3,8 @@
 # this flags tbm people as usualwfh or tc14
 import pandas as pd
 import numpy as np
+from pathlib import Path
+import yaml
 import sys
 import os
 
@@ -22,14 +24,22 @@ popsynhhpath = savedir + "/POPSYN_HH.csv"
 indpxwalkpath = "indp_naics.csv"
 geoinpath = savedir + "/GEOG_IN.TXT"
 
+<<<<<<< Updated upstream
 #telework worker distribution by income, edu level and children
 incdistpath = "incdist.csv"
 edudistpath = "edudist.csv"
+=======
+db = Path(__file__).resolve().parents[3]  # database folder
+with open(os.path.join(db, 'Telework.yaml')) as f:
+    lines_without_backslashes = ''.join([line.replace('\\','/') for line in f])
+    wfh_data = yaml.safe_load(lines_without_backslashes)
+>>>>>>> Stashed changes
 
 # save additional output files?
 savefiles = sys.argv[3]
 
 # major parameters - source: mdt + nirpc survey (which is higher than PUMS data...)
+<<<<<<< Updated upstream
 # percent of all workers
 
 ''' This data will be separated from batch_file.yaml to Telework.yaml including Tuesday-Thursday telework rates'''
@@ -39,6 +49,25 @@ wfhm = float(sys.argv[5])
 wfhh = float(sys.argv[6])
 
 wfhpctlist = [wfhl, wfhm, wfhh]
+=======
+scen_yr = wfh_data['scenario_code']
+
+# Assume decline_rate from 2025 to 2050, 
+decline_rate = wfh_data['declinerate']
+
+# Based on year gap calculate the adjust rate from 2025 to scenaior year
+scen_yr_adj_rate = 1 - decline_rate * (scen_yr - 200)/500
+wfhl = wfh_data['wfhpctlow'] * scen_yr_adj_rate
+wfhm = wfh_data['wfhpctmedium'] * scen_yr_adj_rate
+wfhh = wfh_data['wfhpcthigh'] * scen_yr_adj_rate
+
+# Combine to list for easy loop process
+wfhpctlist = [wfhl, wfhm, wfhh]
+
+# Read income and eduction portion for different WFH rate group from YAML file
+incdist_dict = wfh_data['inc']
+edudist_dict = wfh_data['edu']
+>>>>>>> Stashed changes
 
 # set seedvalue
 seedvalue = 2
@@ -48,10 +77,13 @@ np.random.seed(seed=seedvalue)
 dfpop = pd.read_csv(synpoppath)
 dfhh = pd.read_csv(synhhpath, dtype={'MV': object})
 indpxwalk = pd.read_csv(indpxwalkpath)
+<<<<<<< Updated upstream
 
 # Need to change if plan to get data from Telework.yaml
 incdist = pd.read_csv(incdistpath)
 edudist = pd.read_csv(edudistpath)
+=======
+>>>>>>> Stashed changes
 
 # merge income2, edu2, trc get workers
 dfpop = dfpop.merge(indpxwalk, on='INDP', how='left')
@@ -69,6 +101,7 @@ workers.loc[workers.SCHL.isin([21, 22, 23, 24]), 'edu'] = 2
 workers.loc[:, 'selected'] = 0
 workers = workers[workers['ESR'] != '4']
 
+<<<<<<< Updated upstream
 # telework distribution
 inc_values = incdist.iloc[:, 2].astype(float).tolist()
 edu_values = edudist.iloc[:, 2].astype(float).tolist()
@@ -86,6 +119,8 @@ edudist_dict = {
     "low": {1: edu_values[4], 2: edu_values[5]},
 }
 
+=======
+>>>>>>> Stashed changes
 def samplingworkers(df, wfhpctlist):
     df = df.copy()
     
