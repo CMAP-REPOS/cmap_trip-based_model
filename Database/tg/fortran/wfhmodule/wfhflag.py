@@ -23,17 +23,22 @@ with open(os.path.join(db, 'Telework.yaml')) as f:
     lines_without_backslashes = ''.join([line.replace('\\','/') for line in f])
     wfh_data = yaml.safe_load(lines_without_backslashes)
 
+with open(os.path.join(db, 'batch_file.yaml')) as f:
+    lines_without_backslashes = ''.join([line.replace('\\','/') for line in f])
+    bath_data = yaml.safe_load(lines_without_backslashes)
+
 # save additional output files?
 savefiles = sys.argv[3]
 
 # major parameters - source: mdt + nirpc survey (which is higher than PUMS data...)
-scen_yr = wfh_data['scenario_code']
+scen_yr = bath_data['scenario_code']
+real_yr = bath_data[scen_yr]
 
-# Assume decline_rate from 2025 to 2050, 
+# Assume decline_rate from 2026 to 2050, 
 decline_rate = wfh_data['declinerate']
 
-# Based on year gap calculate the adjust rate from 2025 to scenaior year
-scen_yr_adj_rate = 1 - decline_rate * (scen_yr - 200)/500
+# Based on year gap calculate the adjust rate from 2026 to scenaior year
+scen_yr_adj_rate = 1 - (real_yr-2026)/(2050-2026) * decline_rate
 wfhl = wfh_data['wfhpctlow'] * scen_yr_adj_rate
 wfhm = wfh_data['wfhpctmedium'] * scen_yr_adj_rate
 wfhh = wfh_data['wfhpcthigh'] * scen_yr_adj_rate
