@@ -1,5 +1,3 @@
-# Project details
-model_version: c25q4
 # ---------------- Work from home module inputs (trip generation)
 validationfiles: N
 usualwfhpct: 0.0510

@@ -40,21 +40,21 @@ rem In case CMD.exe is doing stuff in the wrong directory, this command
 rem changes the directory to where the batch file was called from.
 cd %~dp0
 rem -- Read model run settings from Telework.yaml --
-for /f "eol=# skip=2 tokens=2 delims=:" %%a in (Telework.yaml) do (set sc=%%a & goto break1)
+for /f "eol=# skip=2 tokens=2 delims=:" %%a in (batch_file.yaml) do (set sc=%%a & goto break1)
 :break1
-for /f "eol=# skip=4 tokens=2 delims=:" %%b in (Telework.yaml) do (set wfhFile=%%b & goto break2)
+for /f "eol=# skip=1 tokens=2 delims=:" %%b in (Telework.yaml) do (set wfhFile=%%b & goto break2)
 :break2
-for /f "eol=# skip=5 tokens=2 delims=:" %%c in (Telework.yaml) do (set wfh=%%c & goto break3)
+for /f "eol=# skip=2 tokens=2 delims=:" %%c in (Telework.yaml) do (set wfh=%%c & goto break3)
 :break3
-for /f "eol=# skip=6 tokens=2 delims=:" %%d in (Telework.yaml) do (set tc14=%%d & goto break4)
+for /f "eol=# skip=3 tokens=2 delims=:" %%d in (Telework.yaml) do (set tc14=%%d & goto break4)
 :break4
-for /f "eol=# skip=8 tokens=2 delims=:" %%e in (Telework.yaml) do (set wfhLow=%%e & goto break5)
+for /f "eol=# skip=5 tokens=2 delims=:" %%e in (Telework.yaml) do (set wfhLow=%%e & goto break5)
 :break5
-for /f "eol=# skip=9 tokens=2 delims=:" %%f in (Telework.yaml) do (set wfhMedium=%%f & goto break6)
+for /f "eol=# skip=6 tokens=2 delims=:" %%f in (Telework.yaml) do (set wfhMedium=%%f & goto break6)
 :break6
-for /f "eol=# skip=10 tokens=2 delims=:" %%g in (Telework.yaml) do (set wfhHigh=%%g & goto break7)
+for /f "eol=# skip=7 tokens=2 delims=:" %%g in (Telework.yaml) do (set wfhHigh=%%g & goto break7)
 :break7
-for /f "eol=# skip=11 tokens=2 delims=:" %%g in (Telework.yaml) do (set declineScaled=%%g & goto break8)
+for /f "eol=# skip=8 tokens=2 delims=:" %%g in (Telework.yaml) do (set declineScaled=%%g & goto break8)
 :break8
 
 set sc=%sc:~1,3%
