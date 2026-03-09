@@ -33,34 +33,25 @@ for /f "eol=# skip=1 tokens=2 delims=:" %%z in (batch_file.yaml) do (set ver=%%z
 :break0
 for /f "eol=# skip=2 tokens=2 delims=:" %%a in (batch_file.yaml) do (set val=%%a & goto break1)
 :break1
-for /f "eol=# skip=4 tokens=2 delims=:" %%b in (batch_file.yaml) do (set wfhFile=%%b & goto break2)
+for /f "eol=# skip=5 tokens=2 delims=:" %%e in (batch_file.yaml) do (set selLinkFile=%%e & goto break2)
 :break2
-for /f "eol=# skip=5 tokens=2 delims=:" %%c in (batch_file.yaml) do (set wfh=%%c & goto break3)
+for /f "eol=# skip=8 tokens=2* delims=:" %%g in (batch_file.yaml) do (set transactFilePath1=%%g & set transactFilePath2=%%h & goto break3)
 :break3
-for /f "eol=# skip=6 tokens=2 delims=:" %%d in (batch_file.yaml) do (set tc14=%%d & goto break4)
+for /f "eol=# skip=10 tokens=2 delims=:" %%f in (batch_file.yaml) do (set transitAsmt=%%f & goto break4)
 :break4
-for /f "eol=# skip=9 tokens=2 delims=:" %%e in (batch_file.yaml) do (set selLinkFile=%%e & goto break5)
+for /f "eol=# skip=12 tokens=2 delims=:" %%i in (batch_file.yaml) do (set selLineFile=%%i & goto break5)
 :break5
-for /f "eol=# skip=12 tokens=2* delims=:" %%g in (batch_file.yaml) do (set transactFilePath1=%%g & set transactFilePath2=%%h & goto break6)
+for /f "eol=# skip=14 tokens=2 delims=:" %%j in (batch_file.yaml) do (set utilFile=%%j & goto break6)
 :break6
-for /f "eol=# skip=14 tokens=2 delims=:" %%f in (batch_file.yaml) do (set transitAsmt=%%f & goto break7)
+for /f "eol=# skip=16 tokens=2 delims=:" %%k in (batch_file.yaml) do (set UrbansimFile=%%k & goto break7)
 :break7
-for /f "eol=# skip=16 tokens=2 delims=:" %%i in (batch_file.yaml) do (set selLineFile=%%i & goto break8)
+for /f "eol=# skip=18 tokens=2 delims=:" %%l in (batch_file.yaml) do (set RSPrun=%%l & goto break8)
 :break8
-for /f "eol=# skip=18 tokens=2 delims=:" %%j in (batch_file.yaml) do (set utilFile=%%j & goto break9)
+for /f "eol=# skip=21 tokens=2 delims=:" %%m in (batch_file.yaml) do (set srcCode=%%m & goto break9)
 :break9
-for /f "eol=# skip=20 tokens=2 delims=:" %%k in (batch_file.yaml) do (set UrbansimFile=%%k & goto break10)
-:break10
-for /f "eol=# skip=22 tokens=2 delims=:" %%l in (batch_file.yaml) do (set RSPrun=%%l & goto break11)
-:break11
-for /f "eol=# skip=25 tokens=2 delims=:" %%m in (batch_file.yaml) do (set srcCode=%%m & goto break12)
-:break12
 
 set ver=%ver:~1,5%
 set val=%val:~1,3%
-set wfhFile=%wfhFile:~1%
-set wfh=%wfh:~1%
-set tc14=%tc14:~1%
 set selLinkFile=%selLinkFile:~1%
 set transitAsmt=%transitAsmt:~1,1%
 rem Construct complete transit file path
@@ -96,9 +87,6 @@ cd Database
 @echo     --- Model Run Settings ---
 @echo  Conformity version = %ver%
 @echo  Scenario = %val%
-@echo  Create WFH validation file = %wfhFile%
-@echo  Usual WFH share = %wfh%
-@echo  WFH 1-4 days share = %tc14%
 @echo  Highway assignment select link files = %selLinkFile%
 @echo  Location of network transaction files = %transactFilePath%
 @echo  Run transit assignment = %transitAsmt%

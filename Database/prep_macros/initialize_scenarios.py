@@ -54,6 +54,7 @@ with open(os.path.join(db, 'batch_file.yaml')) as f:
     config = yaml.safe_load(lines_without_backslashes)
 scen_yr = config['scenario_code']  # e.g., '200'
 batchin_path = config['transactionFilePath']  # e.g., M:/catslib/modelprod/c24q2
+real_yr = config[scen_yr]
 
 hwy_batchin_dir = os.path.join(batchin_path, 'highway')
 trn_batchin_dir = os.path.join(batchin_path, 'transit')
@@ -392,23 +393,12 @@ print('completed highway batchin. proceeding to transit...')
 ## BUILD TRANSIT ASSIGNMENT SCENARIO NETWORKS 
 #######################
 
-scen_yr = str(scen_yr) #just to ensure it works here - convert to string
-scen3_yr4 = {
-    '100': 2019,
-    '200': 2025, 
-    '300': 2030,
-    '400': 2035,
-    '500': 2040,
-    '600': 2045,
-    '700': 2050
-}
-
 network_batchin_list = [
     #[{transit asmt scenario number}, {transaction file time-of-day suffix}, {name of scenario}]
-    [int(scen_yr)+21, 1, f'{scen3_yr4[scen_yr]} Night (6pm-6am)'],
-    [int(scen_yr)+23, 2, f'{scen3_yr4[scen_yr]} AM (6am-9am)'],
-    [int(scen_yr)+25, 3, f'{scen3_yr4[scen_yr]} Midday (9am-4pm)'],
-    [int(scen_yr)+27, 4, f'{scen3_yr4[scen_yr]} PM (4pm-6pm)']
+    [int(scen_yr)+21, 1, f'{real_yr} Night (6pm-6am)'],
+    [int(scen_yr)+23, 2, f'{real_yr} AM (6am-9am)'],
+    [int(scen_yr)+25, 3, f'{real_yr} Midday (9am-4pm)'],
+    [int(scen_yr)+27, 4, f'{real_yr} PM (4pm-6pm)']
 ]
 
 for asmt_scen in network_batchin_list:
@@ -799,14 +789,14 @@ today = str(date.today().strftime('%Y%m%d'))
 copy_scenario(
             from_scenario = emmebank.scenario(int(scen_yr)+23),
             scenario_id = int(scen_yr)+3,
-            scenario_title = f'{scen3_yr4[scen_yr]} am (6am-9am) transit skim network - {today}',
+            scenario_title = f'{real_yr} am (6am-9am) transit skim network - {today}',
 			copy_linkshapes=True,
             overwrite=True
         )
 copy_scenario(
             from_scenario = emmebank.scenario(int(scen_yr)+25),
             scenario_id = int(scen_yr)+5,
-            scenario_title = f'{scen3_yr4[scen_yr]} midday (9am-4pm) transit skim network - {today}',
+            scenario_title = f'{real_yr} midday (9am-4pm) transit skim network - {today}',
 			copy_linkshapes=True,
             overwrite=True
         )
