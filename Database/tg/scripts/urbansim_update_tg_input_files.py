@@ -85,7 +85,7 @@ newFiles = []
 for item in dirListing:
     newFiles.append(UrbanSim_path / item)
 
-print("{0} {1} {2} {3} {4} {5} \n".format(newFiles[0], newFiles[1], newFiles[2],
+print("{0} \n{1} \n{2} \n{3} \n{4} \n{5} \n".format(newFiles[0], newFiles[1], newFiles[2],
 										  newFiles[3], newFiles[4], newFiles[5]))
 
 # ----------------------------------------------------------------------------
@@ -205,7 +205,7 @@ hhs.drop(['ADULT','WORKER','CHILD','AGE_INDEX','INCOME','VEH','HHTYPE','HHVTYPE'
 #---------------------------------------------------------------------------------------------------------------------#
 
 ### --- Convert SERIALNO to integers --- ###
-hhs['serialno'] = hhs['serialno'].str.replace('HU', '99', regex=False)
+hhs['serialno'] = hhs['serialno'].astype(str).str.replace('HU', '99', regex=False)
 hhs['serialno'] = hhs['serialno'].astype(np.int64) 
 print(" --> Total Households: {0:,}".format(hhs.shape[0]))
 hhs['income_2019_usd'] = round(hhs['income_2019_usd'],2)
@@ -224,12 +224,25 @@ hhsData['rowcol'] = hhsData['rowcol'].astype(int)
 hhsData['adults'] = hhsData['adults'].astype(int) 
 hhsData['adult_workers'] = hhsData['adult_workers'].astype(int) 
 hhsData['children_15_under'] = hhsData['children_15_under'].astype(int)
+
+#urbansim data on or after 2026 has puma_id column
+if 'puma_id' in hhsData.columns:
+	hhsData['puma_id'] = hhsData['puma_id'].astype(int)
+ 
 ## -- Set 2010 PUMA values, if needed -- ##
 if puma == 2010:
-	geo.eval('puma_id = floor(county/1000) * 100000 + stpuma5', inplace=True)
-	geo['puma_id'] = geo['puma_id'].astype(int) 
-	geo2 = geo[['subzone_id', 'puma_id']].copy()
-	hhsData = hhsData.merge(geo2, how='left', on='subzone_id', copy=False)
+    geo.eval('puma_id_2010 = floor(county/1000) * 100000 + stpuma5', inplace=True)
+    geo['puma_id_2010'] = geo['puma_id_2010'].astype(int) 
+    geo2 = geo[['subzone_id', 'puma_id_2010']].copy()
+    hhsData = hhsData.merge(geo2, how='left', on='subzone_id', copy=False)
+    
+    if 'puma_id' in hhsData.columns:
+        puma_mismatch = hhsData.loc[hhsData['puma_id'].astype(int) != hhsData['puma_id_2010']] 
+        if len(puma_mismatch>0):
+            print('puma in urbansim input files is 2020. converting to 2010.')
+            hhsData['puma_id'] = hhsData['puma_id_2010']
+    else:
+    	hhsData['puma_id'] = hhsData['puma_id_2010']
 
 # Trip Generation model Fortran code expects this sort order
 hhsData.sort_values(by=['HH_id'], inplace=True)              				
@@ -291,8 +304,16 @@ persData.loc[persData.JWTR.isnull(),'JWTR'] = 'bb'
 persData.loc[persData.ESR.isnull(),'ESR'] = 'b'
 persData.loc[persData.SCHL.isnull(),'SCHL'] = 'bb'
 persData['INDP'] = persData['INDP'].astype(int)
-persData.drop(['person_id','member_id','age','hh_relationship','education','race_id','sex',
-			   'hours','income','student_status','worker_status'], axis=1, inplace=True)
+# change in schema post-2026, some of these no longer exist -- change to keeping some cols instead of dropping
+# persData.drop(['person_id','member_id','age','hh_relationship','education','race_id','sex',
+# 			   'hours','income','student_status','worker_status'], axis=1, inplace=True)
+keepcols = [
+    'household_id', 'per_num', 'JWTR', 
+    'INDP', 'ESR', 'SEX', 'AGEP', 
+    'SCHL', 'RAC1P'
+]
+persData = persData[keepcols].copy()
+
 persData = persData[~persData.household_id.isnull()]
 print('  --> QC: Person file contains null values: {0}'.format(persData.isnull().values.any()))
 persData.sort_values(by=['household_id','per_num'], inplace=True)
@@ -357,11 +378,14 @@ szData['pef'] = szData['pef'].round(2)
 szData.to_csv(attr_file, columns=['subzone_id','jobs_retail_44_45','total_jobs',
 								  'highEarn'], header=False, index=False)
 print(" --> {0:,} records written to {1}".format(szData.shape[0], attr_file))
+#accommodate change in schema post-2026 -- fix "househols" typo to "households", if exists
+szData.rename(columns={c: c.replace('househols','households') for c in szData.columns}, inplace=True)
+
 szData.to_csv(hh_file, columns=['subzone_id','total_households','total_adults',
 								'total_adult_workers','total_children_15_under',
 								'households_income_30k_less','income_category2_hhs',
 								'income_category3_hhs','income_category4_hhs',
-								'househols_head_35_less','age_householder_category2_hhs',
+								'households_head_35_less','age_householder_category2_hhs',
 								'age_householder_category3_hhs','commuteShare','pef'],
 								header=False, index=False)
 
