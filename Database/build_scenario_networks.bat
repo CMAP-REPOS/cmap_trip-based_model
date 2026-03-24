@@ -11,7 +11,7 @@ for /f "eol=# skip=1 tokens=2 delims=:" %%z in (batch_file.yaml) do (set ver=%%z
 :break0
 for /f "eol=# skip=2 tokens=2 delims=:" %%a in (batch_file.yaml) do (set val=%%a & goto break1)
 :break1
-for /f "eol=# skip=12 tokens=2* delims=:" %%g in (batch_file.yaml) do (set transactFilePath1=%%g & set transactFilePath2=%%h & goto break6)
+for /f "eol=# skip=8 tokens=2* delims=:" %%g in (batch_file.yaml) do (set transactFilePath1=%%g & set transactFilePath2=%%h & goto break6)
 :break6
 
 set ver=%ver:~1,5%
