@@ -349,7 +349,7 @@ szs = szTemplate.merge(szs, how='left', on='subzone_id', copy=False)
 print(" --> Total Subzones: {0:,}".format(szs.shape[0]))
 print('  --> QC: Households in subzone file: {0:,}'.format(szs['total_households'].sum()))
 ## -- Read in original ATTR_IN to get highEarn -- ##
-jobs = pd.read_csv(attr_r, sep=',', header=None, usecols=[0, 3])	
+jobs = pd.read_csv(attr_r, sep=',', header=None, usecols=[0, 1])	
 jobs.columns=['subzone_id','highEarn']
 ## -- Read in original HH_IN to get private auto commute share and sidewalk density-- ##
 # read the HH_IN file in to determine its vintage
@@ -362,7 +362,7 @@ elif len(test.columns) == 36:
 	szhh = pd.read_csv(hh_r, sep=',', header=None, usecols=[0, 34, 35])		
 else:
 	# 2026 LRTP HH_IN.TXT file format (begin c26q2)	
-	szhh = pd.read_csv(hh_r, sep=',', header=None, usecols=[0, 12, 13])		
+	szhh = pd.read_csv(hh_r, sep=',', header=None, usecols=[0, 1, 2])		
 
 szhh.columns=['subzone_id','commuteShare','pef']
 ## -- Merge files -- ##
