@@ -27,18 +27,25 @@ with open(os.path.join(db, 'batch_file.yaml')) as f:
     lines_without_backslashes = ''.join([line.replace('\\','/') for line in f])
     batch_data = yaml.safe_load(lines_without_backslashes)
 
+# find and read config file
+config_file = Path(__file__).resolve().parents[4].joinpath('Scripts','prepare',
+                                                           'conformity_scenario',
+                                                           'hand','config.yaml')    
+with open(config_file) as f:
+    config = yaml.safe_load(f)
+
 # save additional output files?
 savefiles = sys.argv[3]
 
-# major parameters - source: mdt + nirpc survey (which is higher than PUMS data...)
-scen_yr = batch_data['scenario_code']
-real_yr = batch_data[scen_yr]
+# scenario code and year
+scen_code = batch_data['scenario_code']
+real_year = config['scenario_years'][scen_code]
 
 # Assume decline_rate from 2026 to 2050, 
 decline_rate = wfh_data['declinerate']
 
 # Based on year gap calculate the adjust rate from 2026 to scenaior year
-scen_yr_adj_rate = 1 - (real_yr-2026)/(2050-2026) * decline_rate
+scen_yr_adj_rate = 1 - (real_year-2026)/(2050-2026) * decline_rate
 print('Telework decline rate applied: {0:.4f}'.format(scen_yr_adj_rate))
 wfhl = wfh_data['wfhpctlow'] * scen_yr_adj_rate
 wfhm = wfh_data['wfhpctmedium'] * scen_yr_adj_rate

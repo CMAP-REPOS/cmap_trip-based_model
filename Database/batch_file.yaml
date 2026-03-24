@@ -22,12 +22,4 @@ RSP: False
 sourceCode: False
 # ---------------- PUMA version used in Trip Generation. 2010 is the current option.
 pumaVersion: 2010
-# ---------------- Scenario number to year
-100: 2019
-200: 2026
-300: 2030
-400: 2032
-500: 2035
-600: 2040
-700: 2045
-800: 2050
+
