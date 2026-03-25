@@ -45,9 +45,8 @@ fortran_path = Path(__file__).resolve().parents[1].joinpath('fortran')
 hhtypeCat_file = fortran_path / 'tg_hhtype_lookup.csv'
 hhvtypeCat_file = fortran_path / 'tg_hhvtype_lookup.csv'
 geog_file  = fortran_path / 'GEOG_IN.TXT'
+sz_data = fortran_path / 'subzone_tg_data.txt'
 # -- files renamed
-attr_r = fortran_path / 'ATTR_INr.TXT'
-hh_r = fortran_path / 'HH_INr.TXT'
 popsyn_r = fortran_path / 'POPSYN_HHr.CSV'
 
 # ----------------------------------------------------------------------------
@@ -91,14 +90,9 @@ print("{0} \n{1} \n{2} \n{3} \n{4} \n{5} \n".format(newFiles[0], newFiles[1], ne
 # ----------------------------------------------------------------------------
 #  Rename existing TG files prior to update.
 # ----------------------------------------------------------------------------  
-origFiles = (attr_file, hh_file, popsyn_file)
-renamedFiles = (attr_r, hh_r, popsyn_r)
-x = 0
-for f in origFiles:
-	if os.path.exists(renamedFiles[x]):
-		os.remove(renamedFiles[x])
-	os.rename(origFiles[x],renamedFiles[x])
-	x += 1
+if os.path.exists(popsyn_r):
+		os.remove(popsyn_r)
+os.rename(popsyn_file,popsyn_r)
 
 if os.path.exists(hhZip_file):
 	os.remove(hhZip_file)
@@ -349,22 +343,14 @@ szs = szTemplate.merge(szs, how='left', on='subzone_id', copy=False)
 print(" --> Total Subzones: {0:,}".format(szs.shape[0]))
 print('  --> QC: Households in subzone file: {0:,}'.format(szs['total_households'].sum()))
 ## -- Read in original ATTR_IN to get highEarn -- ##
-jobs = pd.read_csv(attr_r, sep=',', header=None, usecols=[0, 1])	
+jobs = pd.read_csv(sz_data, sep=',', header=None, usecols=[0, 1], skiprows=1)	
 jobs.columns=['subzone_id','highEarn']
+jobs['subzone_id']=jobs['subzone_id'].astype(int)
 ## -- Read in original HH_IN to get private auto commute share and sidewalk density-- ##
 # read the HH_IN file in to determine its vintage
-test = pd.read_csv(hh_r, sep=',', header=None)								
-if len(test.columns) == 9:
-	# ON TO 2050 plan HH_IN.TXT file format (pre-c22q2)
-	szhh = pd.read_csv(hh_r, sep=',', header=None, usecols=[0, 7, 8])		
-elif len(test.columns) == 36:
-	# ON TO 2050 Plan Update HH_IN.TXT file format (begin c22q2)
-	szhh = pd.read_csv(hh_r, sep=',', header=None, usecols=[0, 34, 35])		
-else:
-	# 2026 LRTP HH_IN.TXT file format (begin c26q2)	
-	szhh = pd.read_csv(hh_r, sep=',', header=None, usecols=[0, 1, 2])		
-
+szhh = pd.read_csv(sz_data, sep=',', header=None, usecols=[0,2,3], skiprows=1)								
 szhh.columns=['subzone_id','commuteShare','pef']
+szhh['subzone_id']=szhh['subzone_id'].astype(int)
 ## -- Merge files -- ##
 szData = szs.merge(jobs, how='left', on='subzone_id', copy=False)
 szData = szData.merge(szhh, how='left', on='subzone_id', copy=False)
@@ -418,11 +404,10 @@ print("Retail Employment: Subzone Minimum = {0:.1f}, Subzone Maximum = {1:.1f},"
 								  szData['jobs_retail_44_45'].max(),
 								  szData['jobs_retail_44_45'].mean()))      
     
-x = 0
-for f in renamedFiles:
-	if os.path.exists(renamedFiles[x]):
-		os.remove(renamedFiles[x])
-	x += 1
+
+if os.path.exists(popsyn_r):
+	os.remove(popsyn_r)
+	
 
 # ----------------------------------------------------------------------------
 #  Write report file.
