@@ -52,6 +52,4 @@ dependencies:
   - zarr=2.10
   - pip:
     - emat  
-    # Uses relative paths to local packages
-    - -e ../../../src/Mode-Dest-TOD
-    - -e ../../../src/Mode-Dest-TOD/sharrow
+    - cmap_modedest @ git+https://github.com/CMAP-REPOS/cmap_modedest@v24.4.1
