@@ -46,8 +46,6 @@ hhtypeCat_file = fortran_path / 'tg_hhtype_lookup.csv'
 hhvtypeCat_file = fortran_path / 'tg_hhvtype_lookup.csv'
 geog_file  = fortran_path / 'GEOG_IN.TXT'
 sz_data = fortran_path / 'subzone_tg_data.txt'
-# -- files renamed
-popsyn_r = fortran_path / 'POPSYN_HHr.CSV'
 
 # ----------------------------------------------------------------------------
 #  Output files.
@@ -90,10 +88,6 @@ print("{0} \n{1} \n{2} \n{3} \n{4} \n{5} \n".format(newFiles[0], newFiles[1], ne
 # ----------------------------------------------------------------------------
 #  Rename existing TG files prior to update.
 # ----------------------------------------------------------------------------  
-if os.path.exists(popsyn_r):
-		os.remove(popsyn_r)
-os.rename(popsyn_file,popsyn_r)
-
 if os.path.exists(hhZip_file):
 	os.remove(hhZip_file)
 if os.path.exists(perZip_file):
@@ -404,11 +398,6 @@ print("Retail Employment: Subzone Minimum = {0:.1f}, Subzone Maximum = {1:.1f},"
 								  szData['jobs_retail_44_45'].max(),
 								  szData['jobs_retail_44_45'].mean()))      
     
-
-if os.path.exists(popsyn_r):
-	os.remove(popsyn_r)
-	
-
 # ----------------------------------------------------------------------------
 #  Write report file.
 # ---------------------------------------------------------------------------- 
