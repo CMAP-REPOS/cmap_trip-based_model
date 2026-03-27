@@ -198,13 +198,20 @@ if not exist GQ_IN.TXT (goto socec_data_error)
 if not exist ATTR_IN.TXT (goto socec_data_error)
 if not exist POPSYN_HH.CSV (goto socec_data_error)
 
-rem Delete old output files.
+rem Delete old output files and deprecated files.
 if exist *OUT.TXT (del *OUT.TXT)
 if exist *OUTPUT.TXT (del *OUTPUT.TXT)
 if exist MCHW_HH.TXT (del MCHW_HH.TXT)
+if exist TG_PopSyn.exe (del TG_PopSyn.exe)
+if exist TG_INPUT.TXT (del TG_INPUT.TXT)
+if exist highinc_workers.csv (del highinc_workers.csv)
 
-TG_PopSyn.exe
-cd ..\scripts
+cd ..\..
+@echo ============================================================= 
+@echo BEGIN CMAP TRIP GENERATION MODEL
+@echo ============================================================= 
+call python trip_generation\trip_generation_model.py
+cd tg\scripts
 
 echo Creating summary files ...
 python summarize_tg_results.py %project% %run%
@@ -225,8 +232,6 @@ if not exist m01auto.csv (goto m01_data_error)
 if not exist m01type.csv (goto m01_data_error)
 
 cd %~dp0
-
-python tg\fortran\create_HHvtype_file.py
 
 echo Module 1 finished.
 echo.
