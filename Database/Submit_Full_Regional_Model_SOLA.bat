@@ -47,8 +47,6 @@ for /f "eol=# skip=16 tokens=2 delims=:" %%k in (batch_file.yaml) do (set Urbans
 :break7
 for /f "eol=# skip=18 tokens=2 delims=:" %%l in (batch_file.yaml) do (set RSPrun=%%l & goto break8)
 :break8
-for /f "eol=# skip=21 tokens=2 delims=:" %%m in (batch_file.yaml) do (set srcCode=%%m & goto break9)
-:break9
 
 set ver=%ver:~1,5%
 set val=%val:~1,3%
@@ -63,7 +61,6 @@ set selLineFile=%selLineFile:~1%
 set utilFile=%utilFile:~1,1%
 set UrbansimFile=%UrbansimFile:~1,1%
 set RSPrun=%RSPrun:~1,1%
-set srcCode=%srcCode:~1,1%
 REM -- Count number of select link files --
 set tempCnt=0
 for %%a in (%selLinkFile:None=%) do set /a tempCnt+=1
@@ -94,7 +91,6 @@ if "%transitAsmt%" EQU "T" (@echo  Transit assignment select line file = %selLin
 @echo  Save utility files = %utilFile%
 @echo  Create UrbanSim travel time file = %UrbansimFile%
 @echo  RSP evaluation run = %RSPrun%
-@echo  Have CMAP-TRIP2 use destination-mode choice code in this model setup = %srcCode%
 @echo ==================================================================================
 @echo.
 
@@ -127,7 +123,6 @@ echo.
 echo Select Destination Choice-Mode Choice model run mode:
 echo   1) Minimize run time (default) - resources allocated to support a single model run.
 echo   2) Balanced - resources allocated to support two simultaneous model runs.
-echo      [If this is the second of two simultaneous runs: only proceed if srcCode is False (currently set to %srcCode%)]
 echo.
 set /a jobs=38
 set /a zones=10
@@ -242,11 +237,6 @@ CD ..
 
 rem Activate Python env to build it if necessary
 call %~dp0..\Scripts\manage\env\activate_env.cmd
-if "%srcCode%" EQU "T" (
-    @ECHO -- Ensure CMAP-TRIP2 uses the destination choice-mode choice source code in this model setup --
-python -m pip install -e %~dp0..\src\Mode-Dest-TOD
-python -m pip install -e %~dp0..\src\Mode-Dest-TOD\sharrow
-)
 
 rem Activate Emme Python env
 call %~dp0..\Scripts\manage\env\activate_env.cmd emme
