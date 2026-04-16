@@ -191,19 +191,6 @@ REM PREP WORK
 CD %~dp0
 CD prep_macros
 
-REM Now find R executable
-set infile=path.txt
-if exist %infile% (del %infile% /Q)
-dir "C:\Program Files\R\*R.exe" /s /b >> %infile% 2>nul
-set /p path2=<%infile%
-set paren="
-set rpath=%paren%%path2%%paren%
-echo rpath = %rpath%
-call :CheckEmpty2 %infile%
-:Rpass
-if exist %infile% (del %infile% /Q)
-set rfile=create_distr_m01_files
-
 REM -- Start DISTR & M01 Data Processing --
 @ECHO.
 @ECHO Start Time: %date% %time%
@@ -223,7 +210,9 @@ cd prep_macros
 @ECHO.
 @ECHO -- CREATING FILES FOR SPATIAL ANALYSIS --
 @ECHO.
-%rpath% CMD BATCH %rfile%.R
+rem Activate R env
+call %~dp0..\Scripts\manage\env\activate_env.cmd r
+call Rscript create_distr_m01_files.R
 if %ERRORLEVEL% GTR 0 (goto issue)
 
 @ECHO.
@@ -446,18 +435,6 @@ goto end
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 @ECHO VERIFY m01auto.csv, m01tg.txt, m01type.csv EXIST in tg\data!!!
 @ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-pause
-goto end
-
-:CheckEmpty2
-if %~z1 == 0 (goto badR)
-goto Rpass
-
-:badR
-@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO    COULD NOT FIND R INSTALLATION.
-@ECHO ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-@ECHO.
 pause
 goto end
 
