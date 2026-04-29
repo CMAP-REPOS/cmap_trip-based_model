@@ -152,23 +152,19 @@ if "%run%" == "" (
 echo ===================================================================
 echo.
 
-rem Activate Python env
-call %~dp0..\Scripts\manage\env\activate_env.cmd
-if %ERRORLEVEL% NEQ 0 (goto end)
-
 cd tg\scripts
 echo.
 echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo Updating Trip Generation inputs with UrbanSim data ...
 echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-python urbansim_update_tg_input_files.py
+uv run urbansim_update_tg_input_files.py
 if %ERRORLEVEL% NEQ 0 (goto urbansim_issue)
 @echo.
 echo.
 echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo Updating Heavy Truck Trip allocation weights with UrbanSim data ...
 echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-python urbansim_hcv_allocation.py
+uv run urbansim_hcv_allocation.py
 if %ERRORLEVEL% NEQ 0 (goto hcv_issue)
 cd ..\fortran
 
@@ -183,10 +179,10 @@ echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 if %val%==100 (
     echo Running wfhflag_base.py ...
-    python wfhflag_base.py %filedir% %savedir% %wfhFile%
+    uv run wfhflag_base.py %filedir% %savedir% %wfhFile%
 ) else (
     echo Running wfhflag.py ...
-    python wfhflag.py %filedir% %savedir% %wfhFile%
+    uv run wfhflag.py %filedir% %savedir% %wfhFile%
 )
 
 if %ERRORLEVEL% NEQ 0 (goto wfh_issue)
@@ -210,12 +206,12 @@ cd ..\..
 @echo ============================================================= 
 @echo BEGIN CMAP TRIP GENERATION MODEL
 @echo ============================================================= 
-call python trip_generation\trip_generation_model.py
+uv run trip_generation\trip_generation_model.py
 cd tg\scripts
 
 echo Creating summary files ...
-python summarize_tg_results.py %project% %run%
-python prepare_iom_inputs.py %project% %run%
+uv run summarize_tg_results.py %project% %run%
+uv run prepare_iom_inputs.py %project% %run%
 echo.
 
 cd ..\data
@@ -283,12 +279,8 @@ call :CheckEmpty %infile%
 if exist %infile% (del %infile% /Q)
 cd Database
 
-rem Activate Emme Python env
-call %~dp0..\Scripts\manage\env\activate_env.cmd emme
-if %ERRORLEVEL% NEQ 0 (goto end)
-
 echo Preparing emmebank for model run...
-call python useful_macros\cleanup_for_rerun.py %val%>> tg.rpt
+uv run useful_macros\cleanup_for_rerun.py %val%>> tg.rpt
 echo.
 
 echo Importing production and attraction matrices (used only for b/l/m truck distribution)...
@@ -296,7 +288,7 @@ call emme -ng 000 -m prep_macros\import.tg.results 1 >> tg.rpt
 echo.
 
 echo Skimming highway network...
-call python prep_macros\free.skim.mac.py %file1% %val%
+uv run prep_macros\free.skim.mac.py %file1% %val%
 echo.
 
 echo Distributing trucks...
