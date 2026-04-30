@@ -1,0 +1,8 @@
+name: tbm-r
+channels:
+  - conda-forge
+dependencies:
+  - r-base=4.3
+  - r-foreign
+  - r-tidyverse
+  - r-sf

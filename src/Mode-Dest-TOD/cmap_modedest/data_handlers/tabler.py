@@ -1,1 +1,0 @@
-from sharrow import Table

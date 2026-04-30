@@ -1,10 +1,6 @@
 # Project details
-model_version: c25q4
+model_version: c26q2
 scenario_code: 100
-# ---------------- Work from home module inputs (trip generation)
-validationfiles: N
-usualwfhpct: 0.0510
-tc14pct: 0.1031
 # ---------------- Select link analysis files: provide file name (ex: RSP32_links.txt [stored in Database\Select_Link\]) or use None
 # ---------------- Can submit up to 5, comma-separated, any order, no spaces, (ex: None,test4.txt,test1.txt,None,None)
 selectLinkFile: None,None,None,None,None
@@ -21,6 +17,6 @@ util_files: False
 UrbanSim_file: False
 # ---------------- Is this an RSP evaluation run? Default is False.
 RSP: False
-# ---------------- sourceCode will force CMAP-TRIP2 to use the source code in this model setup if set to True. Default is True.
-# ---------------- Set to False if this is the second of two simultaneous runs being submitted.
-sourceCode: True
+# ---------------- PUMA version used in Trip Generation. 2010 is the current option.
+pumaVersion: 2010
+
