@@ -69,15 +69,7 @@ def rename_project(config):
     emp_file.rename(Path(emp_file.parent, new_name + '.emp'))
     prj_file.rename(Path(prj_file.parent, new_name + '.emp.prj'))
     print('project renamed')
-
-def get_wfh_rates(config):
-    scenario_year = config['scenario_years'][config['scenario_code']]
-    wfh_rates = config['wfh_rates'][scenario_year]
-    print('\n'
-          f'Set these {scenario_year} WFH rates in \\Database\\batch_file.yaml:\n'
-          f"    * usualwfhpct: {wfh_rates['fully_remote']}\n"
-          f"    * tc14pct: {wfh_rates['hybrid']}\n")
-    
+  
 def get_trip_growth_factors(config):
     scenario_year = config['scenario_years'][config['scenario_code']]
     trip_growth_factors = config['trip_growth_factors'][scenario_year]
@@ -112,7 +104,6 @@ def main():
     input_data_mac.main()
     print('warm start matrices generated')
     rename_project(config)
-    get_wfh_rates(config)
     get_trip_growth_factors(config)
     get_tnc_surcharge_rates(config)
 

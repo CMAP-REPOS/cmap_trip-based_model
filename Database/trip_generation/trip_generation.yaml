@@ -1,0 +1,39 @@
+## -- Name identifying the model run 
+rtpVersion: '2026 LRTP'
+## -- Number of trip generation subzones in the modeling area
+subzones: 17418
+## -- Number of Census 2010 five percent sample PUMAs in the modeling area
+puma5: 74
+## -- Zones used for trip distribution, mode choice, and assignment 
+## -- (excluding Points of entry)
+zones: 3632
+## -- Number of counties in the modeling area
+counties: 21
+## -- Maximum value used by the vehicle availability submodel for subzone
+## -- sidewalk density (miles of sidewalk per square mile)
+sidewalkMaxDensity: 40.0
+## -- Regional median household income, in 2019 dollars
+incomeRegMed: 72800
+## -- Seed for random number generator
+randomSeed: 211
+## -- Maximum times a specific survey household can be matched to synthetic
+## -- households before resampling occurs
+replicateMax: 1900
+## -- Maximum times resampling will occur once replicateMax has been reached
+resampleMax: 100
+## -- Group quarters trip information
+### --- Workers per person by GQ type
+militaryWorkersPerPerson: 1.00
+univWorkersPerPerson: 0.385
+other1664WorkersPerPerson: 0.306
+other65WorkersPerPerson: 0.12
+### --- Person work trip rates by GQ type
+militaryWorkTrips: 2.00
+univWorkTrips: 0.77
+other1664WorkTrips: 0.612
+other65WorkTrips: 0.24
+## -- Flag to write optional files (HI_HHENUM_TRIP_OUT.CSV, PRODS_HH_OUT.CSV,
+## -- PRODS_GQ_OUT.CSV, FIRST_PA_OUT.CSV, EXTERNAL_PA_OUT.CSV). These are
+## -- useful for debugging and model validation, but are not required for
+## -- production model runs.
+writeOptionalFiles: False
