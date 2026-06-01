@@ -77,7 +77,6 @@ HBWL:
   intrazonal              : 0.02173059479852062
   log_attraction          : 1.0
   metra_longtrip          : 5.625
-  ovtt_dist               : -0.076
   ovtt_dist               : -0.07639147912439262
   samp_af                 : 1.0
   totaltime               : -0.014712168298471244

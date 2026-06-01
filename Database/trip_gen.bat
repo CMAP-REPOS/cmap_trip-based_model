@@ -39,26 +39,47 @@ rem --------
 rem In case CMD.exe is doing stuff in the wrong directory, this command
 rem changes the directory to where the batch file was called from.
 cd %~dp0
-rem -- Read model run settings from batch_file.yaml --
+rem -- Read model run settings from Telework.yaml --
 for /f "eol=# skip=2 tokens=2 delims=:" %%a in (batch_file.yaml) do (set sc=%%a & goto break1)
 :break1
-for /f "eol=# skip=4 tokens=2 delims=:" %%b in (batch_file.yaml) do (set wfhFile=%%b & goto break2)
+for /f "eol=# skip=1 tokens=2 delims=:" %%b in (Telework.yaml) do (set wfhFile=%%b & goto break2)
 :break2
-for /f "eol=# skip=5 tokens=2 delims=:" %%c in (batch_file.yaml) do (set wfh=%%c & goto break3)
+for /f "eol=# skip=2 tokens=2 delims=:" %%c in (Telework.yaml) do (set wfh=%%c & goto break3)
 :break3
-for /f "eol=# skip=6 tokens=2 delims=:" %%d in (batch_file.yaml) do (set tc14=%%d & goto break4)
+for /f "eol=# skip=3 tokens=2 delims=:" %%d in (Telework.yaml) do (set tc14=%%d & goto break4)
 :break4
+for /f "eol=# skip=5 tokens=2 delims=:" %%e in (Telework.yaml) do (set wfhLow=%%e & goto break5)
+:break5
+for /f "eol=# skip=6 tokens=2 delims=:" %%f in (Telework.yaml) do (set wfhMedium=%%f & goto break6)
+:break6
+for /f "eol=# skip=7 tokens=2 delims=:" %%g in (Telework.yaml) do (set wfhHigh=%%g & goto break7)
+:break7
+for /f "eol=# skip=8 tokens=2 delims=:" %%g in (Telework.yaml) do (set declineScaled=%%g & goto break8)
+:break8
+
 set sc=%sc:~1,3%
 set wfhFile=%wfhFile:~1%
 set wfh=%wfh:~1%
 set tc14=%tc14:~1%
+set wfhLow=%wfhLow:~1%
+set wfhMedium=%wfhMedium:~1%
+set wfhHigh=%wfhHigh:~1%
+set declineScaled=%declineScaled:~1%
+
 @echo.
 @echo ========================================
 @echo     --- Model Run Settings ---
 @echo  Scenario = %sc%
 @echo  Create WFH validation file = %wfhFile%
-@echo  Usual WFH share = %wfh%
-@echo  WFH 1-4 days share = %tc14%
+if %sc%==100 (
+    @echo  2019 Usual WFH share = %wfh%
+    @echo  2019 WFH 1-4 days share = %tc14%
+) else (
+    @echo  2025/26 WFH low rate group share= %wfhLow%
+    @echo  2025/26 WFH medium rate group share= %wfhMedium%
+    @echo  2025/26 WFH high rate group share= %wfhHigh%
+    @echo  Decline factor= %declineScaled%
+)
 @echo ========================================
 @echo.
 rem
@@ -99,14 +120,6 @@ echo     * prep_macros\distribute.poes
 echo.
 echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 pause
-echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-echo.
-echo   WORK FROM HOME RATES
-echo.
-echo   Do the WFH rates and industry files need to be updated?
-echo.
-echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-pause
 echo.
 
 rem -- Run trip generation model. --
@@ -117,9 +130,9 @@ goto badscen
 
 :runit
 rem Supply project and run titles.
-set /p project="[ENTER PROJECT TITLE (E.G., c20q2)] "
+set /p project="[ENTER PROJECT TITLE (E.G., c26q2)] "
 echo.
-set /p run="[ENTER RUN TITLE (E.G., 100_20200330)] "
+set /p run="[ENTER RUN TITLE (E.G., 100_20260202)] "
 echo.
 
 set project=%project: =%
@@ -139,17 +152,19 @@ if "%run%" == "" (
 echo ===================================================================
 echo.
 
-rem Activate Python env
-call %~dp0..\Scripts\manage\env\activate_env.cmd
-if %ERRORLEVEL% NEQ 0 (goto end)
-
 cd tg\scripts
+echo.
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo Updating Trip Generation inputs with UrbanSim data ...
-python urbansim_update_tg_input_files.py
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+uv run urbansim_update_tg_input_files.py
 if %ERRORLEVEL% NEQ 0 (goto urbansim_issue)
 @echo.
+echo.
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo Updating Heavy Truck Trip allocation weights with UrbanSim data ...
-python urbansim_hcv_allocation.py
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+uv run urbansim_hcv_allocation.py
 if %ERRORLEVEL% NEQ 0 (goto hcv_issue)
 cd ..\fortran
 
@@ -158,9 +173,18 @@ set savedir="%cd%"
 cd wfhmodule
 set filedir="%cd%"
 echo.
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo Starting the work-from-home allocation model ...
-echo  wfh arguments: %filedir% %savedir% %wfhFile% %wfh% %tc14%
-python wfhflag.py %filedir% %savedir% %wfhFile% %wfh% %tc14%
+echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+if %val%==100 (
+    echo Running wfhflag_base.py ...
+    uv run wfhflag_base.py %filedir% %savedir% %wfhFile%
+) else (
+    echo Running wfhflag.py ...
+    uv run wfhflag.py %filedir% %savedir% %wfhFile%
+)
+
 if %ERRORLEVEL% NEQ 0 (goto wfh_issue)
 cd ..
 
@@ -170,17 +194,24 @@ if not exist GQ_IN.TXT (goto socec_data_error)
 if not exist ATTR_IN.TXT (goto socec_data_error)
 if not exist POPSYN_HH.CSV (goto socec_data_error)
 
-rem Delete old output files.
+rem Delete old output files and deprecated files.
 if exist *OUT.TXT (del *OUT.TXT)
 if exist *OUTPUT.TXT (del *OUTPUT.TXT)
 if exist MCHW_HH.TXT (del MCHW_HH.TXT)
+if exist TG_PopSyn.exe (del TG_PopSyn.exe)
+if exist TG_INPUT.TXT (del TG_INPUT.TXT)
+if exist highinc_workers.csv (del highinc_workers.csv)
 
-TG_PopSyn.exe
-cd ..\scripts
+cd ..\..
+@echo ============================================================= 
+@echo BEGIN CMAP TRIP GENERATION MODEL
+@echo ============================================================= 
+uv run trip_generation\trip_generation_model.py
+cd tg\scripts
 
 echo Creating summary files ...
-python summarize_tg_results.py %project% %run%
-python prepare_iom_inputs.py %project% %run%
+uv run summarize_tg_results.py %project% %run%
+uv run prepare_iom_inputs.py %project% %run%
 echo.
 
 cd ..\data
@@ -197,8 +228,6 @@ if not exist m01auto.csv (goto m01_data_error)
 if not exist m01type.csv (goto m01_data_error)
 
 cd %~dp0
-
-python tg\fortran\create_HHvtype_file.py
 
 echo Module 1 finished.
 echo.
@@ -235,8 +264,6 @@ if exist tg.rpt (del tg.rpt)
 if exist report\stop_truck_distribution.txt (
     del report\stop_truck_distribution.txt
 )
-if not exist tg\fortran\MCHW_HH.TXT (goto filemiss1)
-copy tg\fortran\MCHW_HH.TXT MCHW_HH.TXT /y
 copy tg\fortran\TG_HHENUM_OUTPUT.TXT TG_HHENUM_OUTPUT.TXT /y
 echo.
 
@@ -252,12 +279,8 @@ call :CheckEmpty %infile%
 if exist %infile% (del %infile% /Q)
 cd Database
 
-rem Activate Emme Python env
-call %~dp0..\Scripts\manage\env\activate_env.cmd emme
-if %ERRORLEVEL% NEQ 0 (goto end)
-
 echo Preparing emmebank for model run...
-call python useful_macros\cleanup_for_rerun.py %val%>> tg.rpt
+uv run useful_macros\cleanup_for_rerun.py %val%>> tg.rpt
 echo.
 
 echo Importing production and attraction matrices (used only for b/l/m truck distribution)...
@@ -265,7 +288,7 @@ call emme -ng 000 -m prep_macros\import.tg.results 1 >> tg.rpt
 echo.
 
 echo Skimming highway network...
-call python prep_macros\free.skim.mac.py %file1% %val%
+uv run prep_macros\free.skim.mac.py %file1% %val%
 echo.
 
 echo Distributing trucks...
@@ -314,10 +337,6 @@ goto end
 
 :wfh_issue
 echo !!! THE WORK FROM HOME ALLOCATION MODEL DID NOT RUN PROPERLY !!!
-goto end
-
-:filemiss1
-echo !!! tg\fortran\MCHW_HH.TXT DOES NOT EXIST !!!
 goto end
 
 :truck_balance_err

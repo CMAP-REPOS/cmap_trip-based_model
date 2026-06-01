@@ -28,8 +28,8 @@ def main():
 
     # define variables
     currentScen = int(sys.argv[2])
-    scenAM = currentScen
-    scenMD = scenAM + 5
+    scenAM = currentScen + 3
+    scenMD = currentScen + 5
     t1= r'prep_macros\temp'
     t2= 'transit.itin'
     t3= 'node.txt'

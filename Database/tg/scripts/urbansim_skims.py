@@ -14,13 +14,15 @@ URBANSIM_SKIMS.PY
 # ----------------------------------------------------------------------------
 import os, numpy as np, pandas as pd
 
-hwyTime = os.getcwd() + "\\emmemat\\mf44.emx"   				## -- Congested highway skim time
-tranTime = os.getcwd() + "\\emmemat\\mf822.emx"   				## -- Indexed peak in-vehicle minutes
-tranXfer = os.getcwd() + "\\emmemat\\mf823.emx"   				## -- Indexed peak walk transfer minutes
-tranWait = os.getcwd() + "\\emmemat\\mf824.emx"   				## -- Indexed wait time minutes
+cwd = os.getcwd()
 
-outFolder = os.getcwd() + "\\data\\UrbanSim_skims"				## -- output folder for skims
-outFile = outFolder + "\\skims.csv"
+hwyTime = cwd + "\\emmemat\\mf44.emx"   				## -- Congested highway skim time
+tranTime = cwd + "\\emmemat\\mf822.emx"   				## -- Indexed peak in-vehicle minutes
+tranXfer = cwd + "\\emmemat\\mf823.emx"   				## -- Indexed peak walk transfer minutes
+tranWait = cwd + "\\emmemat\\mf824.emx"   				## -- Indexed wait time minutes
+
+outFolder = cwd + "\\data\\UrbanSim_skims"				## -- output folder for skims
+outFile = outFolder + "\\skims.parquet"
 
 maxZone = 3649													## -- maximum zone number
 maxInternal = 3632												## -- maximum non-POE zone
@@ -67,4 +69,18 @@ skims['Wait_time'] = skims['Wait_time'] * 0.5					## -- multiply headway by 0.5 
 skims['am_peak_transit_time'] = skims['InVehicle'] + skims['Walk_time'] + skims['Wait_time']
 skims['am_peak_transit_time'] = np.where(skims['am_peak_transit_time'] > 1000.0, 1000000.0, skims['am_peak_transit_time'])	##-- replace 1.00E20 with 1000000 to show no transit path exists
 skims = skims.round({'am_peak_travel_time': 2, 'am_peak_transit_time': 2})
-skims.to_csv(outFile, columns=['from_zone_id','to_zone_id','am_peak_travel_time','am_peak_transit_time'], index=False)
+
+# skims.to_csv(outFile, columns=['from_zone_id','to_zone_id','am_peak_travel_time','am_peak_transit_time'], index=False)
+
+#NEW in 2026: set from/to as index, rename columns, then write as parquet instead of csv
+skims.rename(
+  columns={
+    'am_peak_travel_time': 'travel_time_sov',
+    'am_peak_transit_time': 'travel_time_transit'
+  },
+  inplace=True
+)
+
+skims.set_index(['from_zone_id', 'to_zone_id'], inplace=True)
+
+skims[['travel_time_sov', 'travel_time_transit']].to_parquet(outFile)

@@ -15,12 +15,12 @@
  also performs calculations to identify first, priority and last modes.    
 
 
- Arguments: 1= name of Emme project file
-            2= 3-digit scenario number
-            3= model Global Iteration number 0-2
-            4= time period indicator: AM or MD 
+ Arguments: 1= 3-digit scenario number
+            2= model Global Iteration number 0-2
+            3= time period indicator: AM, MD, PM, NT
 
- Craig Heither, 03-25-2024
+
+ Craig Heither, rev. 06-09-2025
  ==========================================================================================
 '''
 
@@ -33,7 +33,6 @@ from tbmtools import project as tbm
 currentScen = int(sys.argv[1])
 globalIter = int(sys.argv[2])
 timePeriod = sys.argv[3]
-donorScen = currentScen*100 + (globalIter-1)*10 + 3                 ## -- used for Global Iterations 1 & 2
 
 ## -- Trasit base fares in cents (updated Oct. 2020) -- ## 
 ctaBusFare= 225
@@ -65,19 +64,47 @@ tranAsmt_stnd = my_modeller.tool("inro.emme.transit_assignment.standard_transit_
 init_partition = my_modeller.tool("inro.emme.data.zone_partition.init_partition")
 change_partition = my_modeller.tool("inro.emme.data.zone_partition.change_partition_description")
 compute_matrix = my_modeller.tool("inro.emme.matrix_calculation.matrix_calculator")
+copy_scenario = my_modeller.tool("inro.emme.data.scenario.copy_scenario")
 ###########################################################################################################################
 
-## -- Set primary scenario -- ##
-if timePeriod == 'MD':
+## -- Set time period parameters -- ##
+if timePeriod == 'AM':
+    donorScen = currentScen*100 + (globalIter-1)*10 + 3                 ## -- used for Global Iterations 1 & 2
+    currentScen = currentScen + 3
+    mtx = ("mf803","mf804","mf805","mf806","mf807","mf808","mf809","mf810","mf811","mf812","mf813","mf815","mf816","mf817","mf818")
+elif timePeriod == 'MD':
+    donorScen = currentScen*100 + (globalIter-1)*10 + 5                 ## -- used for Global Iterations 1 & 2
     currentScen = currentScen + 5
+    mtx = ("mf903","mf904","mf905","mf906","mf907","mf908","mf909","mf910","mf911","mf912","mf913","mf915","mf916","mf917","mf918")
+elif timePeriod == 'PM':
+    donorScen = currentScen*100 + (globalIter-1)*10 + 7                 ## -- used for Global Iterations 1 & 2
+    currentScen = currentScen + 7
+    mtx = ("mf853","mf854","mf855","mf856","mf857","mf858","mf859","mf860","mf861","mf862","mf863","mf865","mf866","mf867","mf868")
+    ## -- Copy PM peak transit scenario for skimming -- ## 
+    skimScen = currentScen + 20
+    pmTran = copy_scenario(from_scenario=skimScen,
+                    scenario_id=currentScen,
+                    scenario_title="pm (4pm-6pm) transit skim network",
+                    copy_linkshapes=True,
+                    overwrite=True,
+                    set_as_primary=True)
+elif timePeriod == 'NT':
+    donorScen = currentScen*100 + (globalIter-1)*10 + 1                 ## -- used for Global Iterations 1 & 2
+    currentScen = currentScen + 1
+    mtx = ("mf953","mf954","mf955","mf956","mf957","mf958","mf959","mf960","mf961","mf962","mf963","mf965","mf966","mf967","mf968")
+    ## -- Copy EA transit scenario for skimming -- ## 
+    skimScen = currentScen + 20
+    eaTran = copy_scenario(from_scenario=skimScen,
+                    scenario_id=currentScen,
+                    scenario_title="night/early am (6pm-6am) transit skim network",
+                    copy_linkshapes=True,
+                    overwrite=True,
+                    set_as_primary=True)
+
 change_scenario(scenario=currentScen)
 
 
 ## -- Initialize matrices -- ##
-mtx = ("mf803","mf804","mf805","mf806","mf807","mf808","mf809","mf810","mf811","mf812","mf813","mf815","mf816","mf817","mf818")
-if timePeriod == 'MD':
-    mtx = ("mf903","mf904","mf905","mf906","mf907","mf908","mf909","mf910","mf911","mf912","mf913","mf915","mf916","mf917","mf918")
-
 new_mf1 = matrix_init(matrix_id="%s" %(mtx[0]), matrix_name="fmode_%s" %(timePeriod),
                         matrix_description="skimmed first mode - %s" %(timePeriod), overwrite=True, default_value=3) ##-- 3=value for bus
 new_mf2 = matrix_init(matrix_id="%s" %(mtx[1]), matrix_name="pmode_%s" %(timePeriod),
@@ -114,8 +141,6 @@ new_mf15 = matrix_init(matrix_id="%s" %(mtx[14]), matrix_name="skimfare_%s" %(ti
 ## -- Use ul2 temporarily to store congested highway time from auto scenario -- ##
 ## -- Global Iteration 0: @hwytm has already been filled with pre-loaded congested times. -- ##
 if globalIter > 0:
-    if timePeriod == 'MD':
-        donorScen = donorScen + 2
     print("currentScen={0}, timePeriod={1}, donorScen={2}".format(currentScen,timePeriod,donorScen))
 
     ## -- Initialize ul2 [link variable] and @hwytm [segment variable] -- ##
