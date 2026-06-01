@@ -39,17 +39,14 @@ set ok=%ok:y=Y%
 if not "%ok%"=="Y" (goto end)
 @echo ==================================================================
 
-rem Activate Emme Python env
-call %~dp0..\Scripts\manage\env\activate_env.cmd emme
-
 @ECHO --- Cleaning up databank ---
 if exist cleanup.rpt (del cleanup.rpt)
-call python useful_macros\cleanup_for_rerun.py %val%>> cleanup.rpt
+uv run useful_macros\cleanup_for_rerun.py %val%>> cleanup.rpt
 if exist reports (del reports)
 @ECHO  Cleanup complete.
 
 @ECHO --- Creating time-of-day highway and transit networks ---
-call python prep_macros\initialize_scenarios.py
+uv run prep_macros\initialize_scenarios.py
 if %ERRORLEVEL% GTR 0 (goto end)
 
 @ECHO -- Checking for transit network input errors --
@@ -59,7 +56,7 @@ if exist report\build_transit.error (del report\build_transit.error /Q)
 
 :while
 if %trnscen% GTR %maxscen% (goto loopend)
-python prep_macros\build_transit_error_check.py %trnscen%
+uv run prep_macros\build_transit_error_check.py %trnscen%
 if exist report\build_transit.error (goto badnet)
 set /A trnscen=%trnscen%+2
 goto while

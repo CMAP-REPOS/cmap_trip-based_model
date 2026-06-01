@@ -1,0 +1,197 @@
+﻿trip_type,wfh_flag,cbd,weight_formula
+1,0,1,1 * total_employment * low_earner_share
+1,0,0,0.755 * total_employment * low_earner_share
+1,1,1,1 * total_employment * low_earner_share
+1,1,0,0.755 * total_employment * low_earner_share
+2,0,1,1 * total_employment * high_earner_share
+2,0,0,0.755 * total_employment * high_earner_share
+2,1,1,1 * total_employment * high_earner_share
+2,1,0,0.755 * total_employment * high_earner_share
+3,0,1,1 * retail_employment + 0.241 * nonretail_employment
+3,0,0,3.103 * retail_employment + 0.634 * nonretail_employment
+3,1,1,1 * retail_employment + 0.241 * nonretail_employment
+3,1,0,3.103 * retail_employment + 0.634 * nonretail_employment
+4,0,1,1 * enrollment
+4,0,0,1 * enrollment * notairport_flag
+4,1,1,1 * enrollment
+4,1,0,1 * enrollment * notairport_flag
+5,0,1,1 * households
+5,0,0,1.132 * households * notairport_flag
+5,1,1,1 * households
+5,1,0,0.057 * households * notairport_flag
+6,0,1,1 * retail_employment + 0.042 * nonretail_employment
+6,0,0,0.623 * retail_employment + 0.18 * nonretail_employment
+6,1,1,1 * retail_employment + 0.024 * nonretail_employment
+6,1,0,0.941 * retail_employment + 0.208 * nonretail_employment
+7,0,1,1 * retail_employment
+7,0,0,1.43 * retail_employment * notairport_flag
+7,1,1,1 * retail_employment
+7,1,0,0.938 * retail_employment * notairport_flag
+8,0,1,1 * households
+8,0,0,2.309 * households * notairport_flag
+8,1,1,1 * households
+8,1,0,0.738 * households * notairport_flag
+9,0,1,1 * retail_employment + 0.095 * nonretail_employment
+9,0,0,0.383 * retail_employment + 0.106 * nonretail_employment
+9,1,1,1 * retail_employment + 0.027 * nonretail_employment
+9,1,0,0.641 * retail_employment + 0.158 * nonretail_employment
+10,0,1,1 * retail_employment
+10,0,0,0.882 * retail_employment * notairport_flag
+10,1,1,1 * retail_employment
+10,1,0,0.556 * retail_employment * notairport_flag
+11,0,1,1 * total_employment
+11,0,0,1.55 * total_employment
+11,1,1,1 * total_employment
+11,1,0,2.722 * total_employment
+12,0,1,1 * households
+12,0,0,1.414 * households * notairport_flag
+12,1,1,1 * households
+12,1,0,0.99 * households * notairport_flag
+13,0,1,1 * retail_employment + 0.051 * nonretail_employment
+13,0,0,0.401 * retail_employment + 0.099 * nonretail_employment
+13,1,1,1 * retail_employment + 0.036 * nonretail_employment
+13,1,0,0.938 * retail_employment + 0.189 * nonretail_employment
+14,0,1,1 * retail_employment
+14,0,0,1.106 * retail_employment * notairport_flag
+14,1,1,1 * retail_employment
+14,1,0,1.217 * retail_employment * notairport_flag
+15,0,1,1 * households
+15,0,0,1.414 * households * notairport_flag
+15,1,1,1 * households
+15,1,0,0.99 * households * notairport_flag
+16,0,1,1 * retail_employment + 0.051 * nonretail_employment
+16,0,0,0.401 * retail_employment + 0.099 * nonretail_employment
+16,1,1,1 * retail_employment + 0.036 * nonretail_employment
+16,1,0,0.938 * retail_employment + 0.189 * nonretail_employment
+17,0,1,1 * retail_employment
+17,0,0,1.106 * retail_employment * notairport_flag
+17,1,1,1 * retail_employment
+17,1,0,1.217 * retail_employment * notairport_flag
+18,0,1,1 * households
+18,0,0,1.414 * households * notairport_flag
+18,1,1,1 * households
+18,1,0,0.99 * households * notairport_flag
+19,0,1,1 * retail_employment + 0.051 * nonretail_employment
+19,0,0,0.401 * retail_employment + 0.099 * nonretail_employment
+19,1,1,1 * retail_employment + 0.036 * nonretail_employment
+19,1,0,0.938 * retail_employment + 0.189 * nonretail_employment
+20,0,1,1 * retail_employment
+20,0,0,1.106 * retail_employment * notairport_flag
+20,1,1,1 * retail_employment
+20,1,0,1.217 * retail_employment * notairport_flag
+21,0,1,1 * enrollment
+21,0,0,1 * enrollment * notairport_flag
+21,1,1,1 * enrollment
+21,1,0,1 * enrollment * notairport_flag
+22,0,1,1 * households
+22,0,0,1.173 * households * notairport_flag
+22,1,1,1 * households
+22,1,0,1.173 * households * notairport_flag
+23,0,1,0.088 * total_employment
+23,0,0,1 * retail_employment + 0.263 * nonretail_employment
+23,1,1,0.088 * total_employment
+23,1,0,1 * retail_employment + 0.263 * nonretail_employment
+24,0,1,1 * retail_employment
+24,0,0,1.634 * retail_employment * notairport_flag
+24,1,1,1 * retail_employment
+24,1,0,1.634 * retail_employment * notairport_flag
+25,0,1,1 * households
+25,0,0,0.985 * households * notairport_flag
+25,1,1,1 * households
+25,1,0,0.985 * households * notairport_flag
+26,0,1,1 * retail_employment + 0.047 * nonretail_employment
+26,0,0,0.754 * retail_employment + 0.18 * nonretail_employment
+26,1,1,1 * retail_employment + 0.047 * nonretail_employment
+26,1,0,0.754 * retail_employment + 0.18 * nonretail_employment
+27,0,1,1 * retail_employment
+27,0,0,1.53 * retail_employment * notairport_flag
+27,1,1,1 * retail_employment
+27,1,0,1.53 * retail_employment * notairport_flag
+28,0,1,1 * households
+28,0,0,0.985 * households * notairport_flag
+28,1,1,1 * households
+28,1,0,0.985 * households * notairport_flag
+29,0,1,1 * retail_employment + 0.047 * nonretail_employment
+29,0,0,0.754 * retail_employment + 0.18 * nonretail_employment
+29,1,1,1 * retail_employment + 0.047 * nonretail_employment
+29,1,0,0.754 * retail_employment + 0.18 * nonretail_employment
+30,0,1,1 * retail_employment
+30,0,0,1.53 * retail_employment * notairport_flag
+30,1,1,1 * retail_employment
+30,1,0,1.53 * retail_employment * notairport_flag
+31,0,1,1 * households
+31,0,0,0.985 * households * notairport_flag
+31,1,1,1 * households
+31,1,0,0.985 * households * notairport_flag
+32,0,1,1 * retail_employment + 0.047 * nonretail_employment
+32,0,0,0.754 * retail_employment + 0.18 * nonretail_employment
+32,1,1,1 * retail_employment + 0.047 * nonretail_employment
+32,1,0,0.754 * retail_employment + 0.18 * nonretail_employment
+33,0,1,1 * retail_employment
+33,0,0,1.53 * retail_employment * notairport_flag
+33,1,1,1 * retail_employment
+33,1,0,1.53 * retail_employment * notairport_flag
+34,0,1,1 * households
+34,0,0,1.511 * households * notairport_flag
+34,1,1,1 * households
+34,1,0,1.511 * households * notairport_flag
+35,0,1,1 * households
+35,0,0,36.326 * households * notairport_flag
+35,1,1,1 * households
+35,1,0,36.326 * households * notairport_flag
+36,0,1,1 * retail_employment + 0.031 * nonretail_employment
+36,0,0,2.51 * retail_employment + 0.324 * nonretail_employment
+36,1,1,1 * retail_employment + 0.031 * nonretail_employment
+36,1,0,2.51 * retail_employment + 0.324 * nonretail_employment
+37,0,1,1 * retail_employment
+37,0,0,1 * retail_employment * notairport_flag
+37,1,1,1 * retail_employment
+37,1,0,1 * retail_employment * notairport_flag
+38,0,1,1 * households
+38,0,0,16.44 * households * notairport_flag
+38,1,1,1 * households
+38,1,0,16.44 * households * notairport_flag
+39,0,1,0.058 * total_employment
+39,0,0,1 * retail_employment + 0.922 * nonretail_employment
+39,1,1,0.058 * total_employment
+39,1,0,1 * retail_employment + 0.922 * nonretail_employment
+40,0,1,1 * retail_employment
+40,0,0,1 * retail_employment * notairport_flag
+40,1,1,1 * retail_employment
+40,1,0,1 * retail_employment * notairport_flag
+41,0,1,1 * households
+41,0,0,16.44 * households * notairport_flag
+41,1,1,1 * households
+41,1,0,16.44 * households * notairport_flag
+42,0,1,0.058 * total_employment
+42,0,0,1 * retail_employment + 0.922 * nonretail_employment
+42,1,1,0.058 * total_employment
+42,1,0,1 * retail_employment + 0.922 * nonretail_employment
+43,0,1,1 * retail_employment
+43,0,0,1 * retail_employment * notairport_flag
+43,1,1,1 * retail_employment
+43,1,0,1 * retail_employment * notairport_flag
+44,0,1,1 * households
+44,0,0,16.44 * households * notairport_flag
+44,1,1,1 * households
+44,1,0,16.44 * households * notairport_flag
+45,0,1,0.058 * total_employment
+45,0,0,1 * retail_employment + 0.922 * nonretail_employment
+45,1,1,0.058 * total_employment
+45,1,0,1 * retail_employment + 0.922 * nonretail_employment
+46,0,1,1 * retail_employment
+46,0,0,1 * retail_employment * notairport_flag
+46,1,1,1 * retail_employment
+46,1,0,1 * retail_employment * notairport_flag
+47,0,1,1 * households
+47,0,0,16.44 * households * notairport_flag
+47,1,1,1 * households
+47,1,0,16.44 * households * notairport_flag
+48,0,1,0.058 * total_employment
+48,0,0,1 * retail_employment + 0.922 * nonretail_employment
+48,1,1,0.058 * total_employment
+48,1,0,1 * retail_employment + 0.922 * nonretail_employment
+49,0,1,1 * retail_employment
+49,0,0,1 * retail_employment * notairport_flag
+49,1,1,1 * retail_employment
+49,1,0,1 * retail_employment * notairport_flag

@@ -152,23 +152,19 @@ if "%run%" == "" (
 echo ===================================================================
 echo.
 
-rem Activate Python env
-call %~dp0..\Scripts\manage\env\activate_env.cmd
-if %ERRORLEVEL% NEQ 0 (goto end)
-
 cd tg\scripts
 echo.
 echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo Updating Trip Generation inputs with UrbanSim data ...
 echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-python urbansim_update_tg_input_files.py
+uv run urbansim_update_tg_input_files.py
 if %ERRORLEVEL% NEQ 0 (goto urbansim_issue)
 @echo.
 echo.
 echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 echo Updating Heavy Truck Trip allocation weights with UrbanSim data ...
 echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-python urbansim_hcv_allocation.py
+uv run urbansim_hcv_allocation.py
 if %ERRORLEVEL% NEQ 0 (goto hcv_issue)
 cd ..\fortran
 
@@ -183,10 +179,10 @@ echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 if %val%==100 (
     echo Running wfhflag_base.py ...
-    python wfhflag_base.py %filedir% %savedir% %wfhFile%
+    uv run wfhflag_base.py %filedir% %savedir% %wfhFile%
 ) else (
     echo Running wfhflag.py ...
-    python wfhflag.py %filedir% %savedir% %wfhFile%
+    uv run wfhflag.py %filedir% %savedir% %wfhFile%
 )
 
 if %ERRORLEVEL% NEQ 0 (goto wfh_issue)
@@ -198,17 +194,24 @@ if not exist GQ_IN.TXT (goto socec_data_error)
 if not exist ATTR_IN.TXT (goto socec_data_error)
 if not exist POPSYN_HH.CSV (goto socec_data_error)
 
-rem Delete old output files.
+rem Delete old output files and deprecated files.
 if exist *OUT.TXT (del *OUT.TXT)
 if exist *OUTPUT.TXT (del *OUTPUT.TXT)
 if exist MCHW_HH.TXT (del MCHW_HH.TXT)
+if exist TG_PopSyn.exe (del TG_PopSyn.exe)
+if exist TG_INPUT.TXT (del TG_INPUT.TXT)
+if exist highinc_workers.csv (del highinc_workers.csv)
 
-TG_PopSyn.exe
-cd ..\scripts
+cd ..\..
+@echo ============================================================= 
+@echo BEGIN CMAP TRIP GENERATION MODEL
+@echo ============================================================= 
+uv run trip_generation\trip_generation_model.py
+cd tg\scripts
 
 echo Creating summary files ...
-python summarize_tg_results.py %project% %run%
-python prepare_iom_inputs.py %project% %run%
+uv run summarize_tg_results.py %project% %run%
+uv run prepare_iom_inputs.py %project% %run%
 echo.
 
 cd ..\data
@@ -225,8 +228,6 @@ if not exist m01auto.csv (goto m01_data_error)
 if not exist m01type.csv (goto m01_data_error)
 
 cd %~dp0
-
-python tg\fortran\create_HHvtype_file.py
 
 echo Module 1 finished.
 echo.
@@ -278,12 +279,8 @@ call :CheckEmpty %infile%
 if exist %infile% (del %infile% /Q)
 cd Database
 
-rem Activate Emme Python env
-call %~dp0..\Scripts\manage\env\activate_env.cmd emme
-if %ERRORLEVEL% NEQ 0 (goto end)
-
 echo Preparing emmebank for model run...
-call python useful_macros\cleanup_for_rerun.py %val%>> tg.rpt
+uv run useful_macros\cleanup_for_rerun.py %val%>> tg.rpt
 echo.
 
 echo Importing production and attraction matrices (used only for b/l/m truck distribution)...
@@ -291,7 +288,7 @@ call python prep_macros\import_tg_results.py >> tg.rpt
 echo.
 
 echo Skimming highway network...
-call python prep_macros\free.skim.mac.py %file1% %val%
+uv run prep_macros\free.skim.mac.py %file1% %val%
 echo.
 
 echo Distributing trucks...

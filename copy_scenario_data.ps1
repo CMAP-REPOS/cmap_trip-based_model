@@ -8,11 +8,6 @@ $destination_db = "$destination_dir\Database\"
 $items = @("emmebank"
            "emmemat"
            "tg\UrbanSim_inputs"
-           "tg\fortran\ATTR_IN.TXT"
-           "tg\fortran\HH_IN.TXT"
-           "tg\fortran\GQ_IN.TXT"
-           "tg\fortran\POPSYN_HH.CSV"
-           "tg\fortran\airport_sz.csv"
            "tg\fortran\SCHOOL_IN.CSV"
            "tg\fortran\wfhmodule\indusmix.csv")
 

@@ -180,7 +180,7 @@ wfh_trip = pd.read_fwf(
   widths=[6, 6, 2, 9, 9],
   names=['subzone17', 'zone17', 'trip_type', 'hh_prods', 'hh_attrs']
 )
-trip = not_wfh_trip.append(wfh_trip)
+trip = pd.concat([not_wfh_trip, wfh_trip], ignore_index=True)
 trip = trip.groupby(['subzone17', 'zone17', 'trip_type']).sum().reset_index()
 
 # Calculate TAZ median household income
