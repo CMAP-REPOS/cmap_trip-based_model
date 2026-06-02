@@ -70,7 +70,8 @@ python cmap_transit_assignment_runner.py %file1% 1 %val%
 REM -- Summarize transit boardings
 cd ..
 set /a val21=%val%+21
-call emme -ng 000 -m transit_asmt_macros/summarize_transit_boardings.mac %val21%
+rem call emme -ng 000 -m transit_asmt_macros/summarize_transit_boardings.mac %val21%
+call python transit_asmt_macros\summarize_transit_boardings.py %val21%
 echo.
 REM -- Delete transit assignment matrices
 python transit_asmt_macros/delete_transit_skims.py %file1%
