@@ -18,7 +18,7 @@ proj_dir = Path(__file__).resolve().parents[2]
 sys.path.append(str(proj_dir.joinpath('Scripts')))
 from tbmtools import project as tbm
 
-print('delete initial batchin scenarios (*0001-*0008)')
+print('delete initial batchin scenarios (*0000-*0008)')
 print('(and build_turn.rpt if it exists)')
 print('  executing...')
 
@@ -35,7 +35,7 @@ with open(os.path.join(db, 'batch_file.yaml')) as f:
     lines_without_backslashes = ''.join([line.replace('\\','/') for line in f])
     config = yaml.safe_load(lines_without_backslashes)
 scen_yr = config['scenario_code']  # e.g., '200'
-scenarios_to_delete = [f'{scen_yr}0{i}' for i in range(1,9)] + [f'{scen_yr}0']
+scenarios_to_delete = [f'{scen_yr}0{i}' for i in range(0,9)] + [f'{scen_yr}0']
 
 #delete scenarios
 for scen in scenarios_to_delete:
