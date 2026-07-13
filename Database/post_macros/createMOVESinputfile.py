@@ -714,6 +714,115 @@ outnoIM_hpmsdailyvmt['year'] = scenyear
 outnoIM_hpmsdailyvmt.to_excel(xlsx_noIM, sheet_name='HPMSDailyVMT', index=False)
 
 
+## ------------------------------------- ##
+## ------ HPMS Annual VMT Tab  --------- ##
+## ------------------------------------- ##
+# Adjust Daily HPMS VMT to Annual 
+
+# Define weekdays
+weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday"]
+
+# Load in annual VMT adjustments
+pth_seasonal = db_dir.joinpath('data', 'seasonal_VMT.xlsx')
+in_weekFractions = pd.read_excel(pth_seasonal, sheet_name = 'weekday_to_weekly')
+in_moFractions = pd.read_excel(pth_seasonal, sheet_name = 'monthly_fractions')
+in_source25split = pd.read_excel(pth_seasonal, sheet_name = 'split25')
+
+
+# Create dataframe of days per month
+in_days_mo = {'month': ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 
+                        'September', 'October', 'November', 'December'],
+            'days': [31, 28, 31, 30, 
+                        31, 30, 31, 31, 
+                        30, 31, 30, 31]}
+in_days_mo=pd.DataFrame(in_days_mo)
+
+###### SARAH TO DO: make this work with scenyear as defined in batch_file.yaml #####
+# Check if year is a leap year, and if so increase days in February by 1
+# check_leap = (year-2016)/4
+# if check_leap.is_integer():
+#     print(f" ---> {year} is a leap year.")
+#     in_days_mo['days'] = np.where(in_days_mo['month']=='February', yamlData['February']+1, in_days_mo['days'])
+# else:
+#     print(f" ---> {year} is not a leap year.")
+
+
+# Find previous travel model year from 'year'; this will be used to project the source type population with future VMT
+# Find previous travel model year from 'year'; this will be used to project the source type population with future VMT
+# work=0
+# if scenario > 100:
+#     try_year = year - 1
+#     end_scenario = scenario-100
+#     while work == 0:
+#         try:
+#             try_scen = int(yamlData[f'year_{try_year}'])
+#             from_year = try_year
+#             work = 1
+#         except:
+#             try_year = try_year - 1
+# else:
+#     from_year = year
+
+# print(from_year)
+# print(f'Using {veh_data_year} ILSOS data')
+# print(f'Using {from_year} as reference year to grow the source type population from TDM VMT')
+
+
+# Create Excel workbooks for IM and nonIM regions
+region_flags = ['IM', 'nonIM']
+for region_flag in region_flags:
+
+    # Get Daily VMT from previous section
+    if region_flag == "IM":
+        in_EMME_HPMS = outIM_hpmsdailyvmt
+    
+    elif region_flag == "nonIM":
+        in_EMME_HPMS = outnoIM_hpmsdailyvmt
+
+    # STEP 1: Find average weekday rate
+    weekFractions = in_weekFractions.copy()
+    weekFractions['flag_weekday'] = np.where(weekFractions['day'].isin(weekdays), 1, 0)
+    weekFractions['mean_weekday'] = weekFractions.groupby(['roadType','roadTypeID', 'flag_weekday'])['IDOT_VMT_pct'].transform('mean')
+
+    roadTypeweekday = weekFractions.loc[weekFractions['flag_weekday'] == 1].copy()
+    roadTypeweekday = roadTypeweekday[['roadType', 'roadTypeID','mean_weekday']].drop_duplicates()
+
+    roadTypePct = in_weekFractions.copy()
+    roadTypePct = roadTypePct.merge(roadTypeweekday, on=['roadType','roadTypeID'])
+    roadTypePct['AvWeekday'] = roadTypePct['IDOT_VMT_pct']/roadTypePct['mean_weekday'] 
+    roadTypePct = roadTypePct.groupby(['roadType', 'roadTypeID'])['AvWeekday'].mean().reset_index()
+
+    # STEP 2: Find adjustment factor for month
+    adjust_fractions = in_moFractions.merge(roadTypePct, on=['roadType', 'roadTypeID'])
+    adjust_fractions['adj_fraction'] = adjust_fractions['fraction']*adjust_fractions['AvWeekday']
+    adjust_fractions = adjust_fractions[['roadType','roadTypeID', 'month', 'adj_fraction']].copy()
+
+    #STEP 3: Apply adjustment factor for each month to source type EMME VMT
+    emme_adj = in_EMME_HPMS.merge(adjust_fractions, on='roadTypeID')
+    emme_adj['adjTotal'] = emme_adj['HPMSDailyVMT']*emme_adj['adj_fraction']
+    emme_adj = emme_adj.merge(in_days_mo, on='month')
+    emme_adj['final_adj'] = emme_adj['days']*emme_adj['adjTotal']
+    emme_adj=emme_adj.groupby(['HPMSVtypeID', 'roadType', 'roadTypeID'])['final_adj'].sum().reset_index()
+
+    # STEP 4: Adjustment to separate motorcycles and passenger and light cars
+    emme_adj = emme_adj.merge(in_source25split, on='roadTypeID')
+    emme_adj['final_VMT'] = np.where(emme_adj['HPMSVtypeID'] == 25, emme_adj['final_adj']*emme_adj['share'], emme_adj['final_adj'])
+    emme_adj['sourceTypeID'] = np.where(emme_adj['HPMSVtypeID'] == 25, emme_adj['source'], emme_adj['HPMSVtypeID'])
+    emme_adj = emme_adj[['sourceTypeID', 'roadTypeID', 'roadType', 'final_VMT']].drop_duplicates().copy()
+    emme_adj = emme_adj.groupby('sourceTypeID')['final_VMT'].sum().round().reset_index()
+
+    # Format for export
+    emme_adj.rename(columns={'sourceTypeID':'HPMSVtypeID', 'final_VMT':'HPMSBaseYearVMT'}, inplace=True)
+    emme_adj['yearID'] = scenyear
+    emme_adj=emme_adj[['HPMSVtypeID', 'yearID', 'HPMSBaseYearVMT']].copy()
+
+    if region_flag == "IM":
+        emme_adj.to_excel(xlsx_IM, sheet_name='HPMSAnnualVMT', index=False)
+
+    if region_flag == "nonIM":
+        emme_adj.to_excel(xlsx_noIM, sheet_name='HPMSAnnualVMT', index=False)
+
+
 
 xlsx_IM.close()
 xlsx_noIM.close()
@@ -723,3 +832,5 @@ print('Done!')
 ## ---------------- END CREATE MOVES INPUT FILE (SAS) ------------------
 
 
+
+# %%
