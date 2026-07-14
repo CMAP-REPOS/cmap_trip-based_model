@@ -14,7 +14,8 @@ dependencies = [
   "pyyaml",
   "sphinx",
   "sphinx_rtd_theme",
-  "tqdm"
+  "tqdm",
+  "ipython>=9.15.0",
 ]
 
 [tool.uv]

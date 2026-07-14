@@ -1,6 +1,15 @@
 # Project details
 model_version: c26q2
-scenario_code: 100
+scenario_code: 800
+year: 2050
+#--- Scenario Code - Year Mapping ---#
+# 100: 2019
+# 200: 2026
+# 300: 2030
+# 500: 2035
+# 600: 2040
+# 800: 2050
+
 # ---------------- Select link analysis files: provide file name (ex: RSP32_links.txt [stored in Database\Select_Link\]) or use None
 # ---------------- Can submit up to 5, comma-separated, any order, no spaces, (ex: None,test4.txt,test1.txt,None,None)
 selectLinkFile: None,None,None,None,None

@@ -56,6 +56,7 @@ with open(db_dir.joinpath('batch_file.yaml')) as f:
     config = yaml.safe_load(f)
 model = config['model_version']  # e.g., 'c23q4'
 scenyear = config['scenario_code']  # e.g., '400'
+year = config['year']
 
 #bring in punch moves link data
 linkdata = pd.read_csv(db_dir.joinpath('data', 'punchlink.csv'))
@@ -732,40 +733,19 @@ in_source25split = pd.read_excel(pth_seasonal, sheet_name = 'split25')
 # Create dataframe of days per month
 in_days_mo = {'month': ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 
                         'September', 'October', 'November', 'December'],
-            'days': [31, 28, 31, 30, 
-                        31, 30, 31, 31, 
-                        30, 31, 30, 31]}
+            'days': [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]}
+
+# Check if year is a leap year, and if so increase days in February by 1
+check_leap = (year-2016)/4
+if check_leap.is_integer():
+    print(f" ---> {year} is a leap year.")
+    feb_ind = in_days_mo["month"].index("February")
+    in_days_mo['days'][feb_ind] +=1
+else:
+    print(f" ---> {year} is not a leap year.")
+
 in_days_mo=pd.DataFrame(in_days_mo)
 
-###### SARAH TO DO: make this work with scenyear as defined in batch_file.yaml #####
-# Check if year is a leap year, and if so increase days in February by 1
-# check_leap = (year-2016)/4
-# if check_leap.is_integer():
-#     print(f" ---> {year} is a leap year.")
-#     in_days_mo['days'] = np.where(in_days_mo['month']=='February', yamlData['February']+1, in_days_mo['days'])
-# else:
-#     print(f" ---> {year} is not a leap year.")
-
-
-# Find previous travel model year from 'year'; this will be used to project the source type population with future VMT
-# Find previous travel model year from 'year'; this will be used to project the source type population with future VMT
-# work=0
-# if scenario > 100:
-#     try_year = year - 1
-#     end_scenario = scenario-100
-#     while work == 0:
-#         try:
-#             try_scen = int(yamlData[f'year_{try_year}'])
-#             from_year = try_year
-#             work = 1
-#         except:
-#             try_year = try_year - 1
-# else:
-#     from_year = year
-
-# print(from_year)
-# print(f'Using {veh_data_year} ILSOS data')
-# print(f'Using {from_year} as reference year to grow the source type population from TDM VMT')
 
 
 # Create Excel workbooks for IM and nonIM regions
