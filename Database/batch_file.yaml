@@ -10,6 +10,8 @@ year: 2050
 # 600: 2040
 # 800: 2050
 
+exportAs: "im"
+# im or im_county
 # ---------------- Select link analysis files: provide file name (ex: RSP32_links.txt [stored in Database\Select_Link\]) or use None
 # ---------------- Can submit up to 5, comma-separated, any order, no spaces, (ex: None,test4.txt,test1.txt,None,None)
 selectLinkFile: None,None,None,None,None
