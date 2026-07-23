@@ -16,6 +16,7 @@ dependencies = [
   "sphinx_rtd_theme",
   "tqdm",
   "ipython>=9.15.0",
+  "ipykernel>=7.3.0",
 ]
 
 [tool.uv]
