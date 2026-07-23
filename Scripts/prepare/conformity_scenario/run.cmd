@@ -2,6 +2,7 @@
 
 cd %~dp0
 
-uv run ".\src\prepare_conformity_scenario.py"
+call "..\..\manage\env\activate_env.cmd" "emme"
+python ".\src\prepare_conformity_scenario.py"
 
 pause

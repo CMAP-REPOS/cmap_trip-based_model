@@ -1,1 +1,0 @@
-git+https://github.com/CMAP-REPOS/cmap_modedest@v24.4.1
