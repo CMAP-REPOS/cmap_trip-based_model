@@ -148,7 +148,6 @@ def clean_linkdata(linkdata):
         links[f'{c}_vht'] = np.where((links['mph'] > 0), links[f'{c}_vmt']/links['mph'], 0)
     links['all_vht'] = np.where((links['mph'] > 0), links['all_vmt']/links['mph'], 0)
 
-    ### SARAH: can make this better?
     ## -- Setup MOVES variables 
     #create avgSpeedBinID by reclassifying mph
     def speed_class(mph):
@@ -555,7 +554,7 @@ def get_hpms_daily_vmt(b, imarea):
 
     # key = { 'sourceTypeID' : 'HPMSVtypeID' }
     key = {
-        21:25, # SARAH: why is this not 20?
+        21:25, 
         32:25,
         42:40, #transit bus vmt only
         52:50,
