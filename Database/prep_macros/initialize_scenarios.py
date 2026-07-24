@@ -51,26 +51,14 @@ proj_dir = db.parent  # cmap_trip-based_model folder
 #set path to batchin files
 with open(os.path.join(db, 'batch_file.yaml')) as f:
     lines_without_backslashes = ''.join([line.replace('\\','/') for line in f])
-    batch_config = yaml.safe_load(lines_without_backslashes)
-
-# find and read config file
-config_file = Path(__file__).resolve().parents[2].joinpath('Scripts','prepare',
-                                                           'conformity_scenario',
-                                                           'hand','config.yaml')
-with open(config_file) as f:
-    config = yaml.safe_load(f)
-
-scen_code = batch_config['scenario_code']
-batchin_path = batch_config['transactionFilePath']  # e.g., M:/catslib/modelprod/c24q2
-real_year = config['scenario_years'][scen_code]
+    config = yaml.safe_load(lines_without_backslashes)
+scen_yr = config['scenario_code']  # e.g., '200'
+batchin_path = config['transactionFilePath']  # e.g., M:/catslib/modelprod/c24q2
 
 hwy_batchin_dir = os.path.join(batchin_path, 'highway')
 trn_batchin_dir = os.path.join(batchin_path, 'transit')
-link_shape_dir = os.path.join(batchin_path, 'linkshape')
-link_shape_file = os.path.join(link_shape_dir, "linkshape_%s.in" %(str(scen_code)))
 print('highway transaction file location: ', hwy_batchin_dir)
 print('transit transaction file location: ', trn_batchin_dir)
-print('link shape transaction file: ', link_shape_file)
 
 ##
 ## EMME SETUP #####
@@ -97,7 +85,6 @@ process_mode_transaction = modeller.tool("inro.emme.data.network.mode.mode_trans
 process_vehicle_transaction = modeller.tool("inro.emme.data.network.transit.vehicle_transaction")
 process_network_transaction = modeller.tool("inro.emme.data.network.base.base_network_transaction")
 process_transit_line_transaction = modeller.tool("inro.emme.data.network.transit.transit_line_transaction")
-process_link_shape_transaction = modeller.tool("inro.emme.data.network.base.link_shape_transaction")
 create_extra = modeller.tool("inro.emme.data.extra_attribute.create_extra_attribute")
 import_attribute_values = modeller.tool("inro.emme.data.network.import_attribute_values")
 net_calc = modeller.tool("inro.emme.network_calculation.network_calculator")
@@ -115,7 +102,7 @@ run_macro = modeller.tool("inro.emme.prompt.run_macro")
 ##
 
 print('create base daily network - all links... ')
-base_scen = int(f'{scen_code}00')
+base_scen = int(f'{scen_yr}00')
 
 create_scenario(
     scenario_id = base_scen,
@@ -188,7 +175,7 @@ batchin_scens = [
 print('creating tod highway scenarios...')
 for bscen in batchin_scens:
     
-    scen = int(f'{scen_code}{bscen[0]}')
+    scen = int(f'{scen_yr}{bscen[0]}')
     tod = int(bscen[0][-1])
     print('    building scenario ', scen)
     # print('    building scenario ', scen, '\n  - tod: ', tod, '\n  - title: ', bscen[1])
@@ -198,17 +185,15 @@ for bscen in batchin_scens:
             from_scenario = emmebank.scenario(base_scen),
             scenario_id = scen,
             scenario_title = bscen[1],
-            overwrite=True,
-            set_as_primary=True
+            overwrite=True
         )
-        print("    from: {0}, to: {1}".format(base_scen, scen))
-    else:
-        change_primary_scenario(emmebank.scenario(base_scen))
+    
+    change_primary_scenario(emmebank.scenario(scen))
     
     print('      -- l1, n1...')
     #n1, l1 batchin
-    l1_batchin = os.path.join(hwy_batchin_dir, str(scen_code), f'{scen}.l1')
-    n1_batchin = os.path.join(hwy_batchin_dir, str(scen_code), f'{scen}.n1')
+    l1_batchin = os.path.join(hwy_batchin_dir, str(scen_yr), f'{scen}.l1')
+    n1_batchin = os.path.join(hwy_batchin_dir, str(scen_yr), f'{scen}.n1')
     
     process_network_transaction(
         transaction_file = n1_batchin
@@ -223,7 +208,7 @@ for bscen in batchin_scens:
     print('      -- l2, n2...')
     
     #n2 batchin (extra attributes)
-    n2_batchin = os.path.join(hwy_batchin_dir, str(scen_code), f'{scen}.n2')
+    n2_batchin = os.path.join(hwy_batchin_dir, str(scen_yr), f'{scen}.n2')
     n2_columns = {0: 'i_node', 1:'@zone', 2:'@atype', 3:'@imarea'}
     
     import_attribute_values(
@@ -233,7 +218,7 @@ for bscen in batchin_scens:
     )
     
     #l2 batchin (extra attributes)
-    l2_batchin = os.path.join(hwy_batchin_dir, str(scen_code), f'{scen}.l2')
+    l2_batchin = os.path.join(hwy_batchin_dir, str(scen_yr), f'{scen}.l2')
     l2_columns = {0: 'i_node', 1:'j_node', 2: '@speed', 3:'@width', 4:'@parkl', 6:'@toll', 7:'@sigic', 9: '@tipid'}
     
     import_attribute_values(
@@ -241,8 +226,6 @@ for bscen in batchin_scens:
         column_labels=l2_columns,
         # scenario = emmebank.scenario(scen)
     )
-
-    process_link_shape_transaction(transaction_file = link_shape_file, revert_on_error = False)
     
     print('      -- other link calculations...')
     
@@ -401,12 +384,23 @@ print('completed highway batchin. proceeding to transit...')
 ## BUILD TRANSIT ASSIGNMENT SCENARIO NETWORKS 
 #######################
 
+scen_yr = str(scen_yr) #just to ensure it works here - convert to string
+scen3_yr4 = {
+    '100': 2019,
+    '200': 2025, 
+    '300': 2030,
+    '400': 2035,
+    '500': 2040,
+    '600': 2045,
+    '700': 2050
+}
+
 network_batchin_list = [
     #[{transit asmt scenario number}, {transaction file time-of-day suffix}, {name of scenario}]
-    [int(scen_code)+21, 1, f'{real_year} Night (6pm-6am)'],
-    [int(scen_code)+23, 2, f'{real_year} AM (6am-9am)'],
-    [int(scen_code)+25, 3, f'{real_year} Midday (9am-4pm)'],
-    [int(scen_code)+27, 4, f'{real_year} PM (4pm-6pm)']
+    [int(scen_yr)+21, 1, f'{scen3_yr4[scen_yr]} Night (6pm-6am)'],
+    [int(scen_yr)+23, 2, f'{scen3_yr4[scen_yr]} AM (6am-9am)'],
+    [int(scen_yr)+25, 3, f'{scen3_yr4[scen_yr]} Midday (9am-4pm)'],
+    [int(scen_yr)+27, 4, f'{scen3_yr4[scen_yr]} PM (4pm-6pm)']
 ]
 
 for asmt_scen in network_batchin_list:
@@ -430,7 +424,7 @@ for asmt_scen in network_batchin_list:
     #build transit network
     transit_modes = os.path.join(trn_batchin_dir, 'tranmodes.txt')
     transit_vehicles = os.path.join(trn_batchin_dir, 'transveh.txt')
-    transit_transaction = os.path.join(trn_batchin_dir, str(scen_code))
+    transit_transaction = os.path.join(trn_batchin_dir, str(scen_yr))
     
     print('  - import modes and vehicles')
     #import modes and vehicles
@@ -445,8 +439,6 @@ for asmt_scen in network_batchin_list:
     #import lines
     process_transit_line_transaction(os.path.join(transit_transaction, f'rail.itinerary_{asmt_scen[1]}'))
     process_transit_line_transaction(os.path.join(transit_transaction, f'bus.itinerary_{asmt_scen[1]}'))
-
-    process_link_shape_transaction(transaction_file = link_shape_file, revert_on_error = False)
     
     print('  - create and calculate extra attributes')
     #create extra attributes
@@ -456,7 +448,7 @@ for asmt_scen in network_batchin_list:
         ['@pspac', 'NODE', 'off-street parking spaces at station'],
         ['@zone', 'NODE', 'CMAP zone'],
         ['@ltime', 'TRANSIT_SEGMENT', 'line service time in minutes'],
-        ['@hwytm', 'TRANSIT_SEGMENT', f'AM peak congested hwy time from scen {scen_code}'],
+        ['@hwytm', 'TRANSIT_SEGMENT', f'AM peak congested hwy time from scen {scen_yr}'],
         ['@zfare_link', 'TRANSIT_SEGMENT', 'incremental zone fare'],
         ['@timbo', 'NODE', 'Base boarding time by station type, min'],
         ['@easeb', 'TRANSIT_LINE', 'Ease of boarding 1=worst, 4=best']
@@ -795,16 +787,16 @@ for asmt_scen in network_batchin_list:
 ## Create transit skim scenarios ##
 today = str(date.today().strftime('%Y%m%d'))
 copy_scenario(
-            from_scenario = emmebank.scenario(int(scen_code)+23),
-            scenario_id = int(scen_code)+3,
-            scenario_title = f'{real_year} am (6am-9am) transit skim network - {today}',
+            from_scenario = emmebank.scenario(int(scen_yr)+23),
+            scenario_id = int(scen_yr)+0,
+            scenario_title = f'{scen3_yr4[scen_yr]} am (6am-9am) transit skim network - {today}',
 			copy_linkshapes=True,
             overwrite=True
         )
 copy_scenario(
-            from_scenario = emmebank.scenario(int(scen_code)+25),
-            scenario_id = int(scen_code)+5,
-            scenario_title = f'{real_year} midday (9am-4pm) transit skim network - {today}',
+            from_scenario = emmebank.scenario(int(scen_yr)+25),
+            scenario_id = int(scen_yr)+5,
+            scenario_title = f'{scen3_yr4[scen_yr]} midday (9am-4pm) transit skim network - {today}',
 			copy_linkshapes=True,
             overwrite=True
         )

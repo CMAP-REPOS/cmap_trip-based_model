@@ -1,7 +1,0 @@
-name: cmap-modedest
-channels:
-  - conda-forge
-dependencies:
-  - larch=5.5.9
-  - python=3.9
-  - uv

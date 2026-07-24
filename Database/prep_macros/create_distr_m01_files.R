@@ -370,7 +370,7 @@ cta_s <- bus %>%
 
 #pace flag cutoffs reflect the distribution of sidewalk density in the whole region
 sidewalk_zn <- in8 %>%
-  rename(subzone17 = V1, sidewalkD = V14) %>%
+  rename(subzone17 = V1, sidewalkD = V36) %>%
   select(subzone17, sidewalkD) %>%
   left_join(szC, by = "subzone17") %>%
   group_by(zone17) %>%
