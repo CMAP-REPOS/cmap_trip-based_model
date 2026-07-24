@@ -1,0 +1,23 @@
+name: Restrict PR Source Branch
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  verify-source-branch:
+    runs-on: windows-latest
+    steps:
+      - name: Verify PR source branch
+        shell: pwsh
+        run: |
+          $allowedBranch = "develop"
+          $headBranch = "${{ github.head_ref }}"
+
+          if ($headBranch -ne $allowedBranch) {
+            Write-Error "Pull Requests to this branch are only allowed from '$allowedBranch'. You tried to merge from '$headBranch'."
+            exit 1
+          }
+
+          Write-Output "Branch verification successful."
