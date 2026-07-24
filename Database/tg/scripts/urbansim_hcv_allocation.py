@@ -1,20 +1,15 @@
 '''
 #####################################################################################
 URBANSIM_HCV_ALLOCATION.PY
-  Craig Heither, rev. 07-21-2025
-  Karly Cazzato, rev. 01-21-2026
+  Craig Heither, rev. 03-28-2022
 
-    Script reads subzone employment by NAICS from UrbanSim files and uses it to develop 
-	allocation weights for heavy commercial vehicle trips. NAICS-level employment 
-    is paired with trips/employee by NAICS estimates and weighted by the zonal share
-    of 2020 building squarefeet. If no buildings exist in the zone in 2020 then a county average
-    zonal share of building sqft is applied to ensure future employment in the zones is 
-    considered. External zones were assigned a zonal share of building sqft based on 
-    an internal zone with a similar trip truck generation rate based on the ATRI
-    calibration dataset. These weighted values are then scaled up to realistic trip volumes. 
-    A file of estimated 2018 truck trips from rail intermodal facilities is also included to 
-    address a gap in the methodology. This ensures the allocation is consistent with the 
-    forecast growth in HCV-dependent land uses.
+    Script reads the scenario buildings file from UrbanSim and uses it to develop 
+	allocation weights for heavy commercial vehicle trips. For the external area, 
+    subzone employment by NAICS is used (along with sqft per worker and truck trip
+    rates) to develop heavy truck trips. A file of estimated 2018 truck trips from 
+    rail intermodal facilities is also included to address a gap in the methodology.
+    This ensures the allocation is consistent with the forecast growth in HCV-dependent
+    land uses.
 
 #####################################################################################
 '''
@@ -24,104 +19,106 @@ URBANSIM_HCV_ALLOCATION.PY
 # ----------------------------------------------------------------------------
 import os, pandas as pd, csv
 import fnmatch																##-- filter files in directory
-import numpy as np
+
 cmapSubzone = 16426															##-- maximum internal CMAP subzone 
-maxZone = 2926
-total_wgt = 564043.02617679   # From ATRI calibration dataset, total weight value for all internal and external truck trips; used to scale final weights to realistic value so intermodal can be added in
-                                                                      
+
+                                                                            
 # ----------------------------------------------------------------------------
 #  Input files.
 # ----------------------------------------------------------------------------  
 USpth ="..\\UrbanSim_inputs"
 ## -- create a list of the UrbanSim files to be processed -- ##
-d1 = fnmatch.filter(os.listdir(USpth), '*subzonetm*')                          ##-- subzone files
+d1 = fnmatch.filter(os.listdir(USpth), '*buildings*')                           ##-- 7 county
+d2 = fnmatch.filter(os.listdir(USpth), '*xsubzonetm*')                          ##-- external area
+dirListing = d1 + d2
 newFiles = []
-for item in d1:
+for item in dirListing:
     newFiles.append(USpth+"\\"+item)
 #
 geog = "..\\fortran\\GEOG_IN.TXT"
+#
+rates = "..\\..\\data\\hcv_tg_rates.txt"                                       ##-- heavy truck trip rates
+corresp = "..\\..\\data\\hcv_building_naics_corresp.csv"                       ##-- NAICS-building type correspondence
+jobsqft = "..\\..\\data\\hcv_sqft_per_job.csv"                                 ##-- average square feet per job
 imx = "..\\..\\data\\hcv_intermodal.csv"                                       ##-- estimate of 2018 truck trips for intermodal facilities
-in_naicsRates = "..\\..\\data\\tg_rates.csv"                                   ##-- estimated trips/employee by NAICS code                              
-in_build_props = "..\\..\\data\\land_use_proportions.csv"                      ##-- proportion of building sqft in zone of all building sqft in CMAP region
+
 
 # ----------------------------------------------------------------------------
 #  Output files.
 # ----------------------------------------------------------------------------  
+chk2 = "..\\..\\data\\chk2.csv"  
 mo20 = "..\\..\\data\\mo20.txt"
 
-print("Subzone files: {0}".format(newFiles))
+print("Building files: {0}".format(newFiles))
+
 
 # ----------------------------------------------------------------------------
-#  Read subzone employment, geographic correspondence and truck trip rates.
+#  Calculate allocation weights for CMAP 7 counties.
 # ----------------------------------------------------------------------------  
+## -- Start with CMAP 7-county buildings -- ##
+bldg1 = pd.read_csv(newFiles[0], sep=',')									##-- CMAP buildings
+print(" --> CMAP Buildings: {0}".format(bldg1.shape[0]))
+test = bldg1[bldg1['subzone_id'] < 5] 
+##test.to_csv(chk1,index=False)
+
 ## -- Read in GEOG_IN to attach Zones -- ##
 geo = pd.read_csv(geog, sep=',', header=None, usecols=[0, 5])
 geo.columns=['subzone_id','zone']
 print(" --> GEOG_IN subzone summary Rows: {0}".format(geo.shape[0]))
+
+## -- Read in truck trip rates file -- ##
+rate = pd.read_csv(rates, sep=',')
+rate.to_csv(chk2,index=False)
+bldg1 = bldg1.merge(geo, how='left', on='subzone_id', copy=False)
+bldg1 = bldg1.merge(rate, how='left', on='building_type_id', copy=False)
 #
-## -- Read in trips/employee by NAICS -- ##        
-naicsRates = pd.read_csv(in_naicsRates, sep=',')              
-#
-## -- Read in zonal share of building sqft -- ##        
-landUse = pd.read_csv(in_build_props, sep=',')            
-#
-intmod = pd.read_csv(imx, usecols=['zone','hcvWgt'], sep=',')
-#          
-#
-## -- Read in subzone employment -- ##
-goodCols = ['subzone_id','num_jobs_sector_11','num_jobs_sector_21','num_jobs_sector_22','num_jobs_sector_23',
+## -- Calculate HCV allocation weights -- ##
+bldg1['hcvWgt'] = bldg1['non_residential_sqft'] * bldg1['hcv_rate']  / 1000     ##-- rates per 1000 sqft
+hcv1 = bldg1.groupby(['zone']).agg({'hcvWgt': 'sum'}).round(4).reset_index()
+
+
+# ----------------------------------------------------------------------------
+#  Calculate allocation weights for external area.
+# ----------------------------------------------------------------------------  
+extern = pd.read_csv(newFiles[1], usecols=['subzone_id','num_jobs_sector_11','num_jobs_sector_21','num_jobs_sector_22','num_jobs_sector_23',
     'num_jobs_sector_31','num_jobs_sector_42','num_jobs_sector_44','num_jobs_sector_48','num_jobs_sector_51','num_jobs_sector_52','num_jobs_sector_53',
     'num_jobs_sector_54','num_jobs_sector_55','num_jobs_sector_56','num_jobs_sector_61','num_jobs_sector_62','num_jobs_sector_71','num_jobs_sector_72',
-    'num_jobs_sector_81','num_jobs_sector_92']
-cmap = pd.read_csv(newFiles[0], usecols=goodCols, sep=',')	                ##-- CMAP 7-county subzones
-cmap = cmap[cmap.subzone_id.le(cmapSubzone)]			                    ##-- ensure only CMAP 7-county subzones
-print(" --> CMAP subzones: {0:,}".format(cmap.shape[0]))
-print('     --> QC: CMAP subzone id is unique: {0}'.format(cmap.subzone_id.is_unique))
+    'num_jobs_sector_81','num_jobs_sector_92'], sep=',')									##-- external subzones
+ext1 = extern[extern['subzone_id'] > cmapSubzone]                              ##-- Ensure only external subzones
+print(" --> External subzone summary Rows: {0}".format(ext1.shape[0]))
+## -- Convert from wide to long -- ##
+external = pd.melt(ext1, id_vars='subzone_id')
+external['NAICS1'] = external['variable'].str[-2:].astype(int)                 ##-- extract NAICS code
 #
-extern = pd.read_csv(newFiles[1], usecols=goodCols, sep=',')                ##-- external subzones
-extern = extern[extern.subzone_id.gt(cmapSubzone)]				            ##-- Ensure only external subzones
-print(" --> External subzones: {0:,}".format(extern.shape[0]))
-print('     --> QC: External subzone id is unique: {0}'.format(extern.subzone_id.is_unique))
-sz = pd.concat([cmap,extern], ignore_index=True, sort=False)	
-print(" --> Total subzones: {0:,}".format(sz.shape[0]))
-print('     --> QC: subzone id is unique: {0}'.format(sz.subzone_id.is_unique))
-
+## -- Attach likely building types to NAICS employment (Cartesian join)-- ##
+bldgType = pd.read_csv(corresp, usecols=['building_type_id', 'NAICS'], sep=',')
+externalCart = external.merge(bldgType, how='cross')
+external = externalCart[externalCart['NAICS1'] == externalCart['NAICS']]       ##-- keep only true NAICS matches
+print(" --> External subzone summary Rows after building types attached: {0}".format(external.shape[0]))
 #
-# ----------------------------------------------------------------------------
-#  Calculate allocation weights for internal and external area. 
-# ----------------------------------------------------------------------------  
-emp = pd.melt(sz, id_vars='subzone_id')
-emp['NAICS'] = emp['variable'].str[-2:].astype(int)      ##-- extract NAICS code
+## -- Calculate square feet by industry for each subzone -- ## 
+jbsqft = pd.read_csv(jobsqft, usecols=['building_type_id', 'building_sqft_per_job'], sep=',')
+external = external.merge(jbsqft, how='left', on='building_type_id', copy=False)
+external['non_residential_sqft'] = external['building_sqft_per_job'] * external['value']
+#
+## -- Use NAICS-building type correspondence file to determine average truck trip rate per industry -- ##
+external = external.merge(rate, how='left', on='building_type_id', copy=False)
+external['hcvWgt'] = external['non_residential_sqft'] * external['hcv_rate']  / 1000     ##-- rates per 1000 sqft
+#
+## -- We do not know what the actual building types are so use the average trip rate per subzone-NAICS combination to estimate -- ##
+hcv2a = external.groupby(['subzone_id','NAICS']).agg({'hcvWgt': 'mean'}).round(4).reset_index()
+#
+## -- Now calculate zonal values -- ##
+hcv2a = hcv2a.merge(geo, how='left', on='subzone_id', copy=False)
+hcv2 = hcv2a.groupby(['zone']).agg({'hcvWgt': 'sum'}).round(4).reset_index()
 
-# Merge subzones with zone crosswalk
-internal = emp.merge(geo, how='left', on='subzone_id', copy=False)
-
-# Aggregate employment by NAICS to zone level
-zn_internal=internal.groupby(['zone', 'NAICS']).agg({'value': 'sum'}).reset_index()
-
-# Apply trips/employee rates by NAICS
-naics_emp = zn_internal.merge(naicsRates, how='left', on=['NAICS'])
-naics_emp['hcvWgt_1']=naics_emp['trips_emp']*naics_emp['value'].round(4)
-
-# Apply land use adjustment 
-naics_emp=naics_emp.merge(landUse, how='left', left_on='zone', right_on='zone17')
-naics_emp['propArea'] = np.where(naics_emp['propArea'].isnull(), naics_emp['propArea'].min(), naics_emp['propArea'])
-naics_emp['hcvWgt_o']=naics_emp['hcvWgt_1']*naics_emp['propArea']
-naics_emp=naics_emp[['zone', 'NAICS', 'value', 'hcvWgt_o']].copy()
-
-# Find shares of developed weights, and apply to total weight to find adjusted weight
-naics_emp['total'] = naics_emp['hcvWgt_o'].sum()
-naics_emp['prop'] = naics_emp['hcvWgt_o']/naics_emp['total']
-naics_emp['hcvWgt'] = naics_emp['prop'] *total_wgt
-
-zn_wt = naics_emp[['zone', 'hcvWgt']].copy()
-zn_wt = zn_wt.groupby(['zone']).agg({'hcvWgt': 'sum'}).round(4).reset_index()
 
 # ----------------------------------------------------------------------------
 #  Create allocation weight file.
 # ----------------------------------------------------------------------------  
 ## -- Add estimate of truck trips for intermodal facilities since building sqft won't quite cover these -- ##
-a = pd.concat([intmod, zn_wt])
+intmod = pd.read_csv(imx, usecols=['zone','hcvWgt'], sep=',')
+a = pd.concat([hcv1,hcv2,intmod])
 hcv = a.groupby(['zone']).agg({'hcvWgt': 'sum'}).round(4).reset_index()
 #
 ## -- Create a template with all zones -- ##
@@ -139,6 +136,7 @@ print(" --> Zonal HCV weights: HCV Minimum = {0:.2f}, HCV Maximum = {1:.2f}, HCV
 
 geo1['a1'] = 'all:'
 geo1.sort_values(by=['zone'], inplace=True)
+##geo1.to_csv(chk2,index=False)
 
 f = open(mo20,'w')
 print("t matrices \nd matrix=mo20 \na matrix=mo20 htrkseed 0 heavy truck allocation seed matrix", file=f) 

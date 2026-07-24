@@ -3,8 +3,6 @@
 # this flags tbm people as usualwfh or tc14
 import pandas as pd
 import numpy as np
-from pathlib import Path
-import yaml
 import sys
 import os
 
@@ -15,96 +13,328 @@ os.chdir(sys.argv[1])
 synpoppath = "synthetic_persons.zip"
 synhhpath = "synthetic_households.zip"
 popsynhhpath = savedir + "/POPSYN_HH.csv"
+incdistpath = "incdist.csv"
+indmixpath = "indusmix.csv"
 indpxwalkpath = "indp_naics.csv"
-geoinpath = savedir + "/GEOG_IN.TXT"
-
-db = Path(__file__).resolve().parents[3]  # database folder
-with open(os.path.join(db, 'Telework.yaml')) as f:
-    lines_without_backslashes = ''.join([line.replace('\\','/') for line in f])
-    wfh_data = yaml.safe_load(lines_without_backslashes)
-
-with open(os.path.join(db, 'batch_file.yaml')) as f:
-    lines_without_backslashes = ''.join([line.replace('\\','/') for line in f])
-    batch_data = yaml.safe_load(lines_without_backslashes)
-
-# find and read config file
-config_file = Path(__file__).resolve().parents[4].joinpath('Scripts','prepare',
-                                                           'conformity_scenario',
-                                                           'hand','config.yaml')    
-with open(config_file) as f:
-    config = yaml.safe_load(f)
 
 # save additional output files?
 savefiles = sys.argv[3]
 
-# scenario code and year
-scen_code = batch_data['scenario_code']
-real_year = config['scenario_years'][scen_code]
-
-# Assume decline_rate from 2026 to 2050, 
-decline_rate = wfh_data['declinerate']
-
-# Based on year gap calculate the adjust rate from 2026 to scenaior year
-scen_yr_adj_rate = 1 - (real_year-2026)/(2050-2026) * decline_rate
-print('Telework decline rate applied: {0:.4f}'.format(scen_yr_adj_rate))
-wfhl = wfh_data['wfhpctlow'] * scen_yr_adj_rate
-wfhm = wfh_data['wfhpctmedium'] * scen_yr_adj_rate
-wfhh = wfh_data['wfhpcthigh'] * scen_yr_adj_rate
-
-# Combine to list for easy loop process
-wfhpctlist = [wfhl, wfhm, wfhh]
-
-# Read income and eduction portion for different WFH rate group from YAML file
-incdist_dict = wfh_data['inc']
-edudist_dict = wfh_data['edu']
+# major parameters - source: mdt + nirpc survey (which is higher than PUMS data...)
+# percent of all workers
+usualwfhpct = float(sys.argv[4])
+tc14pct = float(sys.argv[5])
 
 # set seedvalue
 seedvalue = 2
 np.random.seed(seed=seedvalue)
 
+# place industries in one of two income distributions types
+# high is based on industries that had >60% of workers in income group 4
+# low is based on other industries
+lowlist = ['11', '21', '44-45', '48-49', '56', '61', '62', '71', '72', '81']
+highlist = ['22', '23', '31-33', '42', '51', '52', '53', '54', '55', '92']
+
+# setup education weights for usualwfh (low to high)
+eduw = [0.177, 0.246, 0.576]
+# setup education weights for usualwfh (low to high, fine they don't sum to 1)
+eduwtc = [0.049, 0.114, 0.720]
+
+# set distribution of tc14 into the 4 days
+tcportions = [0.575, 0.254, 0.112, 0.059]
+
+print('setting up for wfhflag script...')
 # read in files
 dfpop = pd.read_csv(synpoppath)
 dfhh = pd.read_csv(synhhpath, dtype={'MV': object})
 indpxwalk = pd.read_csv(indpxwalkpath)
+indmix = pd.read_csv(indmixpath)
+incdist = pd.read_csv(incdistpath)
 
-# merge income2, edu2, trc get workers
+# industry mix - source: mdt + nirpc survey (rescaled after removing industries -7, -8, and 97 to sum to 1)
+indmix1 = indmix[indmix['cat'] == 'usualwfh'][['indus', 'pct']]
+indmix2 = indmix[indmix['cat'] == 'tc14'][['indus', 'pct']]
+
+# merge naics2, income4, edu, get workers
 dfpop = dfpop.merge(indpxwalk, on='INDP', how='left')
 dfpop = dfpop.merge(dfhh[['household_id', 'HINCP19']], on='household_id', how='left')
-
-dfpop['inccat2'] = pd.cut(dfpop.HINCP19, bins=[-99999, 100000, 2000000], right=False, labels=[1, 2])
+dfpop['inccat4'] = pd.cut(dfpop.HINCP19, bins=[-99999, 30000, 60000, 100000, 2000000], right=False, labels=[1, 2, 3, 4])
 
 workers = dfpop[dfpop['JWTR'] != 'bb'].copy()
 workers.JWTR = workers.JWTR.astype(float).astype(int)
 workers.SCHL = workers.SCHL.astype(float).astype(int)
-
-workers.loc[workers.SCHL.isin([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]), 'edu'] = 1
-workers.loc[workers.SCHL.isin([21, 22, 23, 24]), 'edu'] = 2
-
+workers.loc[workers.SCHL.isin([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]), 'edu'] = 1
+workers.loc[workers.SCHL.isin([18, 19, 20]), 'edu'] = 2
+workers.loc[workers.SCHL.isin([21, 22, 23, 24]), 'edu'] = 3
 workers.loc[:, 'selected'] = 0
+
+# overall targets
+targetwfh = round(len(workers) * usualwfhpct, 0)
+targettc14 = round(len(workers) * tc14pct, 0)
+
 workers = workers[workers['ESR'] != '4']
 
-def samplingworkers(df, wfhpctlist):
+# functions
+def portionout(df, pctcol, total, colname):
+    """
+    divides up a total based on a percent column into a new column (no decimals)
+    :param df: input dataframe
+    :param pctcol: name of column that has percentages
+    :param total: can be name of column that has totals, or a numeric total that the percentages will be applied to
+    :param colname: the name of the result column
+    :return: dataframe with targetdec, targetint, decimal, and colname columns
+    """
     df = df.copy()
+    indcounts = workers[workers.selected == 0].groupby('naics2').agg({'household_id':'count'}).reset_index()
+    indcounts.rename({'household_id':'sectortotal'}, axis=1, inplace=True)
+
+
+    if isinstance(total, int) or isinstance(total, float):
+        df['targetdec'] = df[pctcol] * total
+
+        df2 = df.merge(indcounts, left_on='indus', right_on='naics2')
+        df2['testtot'] = df2['sectortotal'] - df2['targetdec']
+
+        if len(df2[df2.testtot < 0]) == 0:
+            pass
+        else:
+            # don't go all the way up to max to prevent same issue further down the line
+            df2.loc[df2.testtot < 0, 'newpct'] = (df2.sectortotal - 10) / total
+            df2.loc[df2.testtot < 0, 'pctdiff'] = df2[pctcol] - df2.newpct
+            todistribute = df2.pctdiff.sum()
+            # normalize unchanged pcts to one to distribute out the missing pct
+            newdenom = 1 - df2.loc[df2.testtot < 0][pctcol].sum()
+            df2.loc[df2.testtot >=0, 'pctfordist'] = df2[pctcol] / newdenom
+            df2.loc[df2.testtot >= 0, 'newpct'] = (df2.pctfordist * todistribute) + df2[pctcol]
+            df2[pctcol] = df2['newpct']
+            df2['targetdec'] = df2[pctcol] * total
+
+        df2['targetint'] = df2['targetdec'].astype('int')
+        df2['decimal'] = df2['targetdec'] - df2['targetint']
+        leftover = total - df2['targetint'].sum()
+        df2.sort_values('decimal', ascending=False, inplace=True)
+        df2.reset_index(drop=True, inplace=True)
+        df2.loc[df2.index < leftover, 'targetint'] = df2.targetint + 1
+        assert (total - df2.targetint.sum()) == 0, "Targets do not sum to total"
+        df2.rename({'targetint': colname}, axis=1, inplace=True)
+        return df2
+
+    elif isinstance(total, str):
+        df['targetdec'] = df[pctcol] * df[total]
+
+        df2 = df.merge(indcounts, left_on='indus', right_on='naics2')
+        df2['testtot'] = df2['sectortotal'] - df2['targetdec']
+
+        if len(df2[df2.testtot < 0]) == 0:
+            pass
+        else:
+            df2.loc[df2.testtot < 0, 'newpct'] = (df2.sectortotal - 10) / df[total]
+            df2.loc[df2.testtot < 0, 'pctdiff'] = df2[pctcol] - df2.newpct
+            todistribute = df2.pctdiff.sum()
+            df2.loc[df2.testtot >= 0, 'newpct'] = df2[pctcol] * (1 + todistribute)
+            df2[pctcol] = df2['newpct']
+            df2['targetdec'] = df2[pctcol] * df2[total]
+
+        df2['targetint'] = df2['targetdec'].astype('int')
+        df2['decimal'] = df2['targetdec'] - df2['targetint']
+
+        totallist = [x for x in df2[total].unique()]
+        piecelist = []
+        for i in totallist:
+            selection = df2[df2[total] == i].copy()
+            leftover = i - selection['targetint'].sum()
+            if leftover != 0:
+                selection.sort_values('decimal', ascending=False, inplace=True)
+                selection.reset_index(drop=True, inplace=True)
+                selection.loc[selection.index < leftover, 'targetint'] = selection.targetint + 1
+                assert (i - selection.targetint.sum()) == 0, "Targets do not sum to total"
+            piecelist.append(selection)
+        df2 = pd.concat(piecelist)
+        df2.rename({'targetint': colname}, axis=1, inplace=True)
+        return df2
+
+
+def settargets(indmix, overalltarget):
+    """
+    use portionout function to set industry/income targets for group of interest (usualwfh or tc14)
+    :param indmix: input df with distribution of people in group of interest into industries
+    :param overalltarget: total target value for people in group of interest
+    :return:
+    """
+    indmixfinal = portionout(indmix, 'pct', overalltarget, 'indint')
+
+    # income targets
+    indmixfinal.loc[indmixfinal['indus'].isin(lowlist), 'incdist'] = 'low'
+    indmixfinal.loc[indmixfinal['indus'].isin(highlist), 'incdist'] = 'high'
+    targets = indmixfinal[['indus', 'pct', 'indint', 'incdist']].merge(incdist, on='incdist', how='left')
+    finaltargets = portionout(targets, 'pct_y', 'indint', 'indincint')
+    finaltargets.reset_index(drop=True, inplace=True)
+
+    return finaltargets
     
-    for idx, trc in enumerate(["low", "medium", "high"]):
-        filtered_df = df[df["trc"] == trc]
-        targetgrouptotal = int(len(filtered_df) * wfhpctlist[idx])
+
+def jwtr11flag(targetdf, workerdf, flagvalue):
+    """
+    flag workers in workerdf with jwtr11 with the flagvalue according to counts in targetdf
+    :param targetdf: guiding dataframe with targets values for each category
+    :param workerdf: worker df with selected flag column
+    :param flagvalue: the value to set the selected column to
+    :return:workerdf
+    """
+    for i, row in targetdf.iterrows():
+        ind = row['indus']
+        inc4 = row['hhinc4']
+        target = row['indincint']
+        options = workerdf[(workerdf['naics2'] == ind) & (workerdf['selected'] == 0) & (
+                workerdf['inccat4'] == inc4) & (workerdf['JWTR'] == 11)]
+        if len(options) > target:
+            ilist = [x for x in options.sample(target, random_state=seedvalue).index.values]
+            workerdf.loc[workerdf.index.isin(ilist), 'selected'] = flagvalue
+        else:
+            ilist2 = [x for x in options.index.values]
+            workerdf.loc[workerdf.index.isin(ilist2), 'selected'] = flagvalue
+
+    return workerdf
+
+
+
+def preproundtwo(workerdf, flagvalue, eduweights, targets):
+    """
+    prepare for roundtwo assignment by calculating numbers still needed and adding eduwgt column
+    :param workerdf: worker df with selected flag column
+    :param flagvalue: value in the 'selected' column to evaluate
+    :param eduweights: weights to apply based on edu field for use in sampling
+    :return: b, workerdf.  b is the new guiding df that lists how many are still needed in each category
+    """
+    result = workerdf[workerdf['selected'] == flagvalue].groupby(['naics2', 'inccat4']). \
+        household_id.count().reset_index()
+
+    # calculate number still needed in each category
+    comparison = targets.merge(result, left_on=['indus', 'hhinc4'],
+                               right_on=['naics2', 'inccat4'], how='left').reset_index()
+    comparison.household_id.fillna(0, inplace=True)
+    comparison['needed'] = comparison['indincint'] - comparison['household_id']
+    b = comparison[comparison['needed'] > 0]
+    workerdf = workerdf.merge(comparison[['indus', 'hhinc4', 'needed']],
+                              left_on=['naics2', 'inccat4'], right_on=['indus', 'hhinc4'], how='left')
+    workerdf.loc[workerdf['edu'] == 1, 'eduwgt'] = eduweights[0]
+    workerdf.loc[workerdf['edu'] == 2, 'eduwgt'] = eduweights[1]
+    workerdf.loc[workerdf['edu'] == 3, 'eduwgt'] = eduweights[2]
+
+    return b, workerdf
+
+
+def roundtwo(dfb, workerdf, flagvalue):
+    """
+    finish flagging workers to meet target values (outside of jwtr == 11) using eduwgt column
+    :param dfb:  guiding dataframe with targets values for each category
+    :param workerdf: worker df with selected flag column
+    :param flagvalue: value to set 'selected' column to
+    :return: workerdf
+    """
+    dolater = {}
+
+    for i, row in dfb.iterrows():
+        ind = row['indus']
+        inc4 = row['hhinc4']
+        target = int(row['needed'])
+        options = workerdf[(workerdf['naics2'] == ind) & (workerdf['selected'] == 0) & (
+                workerdf['inccat4'] == inc4)]
+
+        if len(options) >= target:
+            ilist = [x for x in options.sample(target, weights='eduwgt', random_state=seedvalue).index.values]
+            workerdf.loc[workerdf.index.isin(ilist), 'selected'] = flagvalue
+        elif len(options) < target:
+            dolater[i] = (ind,inc4,target)
         
-        for i in [1, 2]:
-            for e in [1, 2]:
-                inc_factor = incdist_dict[trc][i]
-                edu_factor = edudist_dict[trc][e]
-                targetwfhworkers = int(targetgrouptotal * inc_factor * edu_factor)
-                
-                sub_filtered_df = filtered_df[(filtered_df["inccat2"] == i) & (filtered_df["edu"] == e)]
-                if targetwfhworkers > 0 and len(sub_filtered_df) >= targetwfhworkers:
-                    sample_idx = sub_filtered_df.sample(n=targetwfhworkers, random_state=2).index
-                    df.loc[sample_idx, "selected"] = 1  # mark selected rows
-    
-    return df
+        
+    if len(dolater) > 0:
+        donow = pd.DataFrame.from_dict(dolater, orient='index', columns=['ind','inc','target'])
+        for i,row in donow.iterrows():
+            ind = row['ind']
+            inc4 = row['inc']
+            target = int(row['target'])
+            options = workerdf[(workerdf['naics2'] == ind) & (workerdf['selected'] == 0) & (
+                    workerdf['inccat4'] == inc4)]
+            ilist = [x for x in options.index.values]
+            stillneed = target - len(ilist)
+            options2 = workerdf[(workerdf['naics2'] == ind) & (workerdf['selected'] == 0) & (workerdf.inccat4 != inc4)]
+            ilist.extend([x for x in options2.sample(stillneed).index.values])
+
+            workerdf.loc[workerdf.index.isin(ilist), 'selected'] = flagvalue
+
+    return workerdf
 
 
-workers = samplingworkers(workers, wfhpctlist)
+##########################################
+# part one: usualwfh
+##########################################
+
+# industry targets
+finaltargets1 = settargets(indmix1, targetwfh)
+
+print('selecting usualwfh from JWTR 11...')
+# round one
+workers = jwtr11flag(finaltargets1, workers, 1)
+
+# round two
+b1, workers = preproundtwo(workers, 1, eduw, finaltargets1)
+
+print('selecting usualwfh from any...')
+workers = roundtwo(b1, workers, 1)
+
+current = workers.selected.sum()
+remaining = int(targetwfh - current)
+print('checking overall usualwfh target met...')
+assert remaining == 0, "overall usualwfh target not met"
+workers = workers.drop(['indus', 'hhinc4', 'needed', 'eduwgt'], axis=1)
+
+##########################################
+# part two: tc14
+##########################################
+
+# industry targets
+finaltargets2 = settargets(indmix2, targettc14)
+
+print('selecting tc14 from JWTR 11...')
+# round one
+workers = jwtr11flag(finaltargets2, workers, 2)
+
+# round two
+b2, workers = preproundtwo(workers, 2, eduwtc, finaltargets2)
+
+print('selecting tc14 from any...')
+workers = roundtwo(b2, workers, 2)
+
+current = len(workers[workers['selected'] == 2])
+remaining = int(targettc14 - current)
+print('checking overall tc14 target met...')
+assert remaining == 0, "overall tc14 target not met"
+
+##########################################
+# assign tc14 wfh status for given day
+##########################################
+print('assigning wfh status for tc14...')
+workers['tc'] = 0
+
+tc1 = targettc14 * tcportions[0]
+tc2 = targettc14 * tcportions[1]
+tc3 = targettc14 * tcportions[2]
+tc4 = targettc14 * tcportions[3]
+
+count = 4
+for t in [tc4, tc3, tc2]:
+    options = workers[(workers['selected'] == 2) & (workers['tc'] == 0)]
+    it = int(t)
+    ilist = [x for x in options.sample(it, random_state=seedvalue).index.values]
+    workers.loc[workers.index.isin(ilist), 'tc'] = count
+    count -= 1
+
+workers.loc[(workers['selected'] == 2) & (workers['tc'] == 0), 'tc'] = 1
+
+workers['random'] = np.random.random(size=len(workers))
+workers.loc[(workers['selected'] == 2) & (workers['random'] < (workers['tc'] / 5)), 'working'] = 1
+workers.working.fillna(0, inplace=True)
 
 ##########################################
 # format and save
@@ -113,10 +343,18 @@ print('preparing and saving HH_WFH_STATUS.csv...')
 popsynhh = pd.read_csv(popsynhhpath, names=['sz', 'hhtype', 'vehicles',
                                                'serialno', 'stpuma5', 'rowcol', 'adults', 'workers',
                                                'children', 'iq', 'age', 'hhvtype', 'income'])
-
-hhsummary = workers.groupby("household_id").agg(finalflag=("selected", lambda x: int(x.sum() > 0)),wfhworkers=("selected", "sum")).reset_index()
-
-final1 = dfhh[['household_id','SERIALNO']].merge(hhsummary[['household_id','finalflag','wfhworkers']],on='household_id', how='left')
+workers.loc[workers['selected'] == 1, 'usualwfh'] = 1
+workers.loc[(workers['selected'] == 2) & (workers['working'] == 1), 'tc14'] = 1
+workers.loc[(workers['selected'] == 2) & (workers['working'] == 0), 'tc14nw'] = 1
+workers.usualwfh.fillna(0, inplace=True)
+workers.tc14.fillna(0, inplace=True)
+workers.tc14nw.fillna(0, inplace=True)
+hhsummary = workers.groupby('household_id').agg({'usualwfh':'sum','tc14':'sum','tc14nw':'max'}).reset_index()
+hhsummary['wfhworkers'] = hhsummary['tc14'] + hhsummary['usualwfh']
+hhsummary.loc[(hhsummary['tc14'] > 0) & (hhsummary['usualwfh'] > 0), 'finalflag'] = 1
+hhsummary.loc[(hhsummary['tc14'] > 0) & (hhsummary['usualwfh'] == 0), 'finalflag'] = 2
+hhsummary.loc[(hhsummary['tc14'] == 0) & (hhsummary['usualwfh'] > 0), 'finalflag'] = 1
+final1 = dfhh[['household_id','SERIALNO']].merge(hhsummary[['household_id','finalflag','wfhworkers','tc14nw']],on='household_id', how='left')
 final1.finalflag.fillna(0, inplace=True)
 try:
     final1['SERIALNO'] = final1['SERIALNO'].str.replace('HU','99')
@@ -133,73 +371,11 @@ final1sort['SERIALNO'] = final1sort.SERIALNO.astype('int64')
 final1sort['diffcheck'] = final1sort['SERIALNO'] - final1sort['sn2']
 assert (final1sort.diffcheck == 0).all(), "file not aligned with popsyn_hh"
 final1sort.wfhworkers.fillna(0, inplace=True)
+final1sort.tc14nw.fillna(0, inplace=True)
 final1sort['finalflag'] = final1sort.finalflag.astype('int')
 final1sort['wfhworkers'] = final1sort.wfhworkers.astype('int')
-final1sort[['SERIALNO', 'finalflag','wfhworkers']].to_csv(savedir + "/HH_WFH_STATUS.CSV", index=False, header=False)
-
-# Red GEO data get puma to county
-pumacross = pd.read_csv(geoinpath, sep=",", usecols=[1, 2, 3, 4], names=["fips", "cnty_name", "state", "puma5"], header=None )
-pumacross = pumacross.drop_duplicates()
-pumacross["puma5"] = pumacross["puma5"].astype(str)
-
-# Merge to new data prepare the county status
-final2 = pd.merge(popsynhh, final1sort, left_index=True, right_index=True, how='inner')
-final2['State'] = final2['stpuma5'].astype(str).str[0:2]
-final2['PUMA'] = final2['stpuma5'].astype(str).str[2:]
-final2['PUMA'] = final2['PUMA'].str.lstrip('0')
-final2["PUMA"] = final2["PUMA"].astype(str)
-final2_all = pd.merge(final2, pumacross, left_on="PUMA", right_on="puma5")
-
-# Convert children to numeric first
-final2_all["children"] = pd.to_numeric(final2_all["children"], errors="coerce")
-final2_all["wfhworkers"] = pd.to_numeric(final2_all["wfhworkers"], errors="coerce")
-
-# --- COUNTY MERGES & FILTERS --- 
-# Combine Boone + Winnebago → Winnebago-Boone 
-final2_all.loc[ 
-    final2_all["cnty_name"].isin(["BOONE", "WINNEBAGO"]), "cnty_name" 
-    ] = "WINNEBAGO-BOONE" 
-
-# Combine Kane + Kendall → Kane-Kendall 
-final2_all.loc[ 
-    final2_all["cnty_name"].isin(["KANE", "KENDALL"]), "cnty_name" 
-    ] = "KANE-KENDALL" 
-
-# Remove Lee + Ogle 
-final2_all = final2_all[~final2_all["cnty_name"].isin(["LEE", "OGLE"])]
-
-county_worker = final2_all.groupby(['State','cnty_name'])[['workers','wfhworkers']].sum().reset_index()
-
-county_worker.to_csv(savedir + "/PERSON_COUNTY_STATUS.CSV", index=False)
-
-# Now collapse 3+ into "3+"
-final2_all["children"] = final2_all["children"].apply(
-    lambda x: "3+" if x >= 3 else x
-)
-final2_all["wfhworkers"] = final2_all["wfhworkers"].apply(
-    lambda x: "3+" if x >= 3 else x
-)
-
-# Group and compute counts
-hh_child_work = (
-    final2_all
-    .groupby(['cnty_name','State','children','wfhworkers'])
-    .size()
-    .reset_index(name='HH')
-)
-
-# Totals per county/state
-hh_child_work['HH_county'] = (
-    hh_child_work.groupby(['cnty_name','State'])['HH']
-    .transform('sum')
-)
-
-# Shares
-hh_child_work['HH_county_share'] = (
-    hh_child_work['HH'] / hh_child_work['HH_county']
-)
-
-hh_child_work.to_csv(savedir + "/HH_CHILD_WORK.CSV", index=False)
+final1sort['tc14nw'] = final1sort.tc14nw.astype('int')
+final1sort[['SERIALNO', 'finalflag','wfhworkers','tc14nw']].to_csv(savedir + "/HH_WFH_STATUS.CSV", index=False, header=False)
 
 ##########################################
 # save additional files
@@ -208,3 +384,5 @@ hh_child_work.to_csv(savedir + "/HH_CHILD_WORK.CSV", index=False)
 if savefiles == "Y":
     print('saving additional files...')
     workers.to_csv("workers.csv", index=False)
+    finaltargets1.to_csv("finaltargets_usualwfh.csv", index=False)
+    finaltargets2.to_csv("finaltargets_tc14.csv", index=False)

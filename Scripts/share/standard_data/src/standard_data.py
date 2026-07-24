@@ -182,11 +182,7 @@ def export(project_file_name, trip_roster_file_name, tg_data_file_name, scenario
     # Copy TG results to output directory.
     logging.info('Copying TG results')
     tg_dir = _proj_dir.joinpath('Database/tg')
-    tg_results_file = sorted(tg_dir.joinpath('data').glob('tg_results*.csv'))
-    if len(tg_results_file) > 1:
-        raise FileNotFoundError(f'Multiple TG results files exist in {tg_dir}.')
-    else:
-        file = tg_results_file[0]
+    file = sorted(tg_dir.joinpath('data').glob('tg_results*.csv'))[0]
     shutil.copy(file, _out_dir)
     file_copy = _out_dir.joinpath(file.name)
     renamed_copy = file_copy.with_name(tg_data_file_name)

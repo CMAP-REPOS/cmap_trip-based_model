@@ -1,6 +1,6 @@
 """
 summarize_tg_results.py
-06/12/2025
+05/22/2020
 N. Ferguson
 
 Reads data files from the trip generation model and creates a dataset
@@ -8,7 +8,6 @@ of the results with summary tables.
 
 Revision history
 ----------------
-06/12/2025 Heither: revised line 103 to identify correct columns in new file layout
 05/22/2020 Ferguson: Adapted from summary_tg_results_popsyn.sas.
 08/13/2020 Ferguson: Corrected error in P-A to O-D format conversion
            affecting non-home attractions.
@@ -101,7 +100,7 @@ labels_fips = {
 labels_bin = {'1': 'yes', '0': 'no'}
 
 # Households
-hh = pd.read_csv(pth_hh, header=None, usecols=[0, 12, 13])
+hh = pd.read_csv(pth_hh, header=None, usecols=[0, 34, 35])
 hh.columns = ['subzone17', 'wrkautoms', 'sdwlkidx']
 labels_hh = dict(
   subzone17 = 'subzone',
@@ -180,7 +179,7 @@ wfh_trip = pd.read_fwf(
   widths=[6, 6, 2, 9, 9],
   names=['subzone17', 'zone17', 'trip_type', 'hh_prods', 'hh_attrs']
 )
-trip = pd.concat([not_wfh_trip, wfh_trip], ignore_index=True)
+trip = not_wfh_trip.append(wfh_trip)
 trip = trip.groupby(['subzone17', 'zone17', 'trip_type']).sum().reset_index()
 
 # Calculate TAZ median household income

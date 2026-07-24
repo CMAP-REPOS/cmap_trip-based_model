@@ -21,11 +21,11 @@ echo.
 rem -- Read model run settings from batch_file.yaml --
 for /f "eol=# skip=2 tokens=2 delims=:" %%a in (batch_file.yaml) do (set val=%%a & goto break1)
 :break1
-for /f "eol=# skip=10 tokens=2 delims=:" %%f in (batch_file.yaml) do (set transitAsmt=%%f & goto break2)
+for /f "eol=# skip=14 tokens=2 delims=:" %%f in (batch_file.yaml) do (set transitAsmt=%%f & goto break2)
 :break2
-for /f "eol=# skip=12 tokens=2 delims=:" %%h in (batch_file.yaml) do (set selLineFile=%%h & goto break4)
+for /f "eol=# skip=16 tokens=2 delims=:" %%h in (batch_file.yaml) do (set selLineFile=%%h & goto break4)
 :break4
-for /f "eol=# skip=18 tokens=2 delims=:" %%k in (batch_file.yaml) do (set RSPrun=%%k & goto break5)
+for /f "eol=# skip=22 tokens=2 delims=:" %%k in (batch_file.yaml) do (set RSPrun=%%k & goto break5)
 :break5
 
 set val=%val:~1,3%
@@ -70,7 +70,8 @@ python cmap_transit_assignment_runner.py %file1% 1 %val%
 REM -- Summarize transit boardings
 cd ..
 set /a val21=%val%+21
-call emme -ng 000 -m transit_asmt_macros/summarize_transit_boardings.mac %val21%
+rem call emme -ng 000 -m transit_asmt_macros/summarize_transit_boardings.mac %val21%
+call python transit_asmt_macros\summarize_transit_boardings.py %val21%
 echo.
 REM -- Delete transit assignment matrices
 python transit_asmt_macros/delete_transit_skims.py %file1%
