@@ -6,10 +6,10 @@ on:
       - main
 
 jobs:
-  validate-source-branch:
+  verify-source-branch:
     runs-on: windows-latest
     steps:
-      - name: Validate PR source branch
+      - name: Verify PR source branch
         shell: pwsh
         run: |
           $allowedBranch = "develop"
