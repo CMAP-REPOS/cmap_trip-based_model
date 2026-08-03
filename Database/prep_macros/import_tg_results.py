@@ -57,7 +57,7 @@ def main():
             throw_on_error=True,
             scenario=_m.Modeller().scenario
         )
-        print(f'Successfully process {file}')
+        print(f'Successfully processed {file}')
 
 
     # END
