@@ -15,18 +15,18 @@ REM  Heither, rev. 10-21-2024 (updated for c24q4)
 @echo    - RSP: set to True [it doesn't matter if it is an actual RSP, this merely sets a flag]
 @echo -------------------------------------------------------------------------------------------------
 
-cd %~dp0
 cd ..
+@echo %cd%
 echo.
 rem -- Read model run settings from batch_file.yaml --
 for /f "eol=# skip=2 tokens=2 delims=:" %%a in (batch_file.yaml) do (set val=%%a & goto break1)
 :break1
-for /f "eol=# skip=10 tokens=2 delims=:" %%f in (batch_file.yaml) do (set transitAsmt=%%f & goto break2)
-:break2
-for /f "eol=# skip=12 tokens=2 delims=:" %%h in (batch_file.yaml) do (set selLineFile=%%h & goto break4)
+for /f "eol=# skip=10 tokens=2 delims=:" %%f in (batch_file.yaml) do (set transitAsmt=%%f & goto break4)
 :break4
-for /f "eol=# skip=18 tokens=2 delims=:" %%k in (batch_file.yaml) do (set RSPrun=%%k & goto break5)
+for /f "eol=# skip=12 tokens=2 delims=:" %%i in (batch_file.yaml) do (set selLineFile=%%i & goto break5)
 :break5
+for /f "eol=# skip=18 tokens=2 delims=:" %%l in (batch_file.yaml) do (set RSPrun=%%l & goto break8)
+:break8
 
 set val=%val:~1,3%
 set transitAsmt=%transitAsmt:~1,1%
@@ -59,34 +59,42 @@ echo file1 = %file1%
 call :CheckEmpty %infile%
 :filepass
 if exist %infile% (del %infile% /Q)
-cd Database/transit_asmt_macros
+cd Database
 if exist usemacro_* (del usemacro_* /Q)
 
-rem Activate Emme env
-call %~dp0..\..\Scripts\manage\env\activate_env.cmd emme
-
-REM -- Submit with name of .emp file 
-python cmap_transit_assignment_runner.py %file1% 1 %val%
+@ECHO Begin Transit Assignment setup: %date% %time% >> model_run_timestamp.txt
+REM -- Create matrices to hold TOD transit demand
+if "%RSPrun%" EQU "T" (@ECHO -- Creating HBW transit demand matrices >> model_run_timestamp.txt)
+uv run transit_asmt_macros/setup_transit_asmt_2_initialize_matrices.py %file1% %RSPrun%
+if %ERRORLEVEL% NEQ 0 (goto issue)
+REM -- Fill matrices with demand (point to conda environment)
+uv run transit_asmt_macros/setup_transit_asmt_3_TOD_transit_demand.py %RSPrun%
+if %ERRORLEVEL% NEQ 0 (goto issue)
+@ECHO End Transit Assignment setup >> model_run_timestamp.txt
+@ECHO Submit Transit Assignment >> model_run_timestamp.txt 
+cd transit_asmt_macros
+uv run cmap_transit_assignment_runner.py %file1% 1 %val%
+if %ERRORLEVEL% GTR 0 (goto issue)
 REM -- Summarize transit boardings
 cd ..
 set /a val21=%val%+21
-call emme -ng 000 -m transit_asmt_macros/summarize_transit_boardings.mac %val21%
-echo.
-REM -- Delete transit assignment matrices
-python transit_asmt_macros/delete_transit_skims.py %file1%
+uv run transit_asmt_macros\summarize_transit_boardings.py %val21%
+if %ERRORLEVEL% GTR 0 (goto issue)
 @echo.
-@echo MATRICES DELETED.
-
+REM -- Delete transit assignment matrices
+uv run transit_asmt_macros\delete_transit_skims.py %file1%
+if %ERRORLEVEL% GTR 0 (goto issue)
 if "%check2%" NEQ "None" (
         REM -- Run select line analysis
-        call python transit_asmt_macros\transit_select_line.py %file1% %val% %selLineFile%
+        uv run transit_asmt_macros\transit_select_line.py %file1% %val% %selLineFile%
         if %ERRORLEVEL% GTR 0 (goto issue)
-        @ECHO -- Completed Select Line Analysis 
+        @ECHO -- Completed Select Line Analysis >> model_run_timestamp.txt
         REM -- Summarize select line boardings
-        call python transit_asmt_macros\select_line_boardings.py %file1% %val% %RSPrun% %selLineFile%
+        uv run transit_asmt_macros\select_line_boardings.py %file1% %val% %RSPrun% %selLineFile%
         if %ERRORLEVEL% GTR 0 (goto issue)
-        @ECHO -- Completed Select Line Boarding Analysis
+        @ECHO -- Completed Select Line Boarding Analysis >> model_run_timestamp.txt
     )
+@ECHO End Transit Assignment: %date% %time% >> model_run_timestamp.txt
 goto last
 
 REM ======================================================================
