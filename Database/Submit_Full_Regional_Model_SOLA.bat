@@ -382,14 +382,19 @@ if "%transitAsmt%" EQU "T" (
     uv run transit_asmt_macros/setup_transit_asmt_2_initialize_matrices.py %file1% %RSPrun%
     if %ERRORLEVEL% NEQ 0 (goto issue)
     REM -- Fill matrices with demand (point to conda environment)
-    uv run transit_asmt_macros\setup_transit_asmt_3_TOD_transit_demand.py %RSPrun%
+    uv run transit_asmt_macros/setup_transit_asmt_3_TOD_transit_demand.py %RSPrun%
     if %ERRORLEVEL% NEQ 0 (goto issue)
     @ECHO End Transit Assignment setup >> model_run_timestamp.txt
     @ECHO Submit Transit Assignment >> model_run_timestamp.txt 
     cd transit_asmt_macros
     uv run cmap_transit_assignment_runner.py %file1% 1 %val%
     if %ERRORLEVEL% GTR 0 (goto issue)
+    REM -- Summarize transit boardings
     cd ..
+    set /a val21=%val%+21
+    uv run transit_asmt_macros\summarize_transit_boardings.py %val21%
+    if %ERRORLEVEL% GTR 0 (goto issue)
+    @echo.
     REM -- Delete transit assignment matrices
     uv run transit_asmt_macros\delete_transit_skims.py %file1%
     if %ERRORLEVEL% GTR 0 (goto issue)
