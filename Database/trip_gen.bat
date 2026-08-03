@@ -284,7 +284,7 @@ uv run useful_macros\cleanup_for_rerun.py %val%>> tg.rpt
 echo.
 
 echo Importing production and attraction matrices (used only for b/l/m truck distribution)...
-call python prep_macros\import_tg_results.py >> tg.rpt
+uv run prep_macros\import_tg_results.py >> tg.rpt
 echo.
 
 echo Skimming highway network...
