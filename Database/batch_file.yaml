@@ -10,9 +10,10 @@ year: 2040 # make sure this matches scenario_code
 # 600: 2040
 # 800: 2050
 
-exportAs: "im_county"
+exportAs: "county"
 # "im" to just output IM/nonIM Excel workbooks
 # "im_county" to output IM/nonIM Excel workbooks for each county in the region
+# "county" to output workbooks for each county (include both IM and nonIM regions)
 
 # ---------------- Work from home module inputs (trip generation)
 validationfiles: N
