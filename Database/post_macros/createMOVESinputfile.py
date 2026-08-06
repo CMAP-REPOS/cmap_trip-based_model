@@ -281,13 +281,19 @@ def agg_links(groupcols, links):
 
     return b
 
-def get_initial_model_output(b, imarea):
+def get_initial_model_output(b, imarea=None):
     """ Just filters to given imarea and excludes non-modeled source types"""
     stypes_to_exclude = [11,41,43,51,54]
-    initial_model_output = b.loc[~(b["sourceTypeID"].isin(stypes_to_exclude)) & (b['imarea']==imarea)].copy(deep=True)
+
+    if imarea is None: 
+        initial_model_output = b.loc[~(b["sourceTypeID"].isin(stypes_to_exclude))].copy(deep=True)
+
+    else:
+        initial_model_output = b.loc[~(b["sourceTypeID"].isin(stypes_to_exclude)) & (b['imarea']==imarea)].copy(deep=True)
+
     return initial_model_output
 
-def get_avg_speed_distribution(b,imarea):
+def get_avg_speed_distribution(b,imarea=None):
 
     casecols = ['imarea', 'sourceTypeID', 'roadTypeID', 'hourDayID']
 
@@ -343,9 +349,13 @@ def get_avg_speed_distribution(b,imarea):
 
     avg_speed_dist = share[['imarea', 'sourceTypeID', 'roadTypeID', 'hourDayID', 'avgSpeedBinID','avgSpeedFraction']]
 
-    return avg_speed_dist.loc[(avg_speed_dist['imarea']==imarea)].drop(columns='imarea')
+    if imarea is None:
+        return avg_speed_dist
+
+    else:
+        return avg_speed_dist.loc[(avg_speed_dist['imarea']==imarea)].drop(columns='imarea')
     
-def get_road_type_distribution(b, imarea):
+def get_road_type_distribution(b, imarea=None):
     roadtype = b.groupby(['imarea','sourceTypeID','roadTypeID']).agg({'vmt':'sum'}).reset_index()
     roadtype2 = b.groupby(['imarea','sourceTypeID']).agg({'vmt':'sum'}).rename(columns={'vmt':'sourceVMT'}).reset_index()
 
@@ -406,11 +416,15 @@ def get_road_type_distribution(b, imarea):
     roadtype.eval('roadTypeVMTFraction = vmt / sourceVMT', inplace=True)
     roadtype['roadTypeVMTFraction'] = roadtype['roadTypeVMTFraction'].round(6)
 
-    road_type_distribution = roadtype.loc[roadtype['imarea']==imarea,['sourceTypeID','roadTypeID','roadTypeVMTFraction']].copy()
+    if imarea is None:
+        road_type_distribution = roadtype[['sourceTypeID','roadTypeID','roadTypeVMTFraction','imarea']].copy()
+
+    else: 
+        road_type_distribution = roadtype.loc[roadtype['imarea']==imarea,['sourceTypeID','roadTypeID','roadTypeVMTFraction']].copy()
 
     return road_type_distribution
 
-def get_ramp_fraction(links, imarea):
+def get_ramp_fraction(links, imarea=None):
     
     rmp = links.loc[links['roadTypeID'].isin([2,4])].copy(deep=True)
     rmp.eval('fwyvht = auto_vht + bplate_vht + sush_vht + mtrucklh_vht + htruck_vht + htrucklh_vht + bus_vht', inplace=True)
@@ -425,10 +439,13 @@ def get_ramp_fraction(links, imarea):
     ramp['vmtFraction'] = ramp['vmtFraction'].round(6)
 
     # Output ramp fraction for im area
-    ramp_fraction = ramp.loc[ramp['imarea']==imarea,['roadTypeID','rampFraction']]
+    if imarea is None:
+         ramp_fraction = ramp[['roadTypeID','rampFraction', 'imarea']]
+    else:
+        ramp_fraction = ramp.loc[ramp['imarea']==imarea,['roadTypeID','rampFraction']]
     return ramp_fraction
 
-def get_hourly_vmt_fraction(b, imarea):
+def get_hourly_vmt_fraction(b, imarea=None):
 
     # Apply data to template (all ID combinations)
     roads = [1] + ROAD_TYPES # add off-network roads just for this function
@@ -544,11 +561,14 @@ def get_hourly_vmt_fraction(b, imarea):
 
     vmtshare.drop_duplicates(['sourceTypeID','roadTypeID','dayID','hourID','imarea'], inplace=True)
 
-    hour_vmt_fraction = vmtshare.loc[vmtshare['imarea']==imarea, ['sourceTypeID','roadTypeID','dayID','hourID','hourVMTFraction']]
+    if imarea is None:
+        hour_vmt_fraction = vmtshare[['sourceTypeID','roadTypeID','dayID','hourID','hourVMTFraction',"imarea"]]
+    else:
+        hour_vmt_fraction = vmtshare.loc[vmtshare['imarea']==imarea, ['sourceTypeID','roadTypeID','dayID','hourID','hourVMTFraction']]
 
     return hour_vmt_fraction
 
-def get_hpms_daily_vmt(b, imarea):
+def get_hpms_daily_vmt(b, imarea=None):
     #modeled vehicle types only
     hpms = b.loc[b['sourceTypeID'].isin([21,31,32,42,52,53,61,62])].copy()
 
@@ -566,8 +586,14 @@ def get_hpms_daily_vmt(b, imarea):
     hpms['HPMSVtypeID'] = hpms['sourceTypeID'].map(key)
     hpms1 = hpms.groupby(['imarea', 'roadTypeID', 'HPMSVtypeID']).agg({'vmt':'sum'}).reset_index()
     hpms1.rename(columns={'vmt':'HPMSDailyVMT'}, inplace=True)
+    
 
-    hpmsdailyvmt = hpms1.loc[hpms1['imarea']==imarea, ['roadTypeID','HPMSVtypeID','HPMSDailyVMT']]
+    if imarea is None:
+        hpmsdailyvmt = hpms1[['roadTypeID','HPMSVtypeID','HPMSDailyVMT']]
+
+    else:
+        hpmsdailyvmt = hpms1.loc[hpms1['imarea']==imarea, ['roadTypeID','HPMSVtypeID','HPMSDailyVMT']]
+
     hpmsdailyvmt['year'] = scenyear
 
     return hpmsdailyvmt
@@ -668,8 +694,15 @@ if __name__ == "__main__":
     # If just IM/nonIM run, set counties to empty string. Otherwise, use all CMAP region counties.
     if exportAs == "im": 
         counties = [""]
+        im_regions = [("IM",1), ("nonIM", 0)]
     if exportAs == "im_county": 
         counties = ['COOK', 'DUPAGE', 'KANE', 'KENDALL', 'LAKE', 'MCHENRY', 'WILL','GRUNDY']
+        im_regions = [("IM",1), ("nonIM", 0)]
+    if exportAs == "county":
+        counties = ['COOK', 'DUPAGE', 'KANE', 'KENDALL', 'LAKE', 'MCHENRY', 'WILL','GRUNDY']
+        im_regions = [("",None)]
+
+        
 
     # Define IDs
     groupcols = ['imarea', 'roadTypeID', 'timeperiod', 'avgSpeedBinID', 'hours']
@@ -691,7 +724,7 @@ if __name__ == "__main__":
             b = agg_links(groupcols, links_to_use)
 
             # Loop over IM regions
-            for imarea_text, imarea in {"IM": 1, "nonIM": 0}.items():
+            for imarea_text, imarea in im_regions: 
 
 
                 # Tab 1: Initial Model Output
