@@ -6,6 +6,10 @@
 #      - Incorporated county data to output Excel Workbooks by IM region/county and just IM region (depending on 'exportAs')
 #      - Added tab for Annual VMT calculation
 #      - Incorporated globals from MOVES_constants.py, mainly for the template logic 
+#    Sarah Zebar 2026/8/18
+#       - Replace fallback data logic used for AvgSpeedDistribution, RoadTypeDistribution, hourVMTFraction with regional data 
+#       - Reorganized final loop structure for better readability
+#       - Only for AvgSpeedDistribution - replace zeroes with 1e-10 for use in North Shore project
 #
 #
 #   Tim O'Leary 2023/10/3
@@ -195,12 +199,9 @@ def clean_linkdata(linkdata):
 
     return links
 
-def agg_links(links, imarea=None):
+def agg_links(links):
 
-    if imarea is None:
-        groupcols = ['roadTypeID', 'timeperiod', 'avgSpeedBinID', 'hours']
-    else:
-        groupcols = ['roadTypeID', 'timeperiod', 'avgSpeedBinID', 'hours', 'imarea']
+    groupcols = ['roadTypeID', 'timeperiod', 'avgSpeedBinID', 'hours']
 
     #  Define TBM vehicle types     
     vtypes = ['auto','bplate','sush','mtrucklh','htrucklh','htruck','bus']
@@ -269,22 +270,13 @@ def agg_links(links, imarea=None):
     hrday = [(hr*10)+5 for hr in HOURS] 
 
     # If aggregating IM,nonIM, don't include im/nonIM region in template
-    if imarea is None:
-        template_values = list(product(SOURCE_TYPES, ROAD_TYPES, hrday, SPEED_BINS))
-        template_cols = ['sourceTypeID', 'roadTypeID', 'hourDayID', 'avgSpeedBinID']
-        template = pd.DataFrame(template_values, columns=template_cols)
-        template.sort_values(template_cols, inplace=True)
-        template.reset_index(drop=True, inplace=True)
+    # if imarea is None:
+    template_values = list(product(SOURCE_TYPES, ROAD_TYPES, hrday, SPEED_BINS))
+    template_cols = ['sourceTypeID', 'roadTypeID', 'hourDayID', 'avgSpeedBinID']
+    template = pd.DataFrame(template_values, columns=template_cols)
+    template.sort_values(template_cols, inplace=True)
+    template.reset_index(drop=True, inplace=True)
          
-
-    else:
-        template_values = list(product(SOURCE_TYPES, ROAD_TYPES, hrday, SPEED_BINS, [0,1])) # [0,1] is for IM region
-        template_cols = ['sourceTypeID', 'roadTypeID', 'hourDayID', 'avgSpeedBinID', 'imarea']
-        template = pd.DataFrame(template_values, columns=template_cols)
-        template.sort_values( ['imarea','sourceTypeID', 'roadTypeID', 'hourDayID', 'avgSpeedBinID'], inplace=True)
-        template.reset_index(drop=True, inplace=True)
-            
-    #### Apply data to template (all ID combinations)
 
     # Merge data with template
     b = pd.merge(template, b_temp, how='left', on=template_cols)
@@ -299,172 +291,92 @@ def agg_links(links, imarea=None):
 
     return b
 
-def get_initial_model_output(b, imarea=None):
-    """ Just filters to given imarea and excludes non-modeled source types"""
+def filter_links(links, county, imarea):
+    filtered_links = links.copy()
+    if county is not None:
+        filtered_links = filtered_links.loc[filtered_links["county_name"] == county]
+
+    if imarea is not None:
+        filtered_links = filtered_links.loc[filtered_links["imarea"] == imarea]
+
+    return filtered_links
+
+
+def get_initial_model_output(b):
+    """ Just  excludes non-modeled source types"""
     stypes_to_exclude = [11,41,43,51,54]
-
-    if imarea is None: 
-        initial_model_output = b.loc[~(b["sourceTypeID"].isin(stypes_to_exclude))].copy(deep=True)
-
-    else:
-        initial_model_output = b.loc[~(b["sourceTypeID"].isin(stypes_to_exclude)) & (b['imarea']==imarea)].copy(deep=True)
-
+    initial_model_output = b.loc[~(b["sourceTypeID"].isin(stypes_to_exclude))].copy(deep=True)
     return initial_model_output
 
-def get_avg_speed_distribution(b,imarea=None):
-
-
-    # If aggregating IM and nonIM, don't include replacement data
-    if imarea is None:
-        casecols = ['sourceTypeID', 'roadTypeID', 'hourDayID']
-        sumvht = b.groupby(casecols).agg({'vht':'sum'})
-        sumvht.rename(columns={'vht':'allvht'}, inplace=True)
-        sumvht.reset_index(inplace=True)
-        share = pd.merge(b, sumvht, on=casecols, how='inner')
-        share.eval('avgSpeedFraction = vht / allvht', inplace=True)
-        avg_speed_dist = share[['sourceTypeID', 'roadTypeID', 'hourDayID', 'avgSpeedBinID','avgSpeedFraction']]
-        return avg_speed_dist
-
+def get_avg_speed_distribution(b,fallback_data):
     
-    # otherwise, fill will fallback data
-    else:
-        casecols = ['imarea', 'sourceTypeID', 'roadTypeID', 'hourDayID']
-        sumvht = b.groupby(casecols).agg({'vht':'sum'})
-        sumvht.rename(columns={'vht':'allvht'}, inplace=True)
-        sumvht.reset_index(inplace=True)
-        share = pd.merge(b, sumvht, on=casecols, how='inner')
+    casecols = ['sourceTypeID', 'roadTypeID', 'hourDayID']
+    out_cols = casecols + ["avgSpeedBinID", "avgSpeedFraction"]
 
-        #bus, pt 1: use roadTypeID 4 to replace missing values for roadTypeID 2 for sourceTypeID 41,42,43 for IM area
-        fb1_a = share.loc[(share['sourceTypeID']==42)&(share['roadTypeID']==4)&(share['imarea']==1)].copy(deep=True)
-        fb1_a['roadTypeID'] = 2
-        fb1_b = fb1_a.copy()
-        fb1_b['sourceTypeID'] = 41
-        fb1_c = fb1_a.copy()
-        fb1_c['sourceTypeID'] = 43
-        fb1 = pd.concat([fb1_a, fb1_b, fb1_c])
+    # Calculate avgSpeedFraction by casecol group
+    speed_dist = b.copy()
+    speed_dist["avgSpeedFraction"] = speed_dist.groupby(casecols)["vht"].transform(lambda x: x/x.sum())
 
-        #bus, pt2: use sourceTypeID 41,42,43 for IM area to replace missing values for non-IM area
-        fb2 = pd.concat([fb1, share.loc[(share['sourceTypeID'].isin([41,42,43]))&(share['imarea']==1)].copy(deep=True)])
-        fb2['imarea']=0
+    # Only include fallback data if not full region run
+    if fallback_data:
+        # If entire group is null, it's because all VMTs in the group were zero (0/0 error results in NaN)
+        # Fill these with fallback data (regional defaults) since we can't have null data in MOVES inputs
 
-        #SU long-haul truck, pt1: use sourceTypeID 52 to replace missing values for sourceTypeID 53,54 for IM area
-        fb3 = share.loc[(share['sourceTypeID']==52)&(share['imarea']==1)].copy(deep=True)
-        fb3_a = fb3.copy()
-        fb3_a['sourceTypeID'] = 53
-        fb3_b = fb3.copy()
-        fb3_b['sourceTypeID'] = 54
-        fb3 = pd.concat([fb3_a, fb3_b])
+        # First merge in regional data
+        fallback_data_sheet = fallback_data["AvgSpeedDistribution"]
+        speed_dist = pd.merge(speed_dist, 
+                                fallback_data_sheet, 
+                                on=casecols + ["avgSpeedBinID"], 
+                                how = "left",
+                                suffixes = ("_original", "_regional"))
 
-        #SU long-haul truck, pt2: use sourceTypeID 52,53,54 for IM area to replace missing values for non-IM area
-        fb4 = pd.concat([fb3, share.loc[(share['sourceTypeID']==52)&(share['imarea']==1)]], ignore_index=True)
-        fb4['imarea'] = 0
+        # Create flag for groups that need fallback
+        speed_dist["regional_default"] = speed_dist["avgSpeedFraction_original"].isna()
+        out_cols += ["regional_default"]
 
-        #MU long-haul truck pt1: use sourceTypeID 61 to replace missing values for sourceTypeID 62 for IM area
-        fb5 = share.loc[(share['sourceTypeID']==61)&(share['imarea']==1)].copy(deep=True)
-        fb5['sourceTypeID'] = 62
-
-        #MU long-haul truck pt2: use sourceTypeID 61, 62 for IM area to replace missing values for non-IM area
-        fb6 = pd.concat([fb5, share.loc[(share['sourceTypeID']==61)&(share['imarea']==1)].copy(deep=True)])
-        fb6['imarea'] = 0
-
-        #combining this whole mess together
-        fallback = pd.concat([fb1, fb2, fb3, fb4, fb5, fb6], ignore_index=True)
-        fallback.rename(columns={'vht':'vht2', 'allvht':'allvht2'}, inplace=True)
-        fallback.drop(columns='vmt', inplace=True)
-        fallback.drop_duplicates(['imarea', 'sourceTypeID', 'roadTypeID', 'hourDayID', 'avgSpeedBinID'], inplace=True)
-        fallback.sort_values(['imarea', 'sourceTypeID', 'roadTypeID', 'hourDayID', 'avgSpeedBinID'], inplace=True)
-
-        share = pd.merge(share, fallback, how='left', on=['imarea', 'sourceTypeID', 'roadTypeID', 'hourDayID', 'avgSpeedBinID'])
-        share.loc[(share['allvht']==0)&~(share['allvht2'].isnull()), 'vht'] = share['vht2']
-        share.loc[(share['allvht']==0)&~(share['allvht2'].isnull()), 'allvht'] = share['allvht2']
-        share.eval('avgSpeedFraction = vht / allvht', inplace=True)
-
-        avg_speed_dist = share[['imarea', 'sourceTypeID', 'roadTypeID', 'hourDayID', 'avgSpeedBinID','avgSpeedFraction']]
-        return avg_speed_dist.loc[(avg_speed_dist['imarea']==imarea)].drop(columns='imarea')
+        # Combine into 1 column
+        speed_dist["avgSpeedFraction"] = np.where(speed_dist["regional_default"], 
+                                                    speed_dist["avgSpeedFraction_regional"],
+                                                    speed_dist["avgSpeedFraction_original"])
+        
+    # Fill all zeroes with very small value for North Shore Project for You Zhou
+    speed_dist = speed_dist.replace(0,1e-10)
     
-def get_road_type_distribution(b, imarea=None):
+    return speed_dist[out_cols]
 
-    #prevent division by zero
-    def abovezero(x):
-        return np.maximum(x,0.000001)
+def get_road_type_distribution(b, fallback_data):
 
-    # meaning data is not divided up by IM/nonIM
-    if imarea is None:
-        roadtype = b.groupby(['sourceTypeID','roadTypeID']).agg({'vmt':'sum'}).reset_index()
-        roadtype2 = b.groupby(['sourceTypeID']).agg({'vmt':'sum'}).rename(columns={'vmt':'sourceVMT'}).reset_index()
-        roadtype = pd.merge(roadtype, roadtype2, how='left', on=['sourceTypeID'])
-        #ensure correct datatypes
-        for f in ['sourceTypeID', 'roadTypeID']:
-            roadtype[f] = roadtype[f].astype('int')
-        for f in ['vmt','sourceVMT']:
-            roadtype[f] = roadtype[f].astype('float')
+    # First aggregate VMT to sourceTypeID, roadTypeID level
+    road_dist = b.copy()
+    road_dist = road_dist.groupby(["sourceTypeID", "roadTypeID"]).agg({'vmt':'sum'}).reset_index()
 
+    # Then Calculate roadTypeVMTFraction by sourcetype
+    road_dist["roadTypeVMTFraction"] = road_dist.groupby("sourceTypeID")["vmt"].transform(lambda x: x/x.sum())
 
-        roadtype['sourceVMT'] = roadtype['sourceVMT'].apply(abovezero)
-        roadtype.eval('roadTypeVMTFraction = vmt / sourceVMT', inplace=True)
-        roadtype['roadTypeVMTFraction'] = roadtype['roadTypeVMTFraction'].round(6)
+    out_cols = ["sourceTypeID", "roadTypeID", "roadTypeVMTFraction"]
 
-        return roadtype[['sourceTypeID','roadTypeID','roadTypeVMTFraction']].copy()
+    if fallback_data:
+        # Same as avg speed dist - If entire group is null, it's because all VMTs in the group were zero (0/0 error results in NaN)
+        # Fill these with fallback data (regional defaults) since we can't have null data in MOVES inputs
 
-    else:
-        roadtype = b.groupby(['imarea','sourceTypeID','roadTypeID']).agg({'vmt':'sum'}).reset_index()
-        roadtype2 = b.groupby(['imarea','sourceTypeID']).agg({'vmt':'sum'}).rename(columns={'vmt':'sourceVMT'}).reset_index()
+        # First merge in regional data
+        fallback_data_sheet = fallback_data["RoadTypeDistribution"]
+        road_dist = pd.merge(road_dist, 
+                                fallback_data_sheet, 
+                                on=["sourceTypeID", "roadTypeID"], 
+                                how = "left",
+                                suffixes = ("_original", "_regional"))
 
-        roadtype = pd.merge(roadtype, roadtype2, how='left', on=['imarea','sourceTypeID'])
+        # Create flag for groups that need fallback
+        road_dist["regional_default"] = road_dist["roadTypeVMTFraction_original"].isna()
+        out_cols += ["regional_default"]
 
-        #ensure correct datatypes
-        for f in ['sourceTypeID', 'roadTypeID', 'imarea']:
-            roadtype[f] = roadtype[f].astype('int')
-        for f in ['vmt','sourceVMT']:
-            roadtype[f] = roadtype[f].astype('float')
-
-        #bus part1: use roadTypeID 4 to replace missing values for roadTypeID 2 for sourceTypeID 41,42,43 for IM area
-        fb1 = roadtype.loc[(roadtype['sourceTypeID']==42)&(roadtype['roadTypeID']==4)&(roadtype['imarea']==1)].copy(deep=True)
-        fb1_a = fb1.copy()
-        fb1_a['roadTypeID'] = 2
-        fb1_b = fb1_a.copy()
-        fb1_b['sourceTypeID'] = 41
-        fb1_c = fb1_b.copy()
-        fb1_c['sourceTypeID'] = 43
-        fb1 = pd.concat([fb1_a, fb1_b, fb1_c], ignore_index=True)
-
-        #bus part2: use sourcetypeID 41, 42, 43 for IM area to replace missing values for non-IM area
-        fb2 = pd.concat([fb1, roadtype.loc[(roadtype['sourceTypeID'].isin([41,42,43]))&(roadtype['imarea']==1)].copy(deep=True)], ignore_index=True)
-        fb2['imarea'] = 0
-
-        #SU long-haul truck part1: use sourcetypeID 52 to replace missing values for sourceTypeID 53,54 for IM area
-        fb3 = roadtype.loc[(roadtype['sourceTypeID']==52)&(roadtype['imarea']==1)].copy(deep=True)
-        fb3_a = fb3.copy()
-        fb3_a['sourceTypeID'] = 53
-        fb3_b = fb3_a.copy()
-        fb3_b['sourceTypeID'] = 54
-        fb3 = pd.concat([fb3_a, fb3_b], ignore_index=True)
-
-        #SU long-hault truck part2: use sourcetypeID 52. 53. 54 for IM area to replace missing values for non-IM area
-        fb4 = pd.concat([fb3, roadtype.loc[(roadtype['sourceTypeID']==52)&roadtype['imarea']==1].copy(deep=True)])
-        fb4['imarea']=0
-
-        #MU long-haul truck part1: use sourceTypeID 61 to replace missing values for sourcetypeID 62 for IM area
-        fb5 = roadtype.loc[(roadtype['sourceTypeID']==61)&(roadtype['imarea']==1)].copy(deep=True)
-        fb5['sourceTypeID'] = 62
-
-        #MU long-haul truck part2: use sourceTypeID 61,62 for IM area to replace missing values for non-IM area
-        fb6 = pd.concat([fb5, roadtype.loc[(roadtype['sourceTypeID']==61)&(roadtype['imarea']==1)].copy(deep=True)])
-        fb6['imarea'] = 0
-
-        fallback = pd.concat([fb1,fb2,fb3,fb4,fb5,fb6]).rename(columns={'vmt':'vmt2', 'sourceVMT':'sourceVMT2'}).sort_values(['imarea','sourceTypeID','roadTypeID']).drop_duplicates(['imarea','sourceTypeID','roadTypeID'])
-
-        roadtype = pd.merge(roadtype, fallback, how='left', on=['imarea', 'sourceTypeID', 'roadTypeID'])
-        # roadtype.loc[(roadtype['sourceVMT']==0)&~(roadtype['sourceVMT2'].isnull()), ['vmt', 'sourceVMT']] = roadtype[['vmt2', 'sourceVMT2']]
-        roadtype.loc[(roadtype['sourceVMT']==0)&~(roadtype['sourceVMT2'].isnull()), 'vmt'] = roadtype['vmt2']
-        roadtype.loc[(roadtype['sourceVMT']==0)&~(roadtype['sourceVMT2'].isnull()), 'sourceVMT'] = roadtype['sourceVMT2']
-
-        roadtype['sourceVMT'] = roadtype['sourceVMT'].apply(abovezero)
-
-        roadtype.eval('roadTypeVMTFraction = vmt / sourceVMT', inplace=True)
-        roadtype['roadTypeVMTFraction'] = roadtype['roadTypeVMTFraction'].round(6)
-
-        return roadtype.loc[roadtype['imarea']==imarea,['sourceTypeID','roadTypeID','roadTypeVMTFraction']].copy()
+        # Combine into 1 column
+        road_dist["roadTypeVMTFraction"] = np.where(road_dist["regional_default"], 
+                                                    road_dist["roadTypeVMTFraction_regional"],
+                                                    road_dist["roadTypeVMTFraction_original"])
+    
+    return road_dist[out_cols]
 
 
 
@@ -490,157 +402,63 @@ def get_road_type_distribution(b, imarea=None):
 #         ramp_fraction = ramp.loc[ramp['imarea']==imarea,['roadTypeID','rampFraction']]
 #     return ramp_fraction
 
-def get_hourly_vmt_fraction(b, imarea=None):
 
+def get_hourly_vmt_fraction(b, fallback_data):
     # Apply data to template (all ID combinations)
     roads = [1] + ROAD_TYPES # add in off-network roads just for this function
     dayID = [5]
 
-    if imarea is None:
-        template_values = list(product(SOURCE_TYPES, roads, HOURS, dayID))
-        template = pd.DataFrame(template_values, columns=['sourceTypeID', 'roadTypeID', 'hourID', 'dayID'])
-        template.sort_values(['sourceTypeID', 'roadTypeID', 'hourID'], inplace=True)
-        vmt = b.copy()
-        vmt['hourID'] = (vmt['hourDayID'] - 5)/10
+    template_values = list(product(SOURCE_TYPES, roads, HOURS, dayID))
+    template = pd.DataFrame(template_values, columns=['sourceTypeID', 'roadTypeID', 'hourID', 'dayID'])
+    template.sort_values(['sourceTypeID', 'roadTypeID', 'hourID'], inplace=True)
+    vmt = b.copy()
+    vmt['hourID'] = (vmt['hourDayID'] - 5)/10
 
-        hourvmt = vmt.groupby(['sourceTypeID','roadTypeID','hourID']).agg({'vmt':'sum'}).reset_index()
-        sumvmt = hourvmt.groupby(['sourceTypeID','roadTypeID']).agg({'vmt':'sum'}).reset_index()
-        sumvmt.rename(columns={'vmt':'allvmt'},inplace=True)
+    hourvmt = vmt.groupby(['sourceTypeID','roadTypeID','hourID']).agg({'vmt':'sum'}).reset_index()
+    sumvmt = hourvmt.groupby(['sourceTypeID','roadTypeID']).agg({'vmt':'sum'}).reset_index()
+    sumvmt.rename(columns={'vmt':'allvmt'},inplace=True)
 
-        vmtshare = pd.merge(hourvmt, sumvmt, how='left', on=['sourceTypeID','roadTypeID'])
-        vmtshare.sort_values(['sourceTypeID','roadTypeID','hourID'],inplace=True)
+    vmtshare = pd.merge(hourvmt, sumvmt, how='left', on=['sourceTypeID','roadTypeID'])
+    vmtshare.sort_values(['sourceTypeID','roadTypeID','hourID'],inplace=True)
 
-        vmtshare['allvmt'] = np.maximum(vmtshare['allvmt'], 0.000001)
-        vmtshare.eval('hourVMTFraction = vmt / allvmt', inplace=True)
-        vmtshare['hourVMTFraction'] = vmtshare['hourVMTFraction'].round(6)
+    # vmtshare['allvmt'] = np.maximum(vmtshare['allvmt'], 0.000001)
+    vmtshare.eval('hourVMTFraction = vmt / allvmt', inplace=True)
+    # vmtshare['hourVMTFraction'] = vmtshare['hourVMTFraction'].round(6)
 
-        vmtshare_b = vmtshare.copy()
-        vmtshare_b.loc[vmtshare_b['roadTypeID']==5, 'roadTypeID'] = 1 
+    vmtshare_b = vmtshare.copy()
+    vmtshare_b.loc[vmtshare_b['roadTypeID']==5, 'roadTypeID'] = 1 
 
-        vmtshare = pd.concat([vmtshare, vmtshare_b], ignore_index=True).sort_values(['sourceTypeID','roadTypeID','hourID'])
+    vmtshare = pd.concat([vmtshare, vmtshare_b], ignore_index=True).sort_values(['sourceTypeID','roadTypeID','hourID'])
 
-        vmtshare = pd.merge(template, vmtshare, how='left', on=['sourceTypeID','roadTypeID','hourID'])
+    vmtshare = pd.merge(template, vmtshare, how='left', on=['sourceTypeID','roadTypeID','hourID'])
 
-        vmtshare.drop_duplicates(['sourceTypeID','roadTypeID','dayID','hourID'], inplace=True)
+    vmtshare.drop_duplicates(['sourceTypeID','roadTypeID','dayID','hourID'], inplace=True)
 
-        return vmtshare[['sourceTypeID','roadTypeID','dayID','hourID','hourVMTFraction']]
+    out_cols = ['sourceTypeID','roadTypeID','dayID','hourID','hourVMTFraction']
+    if fallback_data:
+        # If entire group is null, it's because all VMTs in the group were zero (0/0 error results in NaN)
+        # Fill these with fallback data (regional defaults) since we can't have null data in MOVES inputs
+        # First merge in regional data
+        fallback_data_sheet = fallback_data["hourVMTFraction"]
+        vmtshare = pd.merge(vmtshare, 
+                            fallback_data_sheet, 
+                            on=["sourceTypeID", "roadTypeID", "dayID", "hourID"], 
+                            how = "left",
+                            suffixes = ("_original", "_regional"))
+        
+        # Create flag for groups that need fallback
+        vmtshare["regional_default"] = vmtshare["hourVMTFraction_original"].isna()
+        out_cols += ["regional_default"]
 
-    else:
-        template_values = list(product(SOURCE_TYPES, roads, HOURS, dayID, [0,1]))
-        template = pd.DataFrame(template_values, columns=['sourceTypeID', 'roadTypeID', 'hourID', 'dayID', 'imarea'])
-        template.sort_values(['imarea', 'sourceTypeID', 'roadTypeID', 'hourID'], inplace=True)
-        vmt = b.copy()
-        vmt['hourID'] = (vmt['hourDayID'] - 5)/10
-
-        hourvmt = vmt.groupby(['imarea','sourceTypeID','roadTypeID','hourID']).agg({'vmt':'sum'}).reset_index()
-        sumvmt = hourvmt.groupby(['imarea', 'sourceTypeID','roadTypeID']).agg({'vmt':'sum'}).reset_index()
-        sumvmt.rename(columns={'vmt':'allvmt'},inplace=True)
-
-        vmtshare = pd.merge(hourvmt, sumvmt, how='left', on=['imarea','sourceTypeID','roadTypeID'])
-        vmtshare.sort_values(['imarea','sourceTypeID','roadTypeID','hourID'],inplace=True)
-
-        ## -- use surrogates to replace missing values, if necessary
-        #bus part 1: use sourcetypeid 42 to replace missing values for sourceTypeID 41,43 for IM area
-        fb1 = vmtshare.loc[(vmtshare['sourceTypeID']==42)&(vmtshare['imarea']==1)].copy()
-        fb1_a = fb1.copy()
-        fb1_a['sourceTypeID'] = 41
-        fb1_b = fb1.copy()
-        fb1_b['sourceTypeID'] = 43
-        fb1 = pd.concat([fb1_a, fb1_b], ignore_index=True)
-
-        #bus part2: use sourcetypeID 41,42,43 for IM area to replace missing values for non-IM area
-        fb2 = pd.concat([fb1, vmtshare.loc[(vmtshare['sourceTypeID'].isin([41,42,43]))&(vmtshare['imarea']==1)&(vmtshare['allvmt']>0)].copy()], ignore_index=True)
-        fb2['imarea'] = 0
-
-        #su long-haul truck part1: use sourceTypeID 52 to replace missing values for sourcetypeID 53,54 for im area
-        fb3 = vmtshare.loc[(vmtshare['sourceTypeID']==52)&(vmtshare['imarea']==1)].copy()
-        fb3_a = fb3.copy()
-        fb3_a['sourceTypeID'] = 53
-        fb3_b = fb3.copy()
-        fb3_b['sourceTypeID'] = 54
-        fb3 = pd.concat([fb3_a, fb3_b], ignore_index=True)
-
-        #su long haul truck part2: use sourceTypeID 52,53,54 for IM area to replace missing values for non-IM area
-        fb4 = pd.concat([fb3, vmtshare.loc[(vmtshare['sourceTypeID'].isin([52,53,54]))&(vmtshare['imarea']==1)&(vmtshare['allvmt']>0)].copy()], ignore_index=True)
-        fb4['imarea'] = 0
-
-        #mu long-haul truck part 1: use sourcetypeID 61 to replace missing values for sourcetypeid 62 for im area
-        fb5 = vmtshare.loc[(vmtshare['sourceTypeID']==61)&(vmtshare['imarea']==1)].copy()
-        fb5['sourceTypeID'] = 62
-
-        #mu long-haul truck part2: use sourcetypeid 61,62 for IM area to replace missing values for non-IM area
-        fb6 = pd.concat([fb5, vmtshare.loc[(vmtshare['sourceTypeID'].isin([61,62]))&(vmtshare['imarea']==1)&(vmtshare['allvmt']>0)].copy()],ignore_index=True)
-        fb6['imarea'] = 0
-
-        fallback = pd.concat([fb1, fb2, fb3, fb4, fb5, fb6], ignore_index=True).sort_values(['imarea','sourceTypeID','roadTypeID','hourID'])
-        fallback.rename(columns={'vmt':'vmt2', 'allvmt':'allvmt2'},inplace=True)
-        fallback.drop_duplicates(subset=['imarea','sourceTypeID','roadTypeID','hourID'], inplace=True)
-
-        vmtshare = pd.merge(vmtshare, fallback, how='left', on=['imarea', 'sourceTypeID', 'roadTypeID', 'hourID'])
-
-        #calculates hourvmtfraction based on original data
-        vmtshare['hourVMTFraction1'] = np.where(vmtshare['allvmt']>0.000001, vmtshare['vmt']/vmtshare['allvmt'], vmtshare['vmt']/0.000001)
-        #calculates hourvmtfraction based on fallback data
-        vmtshare.loc[~(vmtshare['vmt2'].isnull())&~(vmtshare['allvmt2'].isnull()), 'hourVMTFraction2'] = vmtshare['vmt2'] / vmtshare['allvmt2']
+        # Combine into 1 column
+        vmtshare["hourVMTFraction"] = np.where(vmtshare["regional_default"], 
+                                                    vmtshare["hourVMTFraction_regional"],
+                                                    vmtshare["hourVMTFraction_original"])
+    return vmtshare[out_cols]
 
 
-        #for sourcetypes 53,54 if there is any data
-        #then use both the non-zero vmt and the fallback data to arrive at the hourVMTFraction
 
-        truckpart = vmtshare.loc[(vmtshare['sourceTypeID'].isin([53,54]))&(vmtshare['vmt']>0)].copy()
-        vmtcount = truckpart.groupby(['imarea','sourceTypeID','roadTypeID']).agg({'vmt':'count'}).reset_index()
-        vmtcount.rename(columns={'vmt':'vmtcount1'},inplace=True)
-
-
-        vmtweight = pd.merge(vmtshare, vmtcount, how='left', on=['imarea', 'sourceTypeID', 'roadTypeID'])
-        vmtweight2 = vmtweight.copy()
-        #use fallback vmtfraction for 0 vmt hours
-        vmtweight2.loc[(vmtweight2['sourceTypeID'].isin([53,54]))&(vmtweight2['allvmt']>0)&(vmtweight2['vmt']==0), 'hourVMTFractionpre'] = vmtweight2['hourVMTFraction2']
-
-        #use average of the original and fallback vmtfraction otherwise
-        #original data is weighted by number of hours with data
-        vmtweight2.loc[(vmtweight2['sourceTypeID'].isin([53,54]))&(vmtweight2['allvmt']>0)&(vmtweight2['vmt']>0), 'hourVMTFractionpre'] = (((vmtweight2['vmtcount1']/24)*vmtweight2['hourVMTFraction1'])+vmtweight2['hourVMTFraction2'])/((vmtweight2['vmtcount1']+24)/24)
-
-
-        vmtpre = vmtweight2.groupby(['imarea','sourceTypeID','roadTypeID']).agg({'hourVMTFractionpre':'sum'}).reset_index()
-        vmtpre.rename(columns={'hourVMTFractionpre':'vmtpresum'},inplace=True)
-
-
-        vmtshare = pd.merge(vmtweight2, vmtpre, how='left', on=['imarea','sourceTypeID','roadTypeID']).sort_values(['imarea','sourceTypeID','roadTypeID','hourID'])
-        vmtshare.loc[vmtshare['allvmt']==0, 'vmt3'] = vmtshare['vmt']
-        vmtshare.loc[vmtshare['allvmt']==0, 'allvmt3'] = vmtshare['allvmt']
-
-
-        #substitution if no VMT for entire category
-        vmtshare.loc[(vmtshare['allvmt']==0)&(vmtshare['allvmt2']!=0), 'allvmt'] = vmtshare['allvmt2']
-        vmtshare.loc[(vmtshare['vmt']==0)&(vmtshare['vmt2']!=0), 'vmt'] = vmtshare['vmt2']
-        vmtshare.loc[((vmtshare['allvmt']==0)|(vmtshare['allvmt'].isnull()))&~(vmtshare['allvmt2'].isnull()), 'vmt'] = vmtshare['vmt2']
-        vmtshare.loc[((vmtshare['allvmt']==0)|(vmtshare['allvmt'].isnull()))&~(vmtshare['allvmt2'].isnull()), 'allvmt'] = vmtshare['allvmt2']
-
-        #prevent division by zero
-        vmtshare['allvmt'] = np.maximum(vmtshare['allvmt'], 0.000001)
-        vmtshare.eval('hourVMTFraction = vmt / allvmt', inplace=True)
-        vmtshare['hourVMTFraction'] = vmtshare['hourVMTFraction'].round(6)
-
-        vmtshare.loc[(vmtshare['sourceTypeID'].isin([53,54]))&(vmtshare['vmtpresum']>0), 'hourVMTFraction'] = vmtshare['hourVMTFractionpre'] / vmtshare['vmtpresum']
-        vmtshare['hourVMTFractionpre'] = vmtshare['hourVMTFractionpre'].round(6)
-
-        vmtshare.drop(columns=['vmtpresum','hourVMTFraction1','hourVMTFraction2','hourVMTFractionpre','vmtcount1'], inplace=True)
-
-        #apply urban arterial distribution to Off-Network type
-        vmtshare_b = vmtshare.copy()
-        vmtshare_b.loc[vmtshare_b['roadTypeID']==5, 'roadTypeID'] = 1 
-
-        vmtshare = pd.concat([vmtshare, vmtshare_b], ignore_index=True).sort_values(['imarea','sourceTypeID','roadTypeID','hourID'])
-
-        vmtshare = pd.merge(template, vmtshare, how='left', on=['imarea','sourceTypeID','roadTypeID','hourID'])
-
-        vmtshare.drop_duplicates(['sourceTypeID','roadTypeID','dayID','hourID','imarea'], inplace=True)
-
-        return vmtshare.loc[vmtshare['imarea']==imarea, ['sourceTypeID','roadTypeID','dayID','hourID','hourVMTFraction']]
-
-
-def get_hpms_daily_vmt(b, imarea=None):
+def get_hpms_daily_vmt(b):
     #modeled vehicle types only
     hpms = b.loc[b['sourceTypeID'].isin([21,31,32,42,52,53,61,62])].copy()
 
@@ -657,19 +475,12 @@ def get_hpms_daily_vmt(b, imarea=None):
 
     hpms['HPMSVtypeID'] = hpms['sourceTypeID'].map(key)
     
-    if imarea is None:
-        hpms1 = hpms.groupby(['roadTypeID', 'HPMSVtypeID']).agg({'vmt':'sum'}).reset_index()
-        hpms1.rename(columns={'vmt':'HPMSDailyVMT'}, inplace=True)
-        hpms1['year'] = scenyear
-        return hpms1[['roadTypeID','HPMSVtypeID','HPMSDailyVMT', 'year']]
+    hpms_out = hpms.groupby(['roadTypeID', 'HPMSVtypeID']).agg({'vmt':'sum'}).reset_index()
+    hpms_out.rename(columns={'vmt':'HPMSDailyVMT'}, inplace=True)
+    hpms_out['year'] = scenyear
+    return hpms_out[['roadTypeID','HPMSVtypeID','HPMSDailyVMT', 'year']]
 
-    else:
-        hpms1 = hpms.groupby(['imarea', 'roadTypeID', 'HPMSVtypeID']).agg({'vmt':'sum'}).reset_index()
-        hpms1.rename(columns={'vmt':'HPMSDailyVMT'}, inplace=True)
-        hpms1['year'] = scenyear
-        return hpms1.loc[hpms1['imarea']==imarea, ['roadTypeID','HPMSVtypeID','HPMSDailyVMT', 'year']]
-
-def get_hpms_daily_vmt_w_avgspeed(b, imarea=None):
+def get_hpms_daily_vmt_w_avgspeed(b):
     #modeled vehicle types only
     hpms = b.loc[b['sourceTypeID'].isin([21,31,32,42,52,53,61,62])].copy()
 
@@ -686,17 +497,11 @@ def get_hpms_daily_vmt_w_avgspeed(b, imarea=None):
 
     hpms['HPMSVtypeID'] = hpms['sourceTypeID'].map(key)
     
-    if imarea is None:
-        hpms1 = hpms.groupby(['roadTypeID', 'HPMSVtypeID', 'avgSpeedBinID']).agg({'vmt':'sum'}).reset_index()
-        hpms1.rename(columns={'vmt':'HPMSDailyVMT'}, inplace=True)
-        hpms1['year'] = scenyear
-        return hpms1[['roadTypeID','HPMSVtypeID','avgSpeedBinID','HPMSDailyVMT']]
+    hpms_out = hpms.groupby(['roadTypeID', 'HPMSVtypeID', 'avgSpeedBinID']).agg({'vmt':'sum'}).reset_index()
+    hpms_out.rename(columns={'vmt':'HPMSDailyVMT'}, inplace=True)
+    hpms_out['year'] = scenyear
+    return hpms_out[['roadTypeID','HPMSVtypeID','avgSpeedBinID','HPMSDailyVMT']]
 
-    else:
-        hpms1 = hpms.groupby(['imarea', 'roadTypeID', 'HPMSVtypeID', 'avgSpeedBinID']).agg({'vmt':'sum'}).reset_index()
-        hpms1.rename(columns={'vmt':'HPMSDailyVMT'}, inplace=True)
-        hpms1['year'] = scenyear
-        return hpms1.loc[hpms1['imarea']==imarea, ['roadTypeID','HPMSVtypeID','avgSpeedBinID','HPMSDailyVMT']]
 
 def get_month_days(year):
     """ Accounts for leap year """
@@ -708,11 +513,8 @@ def get_month_days(year):
     # Check if year is a leap year, and if so increase days in February by 1
     check_leap = (year-2016)/4
     if check_leap.is_integer():
-        # print(f" ---> {year} is a leap year.")
         feb_ind = days_mo["month"].index("February")
         days_mo['days'][feb_ind] +=1
-    # else:
-        # print(f" ---> {year} is not a leap year.")
 
     days_mo_df =pd.DataFrame(days_mo)
 
@@ -771,6 +573,8 @@ def get_hpms_annual_vmt(hpms_daily_vmt, year):
 
     return emme_adj
 
+
+
 if __name__ == "__main__":
 
     # Get parameters from batch file
@@ -779,7 +583,7 @@ if __name__ == "__main__":
     model = config['model_version']  # e.g., 'c23q4'
     scenyear = config['scenario_code']  # e.g., '400'
     year = config['year']
-    exportAs = config['exportAs'] # im or im_county
+    exportAs = config['exportAs'] 
 
     # Load in punchlink for specific scenario year
     linkdata = pd.read_csv(DB_DIR.joinpath('data', 'punchlink.csv'))
@@ -791,90 +595,84 @@ if __name__ == "__main__":
     # Get clean link data
     links = clean_linkdata(linkdata)
 
-    # If just IM/nonIM run, set counties to empty string. Otherwise, use all CMAP region counties.
+    # Set by_county and by_imarea booleans according to exportAs type
     if exportAs == "im": 
-        counties = [""]
-        im_regions = [("_IM",1), ("_nonIM", 0)]
+        by_county = False
+        by_imarea = True
     if exportAs == "im_county": 
-        counties = ['COOK', 'DUPAGE', 'KANE', 'KENDALL', 'LAKE', 'MCHENRY', 'WILL','GRUNDY']
-        im_regions = [("_IM",1), ("_nonIM", 0)]
+        by_county = True
+        by_imarea = True
     if exportAs == "county":
-        counties = ['COOK', 'DUPAGE', 'KANE', 'KENDALL', 'LAKE', 'MCHENRY', 'WILL','GRUNDY']
-        im_regions = [("",None)]
+        by_county = True
+        by_imarea = False
     if exportAs == "full_region":
-        counties = [""]
+        by_county = False
+        by_imarea = False       
+        
+    # Define iterables
+    if by_county:
+        counties = [('_COOK', 'COOK'),
+                    ('_DUPAGE', 'DUPAGE'), 
+                    ('_KANE','KANE'), 
+                    ('_KENDALL','KENDALL'), 
+                    ('_LAKE','LAKE'), 
+                    ('_MCHENRY','MCHENRY'), 
+                    ('_WILL','WILL'),
+                    ('_GRUNDY','GRUNDY')]     
+    else:
+        counties = [("", None)]
+
+    if by_imarea:
+        im_regions = [("_IM",1), ("_nonIM", 0)]
+    else:
         im_regions = [("",None)]
 
-        
 
-    # Loop over counties
-    for county in counties:
+    # Define output folder
+    out_folder = DB_DIR.joinpath('data', f'MOVES_{model}_scen{scenyear}')
 
-            # If im_county run, filter for just links in a given county
-            if county != "": 
-                links_to_use = links.loc[links["county_name"] == county]
-                county_ext = f"_{county}"
+    # If doing full region run, set fallback to False
+    # Otherwise, read in full region data
+    if exportAs == "full_region":
+        fallback_data = False
+    else:
+        fallback_data_path = out_folder.joinpath(f'MOVES_{model}_scen{scenyear}.xlsx')
+        fallback_data = pd.read_excel(fallback_data_path, sheet_name = None)
 
-            # Otherwise, use entire links dataset
-            else:
-                links_to_use = links.copy()
-                county_ext = ""
+    print(f"Outputting Results to {out_folder}")
+    for county_text, county in counties:
+        for imarea_text, imarea in im_regions:
+            
+            # Filter for county/imarea
+            filtered_links = filter_links(links, county, imarea)
 
-            # Aggregate to VMT/VHT by group cols
-            # if im_regions[0][1] is None, means don't group by IM/nonIM
-            # will group by IM/nonIM for any other value
-            b = agg_links(links_to_use, im_regions[0][1]) 
+            # Aggregate to VMT/VHT by sourceTypeID, roadTypeID, hourDayID, avgSpeedBinID
+            b = agg_links(filtered_links)
 
-            # Loop over IM regions
-            for imarea_text, imarea in im_regions: 
+            # Calculate data for tabs
+            initial_model_output = get_initial_model_output(b)
+            avg_speed_dist = get_avg_speed_distribution(b, fallback_data)
+            road_type_dist = get_road_type_distribution(b, fallback_data)
+            hourly_vmt_fraction = get_hourly_vmt_fraction(b, fallback_data)
+            hpms_daily_vmt = get_hpms_daily_vmt(b)
+            hpms_daily_vmt_w_avgspeed = get_hpms_daily_vmt_w_avgspeed(b)
+            hpms_annual_vmt = get_hpms_annual_vmt(hpms_daily_vmt, year)
 
-                # Tab 1: Initial Model Output
-                initial_model_output = get_initial_model_output(b, imarea)
+            # Define filename and export all tabs to excel workbook
+            file_name = f'MOVES_{model}_scen{scenyear}{county_text}{imarea_text}.xlsx'
+            out_path = out_folder.joinpath(file_name)
+            out_xlsx = pd.ExcelWriter(out_path)
 
-                # If no data, don't output file
-                if (np.all(initial_model_output["vmt"]==0)) & (np.all(initial_model_output["vht"]==0)):
-                    continue
-
-                # Tab 2: Average Speed Distribution
-                avg_speed_dist = get_avg_speed_distribution(b,imarea)
-
-                # Tab 3: Road Type Distribution
-                road_type_distribution = get_road_type_distribution(b, imarea)
-
-                # Tab 4: Hourly VMT Fraction
-                hourly_vmt_fraction = get_hourly_vmt_fraction(b, imarea)
-
-                # Tab 5: HPMS Daily VMT
-                hpms_daily_vmt = get_hpms_daily_vmt(b, imarea)
-
-                # Tab 6: HPMS Daily VMT with Average Speed group columns
-                hpms_daily_vmt_w_avgspeed = get_hpms_daily_vmt_w_avgspeed(b, imarea)
-                
-                # Tab 7: HPMS Annual VMT
-                hpms_annual_vmt = get_hpms_annual_vmt(hpms_daily_vmt, year)
-                
-                # Create folder for outputs if it doesn't already exist
-                out_folder = DB_DIR.joinpath('data', f'MOVES_{model}_scen{scenyear}')
-                out_folder.mkdir(exist_ok=True)
-
-                # Output to Excel Workbook
-                if exportAs == "full_region":
-                    out_path = out_folder.joinpath(f'MOVES_{model}_scen{scenyear}_full_region.xlsx')
-
-                else: 
-                    out_path = out_folder.joinpath(f'MOVES_{model}_scen{scenyear}{county_ext}{imarea_text}.xlsx')
-
-                out_xlsx = pd.ExcelWriter(out_path)
-
-                initial_model_output.to_excel(out_xlsx, sheet_name='initial_model_output', index=False)
-                avg_speed_dist.to_excel(out_xlsx, sheet_name='AvgSpeedDistribution', index=False)
-                road_type_distribution.to_excel(out_xlsx, sheet_name='RoadTypeDistribution', index=False)
-                hourly_vmt_fraction.to_excel(out_xlsx, sheet_name='hourVMTFraction', index=False)
-                hpms_daily_vmt.to_excel(out_xlsx, sheet_name='HPMSDailyVMT', index=False)
-                hpms_daily_vmt_w_avgspeed.to_excel(out_xlsx, sheet_name='HPMSDailyVMTRoadSpeed', index=False)
-                hpms_annual_vmt.to_excel(out_xlsx, sheet_name='HPMSVtypeYear', index=False)
-
-                out_xlsx.close()
+            initial_model_output.to_excel(out_xlsx, sheet_name='initial_model_output', index=False)
+            avg_speed_dist.to_excel(out_xlsx, sheet_name='AvgSpeedDistribution', index=False)
+            road_type_dist.to_excel(out_xlsx, sheet_name='RoadTypeDistribution', index=False)
+            hourly_vmt_fraction.to_excel(out_xlsx, sheet_name='hourVMTFraction', index=False)
+            hpms_daily_vmt.to_excel(out_xlsx, sheet_name='HPMSDailyVMT', index=False)
+            hpms_daily_vmt_w_avgspeed.to_excel(out_xlsx, sheet_name='HPMSDailyVMTRoadSpeed', index=False)
+            hpms_annual_vmt.to_excel(out_xlsx, sheet_name='HPMSVtypeYear', index=False)
+            
+            out_xlsx.close()
+            print("Saved:", file_name)
     
     print("Done!")
 
