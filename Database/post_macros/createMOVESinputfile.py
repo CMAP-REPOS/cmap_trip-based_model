@@ -8,6 +8,7 @@
 #      - Incorporated globals from MOVES_constants.py, mainly for the template logic 
 #    Sarah Zebar 2026/8/18
 #       - Replace fallback data logic used for AvgSpeedDistribution, RoadTypeDistribution, hourVMTFraction with regional data 
+#       - NOTE: first run must be exportAs = "full_region" to obtain regional data
 #       - Reorganized final loop structure for better readability
 #       - Only for AvgSpeedDistribution - replace zeroes with 1e-10 for use in North Shore project
 #
