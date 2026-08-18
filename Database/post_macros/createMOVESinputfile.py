@@ -569,7 +569,7 @@ def get_hpms_annual_vmt(hpms_daily_vmt, year):
 
     # Format for export
     emme_adj.rename(columns={'sourceTypeID':'HPMSVtypeID', 'final_VMT':'HPMSBaseYearVMT'}, inplace=True)
-    emme_adj['yearID'] = scenyear
+    emme_adj['yearID'] = year
     emme_adj=emme_adj[['HPMSVtypeID', 'yearID', 'HPMSBaseYearVMT']].copy()
 
     return emme_adj
