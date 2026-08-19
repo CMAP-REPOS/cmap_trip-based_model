@@ -641,7 +641,7 @@ if __name__ == "__main__":
     if exportAs == "full_region":
         fallback_data = False
     else:
-        fallback_data_path = out_folder.joinpath(f'MOVES_{model}_scen{scenyear}_NEW2.xlsx')
+        fallback_data_path = out_folder.joinpath(f'MOVES_{model}_scen{scenyear}.xlsx')
         fallback_data = pd.read_excel(fallback_data_path, sheet_name = None)
 
     print(f"Outputting Results to {out_folder}")
@@ -664,7 +664,7 @@ if __name__ == "__main__":
             hpms_annual_vmt = get_hpms_annual_vmt(hpms_daily_vmt, year)
 
             # Define filename and export all tabs to excel workbook
-            file_name = f'MOVES_{model}_scen{scenyear}{county_text}{imarea_text}_testing3.xlsx'
+            file_name = f'MOVES_{model}_scen{scenyear}{county_text}{imarea_text}.xlsx'
             out_path = out_folder.joinpath(file_name)
             out_xlsx = pd.ExcelWriter(out_path)
 
