@@ -589,9 +589,14 @@ if __name__ == "__main__":
     # Load in punchlink for specific scenario year
     linkdata = pd.read_csv(DB_DIR.joinpath('data', 'punchlink.csv'))
 
-    # Merge in zone-county crosswalk
-    zone_county_cw = pd.read_csv(DB_DIR.joinpath('data', 'zone17_county_crosswalk.csv'))
-    linkdata = pd.merge(linkdata, zone_county_cw, left_on="zone", right_on="zone17", how = "left").drop("zone17", axis=1)
+        
+    # Merge in zone-county crosswalk (GEOG_IN)
+    zone_county_cw = pd.read_csv(DB_DIR.joinpath("tg", "fortran", "GEOG_IN.txt"), header=None)
+    zone_county_cw.columns =  ['subzone','county','county_name','state','puma','zone','chicago',
+    'cbd','row_column','area','cmap']
+    ## -> Crosswalk is at subzone level, need to aggregate to zone level
+    zone_county_cw = zone_county_cw.groupby(["zone", "county", "county_name", "state"]).first() 
+    linkdata = pd.merge(linkdata, zone_county_cw, on="zone", how = "left")
 
     # Get clean link data
     links = clean_linkdata(linkdata)
@@ -628,7 +633,6 @@ if __name__ == "__main__":
     else:
         im_regions = [("",None)]
 
-
     # Define output folder
     out_folder = DB_DIR.joinpath('data', f'MOVES_{model}_scen{scenyear}')
 
@@ -637,7 +641,7 @@ if __name__ == "__main__":
     if exportAs == "full_region":
         fallback_data = False
     else:
-        fallback_data_path = out_folder.joinpath(f'MOVES_{model}_scen{scenyear}.xlsx')
+        fallback_data_path = out_folder.joinpath(f'MOVES_{model}_scen{scenyear}_NEW2.xlsx')
         fallback_data = pd.read_excel(fallback_data_path, sheet_name = None)
 
     print(f"Outputting Results to {out_folder}")
@@ -660,7 +664,7 @@ if __name__ == "__main__":
             hpms_annual_vmt = get_hpms_annual_vmt(hpms_daily_vmt, year)
 
             # Define filename and export all tabs to excel workbook
-            file_name = f'MOVES_{model}_scen{scenyear}{county_text}{imarea_text}.xlsx'
+            file_name = f'MOVES_{model}_scen{scenyear}{county_text}{imarea_text}_testing3.xlsx'
             out_path = out_folder.joinpath(file_name)
             out_xlsx = pd.ExcelWriter(out_path)
 
