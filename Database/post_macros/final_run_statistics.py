@@ -13,8 +13,9 @@
 #     --Heither 05-13-2021: remove @busveq from VMT calculation (already included in @vadt)
 #     --Heither 08-21-2021: read Global Iteration value to automatically call appropriate scenario
 #     --OLeary  10-10-2023: conversion to python 
-#     --DWells  08-04-2026: full rework, switch from modeller tools to reading emmebank directly,
-#                           aggregate final scenarios 1-8 instead of using X0029 scenario
+#     --DWells  09-03-2026: full rework, switch from modeller tools to reading emmebank directly,
+#                           aggregate final scenarios 1-8 instead of using X0029 scenario, 
+#                           add transit statistics to output
 #
 #   Districts (revised for zone17 10-29-2018):
 #     1: Chicago (zn 1-717)
@@ -265,6 +266,54 @@ def load_emmebank(database_folder):
     link_attr_df = pd.DataFrame(data = link_attrs, columns = ["timeperiod", "i_node", "j_node", "zone", "length", "vdf", "avauv", "avh2v", "avh3v", "avbqv", "avlqv", "avmqv", "avhqv", "busveq"])
 
     return link_attr_df
+    
+# load all transit data from emmebank
+def load_transit_data(database_folder):
+    if os.path.exists(os.path.join(database_folder, "emmebank")):
+        emmebank_path = os.path.join(database_folder, "emmebank")
+    else:
+        raise FileNotFoundError("Couldn't find emmebank file. This script expects it to be in the \"Database\" and for the database folder to be the working directory of the script.")
+
+    print('    Loading transit data directly from emmebank...')
+    emmebank = _emmebank.Emmebank(emmebank_path)
+
+    # identify the AM peak transit scenario
+    scenarios = []
+    for s in emmebank.scenarios():
+        scenarios.append(s.id)
+    am_transit = fnmatch.filter(scenarios, "?23")[0]
+    scenario = emmebank.scenario(am_transit)
+    network = scenario.get_network()
+
+    # load link data
+    link_attrs = []
+    for l in network.links():
+        link_attrs.append([l.id, l.modes, l.length])
+    link_attr_df = pd.DataFrame(data = link_attrs, columns = ["id", "modes", "length"])
+    # convert emme frozen set of modes to string of mode letters
+    link_attr_df["modes"] = link_attr_df["modes"].astype(str).apply(lambda modes: ''.join([m[0] for m in modes.split('(')[2:]]))
+
+    # load line data
+    line_attrs = []
+    for l in network.transit_lines():
+        l_data = [l.id, l.mode, l.headway]
+        total_length = 0
+        total_time = 0
+        for s in l.segments():
+            total_length += s.link.length
+            total_time += s["@ltime"]
+        l_data.append(total_length)
+        l_data.append(total_time)
+        line_attrs.append(l_data)
+    line_attr_df = pd.DataFrame(data = line_attrs, columns = ["id", "mode", "headway", "length", "time"])
+    line_attr_df["mode"] = line_attr_df["mode"].astype(str)
+
+    # number of runs in the scenario = 180 (number of minutes in the scenario) / line headway
+    line_attr_df["runs"] = 180/line_attr_df["headway"]
+    line_attr_df["service_miles"] = line_attr_df["runs"]*line_attr_df["length"]
+    line_attr_df["service_hours"] = line_attr_df["runs"]*line_attr_df["time"]/60
+
+    return link_attr_df, line_attr_df
 
 # helper function to load trips from parquet files and join them with travel skims read directly from matrix files
 def load_trips_with_skims(database_folder):
@@ -397,13 +446,13 @@ def get_trips_by_vehtype(database_folder):
 
     # get the total sum for each matrix
     trips_dict = {
-        "B-Plate Truck": sum(sum(load_mf(os.path.join(matrix_folder, "mf4.emx")))),
-        "Light Truck": sum(sum(load_mf(os.path.join(matrix_folder, "mf5.emx")))),
-        "Medium Truck": sum(sum(load_mf(os.path.join(matrix_folder, "mf6.emx")))),
-        "Heavy Truck": sum(sum(load_mf(os.path.join(matrix_folder, "mf7.emx")))),
-        "POE Auto": sum(sum(load_mf(os.path.join(matrix_folder, "mf8.emx")))),
-        "POE Truck": sum(sum(load_mf(os.path.join(matrix_folder, "mf9.emx")))),
-        "POE Airport": sum(sum(load_mf(os.path.join(matrix_folder, "mf10.emx")))),
+        "B-Plate Truck Trips": sum(sum(load_mf(os.path.join(matrix_folder, "mf4.emx")))),
+        "Light Truck Trips": sum(sum(load_mf(os.path.join(matrix_folder, "mf5.emx")))),
+        "Medium Truck Trips": sum(sum(load_mf(os.path.join(matrix_folder, "mf6.emx")))),
+        "Heavy Truck Trips": sum(sum(load_mf(os.path.join(matrix_folder, "mf7.emx")))),
+        "POE Auto Trips": sum(sum(load_mf(os.path.join(matrix_folder, "mf8.emx")))),
+        "POE Truck Trips": sum(sum(load_mf(os.path.join(matrix_folder, "mf9.emx")))),
+        "POE Airport Trips": sum(sum(load_mf(os.path.join(matrix_folder, "mf10.emx")))),
     }
 
     trips_df = pd.DataFrame(data = {
@@ -517,6 +566,47 @@ def get_trips_w_skims_statistics(trips, area):
 
     return person_trips, transit_share, trip_distance, trip_duration
 
+# calculate transit statistics (directional miles, service miles, and service hours)
+def get_transit_statistics(link_data, line_data):
+    print("    Calculating transit statistics for each agency...")
+
+    # define agency modes
+    agency_modes = {
+        "CTA": "BE",
+        "Pace": "LPQ",
+        "CTA Rail": "C",
+        "Metra": "M"
+    }
+
+    # directional miles
+    directional_miles = [link_data.loc[link_data["modes"].str.contains(f"[{modes}]", regex = True), "length"].sum() for modes in agency_modes.values()]
+    directional_miles = pd.DataFrame(data = {
+        "statistic": ["directional miles"]*len(agency_modes),
+        "agency": agency_modes.keys(),
+        "value": directional_miles
+    })
+
+    # service miles
+    service_miles = [line_data.loc[line_data["mode"].isin(list(modes)), "service_miles"].sum() for modes in agency_modes.values()]
+    service_miles = pd.DataFrame(data = {
+        "statistic": ["service miles"]*len(agency_modes),
+        "agency": agency_modes.keys(),
+        "value": service_miles
+    })
+
+    # service hours
+    service_hours = [line_data.loc[line_data["mode"].isin(list(modes)), "service_hours"].sum() for modes in agency_modes.values()]
+    service_hours = pd.DataFrame(data = {
+        "statistic": ["service hours"]*len(agency_modes),
+        "agency": agency_modes.keys(),
+        "value": service_hours
+    })
+
+    transit_statistics = pd.concat([directional_miles, service_miles, service_hours])
+    return transit_statistics
+    
+
+
 ############################################################################################################
 #
 # Calculate statistics
@@ -531,6 +621,13 @@ if __name__ == "__main__":
     run_name = workspace.split('\\')[-3] # model name folder (above 'cmap_trip-based_model')
     output_vmtstats = workspace + '\\report\\vmt_statistics.csv' #output of RUN_VMT_STATISTICS
     output_runstats = workspace + '\\report\\final_run_statistics.csv' #output of FINAL_RUN_STATISTICS
+    output_transitstats = workspace + '\\report\\transit_statistics.csv' # new transit statistics
+
+    # get transit data from emmebank
+    transit_links, transit_lines = load_transit_data(workspace)
+
+    # get transit statistics
+    transit_statistics = get_transit_statistics(transit_links, transit_lines)
 
     # get link data from emmebank
     link_data = load_emmebank(workspace)
@@ -588,10 +685,13 @@ if __name__ == "__main__":
     ## -- EXPORT -- ##
     ## ------------ ##
 
-    runstats["value"] = runstats["value"].apply(format_numbers)
-    vmt_by_geo["VMT"] = vmt_by_geo["VMT"].apply(format_numbers)
+    # # format the numbers nicely - commenting out as this is handled in the excel comparison script and doing it here loses percision in the numbers
+    # runstats["value"] = runstats["value"].apply(format_numbers)
+    # vmt_by_geo["VMT"] = vmt_by_geo["VMT"].apply(format_numbers)
+    # transit_statistics["value"] = transit_statistics["value"].apply(format_numbers)
 
     runstats.to_csv(output_runstats, index = False)
     vmt_by_geo.to_csv(output_vmtstats, index = False)
+    transit_statistics.to_csv(output_transitstats, index = False)
 
-    print(f'All done! Outputs exported to: \n    Final Run Statistics: {output_runstats} \n    VMT Statistics: {output_vmtstats}')
+    print(f'All done! Outputs exported to: \n    Final Run Statistics: {output_runstats} \n    VMT Statistics: {output_vmtstats} \n    Transit Statistics: {output_transitstats}')
