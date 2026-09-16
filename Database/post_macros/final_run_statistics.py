@@ -381,8 +381,17 @@ def load_trips_with_skims(database_folder):
     dist_skims = []
 
     for tp in range(8):
-        time_skims.append(load_mf(os.path.join(database_folder, "emmemat", f"mf{time_skim_start + tp}.emx")))
-        dist_skims.append(load_mf(os.path.join(database_folder, "emmemat", f"mf{dist_skim_start + tp}.emx")))
+        try:
+            time_skims.append(load_mf(os.path.join(database_folder, "emmemat", f"mf{time_skim_start + tp}.emx")))
+        except FileNotFoundError:
+            backups = [46, 46, 44, 46, 46, 46, 44, 46]
+            time_skims.append(load_mf(os.path.join(database_folder, "emmemat", f"mf{backups[tp]}.emx")))
+        try:
+            dist_skims.append(load_mf(os.path.join(database_folder, "emmemat", f"mf{dist_skim_start + tp}.emx")))
+        except FileNotFoundError:
+            backups = [47, 47, 45, 47, 47, 47, 45, 47]
+            dist_skims.append(load_mf(os.path.join(database_folder, "emmemat", f"mf{backups[tp]}.emx")))
+
     time_skims.append(np.full(time_skims[0].shape, np.nan))
     dist_skims.append(np.full(dist_skims[0].shape, np.nan))
 
