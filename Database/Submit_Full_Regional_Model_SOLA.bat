@@ -309,7 +309,7 @@ if %ERRORLEVEL% NEQ 0 (goto issue)
 @ECHO --- End assignment Period %tod_cntr%: %date% %time% ---
 @ECHO   --- Begin balance5I_7c.mac Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO --- Balance time period volumes ---
-call emme -ng 000 -m macros\balance5I_7c.mac %val% >> blog.txt
+uv run macros/balance5I_7c.py %counter% >> blog.txt
 @ECHO   --- End balance5I_7c.mac Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO   --- Begin time-of-day skim Period %tod_cntr%: %date% %time% >> model_run_timestamp.txt
 @ECHO --- Complete time of day skims ---
