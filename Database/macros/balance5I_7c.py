@@ -135,10 +135,13 @@ vehtype_dict = {
 # initialize average extra attributes as run_0 volume
 if globalIter == 0:
     # delete old extra attributes, if necessary
-    delete_ea(my_modeller.scenario.extra_attribute("@vauto"))
+    if my_modeller.scenario.extra_attribute("@vauto") is not None:
+        delete_ea(my_modeller.scenario.extra_attribute("@vauto"))
     for vehtype in vehtype_dict.values():
-        delete_ea(my_modeller.scenario.extra_attribute(vehtype["vol_ea"]))
-        delete_ea(my_modeller.scenario.extra_attribute(vehtype["turns_ea"]))
+        if my_modeller.scenario.extra_attribute(vehtype["vol_ea"]) is not None:
+            delete_ea(my_modeller.scenario.extra_attribute(vehtype["vol_ea"]))
+        if my_modeller.scenario.extra_attribute(vehtype["turns_ea"]) is not None:
+            delete_ea(my_modeller.scenario.extra_attribute(vehtype["turns_ea"]))
 
     # initialize extra attributes
     for vehtype in vehtype_dict.values():
