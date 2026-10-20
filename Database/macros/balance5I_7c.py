@@ -30,8 +30,10 @@
 import os
 import sys
 from pathlib import Path
+
 import inro.modeller as _m
-sys.path.append(str(Path(__file__).resolve().parents[2].joinpath('Scripts')))
+
+sys.path.append(str(Path(__file__).resolve().parents[2].joinpath('Scripts', 'tbmtools', 'src')))
 from tbmtools import project as tbm
 
 globalIter = int(sys.argv[1])

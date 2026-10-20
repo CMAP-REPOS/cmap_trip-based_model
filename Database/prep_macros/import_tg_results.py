@@ -1,11 +1,14 @@
 import os
-import sys
 import re
+import sys
 from pathlib import Path
+
 import inro.modeller as _m
-sys.path.append(str(Path(__file__).resolve().parents[2].joinpath('Scripts')))    # Assumes script is in Database/ANOTHERSUBFOLDER; [2] goes up two folders to find cmap_trip-based_model/Scripts
+
+sys.path.append(str(Path(__file__).resolve().parents[2].joinpath('Scripts', 'tbmtools', 'src')))    # Assumes script is in Database/ANOTHERSUBFOLDER; [2] goes up two folders to find cmap_trip-based_model/Scripts
 from tbmtools import project as tbm
-    
+
+
 def main():
     # Define the path to the Emme project (.emp file)
     proj_dir = Path(__file__).resolve().parents[2]

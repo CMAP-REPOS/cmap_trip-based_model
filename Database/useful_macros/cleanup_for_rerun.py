@@ -7,11 +7,14 @@ import os.path
 import shutil
 import sys
 from pathlib import Path
-sys.path.append(str(Path(__file__).resolve().parents[2].joinpath('Scripts')))
-from tbmtools import project as tbm
-import pandas as pd
+
+sys.path.append(str(Path(__file__).resolve().parents[2].joinpath('Scripts', 'tbmtools', 'src')))
 import glob
-   
+
+import pandas as pd
+from tbmtools import project as tbm
+
+
 def main():
 
     #set variables
