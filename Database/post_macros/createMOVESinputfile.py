@@ -52,15 +52,17 @@
 
 
 
+import datetime as dt
 import os
 import re
-import pandas as pd, numpy as np
-import datetime as dt
-import openpyxl
 from itertools import product
-import yaml
 from pathlib import Path
-from MOVES_constants import SOURCE_TYPES, ROAD_TYPES, SPEED_BINS, HOURS
+
+import numpy as np
+import openpyxl
+import pandas as pd
+import yaml
+from MOVES_constants import HOURS, ROAD_TYPES, SOURCE_TYPES, SPEED_BINS
 
 # Define globals
 DB_DIR = Path(__file__).resolve().parents[1]
@@ -635,6 +637,7 @@ if __name__ == "__main__":
 
     # Define output folder
     out_folder = DB_DIR.joinpath('data', f'MOVES_{model}_scen{scenyear}')
+    out_folder.mkdir(exist_ok=True)
 
     # If doing full region run, set fallback to False
     # Otherwise, read in full region data
