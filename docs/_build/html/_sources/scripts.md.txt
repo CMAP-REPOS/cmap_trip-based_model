@@ -1,7 +1,7 @@
-# standard_data.py
+# tbmtools.data_package.py
 
 ```{eval-rst}
-.. automodule:: standard_data
+.. automodule:: tbmtools.data_package
    :members:
    :undoc-members:
 ```

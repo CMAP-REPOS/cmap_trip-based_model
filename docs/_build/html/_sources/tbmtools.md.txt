@@ -1,0 +1,60 @@
+# tbmtools
+
+## `tbmtools.data_package`
+
+```{eval-rst}
+.. automodule:: tbmtools.data_package
+   :members:
+   :undoc-members:
+```
+
+## `tbmtools.transit`
+
+The transit subpackage updates the model's transit network from agency GTFS
+feeds. Its workflow builds an Emme scenario, loads and transforms the feeds,
+checks the imported lines against the feed geometry, and exports transit
+itineraries and data tables.
+
+```{mermaid}
+flowchart TD
+    cli["tbmtools update"] --> update["update.py<br/>run"]
+    update --> config["config.py<br/>project settings and Emme"]
+    update --> rail["extract_rail_network.py<br/>filter MRN and write base-network file"]
+    rail --> basefile["Rail base-network transaction file"]
+    update --> clean["transit_feed.py<br/>clean agency GTFS feeds"]
+    clean --> feeds["Cleaned GTFS feeds"]
+
+    update --> setup["gtfs_scenario.py<br/>build scenario 900, configure schema,<br/>resize Emme database"]
+    basefile --> setup
+    setup --> load["transit_feed.py<br/>load feeds into scenario"]
+    feeds --> load
+    load --> scenario["GTFS transit network<br/>scenario 900"]
+
+    scenario --> verify["update.py<br/>export network and launch verifier"]
+    feeds --> verify
+    verify --> verifier["verify_transit_network.py<br/>prepare ArcGIS project and jobs"]
+    verifier --> analysis["verification.py<br/>compare network lines to feed routes"]
+    analysis --> report["Transit line verification CSV"]
+
+    scenario --> tables["transit_tables.py<br/>transform network and export outputs"]
+    tables --> outputs["Transit itineraries and data tables"]
+    config -. settings and Modeller access .-> update
+    config -. settings and Modeller access .-> rail
+    config -. settings and Modeller access .-> clean
+    config -. settings and Modeller access .-> setup
+    config -. settings and Modeller access .-> load
+    config -. settings and Modeller access .-> tables
+```
+
+### Module responsibilities
+
+| Module | Responsibility |
+| --- | --- |
+| `update` | Orchestrates the transit update command and its subprocesses. |
+| `config` | Reads `Scripts/transit_update.toml`, resolves project paths, and initializes Emme Modeller. |
+| `extract_rail_network` | Selects the year-specific rail network from the MRN geodatabase and writes an Emme transaction file. |
+| `gtfs_scenario` | Builds the base network and prepares scenario schema and database capacity for GTFS imports. |
+| `transit_feed` | Cleans agency feed files, classifies routes, and imports feeds into the scenario. |
+| `verify_transit_network` | Prepares the ArcGIS verification project, runs route checks, and writes the report. |
+| `verification` | Performs per-route network/feed geometry comparisons in worker processes. |
+| `transit_tables` | Transforms the imported network and exports itineraries and model data tables. |

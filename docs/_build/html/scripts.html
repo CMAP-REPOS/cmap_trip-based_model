@@ -1,28 +1,25 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>standard_data.py &mdash; CMAP Trip-Based Travel Demand Model c24q2 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css" />
+  <title>tbmtools.data_package.py &mdash; CMAP Trip-Based Travel Demand Model c24q2 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=e7a3b759"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Sharing model data" href="share.html" /> 
+    <link rel="prev" title="tbmtools.transit" href="transit.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -47,14 +44,17 @@
               <p class="caption" role="heading"><span class="caption-text">Common tasks</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="share.html">Sharing model data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="transit.html"><code class="docutils literal notranslate"><span class="pre">tbmtools.transit</span></code></a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Script reference</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">standard_data.py</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#standard_data.compress"><code class="docutils literal notranslate"><span class="pre">compress()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#standard_data.document"><code class="docutils literal notranslate"><span class="pre">document()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#standard_data.export"><code class="docutils literal notranslate"><span class="pre">export()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#standard_data.load_config"><code class="docutils literal notranslate"><span class="pre">load_config()</span></code></a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">tbmtools.data_package.py</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#tbmtools.data_package.compress_data"><code class="docutils literal notranslate"><span class="pre">compress_data()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tbmtools.data_package.copy_data"><code class="docutils literal notranslate"><span class="pre">copy_data()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tbmtools.data_package.export_data"><code class="docutils literal notranslate"><span class="pre">export_data()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tbmtools.data_package.pack_data"><code class="docutils literal notranslate"><span class="pre">pack_data()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tbmtools.data_package.render_data_user_guide"><code class="docutils literal notranslate"><span class="pre">render_data_user_guide()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tbmtools.data_package.run_pack_data"><code class="docutils literal notranslate"><span class="pre">run_pack_data()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -73,7 +73,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">standard_data.py</li>
+      <li class="breadcrumb-item active">tbmtools.data_package.py</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/scripts.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -83,89 +83,133 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-standard_data">
-<span id="standard-data-py"></span><h1>standard_data.py<a class="headerlink" href="#module-standard_data" title="Permalink to this heading"></a></h1>
-<p>Share standard model data.</p>
-<p>This script prepares standard datasets from a trip-based model run for
-sharing. Arguments are read from configuration files.</p>
-<p>This script requires the <cite>emme-plus</cite> Python environment and the
-<cite>tbmtools</cite> local Python package.</p>
-<p>This script creates the following non-public global variables to serve as path
-anchors:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>_src_dir - source code directory containing this script</p></li>
-<li><p>_proj_dir - trip-based model project directory read by this script</p></li>
-<li><p>_out_dir - output directory for files generated by this script</p></li>
-</ul>
-</div></blockquote>
+  <section id="module-tbmtools.data_package">
+<span id="tbmtools-data-package-py"></span><h1>tbmtools.data_package.py<a class="headerlink" href="#module-tbmtools.data_package" title="Link to this heading"></a></h1>
+<p>Package model output data products for distribution.</p>
+<p>This module exports model data from Emme projects, assembles package
+directories, and renders documentation for the packaged results.</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="standard_data.compress">
-<span class="sig-prename descclassname"><span class="pre">standard_data.</span></span><span class="sig-name descname"><span class="pre">compress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">zip_file_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_paths</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#standard_data.compress" title="Permalink to this definition"></a></dt>
-<dd><p>Compress standard data files into ZIP archives.</p>
-<p>Outputs text log file compress.log.</p>
+<dt class="sig sig-object py" id="tbmtools.data_package.compress_data">
+<span class="sig-prename descclassname"><span class="pre">tbmtools.data_package.</span></span><span class="sig-name descname"><span class="pre">compress_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dirs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tag</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tbmtools.data_package.compress_data" title="Link to this definition"></a></dt>
+<dd><p>Compress exported data directories into ZIP archives.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>zip_file_names</strong> (<em>dict</em>) – Names of compressed data files.</p></li>
-<li><p><strong>source_paths</strong> (<em>dict</em><em> of </em><em>str: Path</em>) – Output file name configuration properties as keys and paths to
-locations of data files to compress as values.</p></li>
+<li><p><strong>data_dirs</strong> (<em>dict</em>) – Mapping of data product names to directories that should be compressed.</p></li>
+<li><p><strong>out_dir</strong> (<em>pathlib.Path</em>) – Directory where the ZIP archives will be written.</p></li>
+<li><p><strong>config</strong> (<em>dict</em>) – Configuration mapping containing the <code class="docutils literal notranslate"><span class="pre">compressed</span></code> section that
+defines the output archive names.</p></li>
+<li><p><strong>tag</strong> (<em>str</em>) – Tag appended to each archive filename.</p></li>
 </ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="standard_data.document">
-<span class="sig-prename descclassname"><span class="pre">standard_data.</span></span><span class="sig-name descname"><span class="pre">document</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#standard_data.document" title="Permalink to this definition"></a></dt>
-<dd><p>Render a HTML data user guide.</p>
-<p>Reads Markdown template with placeholder variables from
-../hand/data_user_guide_md.txt and HTML template from
-../hand/data_user_guide_html.txt.</p>
+<dt class="sig sig-object py" id="tbmtools.data_package.copy_data">
+<span class="sig-prename descclassname"><span class="pre">tbmtools.data_package.</span></span><span class="sig-name descname"><span class="pre">copy_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_paths</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tbmtools.data_package.copy_data" title="Link to this definition"></a></dt>
+<dd><p>Copy packaged data files into the output directory.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>context</strong> (<em>dict</em><em> of </em><em>str: str</em>) – Configuration properties as keys with text to render as values.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>src_dir</strong> (<em>pathlib.Path</em>) – Source project directory containing the TG results data.</p></li>
+<li><p><strong>target_dir</strong> (<em>pathlib.Path</em>) – Destination directory for the packaged data files.</p></li>
+<li><p><strong>config</strong> (<em>dict</em>) – Configuration mapping used to name the copied TG results file.</p></li>
+<li><p><strong>tag</strong> (<em>str</em>) – Tag appended to the copied TG results filename.</p></li>
+<li><p><strong>data_paths</strong> (<em>dict</em>) – Mapping of exported artifact names to their paths, including the trip
+roster.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>FileNotFoundError</strong> – If more than one TG results file is found in the source directory.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="standard_data.export">
-<span class="sig-prename descclassname"><span class="pre">standard_data.</span></span><span class="sig-name descname"><span class="pre">export</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">project_file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trip_roster_file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tg_data_file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scenario_code</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#standard_data.export" title="Permalink to this definition"></a></dt>
-<dd><p>Export standard data files from the trip-based model.</p>
-<p>Outputs text log file export.log.</p>
+<dt class="sig sig-object py" id="tbmtools.data_package.export_data">
+<span class="sig-prename descclassname"><span class="pre">tbmtools.data_package.</span></span><span class="sig-name descname"><span class="pre">export_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">proj_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modeller</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tbmtools.data_package.export_data" title="Link to this definition"></a></dt>
+<dd><p>Export model data products into a staging directory.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>project_file_name</strong> (<em>str</em>) – Name of source Emme project file (.emp).</p></li>
-<li><p><strong>trip_roster_file_name</strong> (<em>str</em>) – Name of output trip roster file.</p></li>
-<li><p><strong>tg_data_file_name</strong> (<em>str</em>) – Name of output trip generation data file.</p></li>
-<li><p><strong>scenario_code</strong> (<em>int</em>) – Project scenario code.</p></li>
+<li><p><strong>proj_dir</strong> (<em>pathlib.Path</em>) – Project directory containing the Emme model files and supporting data.</p></li>
+<li><p><strong>out_dir</strong> (<em>pathlib.Path</em>) – Directory where exported data products will be written.</p></li>
+<li><p><strong>tag</strong> (<em>str</em>) – Tag used to distinguish packaged output files.</p></li>
+<li><p><strong>config</strong> (<em>dict</em>) – Configuration mapping with scenario and output naming settings.</p></li>
+<li><p><strong>modeller</strong> (<em>inro.modeller.Modeller</em>) – Modeller instance used to access Emme tools for exporting data.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>dict of str</strong> – Output file name configuration properties as keys and paths to
-locations of exported data files as values.</p>
+<dd class="field-even"><p>Mapping of exported data product names to their output paths.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Path</p>
+<dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="standard_data.load_config">
-<span class="sig-prename descclassname"><span class="pre">standard_data.</span></span><span class="sig-name descname"><span class="pre">load_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#standard_data.load_config" title="Permalink to this definition"></a></dt>
-<dd><p>Load values from configuration files.</p>
-<p>Reads configuration settings from Database/batch_file.yaml and
-Scripts/share/standard_data/hand/config.yaml.</p>
+<dt class="sig sig-object py" id="tbmtools.data_package.pack_data">
+<span class="sig-prename descclassname"><span class="pre">tbmtools.data_package.</span></span><span class="sig-name descname"><span class="pre">pack_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">proj_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">WindowsPath('E:/nrf/tbm/transit_network_update/cmap_trip-based_model/src/tbmtools/src/tbmtools/config.yaml')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">templates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">WindowsPath('E:/nrf/tbm/transit_network_update/cmap_trip-based_model/src/tbmtools/src/tbmtools/templates')</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tbmtools.data_package.pack_data" title="Link to this definition"></a></dt>
+<dd><p>Package model data products into a compressed archive.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Configuration properties as keys and configuration property
-values as values.</p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>proj_file</strong> (<em>pathlib.Path</em>) – Path to the Emme project file to package.</p></li>
+<li><p><strong>out_dir</strong> (<em>pathlib.Path</em>) – Root output directory where the packaged data will be written.</p></li>
+<li><p><strong>config_file</strong> (<em>pathlib.Path</em><em>, </em><em>optional</em>) – Path to the YAML configuration file used to define packaging settings.</p></li>
+<li><p><strong>templates</strong> (<em>pathlib.Path</em><em>, </em><em>optional</em>) – Directory containing the markdown and HTML templates used to render the
+data user guide.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Path to the generated ZIP archive for the packaged data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pathlib.Path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tbmtools.data_package.render_data_user_guide">
+<span class="sig-prename descclassname"><span class="pre">tbmtools.data_package.</span></span><span class="sig-name descname"><span class="pre">render_data_user_guide</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">templates</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tbmtools.data_package.render_data_user_guide" title="Link to this definition"></a></dt>
+<dd><p>Render an HTML data user guide from Markdown and HTML templates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>templates</strong> (<em>pathlib.Path</em>) – Directory containing the template files used to build the guide.</p></li>
+<li><p><strong>out_dir</strong> (<em>pathlib.Path</em>) – Directory where the generated Markdown and HTML files will be written.</p></li>
+<li><p><strong>context</strong> (<em>dict</em>) – Mapping of configuration keys to values used to render the templates.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Path to the rendered HTML data user guide file.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pathlib.Path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tbmtools.data_package.run_pack_data">
+<span class="sig-prename descclassname"><span class="pre">tbmtools.data_package.</span></span><span class="sig-name descname"><span class="pre">run_pack_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tbmtools.data_package.run_pack_data" title="Link to this definition"></a></dt>
+<dd><p>Package data for one or more Emme projects from CLI arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>args</strong> (<em>argparse.Namespace</em>) – Parsed command-line arguments. If <code class="docutils literal notranslate"><span class="pre">args.series</span></code> is provided, it should
+point to a directory containing one or more Emme project files.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>dict</p>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -176,7 +220,7 @@ values as values.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="share.html" class="btn btn-neutral float-left" title="Sharing model data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="transit.html" class="btn btn-neutral float-left" title="tbmtools.transit" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

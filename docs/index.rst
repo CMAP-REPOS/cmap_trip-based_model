@@ -11,14 +11,15 @@ CMAP Trip-Based Travel Demand Model documentation
    :caption: Common tasks
    :hidden:
 
-   share
+   pack
+   update
 
 .. toctree::
    :maxdepth: 2
-   :caption: Script reference
+   :caption: Package reference
    :hidden:
 
-   scripts
+   tbmtools
 
 Indices
 =======
