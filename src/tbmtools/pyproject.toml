@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=84"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tbmtools"
+version = "0.1.0"
+description = "Tools for trip-based model workflows"
+requires-python = ">=3.11"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["tbmtools"]
+
+[project.scripts]
+tbmtools = "tbmtools.__main__:cli.main"

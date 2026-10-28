@@ -19,11 +19,13 @@ load_config
 mp_compress
     Helper wrapper for calling `compress` from multiprocessing pools.
 """
-from copy import deepcopy
 import logging
-from pathlib import Path
+import os
 import shutil
-from zipfile import ZipFile, ZIP_DEFLATED
+import subprocess
+from copy import deepcopy
+from pathlib import Path
+from zipfile import ZIP_DEFLATED, ZipFile
 
 import yaml
 
@@ -61,6 +63,45 @@ def calculate_vadt(create_attrib, net_calc, scenario, p):
             'expression': '@avauv + @avh2v + @avh3v + @avbqv + @avlqv + (@avmqv/2) + (@avhqv/3)',
             'selections': {'link': 'all'}}
     net_calc(specification=spec, scenario=scenario)
+
+
+def modify_env():
+    """Modify a copy of environment variables."""
+    env = os.environ.copy()
+    del env['PYTHONHOME']  # Remove uv environment variable that causes a conflict for conda.
+    return env
+
+
+def install_tbmtools(python_exe):
+    """Install the tbmtools package in a Python environment."""
+    tbmtools_path = Path(__file__).resolve().parents[2]
+    command = [str(python_exe), "-m", "pip", "install", "-e", str(tbmtools_path)]
+    subprocess.run(command, env=modify_env(), text=True, check=True)
+
+
+def clone_proenv(clone_prefix):
+    """Clone the ArcGIS Pro environment."""
+    conda_prefix = Path(os.getenv("PROGRAMFILES"), "ArcGIS", "Pro", "bin", "Python")
+    conda_exe = conda_prefix.joinpath("Scripts", "conda.exe")
+    command = [str(conda_exe), "create", "--prefix", str(clone_prefix), "--clone", "arcgispro-py3", "--pinned"]
+    subprocess.run(command, env=modify_env(), text=True, check=True)
+
+
+def verify_proenv(env_name):
+    env_prefix = Path(os.getenv("LOCALAPPDATA"), "miniconda3", "envs", env_name)
+    python_exe = env_prefix.joinpath("python.exe")
+    if not python_exe.exists():
+        clone_proenv(env_prefix)
+    return python_exe
+
+
+def conda_env(env_name: Path, command: list[str], args = None, cwd = None):
+    """Run a command in a conda environment."""
+    conda_prefix = Path(os.getenv("LOCALAPPDATA"), "miniconda3")
+    conda_bin = conda_prefix.joinpath('Scripts')
+    conda_exe = conda_bin.joinpath('conda.exe')
+    full_command = [str(conda_exe), 'run', '--name', env_name, '--live-stream'] + command + [str(i) for i in args]
+    subprocess.run(full_command, env=modify_env(), cwd=cwd, text=True, check=True)
 
 
 def compress(out_file_name, source_path, out_dir):

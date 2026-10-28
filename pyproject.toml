@@ -14,8 +14,17 @@ dependencies = [
   "pyyaml",
   "sphinx",
   "sphinx_rtd_theme",
-  "tqdm"
+  "tqdm",
+  "tbmtools",
 ]
 
 [tool.uv]
 package = false
+
+[tool.uv.workspace]
+members = [
+    "src/tbmtools",
+]
+
+[tool.uv.sources]
+tbmtools = { workspace = true, editable = true }
