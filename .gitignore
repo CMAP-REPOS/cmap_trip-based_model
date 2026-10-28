@@ -1,10 +1,31 @@
 # Ignore compiled Python.
 **/__pycache__
 
+# Ignore Python package distribution metadata.
+**/*.egg-info
+
+# Ignore Python toolbox metadata.
+**/*.pyt.xml
+
 # Ignore large Emme project files.
 Database/emmemat
 Database/emmebank
 Logbook/project.mlbk
+
+# Ignore transit update input files.
+Database/cta_*.zip
+Database/metra_*.zip
+Database/nictd_*.zip
+Database/pace_*.zip
+Database/mrn_*.gdb
+route_verification_notes.yml
+
+# Ignore transit update output files.
+Database/raw_transit_feeds
+Database/cleaned_transit_feeds
+output
+VerifyTransitNetwork
+
 
 # Ignore TG model input files that are scenario-dependent.
 Database/tg/fortran/HH_IN.TXT
