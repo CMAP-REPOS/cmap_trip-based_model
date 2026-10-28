@@ -1,24 +1,23 @@
 {
   "type" : "CIMLayerDocument",
-  "version" : "3.3.0",
-  "build" : 52636,
+  "version" : "3.7.0",
+  "build" : 1901,
   "layers" : [
-    "CIMPATH=network_vs__feed/emme_links2.json"
+    "CIMPATH=network_vs__feed/emme_tsegs_emme_tlines_pace_317.json"
   ],
   "layerDefinitions" : [
     {
       "type" : "CIMFeatureLayer",
-      "name" : "emme_links",
-      "uRI" : "CIMPATH=network_vs__feed/emme_links2.json",
+      "name" : "emme_tsegs_emme_tlines_PACE_317",
+      "uRI" : "CIMPATH=network_vs__feed/emme_tsegs_emme_tlines_pace_317.json",
       "sourceModifiedTime" : {
         "type" : "TimeInstant"
       },
-      "metadataURI" : "CIMPATH=Metadata/3c1fafd6f776a1d0a9a5b5b6ce80b787.xml",
       "useSourceMetadata" : true,
-      "description" : "emme_links",
+      "description" : "emme_tsegs_emme_tlines_PACE_317",
       "layerElevation" : {
         "type" : "CIMLayerElevationSurface",
-        "elevationSurfaceLayerURI" : "CIMPATH=Network_Vs__Feed/8037bc4b83a2418c98096d0d485e496e.json"
+        "elevationSurfaceLayerURI" : "CIMPATH=Network_Vs__Feed/960299ccbe93417cab1d1830a6e2cdf6.json"
       },
       "expanded" : true,
       "layerType" : "Operational",
@@ -36,7 +35,17 @@
       "featureElevationExpression" : "0",
       "featureTable" : {
         "type" : "CIMFeatureTable",
-        "displayField" : "ID",
+        "definitionExpression" : "LINE_ID IN ('3ql', '3qm', '3qn', '3qo', '3qp', '3qq', '3qr', '3qs', '3qt', '3qu', '3qv', '3qw', '3qx', '3qy', '3qz', '3r0', '3r1', '3r2', '3r3', '3r4', '3r5', '3r6', '3r7', '3r8', '3r9', '3ra', '3rb', '3rc', '3rd', '3re', '3rf', '3rg', '3rh', '3ri', '3rj', '3rk', '3rl', '3rm', '3rn', '3ro', '3rp', '3rq', '3rr', '3rs', '3rt', '3ru', '3rv', '3rw', '3rx', '3ry', '3rz', '3s0', '3s1', '3s2', '3s3', '3s4', '3s5')",
+        "definitionExpressionName" : "Query 1",
+        "definitionFilterChoices" : [
+          {
+            "type" : "CIMDefinitionFilter",
+            "name" : "Query 1",
+            "definitionExpression" : "LINE_ID IN ('3ql', '3qm', '3qn', '3qo', '3qp', '3qq', '3qr', '3qs', '3qt', '3qu', '3qv', '3qw', '3qx', '3qy', '3qz', '3r0', '3r1', '3r2', '3r3', '3r4', '3r5', '3r6', '3r7', '3r8', '3r9', '3ra', '3rb', '3rc', '3rd', '3re', '3rf', '3rg', '3rh', '3ri', '3rj', '3rk', '3rl', '3rm', '3rn', '3ro', '3rp', '3rq', '3rr', '3rs', '3rt', '3ru', '3rv', '3rw', '3rx', '3ry', '3rz', '3s0', '3s1', '3s2', '3s3', '3s4', '3s5')",
+            "searchOrder" : "esriSearchOrderSpatial"
+          }
+        ],
+        "displayField" : "F_stop_name",
         "editable" : true,
         "fieldDescriptions" : [
           {
@@ -50,7 +59,6 @@
               "roundingOption" : "esriRoundNumberOfDecimals",
               "roundingValue" : 0
             },
-            "readOnly" : true,
             "visible" : true,
             "searchMode" : "Exact"
           },
@@ -63,8 +71,29 @@
           },
           {
             "type" : "CIMFieldDescription",
-            "alias" : "ID",
-            "fieldName" : "ID",
+            "alias" : "SEG_ID",
+            "fieldName" : "SEG_ID",
+            "visible" : true,
+            "searchMode" : "Exact"
+          },
+          {
+            "type" : "CIMFieldDescription",
+            "alias" : "LINE_ID",
+            "fieldName" : "LINE_ID",
+            "visible" : true,
+            "searchMode" : "Exact"
+          },
+          {
+            "type" : "CIMFieldDescription",
+            "alias" : "SEG_NUM",
+            "fieldName" : "SEG_NUM",
+            "numberFormat" : {
+              "type" : "CIMNumericFormat",
+              "alignmentOption" : "esriAlignRight",
+              "alignmentWidth" : 0,
+              "roundingOption" : "esriRoundNumberOfDecimals",
+              "roundingValue" : 0
+            },
             "visible" : true,
             "searchMode" : "Exact"
           },
@@ -98,8 +127,8 @@
           },
           {
             "type" : "CIMFieldDescription",
-            "alias" : "LENGTH",
-            "fieldName" : "LENGTH",
+            "alias" : "DWELL_TIME",
+            "fieldName" : "DWELL_TIME",
             "numberFormat" : {
               "type" : "CIMNumericFormat",
               "alignmentOption" : "esriAlignRight",
@@ -112,8 +141,8 @@
           },
           {
             "type" : "CIMFieldDescription",
-            "alias" : "TYPE",
-            "fieldName" : "TYPE",
+            "alias" : "TTF",
+            "fieldName" : "TTF",
             "numberFormat" : {
               "type" : "CIMNumericFormat",
               "alignmentOption" : "esriAlignRight",
@@ -126,29 +155,36 @@
           },
           {
             "type" : "CIMFieldDescription",
-            "alias" : "MODES",
-            "fieldName" : "MODES",
-            "visible" : true,
-            "searchMode" : "Exact"
-          },
-          {
-            "type" : "CIMFieldDescription",
-            "alias" : "LANES",
-            "fieldName" : "LANES",
+            "alias" : "DWT_IS_FAC",
+            "fieldName" : "DWT_IS_FAC",
             "numberFormat" : {
               "type" : "CIMNumericFormat",
               "alignmentOption" : "esriAlignRight",
               "alignmentWidth" : 0,
               "roundingOption" : "esriRoundNumberOfDecimals",
-              "roundingValue" : 6
+              "roundingValue" : 0
             },
             "visible" : true,
             "searchMode" : "Exact"
           },
           {
             "type" : "CIMFieldDescription",
-            "alias" : "VDF",
-            "fieldName" : "VDF",
+            "alias" : "CAN_ALIGHT",
+            "fieldName" : "CAN_ALIGHT",
+            "numberFormat" : {
+              "type" : "CIMNumericFormat",
+              "alignmentOption" : "esriAlignRight",
+              "alignmentWidth" : 0,
+              "roundingOption" : "esriRoundNumberOfDecimals",
+              "roundingValue" : 0
+            },
+            "visible" : true,
+            "searchMode" : "Exact"
+          },
+          {
+            "type" : "CIMFieldDescription",
+            "alias" : "CAN_BOARD",
+            "fieldName" : "CAN_BOARD",
             "numberFormat" : {
               "type" : "CIMNumericFormat",
               "alignmentOption" : "esriAlignRight",
@@ -203,6 +239,90 @@
           },
           {
             "type" : "CIMFieldDescription",
+            "alias" : "F_split_tim",
+            "fieldName" : "F_split_tim",
+            "numberFormat" : {
+              "type" : "CIMNumericFormat",
+              "alignmentOption" : "esriAlignRight",
+              "alignmentWidth" : 0,
+              "roundingOption" : "esriRoundNumberOfDecimals",
+              "roundingValue" : 6
+            },
+            "visible" : true,
+            "searchMode" : "Exact"
+          },
+          {
+            "type" : "CIMFieldDescription",
+            "alias" : "F_stop_coun",
+            "fieldName" : "F_stop_coun",
+            "numberFormat" : {
+              "type" : "CIMNumericFormat",
+              "alignmentOption" : "esriAlignRight",
+              "alignmentWidth" : 0,
+              "roundingOption" : "esriRoundNumberOfDecimals",
+              "roundingValue" : 6
+            },
+            "visible" : true,
+            "searchMode" : "Exact"
+          },
+          {
+            "type" : "CIMFieldDescription",
+            "alias" : "F_stop_time",
+            "fieldName" : "F_stop_time",
+            "numberFormat" : {
+              "type" : "CIMNumericFormat",
+              "alignmentOption" : "esriAlignRight",
+              "alignmentWidth" : 0,
+              "roundingOption" : "esriRoundNumberOfDecimals",
+              "roundingValue" : 6
+            },
+            "visible" : true,
+            "searchMode" : "Exact"
+          },
+          {
+            "type" : "CIMFieldDescription",
+            "alias" : "F_zfare",
+            "fieldName" : "F_zfare",
+            "numberFormat" : {
+              "type" : "CIMNumericFormat",
+              "alignmentOption" : "esriAlignRight",
+              "alignmentWidth" : 0,
+              "roundingOption" : "esriRoundNumberOfDecimals",
+              "roundingValue" : 6
+            },
+            "visible" : true,
+            "searchMode" : "Exact"
+          },
+          {
+            "type" : "CIMFieldDescription",
+            "alias" : "F_emme_line",
+            "fieldName" : "F_emme_line",
+            "visible" : true,
+            "searchMode" : "Exact"
+          },
+          {
+            "type" : "CIMFieldDescription",
+            "alias" : "F_i_fare_zo",
+            "fieldName" : "F_i_fare_zo",
+            "visible" : true,
+            "searchMode" : "Exact"
+          },
+          {
+            "type" : "CIMFieldDescription",
+            "alias" : "F_j_fare_zo",
+            "fieldName" : "F_j_fare_zo",
+            "visible" : true,
+            "searchMode" : "Exact"
+          },
+          {
+            "type" : "CIMFieldDescription",
+            "alias" : "F_stop_name",
+            "fieldName" : "F_stop_name",
+            "visible" : true,
+            "searchMode" : "Exact"
+          },
+          {
+            "type" : "CIMFieldDescription",
             "alias" : "Shape_Length",
             "fieldName" : "Shape_Length",
             "numberFormat" : {
@@ -212,17 +332,17 @@
               "roundingOption" : "esriRoundNumberOfDecimals",
               "roundingValue" : 6
             },
-            "readOnly" : true,
             "visible" : true,
             "searchMode" : "Exact"
           }
         ],
+        "selectionSetURI" : "CIMPATH=ObjectIdentifierSet/6616c0a821ec2b83e0fdcc1decc02edd.dat",
         "dataConnection" : {
           "type" : "CIMFeatureDatasetDataConnection",
           "featureDataset" : "Network",
-          "workspaceConnectionString" : "DATABASE=.\\Default.gdb",
+          "workspaceConnectionString" : "DATABASE=..\\..\\..\\..\\..\\VerifyTransitNetwork\\VerifyTransitNetwork.gdb",
           "workspaceFactory" : "FileGDB",
-          "dataset" : "emme_links",
+          "dataset" : "emme_tsegs",
           "datasetType" : "esriDTFeatureClass"
         },
         "studyAreaSpatialRel" : "esriSpatialRelUndefined",
@@ -238,7 +358,7 @@
         {
           "type" : "CIMLabelClass",
           "expressionTitle" : "Custom",
-          "expression" : "$feature.ID",
+          "expression" : "$feature['F_stop_name']",
           "expressionEngine" : "Arcade",
           "featuresToLabel" : "AllVisibleFeatures",
           "maplexLabelPlacementProperties" : {
@@ -285,7 +405,8 @@
                   "splitAfter" : true
                 }
               ],
-              "trimStackingSeparators" : true
+              "trimStackingSeparators" : true,
+              "preferToStackLongLabels" : false
             },
             "lineFeatureType" : "General",
             "linePlacementMethod" : "OffsetStraightFromLine",
@@ -468,15 +589,15 @@
                 "joinStyle" : "Round",
                 "lineStyle3D" : "Strip",
                 "miterLimit" : 10,
-                "width" : 4,
+                "width" : 1.5,
                 "height3D" : 1,
                 "anchor3D" : "Center",
                 "color" : {
                   "type" : "CIMRGBColor",
                   "values" : [
-                    156,
-                    156,
-                    156,
+                    168,
+                    56,
+                    0,
                     100
                   ]
                 }
@@ -492,8 +613,8 @@
   "binaryReferences" : [
     {
       "type" : "CIMBinaryReference",
-      "uRI" : "CIMPATH=Metadata/3c1fafd6f776a1d0a9a5b5b6ce80b787.xml",
-      "data" : "<?xml version=\"1.0\"?>\r\n<metadata xml:lang=\"en\"><Esri><CreaDate>20250203</CreaDate><CreaTime>22472500</CreaTime><ArcGISFormat>1.0</ArcGISFormat><SyncOnce>TRUE</SyncOnce></Esri><dataIdInfo><idCitation><resTitle>emme_links</resTitle></idCitation><idAbs>emme_links</idAbs><idCredit></idCredit><idPurp></idPurp><resConst><Consts><useLimit></useLimit></Consts></resConst></dataIdInfo></metadata>\r\n"
+      "uRI" : "CIMPATH=ObjectIdentifierSet/6616c0a821ec2b83e0fdcc1decc02edd.dat",
+      "data" : "CtkCCtYC2tkG29kG5tkG59kG8tkG89kG/tkG/9kGitoGi9oGltoGl9oGotoGo9oGrtoGr9oGutoGu9oGxtoGx9oG0toG09oG3toG39oG6toG69oG9toG99oGgtsGg9sGmNsGmdsGpNsGpdsGsNsGsdsGvNsGvdsGyNsGydsG1NsG1dsG4NsG4dsG7NsG7dsG+NsG+dsGhNwGhdwGkNwGkdwGnNwGndwGqNwGqdwGqtwGq9wGttwGt9wGwtwGw9wGztwGz9wG2twG29wG5twG59wG8twG89wG/twG/9wGit0Gi90Glt0Gl90Got0Go90Grt0Gr90Gut0Gu90Gxt0Gx90G0t0G090G3t0G390G6t0G690G9t0G990Ggt4Gg94Gjt4Gj94Gmt4Gm94Gpt4Gp94Gst4Gs94GyN4Gyd4G1N4G1d4G4N4G4d4G7N4G7d4G+N4G+d4GhN8Ghd8G"
     }
   ],
   "rGBColorProfile" : "sRGB IEC61966-2.1",
@@ -502,10 +623,28 @@
     {
       "type" : "CIMElevationSurfaceLayer",
       "name" : "Ground",
-      "uRI" : "CIMPATH=Network_Vs__Feed/8037bc4b83a2418c98096d0d485e496e.json",
+      "uRI" : "CIMPATH=Network_Vs__Feed/960299ccbe93417cab1d1830a6e2cdf6.json",
+      "sourceModifiedTime" : {
+        "type" : "TimeInstant"
+      },
       "useSourceMetadata" : true,
       "description" : "Ground",
       "expanded" : true,
+      "layer3DProperties" : {
+        "type" : "CIM3DLayerProperties",
+        "castShadows" : true,
+        "isLayerLit" : true,
+        "layerFaceCulling" : "None",
+        "preloadTextureCutoffHigh" : 0.29999999999999999,
+        "preloadTextureCutoffLow" : 0.59999999999999998,
+        "textureCutoffHigh" : 0.29999999999999999,
+        "textureCutoffLow" : 0.59999999999999998,
+        "useCompressedTextures" : true,
+        "verticalExaggeration" : 1,
+        "exaggerationMode" : "ScaleZ",
+        "lighting" : "OneSideDataNormal",
+        "optimizeMarkerTransparency" : true
+      },
       "layerType" : "Operational",
       "showLegends" : false,
       "visibility" : true,

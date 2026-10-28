@@ -1,24 +1,24 @@
 {
   "type" : "CIMLayerDocument",
-  "version" : "3.3.0",
-  "build" : 52636,
+  "version" : "3.7.0",
+  "build" : 1901,
   "layers" : [
-    "CIMPATH=network_vs__feed/emme_nodes2.json"
+    "CIMPATH=Network_Vs__Feed/emme_links.json"
   ],
   "layerDefinitions" : [
     {
       "type" : "CIMFeatureLayer",
-      "name" : "emme_nodes",
-      "uRI" : "CIMPATH=network_vs__feed/emme_nodes2.json",
+      "name" : "emme_links",
+      "uRI" : "CIMPATH=Network_Vs__Feed/emme_links.json",
       "sourceModifiedTime" : {
         "type" : "TimeInstant"
       },
-      "metadataURI" : "CIMPATH=Metadata/e9fb80e085f9d92988acd5ce6c386d08.xml",
+      "metadataURI" : "CIMPATH=Metadata/3c1fafd6f776a1d0a9a5b5b6ce80b787.xml",
       "useSourceMetadata" : true,
-      "description" : "emme_nodes",
+      "description" : "emme_links",
       "layerElevation" : {
         "type" : "CIMLayerElevationSurface",
-        "elevationSurfaceLayerURI" : "CIMPATH=Network_Vs__Feed/8037bc4b83a2418c98096d0d485e496e.json"
+        "elevationSurfaceLayerURI" : "CIMPATH=Network_Vs__Feed/960299ccbe93417cab1d1830a6e2cdf6.json"
       },
       "expanded" : true,
       "layerType" : "Operational",
@@ -36,7 +36,7 @@
       "featureElevationExpression" : "0",
       "featureTable" : {
         "type" : "CIMFeatureTable",
-        "displayField" : "LABEL",
+        "displayField" : "ID",
         "editable" : true,
         "fieldDescriptions" : [
           {
@@ -65,6 +65,13 @@
             "type" : "CIMFieldDescription",
             "alias" : "ID",
             "fieldName" : "ID",
+            "visible" : true,
+            "searchMode" : "Exact"
+          },
+          {
+            "type" : "CIMFieldDescription",
+            "alias" : "INODE",
+            "fieldName" : "INODE",
             "numberFormat" : {
               "type" : "CIMNumericFormat",
               "alignmentOption" : "esriAlignRight",
@@ -77,8 +84,22 @@
           },
           {
             "type" : "CIMFieldDescription",
-            "alias" : "X",
-            "fieldName" : "X",
+            "alias" : "JNODE",
+            "fieldName" : "JNODE",
+            "numberFormat" : {
+              "type" : "CIMNumericFormat",
+              "alignmentOption" : "esriAlignRight",
+              "alignmentWidth" : 0,
+              "roundingOption" : "esriRoundNumberOfDecimals",
+              "roundingValue" : 0
+            },
+            "visible" : true,
+            "searchMode" : "Exact"
+          },
+          {
+            "type" : "CIMFieldDescription",
+            "alias" : "LENGTH",
+            "fieldName" : "LENGTH",
             "numberFormat" : {
               "type" : "CIMNumericFormat",
               "alignmentOption" : "esriAlignRight",
@@ -91,14 +112,49 @@
           },
           {
             "type" : "CIMFieldDescription",
-            "alias" : "Y",
-            "fieldName" : "Y",
+            "alias" : "TYPE",
+            "fieldName" : "TYPE",
+            "numberFormat" : {
+              "type" : "CIMNumericFormat",
+              "alignmentOption" : "esriAlignRight",
+              "alignmentWidth" : 0,
+              "roundingOption" : "esriRoundNumberOfDecimals",
+              "roundingValue" : 0
+            },
+            "visible" : true,
+            "searchMode" : "Exact"
+          },
+          {
+            "type" : "CIMFieldDescription",
+            "alias" : "MODES",
+            "fieldName" : "MODES",
+            "visible" : true,
+            "searchMode" : "Exact"
+          },
+          {
+            "type" : "CIMFieldDescription",
+            "alias" : "LANES",
+            "fieldName" : "LANES",
             "numberFormat" : {
               "type" : "CIMNumericFormat",
               "alignmentOption" : "esriAlignRight",
               "alignmentWidth" : 0,
               "roundingOption" : "esriRoundNumberOfDecimals",
               "roundingValue" : 6
+            },
+            "visible" : true,
+            "searchMode" : "Exact"
+          },
+          {
+            "type" : "CIMFieldDescription",
+            "alias" : "VDF",
+            "fieldName" : "VDF",
+            "numberFormat" : {
+              "type" : "CIMNumericFormat",
+              "alignmentOption" : "esriAlignRight",
+              "alignmentWidth" : 0,
+              "roundingOption" : "esriRoundNumberOfDecimals",
+              "roundingValue" : 0
             },
             "visible" : true,
             "searchMode" : "Exact"
@@ -147,36 +203,16 @@
           },
           {
             "type" : "CIMFieldDescription",
-            "alias" : "ISZONE",
-            "fieldName" : "ISZONE",
+            "alias" : "Shape_Length",
+            "fieldName" : "Shape_Length",
             "numberFormat" : {
               "type" : "CIMNumericFormat",
               "alignmentOption" : "esriAlignRight",
               "alignmentWidth" : 0,
               "roundingOption" : "esriRoundNumberOfDecimals",
-              "roundingValue" : 0
+              "roundingValue" : 6
             },
-            "visible" : true,
-            "searchMode" : "Exact"
-          },
-          {
-            "type" : "CIMFieldDescription",
-            "alias" : "ISINTERSEC",
-            "fieldName" : "ISINTERSEC",
-            "numberFormat" : {
-              "type" : "CIMNumericFormat",
-              "alignmentOption" : "esriAlignRight",
-              "alignmentWidth" : 0,
-              "roundingOption" : "esriRoundNumberOfDecimals",
-              "roundingValue" : 0
-            },
-            "visible" : true,
-            "searchMode" : "Exact"
-          },
-          {
-            "type" : "CIMFieldDescription",
-            "alias" : "LABEL",
-            "fieldName" : "LABEL",
+            "readOnly" : true,
             "visible" : true,
             "searchMode" : "Exact"
           }
@@ -184,9 +220,9 @@
         "dataConnection" : {
           "type" : "CIMFeatureDatasetDataConnection",
           "featureDataset" : "Network",
-          "workspaceConnectionString" : "DATABASE=.\\Default.gdb",
+          "workspaceConnectionString" : "DATABASE=..\\..\\..\\..\\..\\VerifyTransitNetwork\\VerifyTransitNetwork.gdb",
           "workspaceFactory" : "FileGDB",
-          "dataset" : "emme_nodes",
+          "dataset" : "emme_links",
           "datasetType" : "esriDTFeatureClass"
         },
         "studyAreaSpatialRel" : "esriSpatialRelUndefined",
@@ -202,25 +238,24 @@
         {
           "type" : "CIMLabelClass",
           "expressionTitle" : "Custom",
-          "expression" : "$feature.LABEL",
+          "expression" : "$feature.ID",
           "expressionEngine" : "Arcade",
           "featuresToLabel" : "AllVisibleFeatures",
           "maplexLabelPlacementProperties" : {
             "type" : "CIMMaplexLabelPlacementProperties",
-            "featureType" : "Point",
+            "featureType" : "Line",
             "avoidPolygonHoles" : true,
             "canOverrunFeature" : true,
             "canPlaceLabelOutsidePolygon" : true,
             "canRemoveOverlappingLabel" : true,
             "canStackLabel" : true,
             "centerLabelAnchorType" : "Symbol",
-            "connectionType" : "Unambiguous",
-            "constrainOffset" : "NoConstraint",
+            "connectionType" : "MinimizeLabels",
+            "constrainOffset" : "AboveLine",
             "contourAlignmentType" : "Page",
             "contourLadderType" : "Straight",
             "contourMaximumAngle" : 90,
             "enableConnection" : true,
-            "enablePointPlacementPriorities" : true,
             "featureWeight" : 0,
             "fontHeightReductionLimit" : 4,
             "fontHeightReductionStep" : 0.5,
@@ -250,19 +285,21 @@
                   "splitAfter" : true
                 }
               ],
-              "trimStackingSeparators" : true
+              "trimStackingSeparators" : true,
+              "preferToStackLongLabels" : false
             },
             "lineFeatureType" : "General",
-            "linePlacementMethod" : "OffsetCurvedFromLine",
-            "maximumLabelOverrun" : 36,
+            "linePlacementMethod" : "OffsetStraightFromLine",
+            "maximumLabelOverrun" : 16,
             "maximumLabelOverrunUnit" : "Point",
+            "measureFromClippedFeatureGeometry" : true,
             "minimumFeatureSizeUnit" : "Map",
-            "multiPartOption" : "OneLabelPerPart",
+            "multiPartOption" : "OneLabelPerFeature",
             "offsetAlongLineProperties" : {
               "type" : "CIMMaplexOffsetAlongLineProperties",
               "placementMethod" : "BestPositionAlongLine",
               "labelAnchorPoint" : "CenterOfLabel",
-              "distanceUnit" : "Percentage",
+              "distanceUnit" : "Map",
               "useLineDirection" : true
             },
             "pointExternalZonePriorities" : {
@@ -392,6 +429,10 @@
                     "enable" : true,
                     "color" : {
                       "type" : "CIMRGBColor",
+                      "colorSpace" : {
+                        "type" : "CIMICCColorSpace",
+                        "url" : "sRGB IEC61966-2.1"
+                      },
                       "values" : [
                         0,
                         0,
@@ -423,96 +464,33 @@
         "symbol" : {
           "type" : "CIMSymbolReference",
           "symbol" : {
-            "type" : "CIMPointSymbol",
+            "type" : "CIMLineSymbol",
             "symbolLayers" : [
               {
-                "type" : "CIMVectorMarker",
+                "type" : "CIMSolidStroke",
                 "enable" : true,
-                "anchorPointUnits" : "Relative",
-                "dominantSizeAxis3D" : "Z",
-                "size" : 4,
-                "billboardMode3D" : "FaceNearPlane",
-                "frame" : {
-                  "xmin" : -2,
-                  "ymin" : -2,
-                  "xmax" : 2,
-                  "ymax" : 2
-                },
-                "markerGraphics" : [
-                  {
-                    "type" : "CIMMarkerGraphic",
-                    "geometry" : {
-                      "curveRings" : [
-                        [
-                          [
-                            1.2246467991473532e-16,
-                            2
-                          ],
-                          {
-                            "a" : [
-                              [
-                                1.2246467991473532e-16,
-                                2
-                              ],
-                              [
-                                1.8369701987210297e-16,
-                                0
-                              ],
-                              0,
-                              1
-                            ]
-                          }
-                        ]
-                      ]
-                    },
-                    "symbol" : {
-                      "type" : "CIMPolygonSymbol",
-                      "symbolLayers" : [
-                        {
-                          "type" : "CIMSolidStroke",
-                          "enable" : true,
-                          "capStyle" : "Round",
-                          "joinStyle" : "Round",
-                          "lineStyle3D" : "Strip",
-                          "miterLimit" : 10,
-                          "width" : 0.69999999999999996,
-                          "height3D" : 1,
-                          "anchor3D" : "Center",
-                          "color" : {
-                            "type" : "CIMRGBColor",
-                            "values" : [
-                              0,
-                              0,
-                              0,
-                              100
-                            ]
-                          }
-                        },
-                        {
-                          "type" : "CIMSolidFill",
-                          "enable" : true,
-                          "color" : {
-                            "type" : "CIMRGBColor",
-                            "values" : [
-                              156,
-                              156,
-                              156,
-                              100
-                            ]
-                          }
-                        }
-                      ],
-                      "angleAlignment" : "Map"
-                    }
-                  }
-                ],
-                "scaleSymbolsProportionally" : true,
-                "respectFrame" : true
+                "capStyle" : "Round",
+                "joinStyle" : "Round",
+                "lineStyle3D" : "Strip",
+                "miterLimit" : 10,
+                "width" : 4,
+                "height3D" : 1,
+                "anchor3D" : "Center",
+                "color" : {
+                  "type" : "CIMRGBColor",
+                  "colorSpace" : {
+                    "type" : "CIMICCColorSpace",
+                    "url" : "sRGB IEC61966-2.1"
+                  },
+                  "values" : [
+                    156,
+                    156,
+                    156,
+                    100
+                  ]
+                }
               }
-            ],
-            "haloSize" : 1,
-            "scaleX" : 1,
-            "angleAlignment" : "Display"
+            ]
           }
         }
       },
@@ -523,8 +501,8 @@
   "binaryReferences" : [
     {
       "type" : "CIMBinaryReference",
-      "uRI" : "CIMPATH=Metadata/e9fb80e085f9d92988acd5ce6c386d08.xml",
-      "data" : "<?xml version=\"1.0\"?>\r\n<metadata xml:lang=\"en\"><Esri><CreaDate>20250203</CreaDate><CreaTime>22472600</CreaTime><ArcGISFormat>1.0</ArcGISFormat><SyncOnce>TRUE</SyncOnce></Esri><dataIdInfo><idCitation><resTitle>emme_nodes</resTitle></idCitation><idAbs>emme_nodes</idAbs><idCredit></idCredit><idPurp></idPurp><resConst><Consts><useLimit></useLimit></Consts></resConst></dataIdInfo></metadata>\r\n"
+      "uRI" : "CIMPATH=Metadata/3c1fafd6f776a1d0a9a5b5b6ce80b787.xml",
+      "data" : "<?xml version=\"1.0\"?>\r\n<metadata xml:lang=\"en\"><Esri><CreaDate>20250203</CreaDate><CreaTime>22472500</CreaTime><ArcGISFormat>1.0</ArcGISFormat><SyncOnce>TRUE</SyncOnce></Esri><dataIdInfo><idCitation><resTitle>emme_links</resTitle></idCitation><idAbs>emme_links</idAbs><idCredit></idCredit><idPurp></idPurp><resConst><Consts><useLimit></useLimit></Consts></resConst></dataIdInfo></metadata>\r\n"
     }
   ],
   "rGBColorProfile" : "sRGB IEC61966-2.1",
@@ -533,10 +511,28 @@
     {
       "type" : "CIMElevationSurfaceLayer",
       "name" : "Ground",
-      "uRI" : "CIMPATH=Network_Vs__Feed/8037bc4b83a2418c98096d0d485e496e.json",
+      "uRI" : "CIMPATH=Network_Vs__Feed/960299ccbe93417cab1d1830a6e2cdf6.json",
+      "sourceModifiedTime" : {
+        "type" : "TimeInstant"
+      },
       "useSourceMetadata" : true,
       "description" : "Ground",
       "expanded" : true,
+      "layer3DProperties" : {
+        "type" : "CIM3DLayerProperties",
+        "castShadows" : true,
+        "isLayerLit" : true,
+        "layerFaceCulling" : "None",
+        "preloadTextureCutoffHigh" : 0.29999999999999999,
+        "preloadTextureCutoffLow" : 0.59999999999999998,
+        "textureCutoffHigh" : 0.29999999999999999,
+        "textureCutoffLow" : 0.59999999999999998,
+        "useCompressedTextures" : true,
+        "verticalExaggeration" : 1,
+        "exaggerationMode" : "ScaleZ",
+        "lighting" : "OneSideDataNormal",
+        "optimizeMarkerTransparency" : true
+      },
       "layerType" : "Operational",
       "showLegends" : false,
       "visibility" : true,

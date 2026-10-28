@@ -21,6 +21,13 @@ def main():
     pack_parser.add_argument('--series',
                              help='path to a directory containing a series of model runs')
     pack_parser.set_defaults(func=run_pack_data)
+    # Define `update` subcommand.
+    from tbmtools.transit import update
+    update_parser = subparsers.add_parser('update')
+    update_parser.add_argument('--trip_aggregation',
+                               action='store_true',
+                               help='option to aggregate identical trips to a single transit line')
+    update_parser.set_defaults(func=update.run)
     subcommand_args = subcommand_parser.parse_args(remaining_args)
     subcommand_args.func(subcommand_args)
     

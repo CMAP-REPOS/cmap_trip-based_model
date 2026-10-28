@@ -1,7 +1,7 @@
 {
   "type" : "CIMLayerDocument",
-  "version" : "3.3.0",
-  "build" : 52636,
+  "version" : "3.7.0",
+  "build" : 1901,
   "layers" : [
     "CIMPATH=network_vs__feed/pace_routes_604.json"
   ],
@@ -17,7 +17,7 @@
       "description" : "PACE_routes_604",
       "layerElevation" : {
         "type" : "CIMLayerElevationSurface",
-        "elevationSurfaceLayerURI" : "CIMPATH=Network_Vs__Feed/0b0306706303455fadb03533a06e80e0.json"
+        "elevationSurfaceLayerURI" : "CIMPATH=Network_Vs__Feed/960299ccbe93417cab1d1830a6e2cdf6.json"
       },
       "expanded" : true,
       "layerType" : "Operational",
@@ -41,7 +41,8 @@
           {
             "type" : "CIMDefinitionFilter",
             "name" : "Query 1",
-            "definitionExpression" : "SHORT_NAME = '604'"
+            "definitionExpression" : "SHORT_NAME = '604'",
+            "searchOrder" : "esriSearchOrderSpatial"
           }
         ],
         "displayField" : "EMME_NAME",
@@ -121,9 +122,9 @@
         "dataConnection" : {
           "type" : "CIMFeatureDatasetDataConnection",
           "featureDataset" : "Feeds",
-          "workspaceConnectionString" : "DATABASE=.\\Default.gdb",
+          "workspaceConnectionString" : "DATABASE=..\\..\\..\\..\\..\\VerifyTransitNetwork\\VerifyTransitNetwork.gdb",
           "workspaceFactory" : "FileGDB",
-          "dataset" : "PACE_routes",
+          "dataset" : "METRA_routes",
           "datasetType" : "esriDTFeatureClass"
         },
         "studyAreaSpatialRel" : "esriSpatialRelUndefined",
@@ -172,7 +173,8 @@
               "maximumNumberOfLines" : 3,
               "minimumNumberOfCharsPerLine" : 3,
               "maximumNumberOfCharsPerLine" : 24,
-              "trimStackingSeparators" : true
+              "trimStackingSeparators" : true,
+              "preferToStackLongLabels" : false
             },
             "lineFeatureType" : "General",
             "linePlacementMethod" : "OffsetCurvedFromLine",
@@ -380,10 +382,28 @@
     {
       "type" : "CIMElevationSurfaceLayer",
       "name" : "Ground",
-      "uRI" : "CIMPATH=Network_Vs__Feed/0b0306706303455fadb03533a06e80e0.json",
+      "uRI" : "CIMPATH=Network_Vs__Feed/960299ccbe93417cab1d1830a6e2cdf6.json",
+      "sourceModifiedTime" : {
+        "type" : "TimeInstant"
+      },
       "useSourceMetadata" : true,
       "description" : "Ground",
       "expanded" : true,
+      "layer3DProperties" : {
+        "type" : "CIM3DLayerProperties",
+        "castShadows" : true,
+        "isLayerLit" : true,
+        "layerFaceCulling" : "None",
+        "preloadTextureCutoffHigh" : 0.29999999999999999,
+        "preloadTextureCutoffLow" : 0.59999999999999998,
+        "textureCutoffHigh" : 0.29999999999999999,
+        "textureCutoffLow" : 0.59999999999999998,
+        "useCompressedTextures" : true,
+        "verticalExaggeration" : 1,
+        "exaggerationMode" : "ScaleZ",
+        "lighting" : "OneSideDataNormal",
+        "optimizeMarkerTransparency" : true
+      },
       "layerType" : "Operational",
       "showLegends" : false,
       "visibility" : true,

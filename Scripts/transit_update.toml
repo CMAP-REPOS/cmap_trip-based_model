@@ -1,0 +1,22 @@
+[feeds]
+cta = 'E:\nrf\tbm\transit_network_update\cmap_trip-based_model\Database\cta_20260708.zip'
+metra = 'E:\nrf\tbm\transit_network_update\cmap_trip-based_model\Database\metra_20260716.zip'
+pace = 'E:\nrf\tbm\transit_network_update\cmap_trip-based_model\Database\pace_20260526.zip'
+nictd = 'E:\nrf\tbm\transit_network_update\cmap_trip-based_model\Database\nictd_20260423.zip'
+date = "20260729"
+
+["base network"]
+year = 2026
+mrn = 'E:\nrf\tbm\transit_network_update\cmap_trip-based_model\Database\mrn_c26q2.gdb'
+highway.nodes = 'M:\proj1\nrf\Conformity\c26q2\highway\200\20000.n1'
+highway.links = 'M:\proj1\nrf\Conformity\c26q2\highway\200\20000.l1'
+transit.modes = 'M:\proj1\nrf\Conformity\c26q2\transit\tranmodes.txt'
+transit.vehicles = 'M:\proj1\nrf\Conformity\c26q2\transit\transveh.txt'
+"link shape" = 'M:\proj1\nrf\Conformity\c26q2\linkshape\linkshape_200.in'
+"missing rail links" = [ [39008, 32068] ]
+
+[calibration]
+seasonal.cta = [ "19", "130" ]
+seasonal.pace = [ 236, 475, 768, 769, 776 ]
+express.cta = [ "28", "J14" ]
+express.pace = [ 604, 554, 360, 309, 318, 715, 568, 330, 379, 381, 313, 213, 353 ]

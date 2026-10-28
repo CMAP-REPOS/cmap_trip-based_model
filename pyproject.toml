@@ -16,6 +16,7 @@ dependencies = [
   "sphinx_rtd_theme",
   "tqdm",
   "tbmtools",
+  "geopandas>=1.1.4",
 ]
 
 [tool.uv]
