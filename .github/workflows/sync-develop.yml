@@ -1,0 +1,35 @@
+name: Sync Develop with Main
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+jobs:
+  sync:
+    if: github.event.pull_request.merged == true && github.event.pull_request.head.ref == 'develop'
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Configure Git
+        shell: pwsh
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Merge Main into Develop
+        shell: pwsh
+        run: |
+          git fetch origin main
+          try {
+            git merge origin/main --ff-only
+          } catch {
+            git merge origin/main -m "chore: sync main back to develop"
+          }
+          git push origin develop

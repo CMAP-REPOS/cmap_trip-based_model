@@ -1,9 +1,7 @@
-# Name of EMME project file.
-project_file_name: c24q2_100.emp
 # Path to transit transaction file directory.
-transit_directory: C:\Testing\c24q2\transit
+transit_directory: E:\nrf\c25q2\transit
 # Date of Board approval.
-approval_date: June 2024
+approval_date: January 2025
 # Names of output files.
 trip_roster: trip_roster
 tg_data: tg_results

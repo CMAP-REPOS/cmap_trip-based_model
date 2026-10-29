@@ -50,13 +50,14 @@
 ##################
 print('--TOD_network_prep.py')
 #import libraries
-from pathlib import Path
 import sys
-sys.path.append(str(Path(__file__).resolve().parents[2].joinpath('Scripts')))
-from tbmtools import project as tbm
-import Ftime_capacity as fc
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parents[2].joinpath('Scripts', 'tbmtools', 'src')))
 import Arterial_delay as ad
 import calculate_busveq as bus
+import Ftime_capacity as fc
+from tbmtools import project as tbm
 
 #import variables
 yr = str(sys.argv[1])  #emme scenario number -- %val% in batch

@@ -303,12 +303,10 @@ totalHHs = sz['households'].sum()
 sz.drop(szDrop, axis=1, inplace=True)
 
 # Load household work from home flag file
-wfhCols = ['serial_number','wfh_flag','number_WFH_workers','tc14_not_working']
-wfhDrop = ['number_WFH_workers','tc14_not_working']
-wfh = pd.read_csv(wfhFile, names=wfhCols, engine=pdEngine)
+wfhCols = ['serial_number','wfh_flag']  
+wfh = pd.read_csv(wfhFile, names=wfhCols, engine=pdEngine, usecols=[0, 1])
 wfh['household_record'] = wfh.index + 1
 wfh['wfh_flag'] = wfh['wfh_flag'].clip(upper=1)
-wfh.drop(wfhDrop, axis=1, inplace=True)
 
 # Load household vehicle type category file
 hhvtype = pd.read_csv(hhvtypeFile, dtype='Int64', engine=pdEngine)

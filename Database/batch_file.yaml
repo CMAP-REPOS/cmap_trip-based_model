@@ -1,12 +1,12 @@
 # Project details
-model_version: c26q2
-scenario_code: 100
+model_version: c26q4
+scenario_code: 100 
 # ---------------- Select link analysis files: provide file name (ex: RSP32_links.txt [stored in Database\Select_Link\]) or use None
 # ---------------- Can submit up to 5, comma-separated, any order, no spaces, (ex: None,test4.txt,test1.txt,None,None)
 selectLinkFile: None,None,None,None,None
 # ---------------- Transaction file path: include the path to the transaction files that will build the scenario networks in double quotes (spaces OK), 
 # ---------------- point to directory above highway\ and transit\, no ending backslash (ex: "M:\catslib\modelprod\c24q2" or "M:/catslib/modelprod/24q2")
-transactionFilePath: "M:/proj1/nrf/Conformity/c25q4"
+transactionFilePath: "M:/proj1/nrf/Conformity/c26q4"
 # ---------------- Run Transit Assignment at the end of the model run? Default is False.
 runTransitAsmt: False
 # ---------------- Transit select line analysis file: provide file name (ex: rsp57_line.txt [stored in Database\Select_Line\]) or use None
@@ -19,4 +19,16 @@ UrbanSim_file: False
 RSP: False
 # ---------------- PUMA version used in Trip Generation. 2010 is the current option.
 pumaVersion: 2010
-
+year: 2019 # make sure this matches scenario_code
+#--- Scenario Code - Year Mapping ---#
+# 100: 2019
+# 200: 2026
+# 300: 2030
+# 500: 2035
+# 600: 2040
+# 800: 2050
+exportAs: "full_region"
+# "im" to just output IM/nonIM Excel workbooks
+# "im_county" to output IM/nonIM Excel workbooks for each county in the region
+# "county" to output workbooks for each county (include both IM and nonIM regions)
+# "full_region" for the entire CMAP region

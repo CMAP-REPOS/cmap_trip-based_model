@@ -1,0 +1,6 @@
+# Ignore exerything
+*
+# Don't ignore
+!.gitignore
+!/templates
+!config.yaml

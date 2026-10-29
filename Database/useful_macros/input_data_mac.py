@@ -10,7 +10,8 @@ import os
 import os.path
 import sys
 from pathlib import Path
-sys.path.append(str(Path(__file__).resolve().parents[2].joinpath('Scripts')))
+
+sys.path.append(str(Path(__file__).resolve().parents[2].joinpath('Scripts', 'tbmtools', 'src')))
 from tbmtools import project as tbm
 
 

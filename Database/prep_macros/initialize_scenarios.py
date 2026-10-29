@@ -31,16 +31,19 @@
 ##
 
 #import libraries
-import os 
+import os
 import sys
-import yaml
 from datetime import date
 from pathlib import Path
-sys.path.append(str(Path(__file__).resolve().parents[2].joinpath('Scripts')))
+
+import yaml
+
+sys.path.append(str(Path(__file__).resolve().parents[2].joinpath('Scripts', 'tbmtools', 'src')))
 from tbmtools import project as tbm
+
 sys.path.append(str(Path(__file__).resolve().parents[1].joinpath('macros')))
-import Ftime_capacity as fc
 import Arterial_delay as ad
+import Ftime_capacity as fc
 
 #import variables
 

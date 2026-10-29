@@ -81,12 +81,14 @@
  Craig Heither, 10-05-2023
 ## ==========================================================================================
 '''
+import json  ##-- improved readability for printing assignment specification
 import os
 import sys
-import json             ##-- improved readability for printing assignment specification
 from pathlib import Path
+
 import inro.modeller as _m
-sys.path.append(str(Path(__file__).resolve().parents[2].joinpath('Scripts')))
+
+sys.path.append(str(Path(__file__).resolve().parents[2].joinpath('Scripts', 'tbmtools', 'src')))
 from tbmtools import project as tbm
 
 tmPeriod = int(sys.argv[1])

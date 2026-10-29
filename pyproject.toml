@@ -1,6 +1,6 @@
 [project]
 name = "cmap_trip-based_model"
-version = "26.4.22"
+version = "26.10.29"
 requires-python = "==3.11.6"
 dependencies = [
   "jinja2",
