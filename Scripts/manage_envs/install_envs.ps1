@@ -26,6 +26,7 @@ if (-not (conda env list | Select-String -Pattern "tbm-r" -Quiet)) {
     conda env create --file "$PSScriptRoot\tbm-r\tbm-r.yml" --yes
     if ($LastExitCode -ne 0) {
         Write-Error "conda env create tbm-r failed"
+        Read-Host -Prompt "Press Enter to exit"
         exit $LastExitCode
     }
 }
@@ -37,12 +38,14 @@ if (-not (conda env list | Select-String -Pattern "cmap-modedest" -Quiet)) {
     conda env create --file "$PSScriptRoot\cmap-modedest\cmap-modedest.yml" --yes
     if ($LastExitCode -ne 0) {
         Write-Error "conda env create cmap-modedest failed"
+        Read-Host -Prompt "Press Enter to exit"
         exit $LastExitCode
     }
     conda activate cmap-modedest
     uv pip install --requirements "$PSScriptRoot\cmap-modedest\requirements.txt"
     if ($LastExitCode -ne 0) {
         Write-Error "(cmap-modedest) uv pip install failed"
+        Read-Host -Prompt "Press Enter to exit"
         exit $LastExitCode
     }
     conda deactivate
@@ -57,6 +60,7 @@ Write-Host "Syncing uv env with lock file"
 uv sync --locked
 if ($LastExitCode -ne 0) {
     Write-Error "uv sync failed"
+    Read-Host -Prompt "Press Enter to exit"
     exit $LastExitCode
 }
 # Extend the base environment to include Emme packages.
