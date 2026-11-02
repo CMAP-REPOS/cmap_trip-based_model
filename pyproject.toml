@@ -10,7 +10,7 @@ dependencies = [
   "numexpr>=2.8.0,<2.8.5",
   "openpyxl",
   "pandas~=2.0",
-  "pyarrow",
+  "pyarrow~=24.0.0",
   "pyyaml",
   "sphinx",
   "sphinx_rtd_theme",
